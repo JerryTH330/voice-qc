@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./page.css" />
+<title>质检配置 · AI质检平台</title>
+    <link rel="icon" href="../assets/ds-logo.png" />
+    </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="../assets/ds-logo.png" alt="DS logo" />
+          </div>
+          <div class="brand-copy">
+            <strong>AI质检平台</strong>
+          </div>
+        </div>
+
+        <div class="nav-scroll">
+          <div class="nav-group">
+            <div class="nav-label">看板</div>
+            <div class="nav-menu">
+              <button class="nav-item nav-button" data-page="factory-dashboard" data-href="../factory-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M160 128h704a64 64 0 0 1 64 64v512a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V192a64 64 0 0 1 64-64m0 64v512h704V192z" />
+                  <path fill="currentColor" d="M288 320h128v256H288zm192-96h128v352H480zm192 160h128v192H672zM384 832h256a32 32 0 1 1 0 64H384a32 32 0 1 1 0-64m96-96h64v128h-64z" />
+                </svg>
+                <span class="nav-text">厂端看板</span>
+              </button>
+              <button class="nav-item nav-button" data-page="dashboard" data-href="../store-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M192 128v704h384V128zm-32-64h448a32 32 0 0 1 32 32v768a32 32 0 0 1-32 32H160a32 32 0 0 1-32-32V96a32 32 0 0 1 32-32" />
+                  <path fill="currentColor" d="M256 256h256v64H256zm0 192h256v64H256zm0 192h256v64H256zm384-128h128v64H640zm0 128h128v64H640zM64 832h896v64H64z" />
+                  <path fill="currentColor" d="M640 384v448h192V384zm-32-64h256a32 32 0 0 1 32 32v512a32 32 0 0 1-32 32H608a32 32 0 0 1-32-32V352a32 32 0 0 1 32-32" />
+                </svg>
+                <span class="nav-text">门店看板</span>
+              </button>
+              <button class="nav-item nav-button" data-page="sales-dashboard" data-href="../sales-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M512 512a192 192 0 1 0 0-384 192 192 0 0 0 0 384m0 64a256 256 0 1 1 0-512 256 256 0 0 1 0 512m320 320v-96a96 96 0 0 0-96-96H288a96 96 0 0 0-96 96v96a32 32 0 1 1-64 0v-96a160 160 0 0 1 160-160h448a160 160 0 0 1 160 160v96a32 32 0 1 1-64 0" />
+                </svg>
+                <span class="nav-text">销售看板</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">业务</div>
+            <div class="nav-menu">
+              <button class="nav-item nav-button" data-page="script-library" data-href="../script-library/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M160 826.88 273.536 736H800a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H224a64 64 0 0 0-64 64zM296 800 147.968 918.4A32 32 0 0 1 96 893.44V256a128 128 0 0 1 128-128h576a128 128 0 0 1 128 128v416a128 128 0 0 1-128 128z" />
+                  <path fill="currentColor" d="M352 512h320q32 0 32 32t-32 32H352q-32 0-32-32t32-32m0-192h320q32 0 32 32t-32 32H352q-32 0-32-32t32-32" />
+                </svg>
+                <span class="nav-text">优秀话术库</span>
+              </button>
+              <button class="nav-item nav-button" data-page="session" data-href="../session/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M896 529.152V512a384 384 0 1 0-768 0v17.152A128 128 0 0 1 320 640v128a128 128 0 1 1-256 0V512a448 448 0 1 1 896 0v256a128 128 0 1 1-256 0V640a128 128 0 0 1 192-110.848M896 640a64 64 0 0 0-128 0v128a64 64 0 0 0 128 0zm-768 0v128a64 64 0 0 0 128 0V640a64 64 0 1 0-128 0" />
+                </svg>
+                <span class="nav-text">录音列表</span>
+              </button>
+              <button class="nav-item nav-button" data-page="leads" data-href="../leads/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M640 384v64H448a128 128 0 0 0-128 128v128a128 128 0 0 0 128 128h320a128 128 0 0 0 128-128V576a128 128 0 0 0-64-110.848V394.88c74.56 26.368 128 97.472 128 181.056v128a192 192 0 0 1-192 192H448a192 192 0 0 1-192-192V576a192 192 0 0 1 192-192z" />
+                  <path fill="currentColor" d="M384 640v-64h192a128 128 0 0 0 128-128V320a128 128 0 0 0-128-128H256a128 128 0 0 0-128 128v128a128 128 0 0 0 64 110.848v70.272A192.06 192.06 0 0 1 64 448V320a192 192 0 0 1 192-192h320a192 192 0 0 1 192 192v128a192 192 0 0 1-192 192z" />
+                </svg>
+                <span class="nav-text">线索列表</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">管理</div>
+            <div class="nav-menu">
+              <button class="nav-item nav-button" data-page="config" data-href="../config/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M600.704 64a32 32 0 0 1 30.464 22.208l35.2 109.376c14.784 7.232 28.928 15.36 42.432 24.512l112.384-24.192a32 32 0 0 1 34.432 15.36L944.32 364.8a32 32 0 0 1-4.032 37.504l-77.12 85.12a357 357 0 0 1 0 49.024l77.12 85.248a32 32 0 0 1 4.032 37.504l-88.704 153.6a32 32 0 0 1-34.432 15.296L708.8 803.904c-13.44 9.088-27.648 17.28-42.368 24.512l-35.264 109.376A32 32 0 0 1 600.704 960H423.296a32 32 0 0 1-30.464-22.208L357.696 828.48a352 352 0 0 1-42.56-24.64l-112.32 24.256a32 32 0 0 1-34.432-15.36L79.68 659.2a32 32 0 0 1 4.032-37.504l77.12-85.248a357 357 0 0 1 0-48.896l-77.12-85.248A32 32 0 0 1 79.68 364.8l88.704-153.6a32 32 0 0 1 34.432-15.296l112.32 24.256c13.568-9.152 27.776-17.408 42.56-24.64l35.2-109.312A32 32 0 0 1 423.232 64H600.64zm-23.424 64H446.72l-36.352 113.088-24.512 11.968a294 294 0 0 0-34.816 20.096l-22.656 15.36-116.224-25.088-65.28 113.152 79.68 88.192-1.92 27.136a293 293 0 0 0 0 40.192l1.92 27.136-79.808 88.192 65.344 113.152 116.224-25.024 22.656 15.296a294 294 0 0 0 34.816 20.096l24.512 11.968L446.72 896h130.688l36.48-113.152 24.448-11.904a288 288 0 0 0 34.752-20.096l22.592-15.296 116.288 25.024 65.28-113.152-79.744-88.192 1.92-27.136a293 293 0 0 0 0-40.256l-1.92-27.136 79.808-88.128-65.344-113.152-116.288 24.96-22.592-15.232a288 288 0 0 0-34.752-20.096l-24.448-11.904L577.344 128zM512 320a192 192 0 1 1 0 384 192 192 0 0 1 0-384m0 64a128 128 0 1 0 0 256 128 128 0 0 0 0-256" />
+                </svg>
+                <span class="nav-text">质检配置</span>
+              </button>
+              <button class="nav-item nav-button" data-page="system" data-href="../system/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M544 768v128h192a32 32 0 1 1 0 64H288a32 32 0 1 1 0-64h192V768H192A128 128 0 0 1 64 640V256a128 128 0 0 1 128-128h640a128 128 0 0 1 128 128v384a128 128 0 0 1-128 128zM192 192a64 64 0 0 0-64 64v384a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64z" />
+                </svg>
+                <span class="nav-text">系统管理</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-user" hidden>
+          <div class="avatar"></div>
+          <div>
+            <strong id="sidebarUserName"></strong>
+            <span id="sidebarUserMeta"></span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar" id="mainTopbar">
+          <div>
+            <div class="eyebrow" id="pageEyebrow"></div>
+            <h1 class="page-title" id="pageTitle"></h1>
+            <p class="page-desc" id="pageDesc"></p>
+          </div>
+
+          <div class="toolbar">
+            <div class="toolbar-row" id="toolbarActions"></div>
+            <div class="toolbar-row" id="toolbarFilters"></div>
+          </div>
+        </div>
+
+        <div class="page-host" id="pageHost"></div>
+      </main>
+    </div>
+    <template id="tpl-config">
+          <div class="page-stack config-page">
+            <style>
+              .config-page { gap: 16px; }
+              .config-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; align-items: stretch; min-height: 680px; }
+              .task-sidebar,
+              .config-main,
+              .modal-content { background: rgba(255,255,255,0.98); border: 1px solid rgba(217,226,239,0.84); box-shadow: var(--shadow-soft); border-radius: var(--radius-lg); }
+              .task-sidebar { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+              .task-sidebar-head { padding: 20px 20px 16px; border-bottom: 1px solid rgba(217,226,239,0.76); display: flex; justify-content: space-between; align-items: center; gap: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,253,0.92)); }
+              .task-sidebar-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+              .config-create-btn { height: 36px; padding: 0 14px; font-size: 12px; box-shadow: none; }
+              .task-sidebar-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px 20px 16px; border-bottom: 1px solid rgba(217,226,239,0.72); background: linear-gradient(180deg, rgba(248,250,253,0.98), rgba(243,247,253,0.92)); }
+              .task-filter-menu { width: 100%; }
+              .task-filter-trigger { width: 100%; justify-content: flex-start; text-align: left; }
+              .task-list { flex: 1; overflow-y: auto; padding: 10px 0; }
+              .task-item { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; cursor: pointer; border-bottom: 1px solid rgba(217,226,239,0.68); transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+              .task-item:hover { background: rgba(243,247,253,0.84); }
+              .task-item.active { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(56,189,248,0.06)); box-shadow: inset 3px 0 0 var(--blue); }
+              .task-title { font-size: 14px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin: 0; }
+              .task-title-text { flex: 1 1 auto; min-width: 0; line-height: 1.45; letter-spacing: -0.01em; }
+              .task-toggle { margin-left: auto; flex: 0 0 auto; transform: scale(0.78); transform-origin: center right; align-self: center; }
+              .task-toggle.disabled { cursor: not-allowed; opacity: 0.8; }
+              .draft-tag { display: inline-block; padding: 2px 6px; font-size: 11px; font-weight: 600; color: #c27b12; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.18); border-radius: 999px; margin-left: 8px; vertical-align: text-bottom; line-height: 1.2; }
+              .task-meta-line { color: var(--soft); font-size: 11px; line-height: 1.5; }
+              .task-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-top: 6px; flex: 0 0 auto; }
+              .task-status-dot.on { background: var(--green); box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+              .task-status-dot.off { background: var(--muted); }
+              .task-meta { display: flex; gap: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+              .task-meta.compact { align-items: center; gap: 10px 12px; font-size: 11px; color: var(--soft); }
+              .task-pill { min-height: 26px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; background: var(--card-soft); border: 1px solid var(--line); line-height: 1; }
+              .task-pill.model { background: rgba(37,99,235,0.08); color: #2c6ae6; border-color: rgba(37,99,235,0.14); }
+              .task-pill.scenario { background: rgba(245,158,11,0.1); color: #b77905; border-color: rgba(245,158,11,0.14); }
+              .task-pill.count { color: var(--muted); background: rgba(255,255,255,0.96); }
+              .task-exec-text { color: var(--text); font-weight: 600; }
+              .task-extra-text { color: var(--soft); }
+              .config-main { display: flex; flex-direction: column; gap: 16px; min-height: 0; padding: 20px; }
+              .config-main-head { margin: 0; padding-bottom: 16px; border-bottom: 1px solid rgba(217,226,239,0.76); }
+              .config-main-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+              .config-delete-btn { color: var(--red); }
+              .config-save-btn,
+              .config-prompt-btn { box-shadow: none; }
+              .config-scroll-area { flex: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+              .control-bar,
+              .execution-strategy-box,
+              .rule-section-box,
+              .config-prompt-entry { padding: 16px 18px; border: 1px solid rgba(217,226,239,0.84); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(243,247,253,0.92) 100%); }
+              .control-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+              .control-info { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--text); }
+              .control-label { color: var(--muted); margin-right: 6px; }
+              .switch-toggle { position: relative; display: inline-block; width: 40px; height: 20px; }
+              .switch-toggle input { opacity: 0; width: 0; height: 0; }
+              .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--line); transition: .4s; border-radius: 34px; }
+              .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+              input:checked + .slider { background-color: var(--green); }
+              input:checked + .slider:before { transform: translateX(20px); }
+              .execution-strategy-box { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 2; overflow: visible; }
+              .strategy-title { font-size: 14px; font-weight: 700; color: var(--text); display: block; }
+              .strategy-row { display: flex; gap: 18px; align-items: center; font-size: 13px; color: var(--text); }
+              .config-strategy-row { flex-wrap: wrap; gap: 12px 18px; }
+              .config-strategy-divider { width: 1px; height: 16px; background: rgba(217,226,239,0.88); }
+              .radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; font-size: 13px; color: var(--text); }
+              .date-range-picker,
+              .config-input,
+              .rule-input,
+              .custom-select-trigger,
+              .prompt-textarea-small,
+              .rule-textarea,
+              .prompt-preview,
+              .prompt-static-block { border: 1px solid rgba(201,210,224,0.88); border-radius: 16px; background: rgba(255,255,255,0.98); color: var(--text); box-shadow: 0 8px 20px rgba(15,23,42,0.04); font: inherit; }
+              .config-input,
+              .rule-input,
+              .custom-select-trigger,
+              .date-range-picker { min-height: 44px; padding: 0 14px; font-size: 13px; }
+              .config-input,
+              .rule-input { width: 100%; box-sizing: border-box; }
+              .config-compact-input { width: 132px; min-height: 36px; height: 36px; padding: 0 12px; border-radius: 12px; box-shadow: none; font-size: 12px; }
+              #historyStartDate.config-compact-input { width: 118px; }
+              .config-date-picker { position: relative; z-index: 1; }
+              .config-date-picker.is-open { z-index: 220; }
+              .config-date-trigger { min-height: 36px; height: 36px; padding: 0 38px 0 12px; border-radius: 12px; box-shadow: none; min-width: 118px; background: rgba(255,255,255,0.98); }
+              .config-date-trigger strong { font-size: 12px; }
+              .config-range-trigger { min-width: 132px; }
+              .config-date-trigger:disabled { opacity: 0.56; cursor: not-allowed; box-shadow: none; }
+              .config-date-trigger:disabled .session-date-icon { color: var(--soft); }
+              .config-date-panel-slot { position: absolute; top: calc(100% + 8px); left: 0; z-index: 220; }
+              .config-date-picker .session-menu-panel-date { position: static; width: min(392px, calc(100vw - 96px)); max-width: min(392px, calc(100vw - 96px)); }
+              .form-grid { display: grid; gap: 16px; margin-bottom: 0; }
+              .config-form-grid { grid-template-columns: repeat(3, minmax(220px, 1fr)); align-items: end; }
+              .config-form-grid > .form-group { width: 100%; }
+              .config-form-grid .config-input,
+              .config-form-grid .rule-input,
+              .config-form-grid .custom-select-container,
+              .config-form-grid .custom-select-trigger { width: 100%; max-width: none; box-sizing: border-box; }
+              .form-group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+              .form-label { font-size: 12px; font-weight: 600; color: var(--soft); }
+              .rule-editor { display: flex; flex-direction: column; gap: 16px; }
+              .config-rule-editor { overflow: visible; }
+              .editor-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+              .rule-card { border: 1px solid rgba(217,226,239,0.84); border-radius: var(--radius-md); padding: 16px; background: rgba(255,255,255,0.96); margin-bottom: 12px; position: relative; }
+              .rule-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+              .rule-input { max-width: 260px; }
+              .rule-textarea { width: 100%; min-height: 96px; padding: 12px 14px; font-size: 13px; line-height: 1.65; resize: none; margin-bottom: 0; font-family: inherit; overflow-y: hidden; box-sizing: border-box; }
+              .config-rule-container { overflow-y: visible; min-height: 100px; padding-right: 4px; margin-bottom: 4px; }
+              .prompt-template-box { background: transparent; padding: 0; border-radius: 0; margin-top: 0; border: 0; }
+              .prompt-preview,
+              .prompt-static-block { padding: 12px 14px; border-radius: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.75; }
+              .prompt-preview { white-space: pre-wrap; min-height: 100px; color: var(--muted); }
+              .config-prompt-preview { height: auto; min-height: 150px; overflow-y: visible; }
+              .prompt-section-label { font-size: 12px; font-weight: 700; color: var(--blue); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+              .prompt-textarea-small { width: 100%; min-height: 120px; padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; margin-bottom: 14px; resize: none; overflow-y: hidden; box-sizing: border-box; }
+              .prompt-static-block { margin-bottom: 14px; }
+              .custom-select-container { position: relative; width: 100%; }
+              .custom-select-trigger { cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding-right: 40px; position: relative; transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+              .custom-select-trigger:hover { border-color: rgba(37,99,235,0.24); background-color: rgba(255,255,255,1); }
+              .custom-select-trigger:after { content: ''; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; border-top: 1.6px solid var(--soft); border-right: 1.6px solid var(--soft); transform: translateY(-60%) rotate(135deg); }
+              .custom-select-container:focus-within .custom-select-trigger { border-color: rgba(37,99,235,0.34); box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
+              .custom-select-options { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.98); border: 1px solid rgba(217,226,239,0.9); border-radius: 16px; max-height: 280px; overflow-y: auto; display: none; box-shadow: 0 24px 48px rgba(15,23,42,0.14); margin-top: 0; padding: 10px; }
+              .custom-select-options.open { display: flex; flex-direction: column; gap: 4px; }
+              .custom-option { min-height: 40px; width: 100%; padding: 0 14px; border: 0; background: transparent; box-shadow: none; cursor: pointer; display: flex; align-items: center; gap: 12px; justify-content: space-between; text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); border-radius: 12px; position: relative; }
+              .custom-option span { color: inherit; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+              .custom-option:hover { background: rgba(37,99,235,0.06); color: var(--text); }
+              .custom-option:has(input[type="checkbox"]:checked),
+              .custom-option:has(input[type="radio"]:checked) { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(56,189,248,0.1)); color: var(--text); }
+              .custom-option:has(input[type="checkbox"]:checked)::after,
+              .custom-option:has(input[type="radio"]:checked)::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--blue); flex: 0 0 auto; }
+              .custom-option input[type="checkbox"],
+              .custom-option input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; margin: 0; }
+              .model-select-options { right: 0; width: 100%; max-width: 100%; padding: 12px; }
+              .custom-option-group + .custom-option-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(217,226,239,0.72); }
+              .model-select-options .custom-optgroup-label { padding: 0 12px 8px; color: var(--soft); font-size: 11px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+              .model-select-options .custom-option-list { display: flex; flex-direction: column; gap: 4px; }
+              .model-select-options .custom-option-all.active { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(56,189,248,0.1)); color: var(--text); }
+              .model-select-options .custom-option-all.active::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--blue); flex: 0 0 auto; }
+              .task-filter-options { padding: 8px; }
+              .task-filter-option { justify-content: space-between; gap: 12px; color: var(--muted); }
+              .task-filter-option span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+              .task-filter-option.active { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(56,189,248,0.1)); color: var(--text); }
+              .task-filter-option.active::before { content: none; }
+              .task-filter-option.active::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--blue); flex: 0 0 auto; }
+              .custom-optgroup-label { padding: 0 12px 8px; font-size: 11px; font-weight: 700; color: var(--soft); background: transparent; text-transform: uppercase; letter-spacing: 0.04em; }
+              .config-prompt-entry { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+              .config-prompt-entry-label { display: block; margin-bottom: 4px; }
+              .config-prompt-entry-copy { font-size: 12px; color: var(--muted); }
+              .config-empty-state { align-items: center; justify-content: center; text-align: center; }
+              .config-empty-copy { color: var(--muted); }
+              .config-empty-icon { font-size: 44px; margin-bottom: 16px; }
+              .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.24); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+              .modal-overlay.open { display: flex; }
+              .modal-content { width: min(860px, calc(100vw - 48px)); max-height: min(90vh, 880px); display: flex; flex-direction: column; overflow: hidden; }
+              .modal-content.feedback-modal-content { width: min(440px, calc(100vw - 40px)); max-height: none; }
+              .modal-header { padding: 20px 24px; border-bottom: 1px solid rgba(217,226,239,0.84); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,253,0.92)); }
+              .config-modal-title { margin: 0; font-size: 18px; letter-spacing: -0.02em; }
+              .modal-body { padding: 24px; overflow-y: auto; flex: 1; background: var(--card); }
+              .config-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(217,226,239,0.84); background: var(--surface); display: flex; justify-content: flex-end; }
+              .feedback-modal-body { display: flex; flex-direction: column; gap: 10px; padding: 28px 24px 24px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,253,0.96)); }
+              .feedback-modal-title { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
+              .feedback-modal-copy { margin: 0; font-size: 14px; line-height: 1.7; color: var(--muted); white-space: pre-wrap; }
+              .feedback-modal-footer { justify-content: flex-end; gap: 10px; }
+              .feedback-modal-footer .btn,
+              .feedback-modal-footer .btn-primary { min-width: 88px; box-shadow: none; }
+              @media (max-width: 1320px) {
+                .config-layout { grid-template-columns: 300px minmax(0, 1fr); }
+                .config-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              }
+              @media (max-width: 1100px) {
+                .config-layout { grid-template-columns: 1fr; min-height: 0; }
+                .task-sidebar,
+                .config-main { min-height: 0; }
+                .config-main-head,
+                .config-prompt-entry,
+                .task-sidebar-head { flex-direction: column; align-items: flex-start; }
+                .config-main-actions { width: 100%; }
+              }
+              @media (max-width: 820px) {
+                .task-sidebar-filters,
+                .config-form-grid { grid-template-columns: 1fr; }
+                .config-strategy-row,
+                .control-bar { flex-direction: column; align-items: flex-start; }
+                .config-create-btn,
+                .config-main-actions .btn,
+                .config-main-actions .btn-primary,
+                .config-prompt-btn { width: 100%; justify-content: center; }
+                .config-compact-input { width: 100%; }
+                .modal-content { width: min(100vw - 24px, 860px); }
+                .modal-header,
+                .config-modal-footer { padding-left: 18px; padding-right: 18px; }
+                .modal-body { padding: 18px; }
+              }
+              @media (max-width: 360px) {
+                .task-meta.compact { gap: 8px; }
+                .task-exec-text,
+                .task-extra-text { width: 100%; }
+              }
+            </style>
+    
+            <div class="config-layout">
+              <div class="task-sidebar">
+                <div class="task-sidebar-head">
+                  <span class="task-sidebar-title">质检任务列表</span>
+                  <button class="btn-primary config-create-btn" onclick="createNewTask()">+ 新建任务</button>
+                </div>
+                <div class="task-sidebar-filters">
+                  <div class="custom-select-container task-filter-menu">
+                    <button type="button" class="custom-select-trigger task-filter-trigger" id="taskFilterModelTrigger" onclick="toggleTaskFilterSelect('model')">全部车型</button>
+                    <div class="custom-select-options task-filter-options" id="taskFilterModelOptions"></div>
+                  </div>
+                  <div class="custom-select-container task-filter-menu">
+                    <button type="button" class="custom-select-trigger task-filter-trigger" id="taskFilterScenarioTrigger" onclick="toggleTaskFilterSelect('scenario')">全部场景</button>
+                    <div class="custom-select-options task-filter-options" id="taskFilterScenarioOptions"></div>
+                  </div>
+                </div>
+                <div class="task-list" id="taskList"></div>
+              </div>
+    
+              <div class="config-main" id="taskEditor" style="display:none;">
+                <div class="panel-header config-main-head">
+                  <div class="panel-title">
+                    <h3><span id="editorTitle">编辑任务</span><span id="editorDraftTag" class="draft-tag" style="display:none;">草稿</span></h3>
+                    <p>配置特定车型与场景下的质检规则与提示词。</p>
+                  </div>
+                  <div class="config-main-actions">
+                    <button class="btn config-delete-btn" onclick="deleteCurrentTask()">删除任务</button>
+                    <button class="btn" onclick="duplicateCurrentTask()">复制任务</button>
+                    <button class="btn" id="deactivateTaskBtn" onclick="deactivateTask()" style="display:none; color:#d97706;">停用任务</button>
+                    <button class="btn" id="saveDraftBtn" onclick="saveAsDraft()">保存草稿</button>
+                    <button class="btn-primary config-save-btn" onclick="enableTaskConfig()">更新配置</button>
+                  </div>
+                </div>
+    
+                <div class="config-scroll-area">
+                  <div class="control-bar">
+                    <div class="control-info">
+                      <div><span class="control-label">上次更新:</span><span id="lastUpdatedVal">-</span></div>
+                      <div><span class="control-label">启用时间:</span><span id="startTimeVal">-</span></div>
+                    </div>
+                  </div>
+    
+                  <div class="form-grid config-form-grid">
+                    <div class="form-group">
+                      <label class="form-label">任务名称</label>
+                      <input type="text" id="taskNameInput" class="rule-input config-input" placeholder="请输入任务名称，如：埃安AION系列邀约质检">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">适用场景 (Scenario)</label>
+                      <div class="custom-select-container" id="scenarioSelectContainer">
+                        <div class="custom-select-trigger" id="scenarioSelectTrigger" onclick="toggleCustomSelect('scenarioSelectOptions')">请选择场景...</div>
+                        <div class="custom-select-options" id="scenarioSelectOptions"></div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">适用车型 (Model)</label>
+                      <div class="custom-select-container" id="modelSelectContainer">
+                        <div class="custom-select-trigger" id="modelSelectTrigger" onclick="toggleCustomSelect('modelSelectOptions')">请选择车型...</div>
+                        <div class="custom-select-options" id="modelSelectOptions"></div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div class="execution-strategy-box" style="display:none;">
+                    <span class="strategy-title">执行策略 (Execution Strategy)</span>
+                    <div class="strategy-row config-strategy-row">
+                      <label class="radio-label" style="opacity:0.5; cursor:not-allowed;">
+                        <input type="checkbox" id="historyDataCheck" disabled>
+                        应用到历史数据
+                      </label>
+                      <div class="config-date-picker" data-config-date-root="history">
+                        <input type="hidden" id="historyStartDate">
+                        <button
+                          type="button"
+                          id="historyStartDateTrigger"
+                          class="session-date-trigger config-date-trigger config-compact-trigger"
+                          data-config-date-trigger="history"
+                          disabled
+                        >
+                          <strong data-config-history-label>年 / 月 / 日</strong>
+                          <span class="session-date-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="config-date-panel-slot" id="historyStartDatePanel"></div>
+                      </div>
+                      <div class="config-strategy-divider"></div>
+                      <label class="radio-label">
+                        <input type="radio" name="execType" value="continuous" checked onchange="toggleDateRange(false)">
+                        持续执行
+                      </label>
+                      <div class="config-date-picker" data-config-date-root="range" style="display:none;">
+                        <input type="hidden" id="execDateRange">
+                        <input type="hidden" id="execDateRangeStart">
+                        <input type="hidden" id="execDateRangeEnd">
+                        <button
+                          type="button"
+                          id="execDateRangeTrigger"
+                          class="session-date-trigger config-date-trigger config-range-trigger"
+                          data-config-date-trigger="range"
+                          disabled
+                        >
+                          <strong data-config-range-label>日期范围</strong>
+                        </button>
+                        <div class="config-date-panel-slot" id="execDateRangePanel"></div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div class="rule-section-box">
+                    <div class="rule-editor config-rule-editor">
+                      <div class="editor-toolbar">
+                        <span class="form-label">质检标准项 (Quality Standards)</span>
+                        <button class="text-link" onclick="addRuleItem()">+ 添加标准项</button>
+                      </div>
+                      <div id="ruleContainer" class="config-rule-container"></div>
+                    </div>
+                  </div>
+    
+                  <div class="config-prompt-entry">
+                    <div>
+                      <span class="form-label config-prompt-entry-label">提示词模板 (Prompt Template)</span>
+                      <span class="config-prompt-entry-copy">配置 大模型角色 和 分析规则</span>
+                    </div>
+                    <button class="btn-primary config-prompt-btn" onclick="togglePromptModal(true)">配置提示词模板</button>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="config-main config-empty-state" id="emptyState" style="display:flex;">
+                <div class="config-empty-copy">
+                  <div class="config-empty-icon">📋</div>
+                  <p>请从左侧选择一个任务，或点击“新建任务”</p>
+                </div>
+              </div>
+            </div>
+    
+            <div class="modal-overlay" id="promptModal">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h3 class="config-modal-title">提示词模板配置</h3>
+                  <button class="btn" onclick="togglePromptModal(false)">关闭</button>
+                </div>
+                <div class="modal-body">
+                  <div class="prompt-template-box config-prompt-box">
+                    <div class="prompt-section-label">System Role (让系统充当的角色)</div>
+                    <textarea id="promptRole" class="prompt-textarea-small" oninput="autoResize(this); updatePromptPreview()">#任务目标： 你是一名资深汽车门店销售人员，拥有丰富的销售技巧、了解全面的汽车产品知识以及丰富的汽车试乘试驾经验。 请你严格按照以下标准，用严谨的态度和专业的方法，对各类销售话术进行全面、精准的质检。</textarea>
+    
+                    <div class="prompt-section-label">Content (对话内容 - 固定参数)</div>
+                    <div class="prompt-static-block">## content ## <br>(此处将自动填充需要分析的员工和客户的对话内容)</div>
+    
+                    <div class="prompt-section-label">Analysis Steps (分析步骤)</div>
+                    <textarea id="promptSteps" class="prompt-textarea-small" oninput="autoResize(this); updatePromptPreview()">1.仔细阅读销售侧的会话内容，必须联系上下文分析判断。
+    2.具体的语义点定义如下，对每个语义点的定义进行细致研读，确保明确知晓命中该语义点所需的具体条件。</textarea>
+    
+                    <div class="prompt-section-label">Rule (质检标准 - 自动生成)</div>
+                    <div class="prompt-static-block">## rule ## <br>(此处将自动填充上方配置的质检标准项)</div>
+    
+                    <div class="prompt-section-label">Output Format (JSON 输出格式 - 自动生成)</div>
+                    <div class="prompt-preview config-prompt-preview" id="jsonOutputPreview"></div>
+                  </div>
+                </div>
+                <div class="modal-footer config-modal-footer">
+                  <button class="btn-primary" onclick="togglePromptModal(false)">完成配置</button>
+                </div>
+              </div>
+            </div>
+    
+            <div class="modal-overlay" id="feedbackModal" onclick="handleFeedbackModalOverlay(event)">
+              <div class="modal-content feedback-modal-content">
+                <div class="modal-body feedback-modal-body">
+                  <h3 class="feedback-modal-title" id="feedbackModalTitle">提示</h3>
+                  <p class="feedback-modal-copy" id="feedbackModalMessage"></p>
+                </div>
+                <div class="modal-footer config-modal-footer feedback-modal-footer" id="feedbackModalActions">
+                  <button class="btn-primary" type="button" onclick="resolveFeedbackModal(true)">确定</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="./page.js"></script>
+  </body>
+</html>
