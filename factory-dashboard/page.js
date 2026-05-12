@@ -1,7 +1,7 @@
 /* 厂端看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
 (function loadPageRuntime() {
-  const scripts = ["./factory-dashboard.js","../app-runtime.js"];
+  const scripts = ["../dashboard-filter-utils.js","./factory-dashboard.js","../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');
