@@ -144,12 +144,22 @@
         <section class="global-filter-bar" aria-label="全局筛选">
           <div class="store-filter-shell">
             <div class="gf-group store-filter-box">
+              <span class="gf-label">数据来源</span>
+              <div class="gf-tabs" id="gf-source">
+                <button class="gf-tab active" data-source="all">全部</button>
+                <button class="gf-tab" data-source="cloud">云外呼</button>
+                <button class="gf-tab" data-source="badge">工牌</button>
+              </div>
+            </div>
+            <div class="gf-group store-filter-box">
               <span class="gf-label">业务场景</span>
               <div class="gf-tabs" id="gf-scene">
                 <button class="gf-tab active" data-scene="all">全部</button>
-                <button class="gf-tab" data-scene="邀约">邀约</button>
-                <button class="gf-tab" data-scene="门店接待">门店接待</button>
-                <button class="gf-tab" data-scene="试乘试驾">试乘试驾</button>
+                <button class="gf-tab" data-scene="first_follow">首触跟进</button>
+                <button class="gf-tab" data-scene="invite_store">邀约进店</button>
+                <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
+                <button class="gf-tab" data-scene="store_reception">进店接待</button>
+                <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
               </div>
             </div>
             <div class="gf-group gf-time-group store-filter-box">

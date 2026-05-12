@@ -1,6 +1,20 @@
 /* Shared runtime extracted from index.html for independent menu pages. */
 
 function initStoreDashboardPage() {
+  const FILTER_UTILS = window.__dashboardFilterUtils;
+  const {
+    SOURCE_KEYS,
+    SCENE_KEYS,
+    getAllowedScenes,
+    getSceneLabel,
+    normalizeSceneSelection,
+    setSourceSelection,
+    toggleSceneSelection,
+    getLegacySceneBucket,
+    getInvitationSceneCount,
+    getSceneVolumeLabel
+  } = FILTER_UTILS;
+
 // ── 0. 录音数据库 & 播放器 ──────────────────────
   const RECORDING_DB = {
     'R-0312': {
@@ -760,7 +774,7 @@ function initStoreDashboardPage() {
   // 各场景对应的 KPI 显示列表
   // pairedWith: 关联指标，显示在同一单元格底部
   const SCENE_KPI_MAP = {
-    'all':      [
+    all:      [
       { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
       { key: 'reception',  pairedWith: 'drive_rate',   isBiz: true },
       { key: 'test_drive', pairedWith: 'order_rate',   isBiz: true },
@@ -768,19 +782,37 @@ function initStoreDashboardPage() {
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    '邀约':     [
+    first_follow: [
       { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    '门店接待': [
+    invite_store: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    schedule_confirm: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    cloud_multi: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    store_reception: [
       { key: 'reception', pairedWith: 'drive_rate',    isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    '试乘试驾': [
+    test_drive: [
       { key: 'test_drive', pairedWith: 'order_rate',   isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
@@ -822,21 +854,63 @@ function initStoreDashboardPage() {
 
   const STORE_KPI_SCENE_FACTORS = {
     all: {},
-    '邀约': {
-      invitation: 1.18,
-      reception: 0.54,
-      test_drive: 0.42,
-      valid_record: 0.84,
-      avg_duration: 0.88,
-      visit_rate: 5.2,
-      drive_rate: -4.6,
-      order_rate: -1.8,
-      cover_rate: -1.3,
-      hit_rate: 1.2,
-      qa_pass_rate: 0.6,
-      risk_rate: -0.8
+    first_follow: {
+      invitation: 0.96,
+      reception: 0.46,
+      test_drive: 0.32,
+      valid_record: 0.76,
+      avg_duration: 0.86,
+      visit_rate: -1.8,
+      drive_rate: -5.2,
+      order_rate: -2.4,
+      cover_rate: -1.1,
+      hit_rate: 0.8,
+      qa_pass_rate: 0.4,
+      risk_rate: -0.6
     },
-    '门店接待': {
+    invite_store: {
+      invitation: 1.08,
+      reception: 0.62,
+      test_drive: 0.44,
+      valid_record: 0.88,
+      avg_duration: 0.93,
+      visit_rate: 2.8,
+      drive_rate: -4.2,
+      order_rate: -1.7,
+      cover_rate: -0.4,
+      hit_rate: 1.3,
+      qa_pass_rate: 0.9,
+      risk_rate: -0.1
+    },
+    schedule_confirm: {
+      invitation: 0.82,
+      reception: 0.74,
+      test_drive: 0.52,
+      valid_record: 0.92,
+      avg_duration: 0.98,
+      visit_rate: 5.1,
+      drive_rate: -3.1,
+      order_rate: -1.1,
+      cover_rate: 0.6,
+      hit_rate: 1.7,
+      qa_pass_rate: 1.2,
+      risk_rate: 0.2
+    },
+    cloud_multi: {
+      invitation: 1.02,
+      reception: 0.58,
+      test_drive: 0.43,
+      valid_record: 0.85,
+      avg_duration: 0.91,
+      visit_rate: 2.1,
+      drive_rate: -4.4,
+      order_rate: -1.8,
+      cover_rate: -0.2,
+      hit_rate: 1.1,
+      qa_pass_rate: 0.7,
+      risk_rate: -0.2
+    },
+    store_reception: {
       invitation: 0.76,
       reception: 1.16,
       test_drive: 0.88,
@@ -850,7 +924,7 @@ function initStoreDashboardPage() {
       qa_pass_rate: 1.4,
       risk_rate: 0.2
     },
-    '试乘试驾': {
+    test_drive: {
       invitation: 0.58,
       reception: 0.82,
       test_drive: 1.26,
@@ -955,7 +1029,7 @@ function initStoreDashboardPage() {
   };
 
   const getStoreKpiJitter = (key, amplitude = 1) => {
-    const seed = `${currentRole}|${currentScene}|${currentTime}|${currentModel}|${storeTimeStartDate}|${storeTimeEndDate}|${key}`;
+    const seed = `${currentRole}|${currentSource}|${getEffectiveSceneKey()}|${currentTime}|${currentModel}|${storeTimeStartDate}|${storeTimeEndDate}|${key}`;
     let hash = 0;
     for (let i = 0; i < seed.length; i += 1) {
       hash = ((hash << 5) - hash) + seed.charCodeAt(i);
@@ -967,7 +1041,8 @@ function initStoreDashboardPage() {
 
   const getStoreCountFactor = (key) => {
     const roleFactor = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 1;
-    const sceneFactor = STORE_KPI_SCENE_FACTORS[currentScene]?.[key] ?? 1;
+    const sceneKey = getEffectiveSceneKey();
+    const sceneFactor = STORE_KPI_SCENE_FACTORS[sceneKey]?.[key] ?? 1;
     const modelFactor = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 1;
     const jitterFactor = 1 + getStoreKpiJitter(key, 0.055);
     return roleFactor * sceneFactor * modelFactor * jitterFactor;
@@ -977,7 +1052,8 @@ function initStoreDashboardPage() {
     const days = getStoreKpiRangeDays();
     const timeDelta = days <= 1 ? 0 : Math.min(4.2, Math.log2(days) * 0.72);
     const roleDelta = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 0;
-    const sceneDelta = STORE_KPI_SCENE_FACTORS[currentScene]?.[key] ?? 0;
+    const sceneKey = getEffectiveSceneKey();
+    const sceneDelta = STORE_KPI_SCENE_FACTORS[sceneKey]?.[key] ?? 0;
     const modelDelta = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 0;
     const jitterDelta = getStoreKpiJitter(`${key}-rate`, 0.85);
     return roleDelta + sceneDelta + modelDelta + timeDelta + jitterDelta;
@@ -1030,8 +1106,10 @@ function initStoreDashboardPage() {
   };
 
   const buildStoreFilteredKpiData = () => {
+    const sceneKey = getEffectiveSceneKey();
     const isDefaultFilter = currentRole === 'all'
-      && currentScene === 'all'
+      && currentSource === SOURCE_KEYS.all
+      && sceneKey === SCENE_KEYS.all
       && currentTime === '1'
       && currentModel === 'all';
 
@@ -1050,6 +1128,11 @@ function initStoreDashboardPage() {
       nextData[key].num = String(Math.max(minValue, Math.round(scaledValue)));
       Object.assign(nextData[key], getStoreKpiTrend(nextData[key].num, { key }));
     });
+
+    if (sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm) {
+      nextData.invitation.num = String(getInvitationSceneCount(nextData.invitation.num, sceneKey));
+      Object.assign(nextData.invitation, getStoreKpiTrend(nextData.invitation.num, { key: 'invitation' }));
+    }
 
     const avgDurationValue = clampStoreKpiValue(
       12 * getStoreCountFactor('avg_duration') + getStoreKpiJitter('avg-duration-minutes', 1.4),
@@ -1426,7 +1509,8 @@ function initStoreDashboardPage() {
 
   // ── 2. 全局状态 ──────────────────────────────
   let currentRole = "all";
-  let currentScene = "all";
+  let currentSource = SOURCE_KEYS.all;
+  let currentScenes = [SCENE_KEYS.all];
   let currentTime = "1";
   let currentModel = "all";
   let currentFilter = "all";
@@ -1473,6 +1557,14 @@ function initStoreDashboardPage() {
   setInterval(updateTime, 1000);
 
   const getStoreFilterLabel = (value, fallback = '全部') => value === 'all' ? fallback : value;
+  const getStoreSceneSelection = () => normalizeSceneSelection(currentSource, currentScenes);
+  const getEffectiveSceneKey = () => getStoreSceneSelection().effectiveSceneKey;
+  const getLegacySceneKey = () => getStoreSceneSelection().legacySceneBucket;
+  const getStoreSceneLabel = () => {
+    const selection = getStoreSceneSelection();
+    if (selection.isAllSelected) return '全场景';
+    return selection.activeScenes.map(getSceneLabel).join(' / ');
+  };
 
   const getStoreTimeLabel = () => {
     const option = storeTimeRangeOptions.find(item => item.key === currentTime);
@@ -1488,16 +1580,20 @@ function initStoreDashboardPage() {
     const scopeParts = [
       getStoreTimeLabel(),
       getStoreFilterLabel(currentRole, '全员'),
-      getStoreFilterLabel(currentScene, '全场景'),
+      getStoreSceneLabel(),
       getStoreFilterLabel(currentModel, '全车系')
     ];
     const scopeText = scopeParts.join(' · ');
 
+    const sceneKey = getEffectiveSceneKey();
     const sceneSummaryMap = {
       all: '全店接待整体平稳，服务态度与进店接待表现良好，但试驾邀约与竞品应对仍是主要短板。',
-      '邀约': '邀约链路的首触节奏较稳定，但部分顾问在明确到店时间、强化利益点和二次确认上执行不足。',
-      '门店接待': '门店接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
-      '试乘试驾': '试乘试驾环节体验介绍更充分，但试驾前场景铺垫和试驾后下订推进存在断点。'
+      first_follow: '首触跟进的开场需求确认整体稳定，但早段利益点铺垫仍偏弱。',
+      invite_store: '邀约进店场景的到店推进更关键，建议强化明确时间与到店收益表达。',
+      schedule_confirm: '排程确认更依赖时间承诺与到店前提醒，建议重点复盘确认节点。',
+      cloud_multi: '云外呼多个环节表现存在波动，建议按首触、邀约、排程三个节点拆开复盘。',
+      store_reception: '进店接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
+      test_drive: '试乘试驾环节体验介绍更充分，但试驾前场景铺垫和试驾后下订推进存在断点。'
     };
     const roleSummaryMap = {
       all: '建议店长围绕共性短板做集中复盘，并同步跟进高风险录音样本。',
@@ -1519,7 +1615,7 @@ function initStoreDashboardPage() {
       custom: '自定义时间范围内请结合活动节奏看转化变化，避免只用单日样本判断。'
     };
 
-    return `${scopeText}：${sceneSummaryMap[currentScene] || sceneSummaryMap.all}${roleSummaryMap[currentRole] || roleSummaryMap.all}${modelSummaryMap[currentModel] || modelSummaryMap.all}${timeSummaryMap[currentTime] || timeSummaryMap['1']}`;
+    return `${scopeText}：${sceneSummaryMap[sceneKey] || sceneSummaryMap.all}${roleSummaryMap[currentRole] || roleSummaryMap.all}${modelSummaryMap[currentModel] || modelSummaryMap.all}${timeSummaryMap[currentTime] || timeSummaryMap['1']}`;
   };
 
   const getStoreTeamSummaryPlaceholderHtml = () => `
@@ -1931,7 +2027,8 @@ function initStoreDashboardPage() {
     const grid = document.getElementById("hero-kpi-grid");
     if (!grid) return;
 
-    const kpiItems = SCENE_KPI_MAP[currentScene] || SCENE_KPI_MAP['all'];
+    const sceneKey = getEffectiveSceneKey();
+    const kpiItems = SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all;
     const currentKpiData = buildStoreFilteredKpiData();
     const metricCards = [];
     const singleCards = [];
@@ -2078,53 +2175,27 @@ grid.innerHTML = metricCards.join('');
   // ══════════════════════════════════════════════
   // 5. 人员→场景级联逻辑（v3 核心）
   // ══════════════════════════════════════════════
-  const updateSceneTabsState = () => {
+  const syncStoreSceneTabs = () => {
+    const sourceTabs = document.querySelectorAll('#gf-source .gf-tab');
     const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
+    const selection = getStoreSceneSelection();
+    const allowed = new Set(getAllowedScenes(currentSource));
 
-    if (currentRole === '邀约专员') {
-      // 邀约专员：只能选邀约，其他 disabled
-      sceneTabs.forEach(tab => {
-        const scene = tab.dataset.scene;
-        if (scene === '邀约') {
-          tab.classList.remove('disabled');
-          tab.classList.add('active');
-        } else {
-          tab.classList.add('disabled');
-          tab.classList.remove('active');
-        }
-      });
-      currentScene = '邀约';
-    } else if (currentRole === '销售顾问') {
-      // 销售顾问：可选全部/门店接待/试乘试驾，邀约 disabled，默认全部
-      sceneTabs.forEach(tab => {
-        const scene = tab.dataset.scene;
-        if (scene === '邀约') {
-          tab.classList.add('disabled');
-          tab.classList.remove('active');
-        } else {
-          tab.classList.remove('disabled');
-        }
-      });
-      // 如果当前选的是邀约，重置为全部
-      if (currentScene === '邀约') {
-        currentScene = 'all';
-      }
-      // 同步 active 状态
-      sceneTabs.forEach(tab => {
-        if (!tab.classList.contains('disabled')) {
-          tab.classList.toggle('active', tab.dataset.scene === currentScene);
-        }
-      });
-    } else {
-      // 全部人员：所有场景可选
-      sceneTabs.forEach(tab => {
-        tab.classList.remove('disabled');
-      });
-      // 同步 active 状态
-      sceneTabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.scene === currentScene);
-      });
-    }
+    sourceTabs.forEach((tab) => {
+      tab.classList.toggle('active', tab.dataset.source === currentSource);
+    });
+
+    sceneTabs.forEach((tab) => {
+      const scene = tab.dataset.scene;
+      const isAll = scene === SCENE_KEYS.all;
+      const isAllowed = isAll || allowed.has(scene);
+      const isActive = isAll
+        ? selection.isAllSelected
+        : (!selection.isAllSelected && selection.activeScenes.includes(scene));
+
+      tab.classList.toggle('disabled', !isAllowed);
+      tab.classList.toggle('active', isActive);
+    });
   };
 
   // ══════════════════════════════════════════════
@@ -2271,6 +2342,9 @@ grid.innerHTML = metricCards.join('');
     const advisorList = document.getElementById("advisor-list");
     if (!advisorList) return;
 
+    const sceneKey = getEffectiveSceneKey();
+    const legacySceneKey = getLegacySceneKey();
+
     // 按角色筛选
     let filteredData = [...advisorData];
     if (currentRole !== 'all') {
@@ -2294,19 +2368,20 @@ grid.innerHTML = metricCards.join('');
     const startIndex = (advisorPaginationState.page - 1) * advisorPaginationState.pageSize;
     const pagedData = sortedData.slice(startIndex, startIndex + advisorPaginationState.pageSize);
 
-    // 根据业务场景动态生成列
+    const getInvitationView = (advisor) => getInvitationSceneCount(advisor.invitation, sceneKey);
+
     let bizHeaders = [];
-    if (currentScene === '邀约') {
+    if (legacySceneKey === '邀约') {
       bizHeaders = [
         { label: "邀约录音数", key: "invitation", sortable: true },
         { label: "到店率", key: "visit_rate_col", sortable: false }
       ];
-    } else if (currentScene === '门店接待') {
+    } else if (sceneKey === SCENE_KEYS.storeReception) {
       bizHeaders = [
         { label: "接待录音数", key: "reception", sortable: true },
         { label: "试驾率", key: "drive_rate_col", sortable: false }
       ];
-    } else if (currentScene === '试乘试驾') {
+    } else if (sceneKey === SCENE_KEYS.testDrive) {
       bizHeaders = [
         { label: "试驾录音数", key: "test_drive", sortable: true },
         { label: "下订率", key: "order_rate_col", sortable: false }
@@ -2338,17 +2413,18 @@ grid.innerHTML = metricCards.join('');
 
     const buildRow = (a, rankIndex) => {
       let bizCells = '';
-      if (currentScene === '邀约') {
-        const vRate = a.reception > 0 ? ((a.reception / a.invitation * 100) || 0).toFixed(1) + '%' : '-';
+      if (legacySceneKey === '邀约') {
+        const invitationValue = getInvitationView(a);
+        const vRate = invitationValue > 0 ? ((a.reception / invitationValue * 100) || 0).toFixed(1) + '%' : '-';
         bizCells = `
-          <td><span class="advisor-metric-number">${a.invitation}</span></td>
+          <td><span class="advisor-metric-number">${invitationValue}</span></td>
           <td><span class="advisor-metric-rate">${vRate}</span></td>`;
-      } else if (currentScene === '门店接待') {
+      } else if (sceneKey === SCENE_KEYS.storeReception) {
         const dRate = a.reception > 0 ? ((a.test_drive / a.reception * 100) || 0).toFixed(1) + '%' : '-';
         bizCells = `
           <td><span class="advisor-metric-number">${a.reception}</span></td>
           <td><span class="advisor-metric-rate">${dRate}</span></td>`;
-      } else if (currentScene === '试乘试驾') {
+      } else if (sceneKey === SCENE_KEYS.testDrive) {
         const oRate = a.test_drive > 0 ? ((a.test_drive * 0.3 / a.test_drive * 100) || 0).toFixed(1) + '%' : '-';
         bizCells = `
           <td><span class="advisor-metric-number">${a.test_drive}</span></td>
@@ -3094,11 +3170,23 @@ grid.innerHTML = metricCards.join('');
 
   bindGlobalFilter("gf-role", "role", val => {
     currentRole = val;
-    updateSceneTabsState();
   });
 
-  bindGlobalFilter("gf-scene", "scene", val => {
-    currentScene = val;
+  document.getElementById('gf-source')?.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-source]');
+    if (!tab) return;
+    currentSource = tab.dataset.source;
+    currentScenes = setSourceSelection(currentSource);
+    syncStoreSceneTabs();
+    applyGlobalFilter();
+  });
+
+  document.getElementById('gf-scene')?.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-scene]');
+    if (!tab || tab.classList.contains('disabled')) return;
+    currentScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    syncStoreSceneTabs();
+    applyGlobalFilter();
   });
 
   bindGlobalFilter("gf-time", "time", val => {
@@ -3111,6 +3199,8 @@ grid.innerHTML = metricCards.join('');
       renderStoreDateControl();
     }
   });
+
+  syncStoreSceneTabs();
 
   // 车系下拉筛选
   const initStoreModelDropdown = () => {
@@ -3293,17 +3383,18 @@ grid.innerHTML = metricCards.join('');
   };
   const getStoreWeaknessContextDelta = (title = '') => {
     let delta = 0;
-    if (currentScene === '邀约') {
+    const legacySceneKey = getLegacySceneKey();
+    if (legacySceneKey === '邀约') {
       if (title.includes('试驾邀约')) delta += 5.2;
       if (title.includes('金融方案')) delta += 2.4;
       if (title.includes('购车时间')) delta += 1.8;
       if (title.includes('竞品对比')) delta -= 1.2;
-    } else if (currentScene === '门店接待') {
+    } else if (legacySceneKey === '门店接待') {
       if (title.includes('竞品对比')) delta += 2.8;
       if (title.includes('购车时间')) delta -= 3.4;
       if (title.includes('价格异议')) delta += 1.6;
       if (title.includes('试驾邀约')) delta -= 2.2;
-    } else if (currentScene === '试乘试驾') {
+    } else if (legacySceneKey === '试乘试驾') {
       if (title.includes('试驾邀约')) delta -= 4.8;
       if (title.includes('金融方案')) delta += 3.1;
       if (title.includes('竞品对比')) delta += 1.4;
@@ -3331,13 +3422,14 @@ grid.innerHTML = metricCards.join('');
   };
   const getStoreRiskContextDelta = (title = '') => {
     let delta = 0;
-    if (currentScene === '邀约') {
+    const legacySceneKey = getLegacySceneKey();
+    if (legacySceneKey === '邀约') {
       if (title.includes('贬低竞品')) delta += 1.6;
       if (title.includes('交车时间')) delta -= 0.8;
-    } else if (currentScene === '门店接待') {
+    } else if (legacySceneKey === '门店接待') {
       if (title.includes('交车时间')) delta += 2.1;
       if (title.includes('优惠方案')) delta += 1.4;
-    } else if (currentScene === '试乘试驾') {
+    } else if (legacySceneKey === '试乘试驾') {
       if (title.includes('贬低竞品')) delta += 1.2;
       if (title.includes('强制加装')) delta += 0.8;
     }
@@ -3925,8 +4017,10 @@ grid.innerHTML = metricCards.join('');
   };
 
   const getTeamEfficiencyDialScores = () => {
+    const sceneKey = getEffectiveSceneKey();
     const isDefaultFilter = currentRole === 'all'
-      && currentScene === 'all'
+      && currentSource === SOURCE_KEYS.all
+      && sceneKey === SCENE_KEYS.all
       && currentTime === '1'
       && currentModel === 'all';
 
@@ -3935,9 +4029,9 @@ grid.innerHTML = metricCards.join('');
     }
 
     const qualityDelta = getStoreRateDelta('qa_pass_rate');
-    const sceneDelta = currentScene === '邀约' ? -0.8
-      : currentScene === '门店接待' ? 1.1
-      : currentScene === '试乘试驾' ? 1.8
+    const sceneDelta = sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm || sceneKey === SCENE_KEYS.cloudMulti ? -0.8
+      : sceneKey === SCENE_KEYS.storeReception ? 1.1
+      : sceneKey === SCENE_KEYS.testDrive ? 1.8
       : 0;
     const roleDelta = currentRole === '销售顾问' ? 0.9
       : currentRole === '邀约专员' ? -0.4
@@ -4061,16 +4155,22 @@ grid.innerHTML = metricCards.join('');
 
     // Pick volume series & label based on current scene
     let volData, volLabel;
-    if (currentScene === '邀约') {
-      volData = d.invitation; volLabel = '邀约数';
-    } else if (currentScene === '门店接待') {
-      volData = d.reception; volLabel = '接待数';
-    } else if (currentScene === '试乘试驾') {
-      volData = d.test_drive; volLabel = '试驾数';
+    const sceneKey = getEffectiveSceneKey();
+    if (sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm) {
+      volData = d.invitation.map((value) => getInvitationSceneCount(value, sceneKey));
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.cloudMulti) {
+      volData = d.invitation;
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.storeReception) {
+      volData = d.reception;
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.testDrive) {
+      volData = d.test_drive;
+      volLabel = getSceneVolumeLabel(sceneKey);
     } else {
-      // all: sum 邀约数 + 试驾数 + 下订数
       volData = d.invitation.map((v, i) => v + d.test_drive[i] + d.order_count[i]);
-      volLabel = '总量';
+      volLabel = getSceneVolumeLabel(sceneKey);
     }
 
     // Update legend dynamically

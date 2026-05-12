@@ -1,5 +1,17 @@
 /* Generated from /Users/linxianxin/Downloads/厂端看板/factory-v2.* for native SPA route. */
 (function () {
+  const FILTER_UTILS = window.__dashboardFilterUtils;
+  const {
+    SOURCE_KEYS,
+    SCENE_KEYS,
+    getAllowedScenes,
+    normalizeSceneSelection,
+    setSourceSelection,
+    toggleSceneSelection,
+    getInvitationSceneCount,
+    getSceneVolumeLabel
+  } = FILTER_UTILS;
+
   const FACTORY_DASHBOARD_HTML = `<div class="main-tabs-bar sales-role-nav">
     <div class="main-tabs role-page-switch" role="tablist">
       <button class="main-tab role-switch-link active" role="tab" data-tab="sop-execution" id="tab-sop-execution" aria-selected="true" aria-controls="panel-sop-execution">
@@ -42,12 +54,22 @@
         <div class="store-date-control-slot" id="store-date-control"></div>
       </div>
       <div class="gf-group store-filter-box">
+        <span class="gf-label">数据来源</span>
+        <div class="gf-tabs" id="gf-source">
+          <button class="gf-tab active" data-source="all">全部</button>
+          <button class="gf-tab" data-source="cloud">云外呼</button>
+          <button class="gf-tab" data-source="badge">工牌</button>
+        </div>
+      </div>
+      <div class="gf-group store-filter-box">
         <span class="gf-label">业务场景</span>
         <div class="gf-tabs" id="gf-scene">
           <button class="gf-tab active" data-scene="all">全部</button>
-          <button class="gf-tab" data-scene="邀约">邀约</button>
-          <button class="gf-tab" data-scene="门店接待">门店接待</button>
-          <button class="gf-tab" data-scene="试乘试驾">试乘试驾</button>
+          <button class="gf-tab" data-scene="first_follow">首触跟进</button>
+          <button class="gf-tab" data-scene="invite_store">邀约进店</button>
+          <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
+          <button class="gf-tab" data-scene="store_reception">进店接待</button>
+          <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
         </div>
       </div>
       <div class="gf-divider"></div>
@@ -397,7 +419,7 @@
 
   // 各场景对应的 KPI 显示列表
   const SCENE_KPI_MAP = {
-    'all': [
+    all: [
       { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
       { key: 'reception',  pairedWith: 'drive_rate',   isBiz: true },
       { key: 'test_drive', pairedWith: 'order_rate',   isBiz: true },
@@ -405,26 +427,37 @@
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    'sales_combo': [
-      { key: 'reception',  pairedWith: 'drive_rate',   isBiz: true },
-      { key: 'test_drive', pairedWith: 'order_rate',   isBiz: true },
-      { key: 'avg_duration', pairedWith: 'hit_rate' },
-      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
-      { key: 'risk_record', pairedWith: 'risk_rate' }
-    ],
-    '邀约': [
+    first_follow: [
       { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    '门店接待': [
+    invite_store: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    schedule_confirm: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    cloud_multi: [
+      { key: 'invitation', pairedWith: 'visit_rate',   isBiz: true },
+      { key: 'avg_duration', pairedWith: 'hit_rate' },
+      { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+      { key: 'risk_record', pairedWith: 'risk_rate' }
+    ],
+    store_reception: [
       { key: 'reception', pairedWith: 'drive_rate',    isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
       { key: 'risk_record', pairedWith: 'risk_rate' }
     ],
-    '试乘试驾': [
+    test_drive: [
       { key: 'test_drive', pairedWith: 'order_rate',   isBiz: true },
       { key: 'avg_duration', pairedWith: 'hit_rate' },
       { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
@@ -496,7 +529,8 @@
   let currentZone   = 'all';   // 战区
   let currentStore  = 'all';   // 门店
   let currentRole   = 'all';   // 人员角色
-  let currentScene  = 'all';   // 业务场景
+  let currentSource = SOURCE_KEYS.all;
+  let currentScenes = [SCENE_KEYS.all];
   let currentBrand  = '传祺';   // SOP策略洞察品牌
   let currentQcScene = 'all';  // SOP策略洞察质检场景
   let currentTime   = '1';     // 时间: 1=昨日, 7=近7天, 15=近半月, 30=近1月, custom
@@ -526,7 +560,6 @@
     'sop-loss-miss': 0,
     'sop-risk-compare': 0
   };
-  const SALES_COMBO_SCENE = 'sales_combo';
 
   // ══════════════════════════════════════════════════
   // 4. 顶部时间渲染
@@ -1144,65 +1177,52 @@
     });
   };
 
-  // ── 7c. 人员→场景级联 ───────────────────────────
-  const updateSceneTabsState = () => {
+  const syncFactorySceneTabs = () => {
+    const sourceTabs = document.querySelectorAll('#gf-source .gf-tab');
     const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
+    const selection = getFactorySceneSelection();
+    const allowed = new Set(getAllowedScenes(currentSource));
 
-    if (currentRole === '邀约专员') {
-      sceneTabs.forEach(tab => {
-        const scene = tab.dataset.scene;
-        if (scene === '邀约') {
-          tab.classList.remove('disabled');
-          tab.classList.add('active');
-        } else {
-          tab.classList.add('disabled');
-          tab.classList.remove('active');
-        }
-      });
-      currentScene = '邀约';
-    } else if (currentRole === '销售顾问') {
-      currentScene = ['门店接待', '试乘试驾'].includes(currentScene) ? currentScene : SALES_COMBO_SCENE;
-      sceneTabs.forEach(tab => {
-        const scene = tab.dataset.scene;
-        if (scene === '邀约') {
-          tab.classList.add('disabled');
-          tab.classList.remove('active');
-        } else {
-          tab.classList.remove('disabled');
-        }
-      });
-      sceneTabs.forEach(tab => {
-        if (tab.classList.contains('disabled')) return;
-        const scene = tab.dataset.scene;
-        const isComboActive = currentScene === SALES_COMBO_SCENE && (scene === '门店接待' || scene === '试乘试驾');
-        tab.classList.toggle('active', isComboActive || scene === currentScene);
-      });
-    } else {
-      if (currentScene === SALES_COMBO_SCENE) currentScene = 'all';
-      sceneTabs.forEach(tab => tab.classList.remove('disabled'));
-      sceneTabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.scene === currentScene);
-      });
-    }
+    sourceTabs.forEach((tab) => {
+      tab.classList.toggle('active', tab.dataset.source === currentSource);
+    });
+
+    sceneTabs.forEach((tab) => {
+      const scene = tab.dataset.scene;
+      const isAll = scene === SCENE_KEYS.all;
+      const isAllowed = isAll || allowed.has(scene);
+      const isActive = isAll
+        ? selection.isAllSelected
+        : (!selection.isAllSelected && selection.activeScenes.includes(scene));
+
+      tab.classList.toggle('disabled', !isAllowed);
+      tab.classList.toggle('active', isActive);
+    });
   };
 
-  const getEffectiveSceneKey = () => {
-    if (currentRole === '邀约专员') return '邀约';
-    if (currentRole === '销售顾问' && currentScene === SALES_COMBO_SCENE) return SALES_COMBO_SCENE;
-    return currentScene;
-  };
+  const getFactorySceneSelection = () => normalizeSceneSelection(currentSource, currentScenes);
+  const getEffectiveSceneKey = () => getFactorySceneSelection().effectiveSceneKey;
 
   // 绑定人员筛选
   bindGlobalFilter("gf-role", "role", val => {
     currentRole = val;
-    if (currentRole === '销售顾问') currentScene = SALES_COMBO_SCENE;
-    updateSceneTabsState();
   });
 
-  // 绑定场景筛选
-  bindGlobalFilter("gf-scene", "scene", val => {
-    currentScene = currentRole === '销售顾问' && val === 'all' ? SALES_COMBO_SCENE : val;
-    updateSceneTabsState();
+  document.getElementById('gf-source')?.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-source]');
+    if (!tab) return;
+    currentSource = tab.dataset.source;
+    currentScenes = setSourceSelection(currentSource);
+    syncFactorySceneTabs();
+    applyGlobalFilter();
+  });
+
+  document.getElementById('gf-scene')?.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-scene]');
+    if (!tab || tab.classList.contains('disabled')) return;
+    currentScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    syncFactorySceneTabs();
+    applyGlobalFilter();
   });
 
   bindGlobalFilter("gf-brand", "brand", val => {
@@ -1543,14 +1563,34 @@
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const buildFactoryFilteredKpiData = () => {
+    const sceneKey = getEffectiveSceneKey();
+    const nextData = Object.fromEntries(Object.entries(ALL_KPI_DATA).map(([key, value]) => [key, { ...value }]));
+
+    if (sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm) {
+      nextData.invitation.num = String(getInvitationSceneCount(nextData.invitation.num, sceneKey));
+      nextData.visit_rate.num = sceneKey === SCENE_KEYS.firstFollow ? '29.8' : sceneKey === SCENE_KEYS.inviteStore ? '36.4' : '43.2';
+      nextData.hit_rate.num = sceneKey === SCENE_KEYS.firstFollow ? '76' : sceneKey === SCENE_KEYS.inviteStore ? '79' : '82';
+      nextData.qa_pass_rate.num = sceneKey === SCENE_KEYS.firstFollow ? '78' : sceneKey === SCENE_KEYS.inviteStore ? '81' : '84';
+      nextData.invitation.trend = sceneKey === SCENE_KEYS.firstFollow ? '↑1' : sceneKey === SCENE_KEYS.inviteStore ? '↑2' : '↑1';
+      nextData.visit_rate.trend = sceneKey === SCENE_KEYS.firstFollow ? '↑3%' : sceneKey === SCENE_KEYS.inviteStore ? '↑5%' : '↑6%';
+    } else if (sceneKey === SCENE_KEYS.cloudMulti) {
+      nextData.invitation.num = String(nextData.invitation.num);
+      nextData.visit_rate.num = '35.4';
+      nextData.visit_rate.trend = '↑4%';
+    }
+
+    return nextData;
+  };
+
   const renderHeroKPI = () => {
     const grid = document.getElementById("hero-kpi-grid");
     if (!grid) return;
 
     const sceneKey = getEffectiveSceneKey();
     const isContributionTab = currentTab === 'sop-improvement';
-    const kpiData = isContributionTab ? buildContributionKPIData() : ALL_KPI_DATA;
-    const kpiItems = isContributionTab ? SOP_CONTRIBUTION_KPI_MAP : (SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP['all']);
+    const kpiData = isContributionTab ? buildContributionKPIData() : buildFactoryFilteredKpiData();
+    const kpiItems = isContributionTab ? SOP_CONTRIBUTION_KPI_MAP : (SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all);
     const metricCards = [];
     const singleCards = [];
     let lastWasSummaryGroup = false;
@@ -2147,17 +2187,21 @@
     // 根据场景选择业务量数据
     let volData, volLabel;
     const sceneKey = getEffectiveSceneKey();
-    if (sceneKey === '邀约') {
-      volData = d.invitation; volLabel = '邀约数';
-    } else if (sceneKey === '门店接待') {
-      volData = d.reception; volLabel = '接待数';
-    } else if (sceneKey === '试乘试驾') {
-      volData = d.test_drive; volLabel = '试驾数';
-    } else if (sceneKey === SALES_COMBO_SCENE) {
-      volData = d.reception.map((value, idx) => value + (d.test_drive[idx] || 0));
-      volLabel = '接待/试驾量';
+    if (sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm) {
+      volData = d.invitation.map((value) => getInvitationSceneCount(value, sceneKey));
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.cloudMulti) {
+      volData = d.invitation;
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.storeReception) {
+      volData = d.reception;
+      volLabel = getSceneVolumeLabel(sceneKey);
+    } else if (sceneKey === SCENE_KEYS.testDrive) {
+      volData = d.test_drive;
+      volLabel = getSceneVolumeLabel(sceneKey);
     } else {
-      volData = d.validRec; volLabel = '有效录音量';
+      volData = d.validRec;
+      volLabel = '有效录音量';
     }
 
     // 动态更新图例
@@ -5340,9 +5384,9 @@
   // ══════════════════════════════════════════════════
   // 初始渲染
   // ══════════════════════════════════════════════════
+  syncFactorySceneTabs();
   updateFactoryHeroIdentity();
   renderHeroKPI();
   switchTab(currentTab);
-
-  };
+}
 })();
