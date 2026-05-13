@@ -4126,7 +4126,7 @@ grid.innerHTML = metricCards.join('');
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
       } else {
-        nationalDiffVal.textContent = `VS.全国 ${diffText}`;
+        nationalDiffVal.textContent = `vs大区 ${diffText}`;
       }
       nationalDiffVal.classList.toggle('up', nationalDiff >= 0);
       nationalDiffVal.classList.toggle('down', nationalDiff < 0);
@@ -4177,8 +4177,8 @@ grid.innerHTML = metricCards.join('');
     const legendEl = document.getElementById("chart-legend");
     if (legendEl) {
       legendEl.innerHTML = `
-        <span><i class="legend-dot" style="background:#2563eb"></i>门店合格率</span>
-        <span><i class="legend-dot" style="background:#94a3b8"></i>大区合格率</span>
+        <span><i class="legend-dot" style="background:#2563eb"></i>门店质检合格率</span>
+        <span><i class="legend-dot" style="background:#94a3b8"></i>大区质检合格率</span>
         <span><i class="legend-dot" style="background:rgba(37,99,235,0.15)"></i>${volLabel}</span>
       `;
     }
@@ -4200,8 +4200,8 @@ grid.innerHTML = metricCards.join('');
       storeAverageRate: d.zoneAvg,
       recordingVolume: volData,
       tooltipLabels: {
-        primary: '门店合格率',
-        average: '大区合格率',
+        primary: '门店质检合格率',
+        average: '大区质检合格率',
         volume: volLabel
       },
       tooltipColors: {
@@ -4587,7 +4587,7 @@ grid.innerHTML = metricCards.join('');
           label: '线索管理',
           eyebrow: '03 / Customer Detail',
           title: '客户详情',
-          desc: '新版客户详情整合了客户级别、客户标签、沟通表现评分与经营建议，让销售经理能更快完成判断与接续跟进。',
+          desc: '客户详情整合该客户在各个门店全生命周期的旅程表现，形成完整的用户画像。',
           noteTitle: '排版策略',
           noteText: '新版采用“左侧主信息流 + 右侧经营侧卡片”的排版，把评分、标签和评级总结都收束进更稳定的阅读路径。',
           userName: '销售经理 · 刘青',
@@ -7234,7 +7234,17 @@ grid.innerHTML = metricCards.join('');
           }
         })
 
-        return Array.from(customerMap.values()).sort((left, right) => right.aggregateLatestTime - left.aggregateLatestTime)
+        return Array.from(customerMap.values()).map((item) => {
+          if (item.customerName !== '郑昱辰') {
+            return item
+          }
+
+          return {
+            ...item,
+            aggregateLeadCount: 3,
+            aggregateStoreCount: 3
+          }
+        }).sort((left, right) => right.aggregateLatestTime - left.aggregateLatestTime)
       }
 
       function getDisplayedLeadRecords(records = getFilteredLeadRecords()) {
@@ -9641,8 +9651,8 @@ grid.innerHTML = metricCards.join('');
         customerStatus: '已下定',
         store: '上海浦东门店',
         lastContact: '2026-03-15 10:00',
-        aggregateLeadCount: 5,
-        aggregateStoreCount: 2
+        aggregateLeadCount: 3,
+        aggregateStoreCount: 3
       }
       let customerDetailSelection = { ...customerDetailDefaultSelection }
       const salesLeadPhones = {
@@ -9688,13 +9698,13 @@ grid.innerHTML = metricCards.join('');
           store: storeCountText,
           customer: safeSelection.customerName,
           customerStatus: safeSelection.customerStatus,
-          subtitle: `${safeSelection.customerPhone} · 最近联系 ${safeSelection.lastContact} · 关联 ${safeSelection.aggregateLeadCount} 条线索 · 涉及 ${safeSelection.aggregateStoreCount} 家门店`,
+          subtitle: `${safeSelection.customerPhone} · 关联 ${safeSelection.aggregateLeadCount} 条线索 · 涉及 ${safeSelection.aggregateStoreCount} 家门店`,
           currentStoreTitle: `本门店评估 (${safeSelection.store})`,
           currentStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
           otherStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
-          currentStoreBadge: `${safeSelection.store}（本店）`,
+          currentStoreBadge: safeSelection.store,
           singleStoreLabel: `${safeSelection.store.replace(/门店$/, '')}<span class="customer-intention-scope">(单店视角)</span>`,
-          mergedProfile: `该客户最近联系时间为 ${safeSelection.lastContact}，当前汇总 ${safeSelection.aggregateLeadCount} 条线索、涉及 ${safeSelection.aggregateStoreCount} 家门店。<strong>联合逼单侧重点：</strong>结合跨店历史触达信息统一整理关注点，围绕试驾体验、价格顾虑与金融方案做一致性跟进。`
+          mergedProfile: `有两个孩子、重视乘坐舒适性与价格方案的高意向客户，后续应围绕试驾体验、空间优势、金融免息和置换补贴做一致性跟进。`
         }
       }
 
@@ -9710,23 +9720,12 @@ grid.innerHTML = metricCards.join('');
           }
         }
 
-        const setHtml = (selector, value) => {
-          const element = pageHost.querySelector(selector)
-          if (element && value) {
-            element.innerHTML = value
-          }
-        }
-
-        setText('#customerDetailLeadId', `Lead ID: ${payload.leadId}`)
-        setText('#customerDetailStore', `门店: ${payload.store}`)
         setText('#customerDetailHeroTitle', payload.customer)
         setText('#customerDetailHeroSubtitle', payload.subtitle)
         setText('#customerDetailCurrentStoreTitle', payload.currentStoreTitle)
         setText('#customerDetailCurrentStoreStatus', payload.currentStoreStatus)
         setText('#customerDetailOtherStoreStatus', payload.otherStoreStatus)
         setText('#customerDetailCurrentStoreBadgeLabel', payload.currentStoreBadge)
-        setHtml('#customerDetailSingleStoreLabel', payload.singleStoreLabel)
-        setHtml('#customerDetailMergedProfileContent', payload.mergedProfile)
 
         const statusNode = pageHost.querySelector('#customerDetailHeroStatus')
         if (statusNode) {
@@ -9735,8 +9734,87 @@ grid.innerHTML = metricCards.join('');
         }
       }
 
+      function initCustomerJourneyFilter() {
+        const board = pageHost.querySelector('.customer-journey-board')
+        const buttons = Array.from(pageHost.querySelectorAll('[data-customer-journey-filter]'))
+        const items = Array.from(pageHost.querySelectorAll('[data-customer-journey-store]'))
+
+        if (!board || buttons.length === 0 || items.length === 0) {
+          return
+        }
+
+        const applyFilter = (filter) => {
+          const safeFilter = filter || 'all'
+
+          buttons.forEach((button) => {
+            const isActive = button.dataset.customerJourneyFilter === safeFilter
+            button.classList.toggle('is-active', isActive)
+            button.setAttribute('aria-pressed', String(isActive))
+          })
+
+          items.forEach((item) => {
+            const shouldHide = safeFilter !== 'all' && item.dataset.customerJourneyStore !== safeFilter
+            item.hidden = shouldHide
+          })
+
+          board.classList.toggle('is-filtered', safeFilter !== 'all')
+        }
+
+        buttons.forEach((button) => {
+          button.addEventListener('click', () => {
+            applyFilter(button.dataset.customerJourneyFilter)
+          })
+        })
+
+        applyFilter('all')
+      }
+
+      function initCustomerHeroJourneyToggle() {
+        const journeyList = pageHost.querySelector('.customer-hero-journeys')
+        if (!journeyList) {
+          return
+        }
+
+        const rows = Array.from(journeyList.querySelectorAll(':scope > .customer-hero-journey-row'))
+        const moreWrap = journeyList.querySelector('.customer-hero-more')
+        const moreButton = journeyList.querySelector('.customer-hero-more-btn')
+        const moreCopy = journeyList.querySelector('.customer-hero-more-copy')
+        const moreCount = journeyList.querySelector('.customer-hero-more-count')
+
+        if (!moreWrap || !moreButton || rows.length <= 2) {
+          journeyList.classList.remove('has-extra', 'is-collapsed')
+          if (moreWrap) {
+            moreWrap.hidden = true
+          }
+          return
+        }
+
+        journeyList.classList.add('has-extra', 'is-collapsed')
+        moreWrap.hidden = false
+
+        const updateToggle = () => {
+          const isCollapsed = journeyList.classList.contains('is-collapsed')
+          moreButton.setAttribute('aria-expanded', String(!isCollapsed))
+          if (moreCopy) {
+            moreCopy.textContent = isCollapsed ? '展开查看更多' : '收起'
+          }
+          if (moreCount) {
+            moreCount.textContent = isCollapsed ? `共 ${rows.length} 家门店` : ''
+          }
+        }
+
+        moreButton.addEventListener('click', () => {
+          journeyList.classList.toggle('is-collapsed')
+          updateToggle()
+        })
+
+        updateToggle()
+      }
+
       function initCustomerDetailPage() {
         applyCustomerDetailPayload(buildCustomerDetailPayload())
+        initCustomerJourneyFilter()
+        initCustomerHeroJourneyToggle()
       }
 
       function getSalesLeadCollection(role) {
