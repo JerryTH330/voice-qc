@@ -3753,7 +3753,7 @@ grid.innerHTML = metricCards.join('');
       orgPath: `${r.orgPath || advisorOrgMap[r.advisor] || r.advisor}-${r.customer || `${r.advisor || '顾问'}相关客户`}`
     }));
 
-    storeRecordingLibraryState = { type, issue, records, query: '', page: 1 };
+    storeRecordingLibraryState = { type, issue, records, query: '', filterType: 'advisor', page: 1 };
 
     const overlay = document.createElement('div');
     overlay.id = 'issue-recording-library-overlay';
@@ -3764,7 +3764,7 @@ grid.innerHTML = metricCards.join('');
           <div>
             <div class="recording-library-eyebrow">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}</div>
             <h2 id="issue-recording-library-title">${issue.title}</h2>
-            <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持搜索顾问、门店、录音编号。</p>
+            <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。</p>
           </div>
           <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
         </div>
@@ -3775,7 +3775,15 @@ grid.innerHTML = metricCards.join('');
         <div class="recording-library-tools">
           <label class="recording-library-search">
             <span>搜索</span>
-            <input id="issue-recording-library-search" type="search" placeholder="输入顾问、门店、录音编号" autocomplete="off">
+            <div class="recording-library-filter-control">
+              <select id="issue-recording-library-filter-type" aria-label="选择筛选字段">
+                <option value="advisor">按销售姓名</option>
+                <option value="customer">按客户姓名</option>
+                <option value="date">按日期</option>
+                <option value="id">按录音ID</option>
+              </select>
+              <input id="issue-recording-library-search" type="search" placeholder="输入销售姓名" autocomplete="off">
+            </div>
           </label>
         </div>
         <div class="recording-library-result-row">
@@ -3793,12 +3801,33 @@ grid.innerHTML = metricCards.join('');
     document.body.appendChild(overlay);
 
     const searchInput = document.getElementById('issue-recording-library-search');
+    const filterSelect = document.getElementById('issue-recording-library-filter-type');
+    const updateSearchPlaceholder = () => {
+      const placeholderMap = {
+        advisor: '输入销售姓名',
+        customer: '输入客户姓名',
+        date: '输入日期，如 3-25',
+        id: '输入录音ID'
+      };
+      if (searchInput) {
+        searchInput.placeholder = placeholderMap[storeRecordingLibraryState?.filterType] || '输入筛选关键词';
+      }
+    };
+    filterSelect?.addEventListener('change', (event) => {
+      storeRecordingLibraryState.filterType = event.target.value;
+      storeRecordingLibraryState.query = '';
+      storeRecordingLibraryState.page = 1;
+      if (searchInput) searchInput.value = '';
+      updateSearchPlaceholder();
+      renderStoreRecordingLibraryList();
+    });
     searchInput?.addEventListener('input', (event) => {
       storeRecordingLibraryState.query = event.target.value;
       storeRecordingLibraryState.page = 1;
       renderStoreRecordingLibraryList();
     });
 
+    updateSearchPlaceholder();
     renderStoreRecordingLibraryList();
     setTimeout(() => searchInput?.focus(), 0);
   };
@@ -3811,18 +3840,22 @@ grid.innerHTML = metricCards.join('');
 
   const renderStoreRecordingLibraryList = () => {
     if (!storeRecordingLibraryState) return;
-    const { records, query, page } = storeRecordingLibraryState;
+    const { records, query, filterType, page } = storeRecordingLibraryState;
     const listEl = document.getElementById('issue-recording-library-list');
     const resultEl = document.getElementById('issue-recording-library-result');
     const loadMoreBtn = document.getElementById('issue-recording-library-more');
     if (!listEl || !resultEl || !loadMoreBtn) return;
 
     const PAGE_SIZE = 10;
-    const filtered = query
-      ? records.filter(r =>
-          (r.advisor || '').includes(query) ||
-          (r.id || '').includes(query) ||
-          (r.time || '').includes(query))
+    const normalizedQuery = String(query || '').trim();
+    const getFilterTarget = (record) => {
+      if (filterType === 'customer') return record.customer || '';
+      if (filterType === 'date') return record.time || '';
+      if (filterType === 'id') return record.id || '';
+      return record.advisor || '';
+    };
+    const filtered = normalizedQuery
+      ? records.filter(r => String(getFilterTarget(r)).includes(normalizedQuery))
       : records;
 
     const total = filtered.length;
@@ -12369,6 +12402,7 @@ grid.innerHTML = metricCards.join('');
           totalPeople: SALES_REVIEW_TOTAL_PEOPLE,
           records,
           query: '',
+          filterType: 'customer',
           page: 1
         }
 
@@ -12381,7 +12415,7 @@ grid.innerHTML = metricCards.join('');
               <div>
                 <div class="recording-library-eyebrow">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}</div>
                 <h2 id="issue-recording-library-title">${issue.title}</h2>
-                <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持搜索顾问、门店、录音编号。</p>
+                <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按客户姓名、日期、录音ID筛选。</p>
               </div>
               <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeSalesReviewRecordingLibrary()">×</button>
             </div>
@@ -12392,7 +12426,14 @@ grid.innerHTML = metricCards.join('');
             <div class="recording-library-tools">
               <label class="recording-library-search">
                 <span>搜索</span>
-                <input id="issue-recording-library-search" type="search" placeholder="输入顾问、门店、录音编号" autocomplete="off">
+                <div class="recording-library-filter-control">
+                  <select id="issue-recording-library-filter-type" aria-label="选择筛选字段">
+                    <option value="customer">按客户姓名</option>
+                    <option value="date">按日期</option>
+                    <option value="id">按录音ID</option>
+                  </select>
+                  <input id="issue-recording-library-search" type="search" placeholder="输入客户姓名" autocomplete="off">
+                </div>
               </label>
             </div>
             <div class="recording-library-result-row">
@@ -12410,6 +12451,25 @@ grid.innerHTML = metricCards.join('');
         document.body.appendChild(overlay)
 
         const searchInput = document.getElementById('issue-recording-library-search')
+        const filterSelect = document.getElementById('issue-recording-library-filter-type')
+        const updateSearchPlaceholder = () => {
+          const placeholderMap = {
+            customer: '输入客户姓名',
+            date: '输入日期，如 03-20',
+            id: '输入录音ID'
+          }
+          if (searchInput) {
+            searchInput.placeholder = placeholderMap[salesReviewRecordingLibraryState?.filterType] || '输入筛选关键词'
+          }
+        }
+        filterSelect?.addEventListener('change', (event) => {
+          salesReviewRecordingLibraryState.filterType = event.target.value
+          salesReviewRecordingLibraryState.query = ''
+          salesReviewRecordingLibraryState.page = 1
+          if (searchInput) searchInput.value = ''
+          updateSearchPlaceholder()
+          renderSalesReviewRecordingLibraryList()
+        })
         searchInput?.addEventListener('input', (event) => {
           salesReviewRecordingLibraryState.query = event.target.value
           salesReviewRecordingLibraryState.page = 1
@@ -12422,6 +12482,7 @@ grid.innerHTML = metricCards.join('');
           renderSalesReviewRecordingLibraryList()
         })
 
+        updateSearchPlaceholder()
         renderSalesReviewRecordingLibraryList()
         window.setTimeout(() => searchInput?.focus(), 0)
       }
@@ -12437,7 +12498,7 @@ grid.innerHTML = metricCards.join('');
           return
         }
 
-        const { records, query, page } = salesReviewRecordingLibraryState
+        const { records, query, filterType, page } = salesReviewRecordingLibraryState
         const listEl = document.getElementById('issue-recording-library-list')
         const resultEl = document.getElementById('issue-recording-library-result')
         const loadMoreBtn = document.getElementById('issue-recording-library-more')
@@ -12447,13 +12508,13 @@ grid.innerHTML = metricCards.join('');
 
         const PAGE_SIZE = 10
         const normalizedQuery = String(query || '').trim()
+        const getFilterTarget = (record) => {
+          if (filterType === 'date') return record.time || ''
+          if (filterType === 'id') return record.id || ''
+          return record.customer || ''
+        }
         const filtered = normalizedQuery
-          ? records.filter((record) =>
-              (record.advisor || '').includes(normalizedQuery)
-              || (record.orgPath || '').includes(normalizedQuery)
-              || (record.id || '').includes(normalizedQuery)
-              || (record.time || '').includes(normalizedQuery)
-            )
+          ? records.filter((record) => String(getFilterTarget(record)).includes(normalizedQuery))
           : records
 
         const total = filtered.length
