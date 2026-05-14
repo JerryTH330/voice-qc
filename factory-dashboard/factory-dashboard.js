@@ -166,8 +166,8 @@
                 </div>
                 <div class="summary-list">
                   <div class="summary-item success" id="sop-summary-trend"><strong id="sop-summary-trend-title">优势发掘</strong><span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span></div>
-                  <div class="summary-item warning" id="sop-summary-weakness"><strong>短板集中</strong><span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span></div>
-                  <div class="summary-item danger" id="sop-summary-risk"><strong>风险需控</strong><span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span></div>
+                  <div class="summary-item warning" id="sop-summary-weakness"><strong>短板改善</strong><span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span></div>
+                  <div class="summary-item danger" id="sop-summary-risk"><strong>风险管控</strong><span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span></div>
                 </div>
               </div>
             </section>
@@ -194,35 +194,19 @@
             <div class="card-header">
               <div>
                 <div class="card-title">录音复盘</div>
-                <div class="card-sub">邀约结果总评与关键转折分析</div>
+                <div class="card-sub">按规则定位 TOP/BOT 组织表现</div>
               </div>
             </div>
             <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
-              <button type="button" class="issue-insight-tab active" data-issue-insight-tab="weakness" role="tab" aria-selected="true">待改善短板TOP5</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势发掘TOP5</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
+              <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="advantage" role="tab" aria-selected="false">优势缺陷识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
             </div>
             <div class="issue-detail-section">
-              <section class="track issue-detail-card issue-detail-weakness active" id="detail-weakness" role="tabpanel" aria-label="短板改善">
+              <section class="track issue-detail-card active" id="detail-rule-analysis" role="tabpanel" aria-label="规则命中分析">
                 <div class="store-section-content issue-detail-content">
                   <div class="issue-detail-pad">
-                    <div id="weakness-chart" class="issue-list"></div>
-                  </div>
-                </div>
-              </section>
-
-              <section class="track issue-detail-card issue-detail-strength" id="detail-strength" role="tabpanel" aria-label="优势发掘" hidden>
-                <div class="store-section-content issue-detail-content">
-                  <div class="issue-detail-pad">
-                    <div id="strength-chart" class="issue-list"></div>
-                  </div>
-                </div>
-              </section>
-
-              <section class="track issue-detail-card issue-detail-risk" id="detail-risk" role="tabpanel" aria-label="风险命中" hidden>
-                <div class="store-section-content issue-detail-content">
-                  <div class="issue-detail-pad">
-                    <div id="risk-chart" class="issue-list"></div>
+                    <div id="issue-rule-analysis-root" class="issue-rule-analysis-root"></div>
                   </div>
                 </div>
               </section>
@@ -885,6 +869,7 @@
 
   const commitFactoryOrganizationFilter = (path) => {
     applyFactoryOrgPath(path);
+    issueRuleAnalysisState.path = [];
     factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
     factoryOrgMenuState.searchQuery = '';
     factoryOrgMenuState.searchActive = false;
@@ -4695,6 +4680,367 @@
     ]
   };
 
+  const makeIssueRule = (id, name, category, rate, sampleCount) => ({
+    id,
+    name,
+    category,
+    rate,
+    sampleCount,
+    hitCount: Math.round(sampleCount * rate / 100)
+  });
+
+  const ISSUE_RULE_TABS = {
+    sop: {
+      label: 'SOP 质检分析',
+      metricLabel: '命中率',
+      countLabel: '命中/样本',
+      emptyText: '暂无匹配 SOP 规则',
+      topTitle: '表现最好 TOP5',
+      bottomTitle: '表现待提升 BOT5',
+      rules: [
+        makeIssueRule('sop-compare-model', '对比车型', '需求确认', 78, 1280),
+        makeIssueRule('sop-intent-model', '意向车型', '需求确认', 74, 1280),
+        makeIssueRule('sop-rebuy', '增换购情况', '需求确认', 67, 1180),
+        makeIssueRule('sop-concern', '购车关注点', '需求确认', 63, 1180),
+        makeIssueRule('sop-wechat', '添加微信要求', '留资承接', 61, 1120),
+        makeIssueRule('sop-buy-time', '计划购车时间', '需求确认', 58, 1090),
+        makeIssueRule('sop-test-drive-time', '试乘试驾时间', '到店邀约', 55, 1060),
+        makeIssueRule('sop-budget', '预算范围确认', '需求确认', 72, 1190),
+        makeIssueRule('sop-purpose', '用车场景确认', '需求确认', 69, 1170),
+        makeIssueRule('sop-family', '家庭成员需求', '需求确认', 64, 980),
+        makeIssueRule('sop-config-guide', '配置版本推荐', '产品讲解', 62, 1050),
+        makeIssueRule('sop-value-rights', '权益政策说明', '产品讲解', 60, 1010),
+        makeIssueRule('sop-price-anchor', '价格锚点铺垫', '价格沟通', 57, 990),
+        makeIssueRule('sop-finance', '金融方案介绍', '促单转化', 53, 960),
+        makeIssueRule('sop-trade-in', '置换政策说明', '促单转化', 51, 880),
+        makeIssueRule('sop-next-step', '下一步跟进约定', '跟进承接', 49, 920),
+        makeIssueRule('sop-store-route', '到店路线引导', '到店邀约', 47, 760),
+        makeIssueRule('sop-objection-price', '价格异议承接', '异议处理', 46, 870),
+        makeIssueRule('sop-objection-wait', '等待周期解释', '异议处理', 44, 690),
+        makeIssueRule('sop-summary', '接待结束总结', '跟进承接', 42, 820),
+        makeIssueRule('sop-customer-tag', '客户标签补充', '跟进承接', 39, 760)
+      ]
+    },
+    advantage: {
+      label: '优势缺陷识别',
+      metricLabel: '命中率',
+      countLabel: '命中/样本',
+      emptyText: '暂无匹配优势缺陷规则',
+      topTitle: '优势组织 TOP5',
+      bottomTitle: '短板组织 BOT5',
+      rules: [
+        makeIssueRule('adv-need', '深度需求挖掘', '需求洞察', 83, 980),
+        makeIssueRule('adv-product-value', '本品价值塑造', '产品表达', 76, 960),
+        makeIssueRule('adv-competitor', '竞品差异化对比', '产品表达', 71, 930),
+        makeIssueRule('adv-price', '价格异议处理', '异议处理', 64, 890),
+        makeIssueRule('adv-version', '版本配置引导', '产品表达', 62, 850),
+        makeIssueRule('adv-store', '门店/公司优势塑造', '信任建立', 59, 820),
+        makeIssueRule('adv-wechat', '微信留资承接', '留资承接', 56, 800),
+        makeIssueRule('adv-retain-lead', '留人稳线索', '线索承接', 52, 760),
+        makeIssueRule('adv-invite', '到店邀约推进', '到店邀约', 49, 740),
+        makeIssueRule('adv-boundary', '承诺与风险边界', '风险边界', 45, 680)
+      ]
+    },
+    risk: {
+      label: '风险命中分析',
+      metricLabel: '风险命中率',
+      countLabel: '命中/样本',
+      emptyText: '暂无匹配风险规则',
+      topTitle: '风险最高 TOP5',
+      bottomTitle: '风险最低 BOT5',
+      rules: [
+        makeIssueRule('risk-abuse', '辱骂/嘲讽客户', '服务红线', 12, 860),
+        makeIssueRule('risk-impatient', '明显不耐烦、催促打断客户', '服务红线', 18, 910),
+        makeIssueRule('risk-conflict', '与客户争执、冲突', '服务红线', 9, 820),
+        makeIssueRule('risk-no-apology-complaint', '客户明确表达不满后，销售未致歉', '服务补救', 21, 940),
+        makeIssueRule('risk-no-apology-problem', '出现问题，或是客户不满时，未及时表示歉意', '服务补救', 24, 970)
+      ]
+    }
+  };
+
+  const issueRuleAnalysisState = {
+    activeTab: 'sop',
+    query: '',
+    sort: 'rate-desc',
+    page: 1,
+    selectedRuleId: null,
+    path: []
+  };
+
+  const ISSUE_RULE_PAGE_SIZE = 5;
+
+  const clampPercent = (value) => Math.max(1, Math.min(98, Math.round(value)));
+
+  const textHash = (value) => String(value || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+  const getActiveIssueRuleConfig = () => ISSUE_RULE_TABS[issueRuleAnalysisState.activeTab] || ISSUE_RULE_TABS.sop;
+
+  const getActiveIssueRule = () => getActiveIssueRuleConfig().rules.find(rule => rule.id === issueRuleAnalysisState.selectedRuleId) || null;
+
+  const getIssueRuleBaseOrg = () => {
+    const region = currentRegion !== 'all'
+      ? SOP_RANK_DATA.regions.find(item => item.name === currentRegion)
+      : null;
+    const zone = region && currentZone !== 'all'
+      ? (region.zones || []).find(item => item.name === currentZone)
+      : null;
+    const store = zone && currentStore !== 'all'
+      ? (zone.stores || []).find(item => item.name === currentStore)
+      : null;
+
+    return { region, zone, store };
+  };
+
+  const getCurrentOrgChildren = () => {
+    const { region: baseRegion, zone: baseZone, store: baseStore } = getIssueRuleBaseOrg();
+    const [firstCrumb, secondCrumb] = issueRuleAnalysisState.path;
+
+    if (baseStore) {
+      return [{ ...baseStore, level: 'store' }];
+    }
+
+    if (baseZone) {
+      return (baseZone.stores || []).map(store => ({ ...store, level: 'store' }));
+    }
+
+    if (baseRegion) {
+      if (!firstCrumb) {
+        return (baseRegion.zones || []).map(zone => ({ ...zone, level: 'zone' }));
+      }
+      const zone = (baseRegion.zones || []).find(item => item.name === firstCrumb.name);
+      if (!zone) return [];
+      return (zone.stores || []).map(store => ({ ...store, level: 'store' }));
+    }
+
+    if (!firstCrumb) {
+      return SOP_RANK_DATA.regions.map(region => ({ ...region, level: 'region' }));
+    }
+    const region = SOP_RANK_DATA.regions.find(item => item.name === firstCrumb.name);
+    if (!region) return [];
+    if (!secondCrumb) {
+      return (region.zones || []).map(zone => ({ ...zone, level: 'zone' }));
+    }
+    const zone = (region.zones || []).find(item => item.name === secondCrumb.name);
+    if (!zone) return [];
+    return (zone.stores || []).map(store => ({ ...store, level: 'store' }));
+  };
+
+  const buildOrgRuleStats = (rule, org, index) => {
+    const tab = issueRuleAnalysisState.activeTab;
+    const hashOffset = (textHash(`${rule.id}-${org.name}`) % 13) - 6;
+    const levelOffset = org.level === 'region' ? 0 : org.level === 'zone' ? -1 : -2;
+    const sampleBase = org.level === 'region' ? 980 : org.level === 'zone' ? 360 : 118;
+    const sampleCount = Math.max(30, sampleBase - index * 23 + (textHash(org.name) % 37));
+    const orgSopRate = Number(org.sopRate || 75);
+    const orgRiskRate = Number(org.riskHit || 6);
+    const rate = tab === 'risk'
+      ? clampPercent(rule.rate + (orgRiskRate - 6) * 3.4 + hashOffset + levelOffset)
+      : clampPercent(rule.rate + (orgSopRate - 75) * 0.56 + hashOffset + levelOffset);
+
+    return {
+      name: org.name,
+      level: org.level,
+      rate,
+      sampleCount,
+      hitCount: Math.round(sampleCount * rate / 100),
+      drillable: org.level !== 'store'
+    };
+  };
+
+  const getVisibleIssueRules = () => {
+    const config = getActiveIssueRuleConfig();
+    const query = issueRuleAnalysisState.query.trim();
+    const filtered = query
+      ? config.rules.filter(rule => `${rule.name}${rule.category}`.includes(query))
+      : [...config.rules];
+
+    const sorted = filtered.sort((a, b) => {
+      if (issueRuleAnalysisState.sort === 'rate-asc') return a.rate - b.rate;
+      if (issueRuleAnalysisState.sort === 'count-desc') return b.hitCount - a.hitCount;
+      if (issueRuleAnalysisState.sort === 'sample-desc') return b.sampleCount - a.sampleCount;
+      return b.rate - a.rate;
+    });
+
+    return sorted;
+  };
+
+  const renderRuleListView = (config, rules) => {
+    const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+    const currentPage = Math.min(issueRuleAnalysisState.page, pageCount);
+    const start = (currentPage - 1) * ISSUE_RULE_PAGE_SIZE;
+    const visibleRules = rules.slice(start, start + ISSUE_RULE_PAGE_SIZE);
+    const rows = visibleRules.map(rule => `
+      <button type="button" class="issue-rule-row" data-rule-id="${rule.id}">
+        <span class="issue-rule-name">
+          <strong>${escapeHtml(rule.name)}</strong>
+          <em>${escapeHtml(rule.category)}</em>
+        </span>
+        <span class="issue-rule-rate">${rule.rate}%</span>
+        <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
+        <span class="issue-rule-action">看组织表现</span>
+      </button>
+    `).join('');
+
+    return `
+      <div class="issue-rule-toolbar">
+        <label class="issue-rule-search">
+          <span>搜索规则</span>
+          <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称" autocomplete="off">
+        </label>
+        <label class="issue-rule-sort">
+          <span>排序</span>
+          <select class="issue-rule-sort-select">
+            <option value="rate-desc"${issueRuleAnalysisState.sort === 'rate-desc' ? ' selected' : ''}>命中率从高到低</option>
+            <option value="rate-asc"${issueRuleAnalysisState.sort === 'rate-asc' ? ' selected' : ''}>命中率从低到高</option>
+            <option value="count-desc"${issueRuleAnalysisState.sort === 'count-desc' ? ' selected' : ''}>命中数量优先</option>
+            <option value="sample-desc"${issueRuleAnalysisState.sort === 'sample-desc' ? ' selected' : ''}>样本数量优先</option>
+          </select>
+        </label>
+      </div>
+      <div class="issue-rule-list-head">
+        <span>规则项</span>
+        <span>${config.metricLabel}</span>
+        <span>${config.countLabel}</span>
+        <span>操作</span>
+      </div>
+      <div class="issue-rule-list">
+        ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
+      </div>
+      <div class="issue-rule-footer">
+        <span>共 ${rules.length} 条，当前第 ${currentPage}/${pageCount} 页</span>
+        <div class="issue-rule-pager" aria-label="规则分页">
+          <button type="button" class="issue-rule-page-btn" data-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+          <button type="button" class="issue-rule-page-btn" data-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderOrgRankList = (title, rows, tone) => `
+    <div class="issue-org-rank-card ${tone}">
+      <div class="issue-org-rank-title">${title}</div>
+      <div class="issue-org-rank-list">
+        ${rows.map((row, index) => `
+          <button type="button" class="issue-org-row${row.drillable ? '' : ' disabled'}" data-org-name="${escapeHtml(row.name)}" ${row.drillable ? '' : 'disabled'}>
+            <span class="issue-org-main">
+              <em>${index + 1}</em>
+              <strong>${escapeHtml(row.name)}</strong>
+            </span>
+            <span class="issue-org-rate">${row.rate}%</span>
+            <span class="issue-org-count">${row.hitCount}/${row.sampleCount}</span>
+            <span class="issue-org-drill">${row.drillable ? '下钻' : '门店层'}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  const renderOrgDrillView = (config, rule) => {
+    const children = getCurrentOrgChildren().map((org, index) => buildOrgRuleStats(rule, org, index));
+    const highRows = [...children].sort((a, b) => b.rate - a.rate).slice(0, 5);
+    const lowRows = [...children].sort((a, b) => a.rate - b.rate).slice(0, 5);
+    const canBackLevel = issueRuleAnalysisState.path.length > 0;
+
+    return `
+      <div class="issue-drill-actions">
+        <button type="button" class="issue-rule-back">返回规则列表</button>
+        ${canBackLevel ? '<button type="button" class="issue-org-back">返回上一级</button>' : ''}
+      </div>
+      <div class="issue-selected-metrics">
+        <div><strong>${rule.rate}%</strong><span>${config.metricLabel}</span></div>
+        <div><strong>${rule.hitCount}/${rule.sampleCount}</strong><span>${config.countLabel}</span></div>
+      </div>
+      <div class="issue-org-rank-grid">
+        ${renderOrgRankList(config.topTitle, highRows, 'top')}
+        ${renderOrgRankList(config.bottomTitle, lowRows, 'bottom')}
+      </div>
+    `;
+  };
+
+  const bindIssueRuleAnalysisEvents = (focusSearch = false) => {
+    const root = document.getElementById('issue-rule-analysis-root');
+    if (!root) return;
+
+    const searchInput = root.querySelector('.issue-rule-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (event) => {
+        issueRuleAnalysisState.query = event.target.value;
+        issueRuleAnalysisState.page = 1;
+        renderIssueRuleAnalysis(true);
+      });
+      if (focusSearch) {
+        const position = searchInput.value.length;
+        requestAnimationFrame(() => {
+          searchInput.focus();
+          searchInput.setSelectionRange(position, position);
+        });
+      }
+    }
+
+    root.querySelector('.issue-rule-sort-select')?.addEventListener('change', (event) => {
+      issueRuleAnalysisState.sort = event.target.value;
+      issueRuleAnalysisState.page = 1;
+      renderIssueRuleAnalysis();
+    });
+
+    root.querySelectorAll('.issue-rule-page-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const rules = getVisibleIssueRules();
+        const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+        const delta = btn.dataset.pageAction === 'next' ? 1 : -1;
+        issueRuleAnalysisState.page = Math.max(1, Math.min(pageCount, issueRuleAnalysisState.page + delta));
+        renderIssueRuleAnalysis();
+      });
+    });
+
+    const rules = getVisibleIssueRules();
+    const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+    if (issueRuleAnalysisState.page > pageCount) {
+      issueRuleAnalysisState.page = pageCount;
+      renderIssueRuleAnalysis();
+      return;
+    }
+
+    root.querySelectorAll('.issue-rule-row').forEach(row => {
+      row.addEventListener('click', () => {
+        issueRuleAnalysisState.selectedRuleId = row.dataset.ruleId;
+        issueRuleAnalysisState.path = [];
+        renderIssueRuleAnalysis();
+      });
+    });
+
+    root.querySelector('.issue-rule-back')?.addEventListener('click', () => {
+      issueRuleAnalysisState.selectedRuleId = null;
+      issueRuleAnalysisState.path = [];
+      renderIssueRuleAnalysis();
+    });
+
+    root.querySelector('.issue-org-back')?.addEventListener('click', () => {
+      issueRuleAnalysisState.path.pop();
+      renderIssueRuleAnalysis();
+    });
+
+    root.querySelectorAll('.issue-org-row:not(.disabled)').forEach(row => {
+      row.addEventListener('click', () => {
+        issueRuleAnalysisState.path.push({ name: row.dataset.orgName });
+        renderIssueRuleAnalysis();
+      });
+    });
+  };
+
+  const renderIssueRuleAnalysis = (focusSearch = false) => {
+    const root = document.getElementById('issue-rule-analysis-root');
+    if (!root) return;
+    const config = getActiveIssueRuleConfig();
+    const selectedRule = getActiveIssueRule();
+    const rules = getVisibleIssueRules();
+    root.innerHTML = selectedRule
+      ? renderOrgDrillView(config, selectedRule)
+      : renderRuleListView(config, rules);
+    bindIssueRuleAnalysisEvents(focusSearch);
+  };
+
   // ── renderSOPDial：圆环动画 ─────────────────────────
   const renderSOPDial = () => {
     const fill = document.getElementById('sop-dial-fill');
@@ -4809,21 +5155,20 @@
 
   const setupSOPIssueCloudTabs = () => {
     const tabs = document.querySelectorAll('[data-issue-insight-tab]');
-    const weaknessPanel = document.getElementById('detail-weakness');
-    const strengthPanel = document.getElementById('detail-strength');
-    const riskPanel = document.getElementById('detail-risk');
-    if (!tabs.length || !weaknessPanel || !strengthPanel || !riskPanel) return;
+    if (!tabs.length) return;
 
-    const panels = { weakness: weaknessPanel, strength: strengthPanel, risk: riskPanel };
-    const switchTo = (target = 'weakness') => {
+    const switchTo = (target = 'sop') => {
       tabs.forEach(tab => {
         const active = tab.dataset.issueInsightTab === target;
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', String(active));
       });
-      Object.entries(panels).forEach(([key, panel]) => {
-        panel.hidden = key !== target;
-      });
+      issueRuleAnalysisState.activeTab = ISSUE_RULE_TABS[target] ? target : 'sop';
+      issueRuleAnalysisState.query = '';
+      issueRuleAnalysisState.page = 1;
+      issueRuleAnalysisState.selectedRuleId = null;
+      issueRuleAnalysisState.path = [];
+      renderIssueRuleAnalysis();
     };
 
     tabs.forEach(tab => {
@@ -5246,10 +5591,8 @@
     renderSOPDial();
     renderSOPOverviewSummary();
     renderTrendChart();
-    renderSOPWeakness();
-    renderSOPStrength();
-    renderSOPRisk();
     setupSOPIssueCloudTabs();
+    renderIssueRuleAnalysis();
   };
 
   // 保留原线索稽查模拟数据，供后续页面迁移或业务模块复用。
