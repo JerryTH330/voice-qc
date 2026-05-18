@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>客户洞察</title>
+    <link rel="icon" href="../AI质检平台4.29/assets/ds-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./客户洞察.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <main class="workspace">
+        <header class="page-header">
+          <div>
+            <h1>客户洞察</h1>
+            <p>基于录音结构化标签实时聚合，筛选后自动生成AI画像。</p>
+          </div>
+        </header>
+
+        <section class="filter-panel global-filter-bar" aria-label="全局筛选">
+          <div class="filter-grid" id="filterGrid"></div>
+        </section>
+
+        <section class="metric-grid metric-grid-8" id="metricGrid" aria-label="客户洞察指标"></section>
+
+        <section class="insight-layout">
+          <article class="portrait-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>AI画像</h2>
+                <p id="portraitSubtext">识别真正影响成交的关键因素</p>
+              </div>
+            </div>
+
+            <div class="portrait-map" id="portraitMap">
+              <svg class="portrait-links" id="portraitLinks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="center-model">
+                <div class="car-plate">
+                  <img src="../AI质检平台4.29/assets/portrait-model.png" alt="" />
+                  <strong id="centerCarName">AION Y Plus</strong>
+                  <span>当前分析车型</span>
+                </div>
+              </div>
+              <div class="portrait-node-set" id="portraitNodeSet"></div>
+            </div>
+          </article>
+
+          <article class="data-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>意向特征热力图</h2>
+                <p>各意向等级客户在关键标签上的命中分布情况</p>
+              </div>
+            </div>
+            <div class="heatmap-container" id="heatmapContainer"></div>
+          </article>
+
+          <article class="rank-panel" style="grid-column: 1 / -1;">
+            <div class="panel-heading compact">
+              <div>
+                <h2>画像明细</h2>
+                <p>按TOP排行展示画像标签、命中率与趋势。</p>
+              </div>
+              <div class="view-toggle" id="rankViewToggle">
+                <button class="active" data-view="cloud">词云视图</button>
+                <button data-view="list">列表视图</button>
+              </div>
+            </div>
+            <div class="rank-grid" id="rankGrid"></div>
+            <div class="rank-cloud" id="rankCloud" style="display: none;"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./客户洞察.js"></script>
+  </body>
+</html>
