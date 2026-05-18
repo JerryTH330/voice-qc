@@ -12,7 +12,8 @@ function initStoreDashboardPage() {
     toggleSceneSelection,
     getLegacySceneBucket,
     getInvitationSceneCount,
-    getSceneVolumeLabel
+    getSceneVolumeLabel,
+    getBusinessMetricKeysForSelection
   } = FILTER_UTILS;
 
 // ── 0. 录音数据库 & 播放器 ──────────────────────
@@ -1563,6 +1564,7 @@ function initStoreDashboardPage() {
   const getStoreSceneLabel = () => {
     const selection = getStoreSceneSelection();
     if (selection.isAllSelected) return '全场景';
+    if (selection.isNoneSelected) return '未选择场景';
     return selection.activeScenes.map(getSceneLabel).join(' / ');
   };
 
@@ -2001,6 +2003,18 @@ function initStoreDashboardPage() {
     </div>
   `;
 
+  const renderInlinePairKpiMetric = (primaryMetric, secondaryMetric, extraClass = '') => `
+    <div class="hm-inline-pair-card${extraClass ? ` ${extraClass}` : ''}">
+      <div class="hm-inline-pair-side">
+        ${renderKpiMetricBody(primaryMetric)}
+      </div>
+      <div class="hm-inline-pair-divider" aria-hidden="true"></div>
+      <div class="hm-inline-pair-side">
+        ${renderKpiMetricBody(secondaryMetric)}
+      </div>
+    </div>
+  `;
+
   const renderFlowLink = (fromTone = 'blue', toTone = 'cyan') => `
     <div class="hm-flow-link" aria-hidden="true" style="--flow-start-rgb:${FLOW_TONE_RGB[fromTone] || FLOW_TONE_RGB.blue};--flow-end-rgb:${FLOW_TONE_RGB[toTone] || FLOW_TONE_RGB.cyan};">
       <div class="hm-flow-row hm-flow-row-top">
@@ -2023,64 +2037,65 @@ function initStoreDashboardPage() {
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const HERO_BIZ_KPI_ITEM_MAP = {
+    invitation: { key: 'invitation', pairedWith: 'visit_rate', isBiz: true },
+    reception: { key: 'reception', pairedWith: 'drive_rate', isBiz: true },
+    test_drive: { key: 'test_drive', pairedWith: 'order_rate', isBiz: true }
+  };
+
+  const HERO_SUMMARY_KPI_ITEMS = [
+    { key: 'avg_duration', pairedWith: 'hit_rate' },
+    { key: 'qa_pass_count', pairedWith: 'qa_pass_rate' },
+    { key: 'risk_record', pairedWith: 'risk_rate' }
+  ];
+
+  const buildStoreHeroKpiItems = () => {
+    const bizItems = getBusinessMetricKeysForSelection(currentSource, currentScenes)
+      .map((key) => HERO_BIZ_KPI_ITEM_MAP[key])
+      .filter(Boolean);
+
+    return [...bizItems, ...HERO_SUMMARY_KPI_ITEMS];
+  };
+
   const renderHeroKPI = () => {
     const grid = document.getElementById("hero-kpi-grid");
     if (!grid) return;
 
-    const sceneKey = getEffectiveSceneKey();
-    const kpiItems = SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all;
     const currentKpiData = buildStoreFilteredKpiData();
-    const metricCards = [];
-    const singleCards = [];
-    let lastWasSummaryGroup = false;
-    let lastSummaryTone = null;
-    let hasSummaryCluster = false;
-    let hasInsertedSummaryDivider = false;
+    const bizItems = getBusinessMetricKeysForSelection(currentSource, currentScenes)
+      .map((key) => HERO_BIZ_KPI_ITEM_MAP[key])
+      .filter(Boolean)
+      .map((item) => currentKpiData[item.key])
+      .filter(Boolean);
 
-    const flushSingleCards = () => {
-      if (!singleCards.length) return;
-      metricCards.push(`<div class="hm-single-grid">${singleCards.join('')}</div>`);
-      singleCards.length = 0;
-    };
-
-    kpiItems.forEach((item) => {
-      const primaryMetric = currentKpiData[item.key];
-      const secondaryMetric = item.pairedWith ? currentKpiData[item.pairedWith] : null;
-      if (!primaryMetric) return;
-
-      if (secondaryMetric && GROUPED_HERO_METRIC_KEYS.has(item.key)) {
-        flushSingleCards();
-        const isSummaryGroup = SUMMARY_GROUP_METRIC_KEYS.has(item.key);
-        if (!isSummaryGroup && hasSummaryCluster && !hasInsertedSummaryDivider) {
-          metricCards.push(renderMetricDivider());
-          hasInsertedSummaryDivider = true;
-        }
-        if (isSummaryGroup && lastWasSummaryGroup) {
-          metricCards.push(renderFlowLink(lastSummaryTone, primaryMetric.tone || 'cyan'));
-        }
-        metricCards.push(renderGroupedKpiMetric(primaryMetric, secondaryMetric, { summary: isSummaryGroup, hideSubRow: isSummaryGroup }));
-        if (isSummaryGroup) {
-          hasSummaryCluster = true;
-          lastSummaryTone = primaryMetric.tone || null;
-        }
-        lastWasSummaryGroup = isSummaryGroup;
-        return;
-      }
-
-      if (hasSummaryCluster && !hasInsertedSummaryDivider && singleCards.length === 0) {
-        metricCards.push(renderMetricDivider());
-        hasInsertedSummaryDivider = true;
-      }
-      lastWasSummaryGroup = false;
-      lastSummaryTone = null;
-      singleCards.push(renderSingleKpiMetric(primaryMetric));
-      if (secondaryMetric) {
-        singleCards.push(renderSingleKpiMetric(secondaryMetric));
+    const topRowCards = [];
+    bizItems.forEach((metric, index) => {
+      topRowCards.push(renderGroupedKpiMetric(metric, metric, { summary: true, hideSubRow: true }));
+      if (index < bizItems.length - 1) {
+        const nextMetric = bizItems[index + 1];
+        topRowCards.push(renderFlowLink(metric.tone || 'blue', nextMetric.tone || 'cyan'));
       }
     });
 
-    flushSingleCards();
-grid.innerHTML = metricCards.join('');
+    const bottomRowCards = [];
+    if (currentKpiData.avg_duration) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.avg_duration));
+    }
+    if (currentKpiData.hit_rate) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.hit_rate));
+    }
+    if (currentKpiData.qa_pass_count && currentKpiData.qa_pass_rate) {
+      bottomRowCards.push(renderInlinePairKpiMetric(currentKpiData.qa_pass_count, currentKpiData.qa_pass_rate, 'hm-inline-pair-qa'));
+    }
+    if (currentKpiData.risk_record && currentKpiData.risk_rate) {
+      bottomRowCards.push(renderInlinePairKpiMetric(currentKpiData.risk_record, currentKpiData.risk_rate, 'hm-inline-pair-risk'));
+    }
+
+    grid.innerHTML = `
+      ${topRowCards.length ? `<div class="hm-layout-top">${topRowCards.join('')}</div>` : ''}
+      ${topRowCards.length && bottomRowCards.length ? '<div class="hm-layout-divider" aria-hidden="true"></div>' : ''}
+      ${bottomRowCards.length ? `<div class="hm-layout-bottom">${bottomRowCards.join('')}</div>` : ''}
+    `;
     window.requestAnimationFrame(() => animateStoreHeroCounters(grid));
     drawFunnelFlow();
   };
@@ -2180,9 +2195,14 @@ grid.innerHTML = metricCards.join('');
     const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
     const selection = getStoreSceneSelection();
     const allowed = new Set(getAllowedScenes(currentSource));
+    const visibleAllowedScenes = selection.allowedScenes.filter((scene) => allowed.has(scene));
+    const activeVisibleScenes = selection.isAllSelected ? visibleAllowedScenes : selection.activeScenes.filter((scene) => allowed.has(scene));
+    const isIndeterminate = !selection.isAllSelected && activeVisibleScenes.length > 0 && activeVisibleScenes.length < visibleAllowedScenes.length;
 
     sourceTabs.forEach((tab) => {
-      tab.classList.toggle('active', tab.dataset.source === currentSource);
+      const isActive = tab.dataset.source === currentSource;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 
     sceneTabs.forEach((tab) => {
@@ -2191,10 +2211,16 @@ grid.innerHTML = metricCards.join('');
       const isAllowed = isAll || allowed.has(scene);
       const isActive = isAll
         ? selection.isAllSelected
-        : (!selection.isAllSelected && selection.activeScenes.includes(scene));
+        : activeVisibleScenes.includes(scene);
 
+      tab.classList.toggle('is-hidden', !isAllowed);
       tab.classList.toggle('disabled', !isAllowed);
       tab.classList.toggle('active', isActive);
+      tab.classList.toggle('is-indeterminate', isAll && isIndeterminate);
+      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      tab.setAttribute('aria-checked', isAll && isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
+      tab.setAttribute('aria-hidden', !isAllowed ? 'true' : 'false');
+      tab.tabIndex = isAllowed ? 0 : -1;
     });
   };
 
@@ -3071,38 +3097,17 @@ grid.innerHTML = metricCards.join('');
 
   function renderStoreDateControl() {
     const host = document.getElementById("store-date-control");
-    const shell = document.getElementById("store-date-filter-shell");
     if (!host) {
       return;
     }
 
     if (currentTime !== "custom") {
       host.innerHTML = "";
-      if (shell) {
-        shell.hidden = true;
-      }
       return;
-    }
-
-    if (shell) {
-      shell.hidden = false;
     }
 
     host.innerHTML = `
       <div class="store-date-root${storeDateState.open ? " is-open" : ""}" data-store-date-root="true">
-        <button
-          type="button"
-          class="session-date-trigger store-date-trigger${storeDateState.open ? " active" : ""}"
-          data-store-date-trigger="true"
-          aria-label="日期范围筛选"
-          aria-haspopup="dialog"
-          aria-expanded="${storeDateState.open ? "true" : "false"}"
-        >
-          <strong>${escapeHtml(formatSessionDateDisplay(storeTimeStartDate))}</strong>
-          <em>至</em>
-          <strong>${escapeHtml(formatSessionDateDisplay(storeTimeEndDate))}</strong>
-          <span class="session-date-icon" aria-hidden="true"></span>
-        </button>
         ${storeDateState.open ? renderStoreDateMenu() : ""}
       </div>
     `;
@@ -3158,8 +3163,12 @@ grid.innerHTML = metricCards.join('');
     tabs.forEach(tab => {
       tab.addEventListener("click", () => {
         if (tab.classList.contains('disabled')) return;
-        tabs.forEach(t => t.classList.remove("active"));
+        tabs.forEach(t => {
+          t.classList.remove("active");
+          t.setAttribute("aria-pressed", "false");
+        });
         tab.classList.add("active");
+        tab.setAttribute("aria-pressed", "true");
         stateUpdater(tab.dataset[dataAttr]);
         // 自定义时间先进入日期选择态，应用后再真正生效
         if (containerId === 'gf-time' && tab.dataset[dataAttr] === 'custom') return;
@@ -3204,20 +3213,23 @@ grid.innerHTML = metricCards.join('');
 
   // 车系下拉筛选
   const initStoreModelDropdown = () => {
+    const root = document.getElementById('store-model-dropdown');
     const trigger = document.getElementById('store-model-trigger');
     const panel = document.getElementById('store-model-panel');
     const display = document.getElementById('store-model-display');
-    if (!trigger || !panel || !display) return;
+    if (!root || !trigger || !panel || !display) return;
 
     const modelLabels = { all: '全部车系', M8: '传祺M8', S7: '传祺S7', GS8: '传祺GS8', E8: '传祺E8' };
 
     const openDropdown = () => {
+      root.classList.add('is-open');
       panel.classList.add('show');
       trigger.classList.add('active');
       trigger.setAttribute('aria-expanded', 'true');
     };
 
     const closeDropdown = () => {
+      root.classList.remove('is-open');
       panel.classList.remove('show');
       trigger.classList.remove('active');
       trigger.setAttribute('aria-expanded', 'false');
@@ -3757,13 +3769,12 @@ grid.innerHTML = metricCards.join('');
 
     const overlay = document.createElement('div');
     overlay.id = 'issue-recording-library-overlay';
-    overlay.className = 'issue-recording-library-overlay';
+    overlay.className = 'issue-recording-library-overlay store-recording-library-overlay';
     overlay.innerHTML = `
       <section class="issue-recording-library-page" role="dialog" aria-modal="true" aria-labelledby="issue-recording-library-title">
         <div class="recording-library-head">
           <div>
-            <div class="recording-library-eyebrow">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}</div>
-            <h2 id="issue-recording-library-title">${issue.title}</h2>
+            <h2 id="issue-recording-library-title">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}·${issue.title}</h2>
             <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。</p>
           </div>
           <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>

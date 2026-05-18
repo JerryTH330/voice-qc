@@ -69,6 +69,12 @@
     [SOURCE_KEYS.badge]: '工牌'
   };
 
+  const INVITATION_SCENES = [
+    SCENE_KEYS.firstFollow,
+    SCENE_KEYS.inviteStore,
+    SCENE_KEYS.scheduleConfirm
+  ];
+
   function getAllowedScenes(source) {
     return [...(SOURCE_ALLOWED_SCENES[source] || SOURCE_ALLOWED_SCENES[SOURCE_KEYS.all])];
   }
@@ -105,12 +111,25 @@
     const explicitAll = deduped.includes(SCENE_KEYS.all);
     const cleaned = deduped.filter((scene) => allowedScenes.includes(scene));
 
-    if (explicitAll || cleaned.length === 0 || areAllAllowedScenesSelected(source, cleaned)) {
+    if (explicitAll || areAllAllowedScenesSelected(source, cleaned)) {
       return {
         source,
         allowedScenes,
         activeScenes: [],
         isAllSelected: true,
+        isNoneSelected: false,
+        effectiveSceneKey: SCENE_KEYS.all,
+        legacySceneBucket: 'all'
+      };
+    }
+
+    if (cleaned.length === 0) {
+      return {
+        source,
+        allowedScenes,
+        activeScenes: [],
+        isAllSelected: false,
+        isNoneSelected: true,
         effectiveSceneKey: SCENE_KEYS.all,
         legacySceneBucket: 'all'
       };
@@ -122,6 +141,7 @@
         allowedScenes,
         activeScenes: cleaned,
         isAllSelected: false,
+        isNoneSelected: false,
         effectiveSceneKey: cleaned[0],
         legacySceneBucket: getLegacySceneBucket(cleaned[0])
       };
@@ -132,6 +152,7 @@
       allowedScenes,
       activeScenes: cleaned,
       isAllSelected: false,
+      isNoneSelected: false,
       effectiveSceneKey: SCENE_KEYS.cloudMulti,
       legacySceneBucket: getLegacySceneBucket(SCENE_KEYS.cloudMulti)
     };
@@ -143,7 +164,8 @@
 
   function toggleSceneSelection(source, scenes, targetScene) {
     if (targetScene === SCENE_KEYS.all) {
-      return [SCENE_KEYS.all];
+      const normalized = normalizeSceneSelection(source, scenes);
+      return normalized.isAllSelected ? [] : [SCENE_KEYS.all];
     }
 
     const allowed = getAllowedScenes(source);
@@ -153,7 +175,7 @@
     }
 
     const normalized = normalizeSceneSelection(source, scenes);
-    const active = normalized.isAllSelected ? [] : [...normalized.activeScenes];
+    const active = normalized.isAllSelected ? [...normalized.allowedScenes] : [...normalized.activeScenes];
     const nextActive = active.includes(targetScene)
       ? active.filter((scene) => scene !== targetScene)
       : [...active, targetScene];
@@ -192,6 +214,26 @@
     return SOURCE_LABELS[sourceKey] || SOURCE_LABELS[SOURCE_KEYS.all];
   }
 
+  function getBusinessMetricKeysForSelection(source, scenes) {
+    const selection = normalizeSceneSelection(source, scenes);
+    const selectedScenes = selection.isAllSelected ? selection.allowedScenes : selection.activeScenes;
+    const metricKeys = [];
+
+    if (source !== SOURCE_KEYS.badge && selectedScenes.some((scene) => INVITATION_SCENES.includes(scene))) {
+      metricKeys.push('invitation');
+    }
+
+    if (selectedScenes.includes(SCENE_KEYS.storeReception)) {
+      metricKeys.push('reception');
+    }
+
+    if (selectedScenes.includes(SCENE_KEYS.testDrive)) {
+      metricKeys.push('test_drive');
+    }
+
+    return metricKeys;
+  }
+
   return {
     SOURCE_KEYS,
     SCENE_KEYS,
@@ -204,6 +246,7 @@
     getSceneLabel,
     getInvitationSceneCount,
     getSceneVolumeLabel,
-    getSourceLabel
+    getSourceLabel,
+    getBusinessMetricKeysForSelection
   };
 });
