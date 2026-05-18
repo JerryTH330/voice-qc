@@ -2023,12 +2023,40 @@ function initStoreDashboardPage() {
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const getStoreHeroKpiItems = () => {
+    const selection = getStoreSceneSelection();
+    const singleScene = selection.activeScenes.length === 1 ? selection.activeScenes[0] : null;
+
+    if (singleScene === SCENE_KEYS.firstFollow
+      || singleScene === SCENE_KEYS.inviteStore
+      || singleScene === SCENE_KEYS.scheduleConfirm) {
+      return [{ key: 'invitation', isBiz: true }];
+    }
+
+    if (singleScene === SCENE_KEYS.storeReception) {
+      return [{ key: 'reception', isBiz: true }];
+    }
+
+    if (singleScene === SCENE_KEYS.testDrive) {
+      return [{ key: 'test_drive', isBiz: true }];
+    }
+
+    if (currentSource === SOURCE_KEYS.badge && selection.isAllSelected) {
+      return [
+        { key: 'reception', isBiz: true },
+        { key: 'test_drive', isBiz: true }
+      ];
+    }
+
+    return SCENE_KPI_MAP[selection.effectiveSceneKey] || SCENE_KPI_MAP.all;
+  };
+
   const renderHeroKPI = () => {
     const grid = document.getElementById("hero-kpi-grid");
     if (!grid) return;
 
-    const sceneKey = getEffectiveSceneKey();
-    const kpiItems = SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all;
+    const kpiItems = getStoreHeroKpiItems();
+    const isCompactKpi = kpiItems.length <= 2 && kpiItems.every(item => !item.pairedWith);
     const currentKpiData = buildStoreFilteredKpiData();
     const metricCards = [];
     const singleCards = [];
@@ -2039,7 +2067,11 @@ function initStoreDashboardPage() {
 
     const flushSingleCards = () => {
       if (!singleCards.length) return;
-      metricCards.push(`<div class="hm-single-grid">${singleCards.join('')}</div>`);
+      if (isCompactKpi) {
+        metricCards.push(...singleCards);
+      } else {
+        metricCards.push(`<div class="hm-single-grid">${singleCards.join('')}</div>`);
+      }
       singleCards.length = 0;
     };
 

@@ -1,6 +1,7 @@
 /* Generated from /Users/linxianxin/Downloads/厂端看板/factory-v2.* for native SPA route. */
 (function () {
   const FILTER_UTILS = window.__dashboardFilterUtils;
+  const ISSUE_RULE_ANALYSIS_UTILS = window.__factoryIssueRuleAnalysisUtils || {};
   const {
     SOURCE_KEYS,
     SCENE_KEYS,
@@ -11,6 +12,9 @@
     getInvitationSceneCount,
     getSceneVolumeLabel
   } = FILTER_UTILS;
+  const {
+    sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : [])
+  } = ISSUE_RULE_ANALYSIS_UTILS;
 
   const FACTORY_DASHBOARD_HTML = `<div class="main-tabs-bar sales-role-nav">
     <div class="main-tabs role-page-switch" role="tablist">
@@ -194,7 +198,7 @@
             <div class="card-header">
               <div>
                 <div class="card-title">录音复盘</div>
-                <div class="card-sub">按规则定位 TOP/BOT 组织表现</div>
+                <div class="card-sub">按规则定位组织表现并支持下钻</div>
               </div>
             </div>
             <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
@@ -234,16 +238,114 @@
 
       <section class="main-panel" id="panel-sop-improvement" role="tabpanel" aria-labelledby="tab-sop-improvement">
         <section class="sop-column sop-strategy-column" aria-label="SOP策略洞察">
-          <section class="track contribution-summary-track" aria-label="SOP策略洞察小结">
+
+          <!-- 分析闭环漏斗 -->
+          <section class="track si-funnel-track" aria-label="销售行为分析闭环">
+            <div class="track-header">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="track-icon strategy">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div>
+                  <h2 class="track-title">销售行为 → 成交结果 分析闭环</h2>
+                  <p class="track-sub">基于录音分析，建立SOP执行质量与成交结果的数据链路</p>
+                </div>
+              </div>
+            </div>
             <div class="track-body">
-              <div class="sop-summary-card-grid" role="tablist" aria-label="SOP策略洞察明细切换">
-                <button class="sop-module-summary deal active" id="sop-hit-summary" type="button" data-sop-summary="hit" role="tab" aria-selected="true" aria-controls="sop-active-detail-panel"></button>
-                <button class="sop-module-summary loss" id="sop-loss-summary" type="button" data-sop-summary="loss" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel"></button>
-                <button class="sop-module-summary risk" id="sop-risk-summary" type="button" data-sop-summary="risk" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel"></button>
+              <div class="si-funnel">
+                <div class="si-funnel-nodes">
+                  <div class="si-funnel-node">
+                    <div class="si-fn-icon si-fn-icon--blue">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="si-fn-value" id="si-fn-recordings">32</div>
+                    <div class="si-fn-label">分析录音</div>
+                    <div class="si-fn-unit">条</div>
+                  </div>
+                  <div class="si-funnel-arrow">→</div>
+                  <div class="si-funnel-node">
+                    <div class="si-fn-icon si-fn-icon--violet">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="si-fn-value" id="si-fn-hit-rate">78.0</div>
+                    <div class="si-fn-label">话术命中率</div>
+                    <div class="si-fn-unit">%</div>
+                  </div>
+                  <div class="si-funnel-arrow">→</div>
+                  <div class="si-funnel-node si-funnel-node--split">
+                    <div class="si-fn-split-item si-fn-split--success">
+                      <div class="si-fn-icon si-fn-icon--green">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                      </div>
+                      <div class="si-fn-value si-fn-value--green" id="si-fn-order">4</div>
+                      <div class="si-fn-label">下订用户</div>
+                      <div class="si-fn-unit">人</div>
+                    </div>
+                    <div class="si-fn-split-divider">vs</div>
+                    <div class="si-fn-split-item si-fn-split--danger">
+                      <div class="si-fn-icon si-fn-icon--red">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                      </div>
+                      <div class="si-fn-value si-fn-value--red" id="si-fn-loss">14</div>
+                      <div class="si-fn-label">战败用户</div>
+                      <div class="si-fn-unit">人</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="si-funnel-insight" id="si-funnel-insight"></div>
               </div>
             </div>
           </section>
 
+          <!-- 三角色洞察卡片 -->
+          <div class="si-role-grid" role="tablist" aria-label="角色视角洞察">
+
+            <button class="si-role-card active" id="sop-hit-summary" type="button"
+              data-sop-summary="hit" role="tab" aria-selected="true" aria-controls="sop-active-detail-panel">
+              <div class="si-rc-header">
+                <div class="si-rc-badge si-rc-badge--ops">运营视角</div>
+                <div class="si-rc-question">哪些SOP应该强化？</div>
+              </div>
+              <div class="si-rc-body">
+                <div class="si-rc-rule" id="si-hit-rule">—</div>
+                <div class="si-rc-desc" id="si-hit-desc">对下订成交命中优势贡献最高的SOP规则</div>
+              </div>
+              <div class="si-rc-metrics" id="si-hit-metrics"></div>
+              <div class="si-rc-cta">查看明细分析 →</div>
+            </button>
+
+            <button class="si-role-card" id="sop-loss-summary" type="button"
+              data-sop-summary="loss" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel">
+              <div class="si-rc-header">
+                <div class="si-rc-badge si-rc-badge--mgmt">管理层视角</div>
+                <div class="si-rc-question">为什么战败？</div>
+              </div>
+              <div class="si-rc-body">
+                <div class="si-rc-rule" id="si-loss-rule">—</div>
+                <div class="si-rc-desc" id="si-loss-desc">战败用户中未命中率最高的SOP缺失</div>
+              </div>
+              <div class="si-rc-metrics" id="si-loss-metrics"></div>
+              <div class="si-rc-cta">查看明细分析 →</div>
+            </button>
+
+            <button class="si-role-card" id="sop-risk-summary" type="button"
+              data-sop-summary="risk" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel">
+              <div class="si-rc-header">
+                <div class="si-rc-badge si-rc-badge--train">培训视角</div>
+                <div class="si-rc-question">哪些行为真正影响成交？</div>
+              </div>
+              <div class="si-rc-body">
+                <div class="si-rc-rule" id="si-risk-rule">—</div>
+                <div class="si-rc-desc" id="si-risk-desc">战败用户中风险命中率显著偏高的话术行为</div>
+              </div>
+              <div class="si-rc-metrics" id="si-risk-metrics"></div>
+              <div class="si-rc-cta">查看明细分析 →</div>
+            </button>
+
+          </div>
+
+          <!-- 明细分析面板 -->
           <section class="track contribution-track" id="sop-active-detail-panel" role="tabpanel" aria-labelledby="sop-hit-summary" aria-label="SOP策略洞察明细">
             <div class="track-header">
               <div style="display:flex;align-items:center;gap:10px">
@@ -3071,26 +3173,33 @@
   };
 
   const renderModuleSummary = (containerId, config) => {
+    // 新版本：更新角色卡片内容（不再依赖旧的 sop-module-summary DOM 结构）
+    const { item, metrics = [] } = config || {};
+    if (!item) return;
+    const keyMap = {
+      'sop-hit-summary':  { rule: 'si-hit-rule',  metrics: 'si-hit-metrics' },
+      'sop-loss-summary': { rule: 'si-loss-rule', metrics: 'si-loss-metrics' },
+      'sop-risk-summary': { rule: 'si-risk-rule', metrics: 'si-risk-metrics' }
+    };
+    const ids = keyMap[containerId];
+    if (!ids) return;
+    const ruleEl = document.getElementById(ids.rule);
+    const metricsEl = document.getElementById(ids.metrics);
+    if (ruleEl) ruleEl.textContent = item.rule;
+    if (metricsEl) {
+      metricsEl.innerHTML = metrics.map(m => `
+        <div class="si-rc-metric">
+          <span class="si-rc-metric-label">${m.label}</span>
+          <strong class="si-rc-metric-value">${m.value}</strong>
+        </div>`).join('');
+    }
+    // 同步激活状态
     const el = document.getElementById(containerId);
-    if (!el || !config?.item) return;
-    const { item, tone = 'deal', eyebrow, title, metrics = [] } = config;
-    const detailKey = el.dataset.sopSummary || '';
-    const isActive = detailKey === currentSOPDetail;
-    el.className = `sop-module-summary ${tone}${isActive ? ' active' : ''}`;
-    el.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    el.innerHTML = `
-      <div class="sop-summary-main">
-        <div class="sop-summary-eyebrow">${eyebrow}</div>
-        <div class="sop-summary-title">${title}</div>
-        <div class="sop-summary-meta">${item.scene} · ${item.rule}</div>
-      </div>
-      <div class="sop-summary-metrics">
-        ${metrics.map(metric => `
-          <div class="sop-summary-metric">
-            <span>${metric.label}</span>
-            <strong>${metric.value}</strong>
-          </div>`).join('')}
-      </div>`;
+    if (el) {
+      const isActive = (el.dataset.sopSummary || '') === currentSOPDetail;
+      el.classList.toggle('active', isActive);
+      el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
   };
 
   const syncSOPDetailPanels = () => {
@@ -3257,6 +3366,7 @@
       tone: 'deal',
       eyebrow: '下订话术命中率分析小结',
       title: currentHitSortMetric === 'diff' ? `${top.rule} 的下订命中优势最明显` : `${top.rule} 对下订命中优势贡献最高`,
+      roleLabel: '运营视角：哪些SOP应该强化',
       metrics: [
         { label: '下订用户数', value: countText(top.orderRecordings) },
         { label: '差异', value: signedRateText(top[target.hitDiffKey]) },
@@ -3297,6 +3407,7 @@
       tone: 'loss',
       eyebrow: '战败用户SOP缺失识别小结',
       title: `${top.rule} 是战败用户最突出的 SOP 缺失`,
+      roleLabel: '管理层视角：为什么战败',
       metrics: [
         { label: '战败用户数', value: countText(top.lossRecordings) },
         { label: '规则未命中数', value: countText(top.lossMissCount) },
@@ -3333,6 +3444,7 @@
       tone: 'risk',
       eyebrow: '战败风险命中率分析小结',
       title: `${top.rule} 在战败用户中风险命中更突出`,
+      roleLabel: '培训视角：哪些行为真正影响成交',
       metrics: [
         { label: '战败风险命中率', value: rateText(top.lossRisk) },
         { label: target.riskRateLabel, value: rateText(top[target.riskRateKey]) },
@@ -3471,8 +3583,34 @@
     syncSOPSortSwitches();
   };
 
+  // ── renderSIFunnel：渲染分析闭环漏斗顶部数字 ─────
+  const renderSIFunnel = () => {
+    const kpi = buildContributionKPIData();
+    const orderHitRate = parseFloat(kpi.order_sop_hit_rate.num);
+    const lossHitRate = parseFloat(kpi.lost_sop_hit_rate.num);
+    const gap = orderHitRate - lossHitRate;
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('si-fn-recordings', kpi.contribution_recordings.num);
+    set('si-fn-hit-rate', kpi.sop_hit_rate.num);
+    set('si-fn-order', kpi.order_users.num);
+    set('si-fn-loss', kpi.lost_users.num);
+
+    const insightEl = document.getElementById('si-funnel-insight');
+    if (insightEl) {
+      const orderHitEl = `<strong style="color:#16A34A">${kpi.order_sop_hit_rate.num}%</strong>`;
+      const lossHitEl = `<strong style="color:#DC2626">${kpi.lost_sop_hit_rate.num}%</strong>`;
+      const gapEl = `<strong>${gap.toFixed(1)}pp</strong>`;
+      const msg = gap > 10
+        ? `下订用户话术命中率 ${orderHitEl} 显著高于战败用户 ${lossHitEl}，差距 ${gapEl}。SOP执行质量与成交结果高度相关。`
+        : `下订用户话术命中率 ${orderHitEl}，战败用户 ${lossHitEl}，差距 ${gapEl}。建议持续追踪SOP执行对成交的影响。`;
+      insightEl.innerHTML = `<span class="si-funnel-insight-icon">💡</span><span>${msg}</span>`;
+    }
+  };
+
   // ── renderSOPImprovementTab：SOP策略洞察总调度 ─────
   const renderSOPImprovementTab = () => {
+    renderSIFunnel();
     renderHitCompare();
     renderLossMiss();
     renderRiskCompare();
@@ -4916,7 +5054,7 @@
     `;
   };
 
-  const renderOrgRankList = (title, rows, tone) => `
+  const renderOrgRankList = (title, rows, tone = '') => `
     <div class="issue-org-rank-card ${tone}">
       <div class="issue-org-rank-title">${title}</div>
       <div class="issue-org-rank-list">
@@ -4937,8 +5075,7 @@
 
   const renderOrgDrillView = (config, rule) => {
     const children = getCurrentOrgChildren().map((org, index) => buildOrgRuleStats(rule, org, index));
-    const highRows = [...children].sort((a, b) => b.rate - a.rate).slice(0, 5);
-    const lowRows = [...children].sort((a, b) => a.rate - b.rate).slice(0, 5);
+    const sortedRows = sortIssueOrgRows(children, issueRuleAnalysisState.sort);
     const canBackLevel = issueRuleAnalysisState.path.length > 0;
 
     return `
@@ -4951,8 +5088,7 @@
         <div><strong>${rule.hitCount}/${rule.sampleCount}</strong><span>${config.countLabel}</span></div>
       </div>
       <div class="issue-org-rank-grid">
-        ${renderOrgRankList(config.topTitle, highRows, 'top')}
-        ${renderOrgRankList(config.bottomTitle, lowRows, 'bottom')}
+        ${renderOrgRankList('当前组织列表', sortedRows)}
       </div>
     `;
   };
