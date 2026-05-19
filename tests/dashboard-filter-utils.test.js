@@ -11,7 +11,8 @@ const {
   toggleSceneSelection,
   getLegacySceneBucket,
   getInvitationSceneCount,
-  getSceneVolumeLabel
+  getSceneVolumeLabel,
+  getBusinessMetricKeysForSelection
 } = require('../dashboard-filter-utils.js');
 
 test('cloud source defaults to three cloud scenes', () => {
@@ -41,6 +42,16 @@ test('badge source removes cloud-only scenes and keeps badge defaults', () => {
 test('all source keeps only all when all is clicked', () => {
   const next = toggleSceneSelection(SOURCE_KEYS.all, [SCENE_KEYS.firstFollow], SCENE_KEYS.all);
   assert.deepEqual(next, [SCENE_KEYS.all]);
+});
+
+test('clicking all again from all-selected state clears current selection', () => {
+  const next = toggleSceneSelection(SOURCE_KEYS.all, [SCENE_KEYS.all], SCENE_KEYS.all);
+  assert.deepEqual(next, []);
+});
+
+test('all-selected master state deselecting one child keeps the rest selected', () => {
+  const next = toggleSceneSelection(SOURCE_KEYS.cloud, [SCENE_KEYS.all], SCENE_KEYS.firstFollow);
+  assert.deepEqual(next, [SCENE_KEYS.inviteStore, SCENE_KEYS.scheduleConfirm]);
 });
 
 test('cloud source collapses back to all when every allowed scene is selected', () => {
@@ -95,18 +106,26 @@ test('all selection reports 全部 label semantics through empty active scenes',
   const normalized = normalizeSceneSelection(SOURCE_KEYS.all, [SCENE_KEYS.all]);
 
   assert.equal(normalized.isAllSelected, true);
+  assert.equal(normalized.isNoneSelected, false);
   assert.deepEqual(normalized.activeScenes, []);
   assert.equal(normalized.effectiveSceneKey, SCENE_KEYS.all);
 });
 
-test('cloud source deselecting down to none returns all state', () => {
+test('cloud source deselecting down to none returns empty state', () => {
   const next = toggleSceneSelection(
     SOURCE_KEYS.cloud,
     [SCENE_KEYS.firstFollow],
     SCENE_KEYS.firstFollow
   );
 
-  assert.deepEqual(next, [SCENE_KEYS.all]);
+  assert.deepEqual(next, []);
+});
+
+test('empty selection is represented as none-selected, not all-selected', () => {
+  const normalized = normalizeSceneSelection(SOURCE_KEYS.cloud, []);
+  assert.equal(normalized.isAllSelected, false);
+  assert.equal(normalized.isNoneSelected, true);
+  assert.deepEqual(normalized.activeScenes, []);
 });
 
 test('badge source ignores cloud-only toggle attempts', () => {
@@ -134,4 +153,30 @@ test('scene volume labels match spec wording', () => {
   assert.equal(getSceneVolumeLabel(SCENE_KEYS.storeReception), '接待数');
   assert.equal(getSceneVolumeLabel(SCENE_KEYS.testDrive), '试驾数');
   assert.equal(getSceneVolumeLabel(SCENE_KEYS.all), '总量');
+});
+
+test('business metric keys follow source and scene selection rules', () => {
+  assert.deepEqual(
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.cloud, [SCENE_KEYS.all]),
+    ['invitation']
+  );
+  assert.deepEqual(
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.badge, [SCENE_KEYS.all]),
+    ['reception', 'test_drive']
+  );
+  assert.deepEqual(
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.all, [
+      SCENE_KEYS.firstFollow,
+      SCENE_KEYS.inviteStore,
+      SCENE_KEYS.scheduleConfirm
+    ]),
+    ['invitation']
+  );
+  assert.deepEqual(
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.all, [
+      SCENE_KEYS.storeReception,
+      SCENE_KEYS.testDrive
+    ]),
+    ['reception', 'test_drive']
+  );
 });

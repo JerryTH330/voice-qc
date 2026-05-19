@@ -128,68 +128,60 @@
         </section>
     
         <section class="store-top-nav" aria-label="顶部导航与筛选">
-          <div class="main-tabs-bar sales-role-nav">
-            <div class="main-tabs role-page-switch" id="main-tabs" role="tablist" aria-label="门店看板模块切换">
-              <button class="main-tab role-switch-link active" role="tab" data-tab="advisors" id="main-tab-advisors" aria-selected="true" aria-controls="main-panel-advisors">
-                顾问管理
-              </button>
-              <button class="main-tab role-switch-link" role="tab" data-tab="leads" id="main-tab-leads" aria-selected="false" aria-controls="main-panel-leads">
-                督办清单
-              </button>
-            </div>
-          </div>
         <!-- ══════════════════════════════════════
              全局筛选栏（v3：筛选置顶，紧贴导航栏下方）
              ══════════════════════════════════════ -->
-        <section class="global-filter-bar" aria-label="全局筛选">
-          <div class="store-filter-shell">
-            <div class="gf-group store-filter-box">
+        <section class="global-filter-bar session-filter-card" aria-label="全局筛选">
+          <div class="store-filter-shell session-filter-toolbar">
+            <div class="session-filter-row session-filter-row-segment store-filter-row-segment">
+            <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-stage">
               <span class="gf-label">数据来源</span>
-              <div class="gf-tabs" id="gf-source">
-                <button class="gf-tab active" data-source="all">全部</button>
-                <button class="gf-tab" data-source="cloud">云外呼</button>
-                <button class="gf-tab" data-source="badge">工牌</button>
+              <div class="gf-tabs todo-filter-tabs" id="gf-source" role="group" aria-label="数据来源">
+                <button class="gf-tab todo-filter-tab active" data-source="all" aria-pressed="true">全部</button>
+                <button class="gf-tab todo-filter-tab" data-source="cloud" aria-pressed="false">云外呼</button>
+                <button class="gf-tab todo-filter-tab" data-source="badge" aria-pressed="false">工牌</button>
               </div>
             </div>
-            <div class="gf-group store-filter-box">
+            <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-intent">
               <span class="gf-label">业务场景</span>
-              <div class="gf-tabs" id="gf-scene">
-                <button class="gf-tab active" data-scene="all">全部</button>
-                <button class="gf-tab" data-scene="first_follow">首触跟进</button>
-                <button class="gf-tab" data-scene="invite_store">邀约进店</button>
-                <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
-                <button class="gf-tab" data-scene="store_reception">进店接待</button>
-                <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
+              <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
+                <button class="gf-tab todo-filter-tab active" data-scene="all" aria-pressed="true">全部</button>
+                <button class="gf-tab todo-filter-tab" data-scene="first_follow" aria-pressed="false">首触跟进</button>
+                <button class="gf-tab todo-filter-tab" data-scene="invite_store" aria-pressed="false">邀约进店</button>
+                <button class="gf-tab todo-filter-tab" data-scene="schedule_confirm" aria-pressed="false">排程确认</button>
+                <button class="gf-tab todo-filter-tab" data-scene="store_reception" aria-pressed="false">进店接待</button>
+                <button class="gf-tab todo-filter-tab" data-scene="test_drive" aria-pressed="false">试乘试驾</button>
               </div>
             </div>
-            <div class="gf-group gf-time-group store-filter-box">
+            <div class="gf-group gf-time-group store-filter-box session-toolbar-control session-toolbar-segment-control store-toolbar-control-time">
               <span class="gf-label">时间</span>
-              <div class="gf-tabs" id="gf-time">
-                <button class="gf-tab active" data-time="1">昨日</button>
-                <button class="gf-tab" data-time="7">近7天</button>
-                <button class="gf-tab" data-time="15">近半月</button>
-                <button class="gf-tab" data-time="30">近1月</button>
-                <button class="gf-tab gf-tab-custom" data-time="custom" id="gf-custom-btn">自定义</button>
+              <div class="gf-tabs todo-filter-tabs" id="gf-time" role="group" aria-label="时间">
+                <button class="gf-tab todo-filter-tab active" data-time="1" aria-pressed="true">昨日</button>
+                <button class="gf-tab todo-filter-tab" data-time="7" aria-pressed="false">近7天</button>
+                <button class="gf-tab todo-filter-tab" data-time="15" aria-pressed="false">近半月</button>
+                <button class="gf-tab todo-filter-tab" data-time="30" aria-pressed="false">近1月</button>
+                <button class="gf-tab gf-tab-custom todo-filter-tab" data-time="custom" id="gf-custom-btn" aria-pressed="false">自定义</button>
               </div>
+              <div class="store-date-popover-anchor" id="store-date-control"></div>
             </div>
-            <div class="gf-group store-date-filter-shell" id="store-date-filter-shell" hidden>
-              <div class="store-date-control-slot" id="store-date-control"></div>
             </div>
-            <div class="gf-group store-filter-box">
-              <div class="store-model-dropdown" id="store-model-dropdown">
+            <div class="session-filter-row session-filter-row-main store-filter-row-main">
+            <div class="gf-group store-filter-box session-toolbar-control session-toolbar-menu session-toolbar-control-car store-model-dropdown" id="store-model-dropdown">
                 <span class="gf-label">车系</span>
-                <button type="button" class="store-model-trigger" id="store-model-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <button type="button" class="store-model-trigger session-select-trigger" id="store-model-trigger" aria-haspopup="listbox" aria-expanded="false">
                   <strong id="store-model-display">全部车系</strong>
-                  <span class="store-model-caret"></span>
+                  <span class="store-model-caret session-select-caret"></span>
                 </button>
-                <div class="store-model-panel" id="store-model-panel">
-                  <div class="store-model-option active" data-model="all"><span>全部车系</span></div>
-                  <div class="store-model-option" data-model="M8"><span>传祺M8</span></div>
-                  <div class="store-model-option" data-model="S7"><span>传祺S7</span></div>
-                  <div class="store-model-option" data-model="GS8"><span>传祺GS8</span></div>
-                  <div class="store-model-option" data-model="E8"><span>传祺E8</span></div>
+                <div class="store-model-panel session-menu-panel" id="store-model-panel">
+                  <div class="session-menu-option-list">
+                  <button type="button" class="store-model-option session-menu-option active" data-model="all"><span>全部车系</span></button>
+                  <button type="button" class="store-model-option session-menu-option" data-model="M8"><span>传祺M8</span></button>
+                  <button type="button" class="store-model-option session-menu-option" data-model="S7"><span>传祺S7</span></button>
+                  <button type="button" class="store-model-option session-menu-option" data-model="GS8"><span>传祺GS8</span></button>
+                  <button type="button" class="store-model-option session-menu-option" data-model="E8"><span>传祺E8</span></button>
+                  </div>
                 </div>
-              </div>
+            </div>
             </div>
           </div>
         </section>
@@ -215,6 +207,17 @@
         </section>
     
         <div class="store-tab-content-shell">
+
+          <div class="main-tabs-bar sales-role-nav">
+            <div class="main-tabs role-page-switch" id="main-tabs" role="tablist" aria-label="门店看板模块切换">
+              <button class="main-tab role-switch-link active" role="tab" data-tab="advisors" id="main-tab-advisors" aria-selected="true" aria-controls="main-panel-advisors">
+                顾问管理
+              </button>
+              <button class="main-tab role-switch-link" role="tab" data-tab="leads" id="main-tab-leads" aria-selected="false" aria-controls="main-panel-leads">
+                督办清单
+              </button>
+            </div>
+          </div>
     
         <!-- ══════════════════════════════════════
              Panel: 督办清单
@@ -278,10 +281,7 @@
             <div class="tab-left-stack" aria-label="顾问管理概览">
               <section class="track sop-overview-track" aria-label="质检概览">
                 <div class="track-header">
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div class="track-icon sop">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    </div>
+                  <div class="track-header-main">
                     <div>
                       <h2 class="track-title">质检概览</h2>
                       <p class="track-sub">质检合格率 · 质检小结</p>
@@ -781,6 +781,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js"></script>
+    <script src="./page.js?v=20260518101740"></script>
   </body>
 </html>
