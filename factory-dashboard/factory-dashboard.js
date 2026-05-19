@@ -1,6 +1,7 @@
 /* Generated from /Users/linxianxin/Downloads/厂端看板/factory-v2.* for native SPA route. */
 (function () {
   const FILTER_UTILS = window.__dashboardFilterUtils;
+  const FACTORY_HERO_UTILS = window.__factoryHeroUtils || {};
   const ISSUE_RULE_ANALYSIS_UTILS = window.__factoryIssueRuleAnalysisUtils || {};
   const {
     SOURCE_KEYS,
@@ -12,6 +13,9 @@
     getInvitationSceneCount,
     getSceneVolumeLabel
   } = FILTER_UTILS;
+  const {
+    getFactoryHeroSubtitle = (profile) => String(profile?.organization || profile?.region || '').trim()
+  } = FACTORY_HERO_UTILS;
   const {
     sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : [])
   } = ISSUE_RULE_ANALYSIS_UTILS;
@@ -40,23 +44,6 @@
       </div>
       <div class="gf-divider"></div>
       <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
-      <div class="gf-divider"></div>
-      <div class="gf-group gf-time-group store-filter-box">
-        <span class="gf-label">时间</span>
-        <div class="gf-tabs" id="gf-time">
-          <button class="gf-tab active" data-time="1">昨日</button>
-          <button class="gf-tab" data-time="7">近7天</button>
-          <button class="gf-tab" data-time="15">近半月</button>
-          <button class="gf-tab" data-time="30">近1月</button>
-          <button class="gf-tab gf-tab-custom" data-time="custom" id="gf-custom-btn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            自定义
-          </button>
-        </div>
-      </div>
-      <div class="gf-group store-date-filter-shell" id="store-date-filter-shell" hidden>
-        <div class="store-date-control-slot" id="store-date-control"></div>
-      </div>
       <div class="gf-group store-filter-box">
         <span class="gf-label">数据来源</span>
         <div class="gf-tabs" id="gf-source">
@@ -76,7 +63,19 @@
           <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
         </div>
       </div>
-      <div class="gf-divider"></div>
+      <div class="gf-group gf-time-group store-filter-box">
+        <span class="gf-label">时间</span>
+        <div class="gf-tabs" id="gf-time">
+          <button class="gf-tab active" data-time="1">昨日</button>
+          <button class="gf-tab" data-time="7">近7天</button>
+          <button class="gf-tab" data-time="15">近半月</button>
+          <button class="gf-tab" data-time="30">近1月</button>
+          <button class="gf-tab gf-tab-custom" data-time="custom" id="gf-custom-btn">自定义</button>
+        </div>
+      </div>
+      <div class="gf-group store-date-filter-shell" id="store-date-filter-shell" hidden>
+        <div class="store-date-control-slot" id="store-date-control"></div>
+      </div>
       <div class="gf-group store-filter-box">
         <div class="store-model-dropdown factory-model-dropdown" id="factory-model-dropdown">
           <span class="gf-label">车系</span>
@@ -94,17 +93,6 @@
         </div>
       </div>
     </section>
-    <div class="gf-date-popup" id="gf-date-popup">
-      <div class="gf-date-popup-header">选择时间范围</div>
-      <div class="gf-date-popup-body">
-        <div class="gf-date-field"><label>开始日期</label><input type="date" class="gf-date-input" id="gf-date-start"></div>
-        <div class="gf-date-field"><label>结束日期</label><input type="date" class="gf-date-input" id="gf-date-end"></div>
-      </div>
-      <div class="gf-date-popup-footer">
-        <button class="gf-popup-btn cancel" id="gf-date-cancel">取消</button>
-        <button class="gf-popup-btn confirm" id="gf-date-confirm">确认</button>
-      </div>
-    </div>
   </div>
 
   <div class="dashboard-content">
@@ -441,6 +429,56 @@
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
+  const formatFactoryDateDisplay = (value) => {
+    if (!value) {
+      return '不限';
+    }
+
+    const [year, month, day] = value.split('-');
+    return `${year}/${month}/${day}`;
+  };
+
+  const formatFactoryMonthLabel = (year, month) => `${year}年${month}月`;
+
+  const parseFactoryDateValue = (value) => {
+    if (!value) {
+      return null;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const formatFactoryDateValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getFactoryDateCells = (year, month) => {
+    const days = [];
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDate = new Date(year, month, 0).getDate();
+    const leadingSlots = (firstDay.getDay() + 6) % 7;
+
+    for (let index = 0; index < leadingSlots; index += 1) {
+      days.push(null);
+    }
+
+    for (let day = 1; day <= lastDate; day += 1) {
+      days.push(new Date(year, month - 1, day));
+    }
+
+    while (days.length % 7 !== 0) {
+      days.push(null);
+    }
+
+    return days;
+  };
+
+  const getFactoryDateRangeText = (startDate, endDate) => `${formatFactoryDateDisplay(startDate)} 至 ${formatFactoryDateDisplay(endDate)}`;
+
   const buildFactoryOrganizationTree = () => {
     return Object.entries(ORG_TREE).map(([region, zones]) => ({
       label: region,
@@ -620,6 +658,8 @@
   let currentBrand  = '传祺';   // SOP策略洞察品牌
   let currentQcScene = 'all';  // SOP策略洞察质检场景
   let currentTime   = '1';     // 时间: 1=昨日, 7=近7天, 15=近半月, 30=近1月, custom
+  let factoryTimeStartDate = '';
+  let factoryTimeEndDate = '';
   let currentModel  = 'all';   // 车型
   let currentTab    = 'sop-execution'; // 当前激活 Tab（SOP执行质检 / SOP策略洞察）
   let currentHitCompareTarget = 'loss';      // 话术命中率对比维度：loss / nonOrder
@@ -641,6 +681,20 @@
     'sop-hit-compare': false
   };
   let activeFormulaHelpKey = '';
+  const factoryDateShortcutOptions = [
+    { key: '1', label: '近1天' },
+    { key: '7', label: '近7天' },
+    { key: '15', label: '近15天' },
+    { key: '30', label: '近30天' }
+  ];
+  const factoryDateState = {
+    open: false,
+    activeField: 'startDate',
+    draftStartDate: '',
+    draftEndDate: '',
+    viewYear: new Date().getFullYear(),
+    viewMonth: new Date().getMonth() + 1
+  };
   const contributionSelectedRow = {
     'sop-hit-compare': 0,
     'sop-loss-miss': 0,
@@ -680,7 +734,8 @@
   const factoryUserProfile = {
     surname: '李',
     fullName: '李李',
-    region: '广州'
+    region: '广州',
+    organization: '华南大区'
   };
 
   const updateFactoryHeroIdentity = () => {
@@ -694,8 +749,7 @@
       name.textContent = factoryUserProfile.fullName;
     }
     if (subtitle) {
-      const brandLabel = currentBrand === 'all' ? '全品牌' : currentBrand;
-      subtitle.textContent = `${brandLabel}-${factoryUserProfile.region}`;
+      subtitle.textContent = getFactoryHeroSubtitle(factoryUserProfile);
     }
   };
 
@@ -1320,14 +1374,383 @@
     currentQcScene = val;
   });
 
+  const shiftFactoryReferenceDate = (date, offsetDays) => {
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + offsetDays);
+    return nextDate;
+  };
+
+  const getFactoryRangeValues = (rangeKey) => {
+    const anchorDate = new Date();
+    let startDate = anchorDate;
+    let endDate = anchorDate;
+
+    if (rangeKey === '1') {
+      startDate = shiftFactoryReferenceDate(anchorDate, -1);
+      endDate = startDate;
+    } else if (rangeKey === '7') {
+      startDate = shiftFactoryReferenceDate(anchorDate, -6);
+    } else if (rangeKey === '15') {
+      startDate = shiftFactoryReferenceDate(anchorDate, -14);
+    } else if (rangeKey === '30') {
+      startDate = shiftFactoryReferenceDate(anchorDate, -29);
+    }
+
+    return {
+      startDate: formatFactoryDateValue(startDate),
+      endDate: formatFactoryDateValue(endDate)
+    };
+  };
+
+  const syncFactoryTimeRangeFromQuickFilter = (rangeKey) => {
+    const { startDate, endDate } = getFactoryRangeValues(rangeKey);
+    factoryTimeStartDate = startDate;
+    factoryTimeEndDate = endDate;
+  };
+
+  const getFactoryDateLimitRange = () => {
+    const maxDate = new Date();
+    const minYear = maxDate.getFullYear();
+    const minMonth = maxDate.getMonth() - 6;
+    const minMonthLastDate = new Date(minYear, minMonth + 1, 0).getDate();
+    const minDate = new Date(minYear, minMonth, Math.min(maxDate.getDate(), minMonthLastDate));
+
+    return {
+      minDate,
+      maxDate,
+      minValue: formatFactoryDateValue(minDate),
+      maxValue: formatFactoryDateValue(maxDate)
+    };
+  };
+
+  const clampFactoryDateValue = (value) => {
+    if (!value) {
+      return '';
+    }
+
+    const { minValue, maxValue } = getFactoryDateLimitRange();
+    if (value < minValue) return minValue;
+    if (value > maxValue) return maxValue;
+    return value;
+  };
+
+  const isFactoryDateSelectable = (value) => {
+    if (!value) {
+      return false;
+    }
+
+    const { minValue, maxValue } = getFactoryDateLimitRange();
+    return value >= minValue && value <= maxValue;
+  };
+
+  const syncFactoryDateView = (value) => {
+    const target = parseFactoryDateValue(clampFactoryDateValue(value)) || getFactoryDateLimitRange().maxDate;
+    factoryDateState.viewYear = target.getFullYear();
+    factoryDateState.viewMonth = target.getMonth() + 1;
+  };
+
+  const shiftFactoryDateView = (offset) => {
+    const { minDate, maxDate } = getFactoryDateLimitRange();
+    const minMonthIndex = minDate.getFullYear() * 12 + minDate.getMonth();
+    const maxMonthIndex = maxDate.getFullYear() * 12 + maxDate.getMonth();
+    const currentMonthIndex = factoryDateState.viewYear * 12 + factoryDateState.viewMonth - 1;
+    const nextMonthIndex = Math.min(maxMonthIndex, Math.max(minMonthIndex, currentMonthIndex + offset));
+
+    factoryDateState.viewYear = Math.floor(nextMonthIndex / 12);
+    factoryDateState.viewMonth = (nextMonthIndex % 12) + 1;
+  };
+
+  const applyFactoryDateDraft = (field, value) => {
+    const nextValue = clampFactoryDateValue(value);
+    if (!nextValue) {
+      return;
+    }
+
+    if (field === 'startDate') {
+      factoryDateState.draftStartDate = nextValue;
+      if (!factoryDateState.draftEndDate || factoryDateState.draftEndDate < nextValue) {
+        factoryDateState.draftEndDate = nextValue;
+      }
+      factoryDateState.activeField = 'endDate';
+      syncFactoryDateView(factoryDateState.draftEndDate);
+      return;
+    }
+
+    factoryDateState.draftEndDate = nextValue;
+    if (!factoryDateState.draftStartDate || factoryDateState.draftStartDate > nextValue) {
+      factoryDateState.draftStartDate = nextValue;
+    }
+  };
+
+  const getFactoryRangeInclusiveDays = (startDate, endDate) => {
+    const start = parseFactoryDateValue(startDate);
+    const end = parseFactoryDateValue(endDate);
+    if (!start || !end) {
+      return 7;
+    }
+
+    const diff = Math.round((end.getTime() - start.getTime()) / 86400000);
+    return Math.max(1, diff + 1);
+  };
+
+  const getFactoryTimeRangeKey = () => {
+    if (currentTime !== 'custom') {
+      return currentTime;
+    }
+
+    const days = getFactoryRangeInclusiveDays(factoryTimeStartDate, factoryTimeEndDate);
+    if (days <= 1) return '1';
+    if (days <= 7) return '7';
+    if (days <= 15) return '15';
+    return '30';
+  };
+
+  const renderFactoryDateMenu = () => {
+    const activeField = factoryDateState.activeField;
+    const startDate = factoryDateState.draftStartDate;
+    const endDate = factoryDateState.draftEndDate;
+    const { minDate, maxDate, maxValue } = getFactoryDateLimitRange();
+    const todayValue = maxValue;
+    const minMonthIndex = minDate.getFullYear() * 12 + minDate.getMonth();
+    const maxMonthIndex = maxDate.getFullYear() * 12 + maxDate.getMonth();
+    const currentMonthIndex = factoryDateState.viewYear * 12 + factoryDateState.viewMonth - 1;
+    const disablePrevMonth = currentMonthIndex <= minMonthIndex;
+    const disableNextMonth = currentMonthIndex >= maxMonthIndex;
+    const cells = getFactoryDateCells(factoryDateState.viewYear, factoryDateState.viewMonth);
+
+    return `
+      <div class="session-menu-panel session-menu-panel-date">
+        <div class="session-date-panel-head">
+          <div class="session-date-panel-copy">
+            <span>日期范围</span>
+            <strong>${escapeHtml(getFactoryDateRangeText(startDate, endDate))}</strong>
+          </div>
+          <div class="session-date-nav">
+            <button type="button" class="session-date-nav-btn" data-factory-date-nav="-1" aria-label="上一个月"${disablePrevMonth ? ' disabled' : ''}>
+              <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
+            </button>
+            <strong>${escapeHtml(formatFactoryMonthLabel(factoryDateState.viewYear, factoryDateState.viewMonth))}</strong>
+            <button type="button" class="session-date-nav-btn" data-factory-date-nav="1" aria-label="下一个月"${disableNextMonth ? ' disabled' : ''}>
+              <i class="session-date-nav-arrow next" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="session-date-tabs">
+          <button type="button" class="session-date-tab${activeField === 'startDate' ? ' active' : ''}" data-factory-date-field="startDate">
+            <span>开始日期</span>
+            <strong>${escapeHtml(formatFactoryDateDisplay(startDate))}</strong>
+          </button>
+          <button type="button" class="session-date-tab${activeField === 'endDate' ? ' active' : ''}" data-factory-date-field="endDate">
+            <span>结束日期</span>
+            <strong>${escapeHtml(formatFactoryDateDisplay(endDate))}</strong>
+          </button>
+        </div>
+        <div class="session-date-weekdays">
+          <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+        </div>
+        <div class="session-date-grid">
+          ${cells.map((date) => {
+            if (!date) {
+              return '<span class="session-date-empty" aria-hidden="true"></span>';
+            }
+
+            const value = formatFactoryDateValue(date);
+            const isDisabled = !isFactoryDateSelectable(value);
+            const inRange = startDate && endDate && value >= startDate && value <= endDate;
+            const isStart = value === startDate;
+            const isEnd = value === endDate;
+            const isToday = value === todayValue;
+
+            return `
+              <button
+                type="button"
+                class="session-date-day${isDisabled ? ' is-disabled' : ''}${inRange ? ' in-range' : ''}${isStart ? ' is-start' : ''}${isEnd ? ' is-end' : ''}${isToday ? ' is-today' : ''}"
+                ${isDisabled ? 'disabled' : `data-factory-date-value="${escapeHtml(value)}"`}
+              >
+                ${date.getDate()}
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <div class="session-date-shortcuts">
+          ${factoryDateShortcutOptions.map((option) => `
+            <button type="button" class="session-date-shortcut" data-factory-date-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
+          `).join('')}
+        </div>
+        <div class="session-cascader-footer session-date-footer">
+          <span>${escapeHtml(`已选择 ${getFactoryDateRangeText(startDate, endDate)}`)}</span>
+          <div class="session-date-actions">
+            <button type="button" class="btn session-date-action-btn" data-factory-date-cancel="true">取消</button>
+            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-factory-date-apply="true">应用日期</button>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const bindFactoryDateEvents = () => {
+    const host = document.getElementById('store-date-control');
+    if (!host) {
+      return;
+    }
+
+    host.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    host.querySelectorAll('[data-factory-date-trigger]').forEach((node) => {
+      node.addEventListener('click', (event) => {
+        event.stopPropagation();
+
+        if (factoryDateState.open) {
+          factoryDateState.open = false;
+          renderFactoryDateControl();
+          return;
+        }
+
+        openFactoryDatePicker();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-field]').forEach((node) => {
+      node.addEventListener('click', () => {
+        factoryDateState.activeField = node.dataset.factoryDateField;
+        const value = factoryDateState.activeField === 'startDate'
+          ? factoryDateState.draftStartDate
+          : factoryDateState.draftEndDate;
+        syncFactoryDateView(value);
+        renderFactoryDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-nav]').forEach((node) => {
+      node.addEventListener('click', () => {
+        shiftFactoryDateView(Number(node.dataset.factoryDateNav));
+        renderFactoryDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-value]').forEach((node) => {
+      node.addEventListener('click', () => {
+        applyFactoryDateDraft(factoryDateState.activeField, node.dataset.factoryDateValue);
+        renderFactoryDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-shortcut]').forEach((node) => {
+      node.addEventListener('click', () => {
+        const { startDate, endDate } = getFactoryRangeValues(node.dataset.factoryDateShortcut);
+        factoryDateState.draftStartDate = startDate;
+        factoryDateState.draftEndDate = endDate;
+        factoryDateState.activeField = 'endDate';
+        syncFactoryDateView(endDate);
+        renderFactoryDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-cancel]').forEach((node) => {
+      node.addEventListener('click', () => {
+        closeFactoryDatePicker();
+      });
+    });
+
+    host.querySelectorAll('[data-factory-date-apply]').forEach((node) => {
+      node.addEventListener('click', () => {
+        applyFactoryDateFilters();
+      });
+    });
+  };
+
+  function renderFactoryDateControl() {
+    const host = document.getElementById('store-date-control');
+    const shell = document.getElementById('store-date-filter-shell');
+    if (!host) {
+      return;
+    }
+
+    if (currentTime !== 'custom') {
+      host.innerHTML = '';
+      if (shell) {
+        shell.hidden = true;
+      }
+      return;
+    }
+
+    if (shell) {
+      shell.hidden = false;
+    }
+
+    host.innerHTML = `
+      <div class="store-date-root${factoryDateState.open ? ' is-open' : ''}" data-factory-date-root="true">
+        <button
+          type="button"
+          class="session-date-trigger store-date-trigger${factoryDateState.open ? ' active' : ''}"
+          data-factory-date-trigger="true"
+          aria-label="日期范围筛选"
+          aria-haspopup="dialog"
+          aria-expanded="${factoryDateState.open ? 'true' : 'false'}"
+        >
+          <strong>${escapeHtml(formatFactoryDateDisplay(factoryTimeStartDate))}</strong>
+          <em>至</em>
+          <strong>${escapeHtml(formatFactoryDateDisplay(factoryTimeEndDate))}</strong>
+          <span class="session-date-icon" aria-hidden="true"></span>
+        </button>
+        ${factoryDateState.open ? renderFactoryDateMenu() : ''}
+      </div>
+    `;
+
+    bindFactoryDateEvents();
+  }
+
+  function closeFactoryDatePicker(shouldRender = true) {
+    if (!factoryDateState.open) {
+      return;
+    }
+
+    factoryDateState.open = false;
+    if (shouldRender) {
+      renderFactoryDateControl();
+    }
+  }
+
+  function openFactoryDatePicker() {
+    if (!factoryTimeStartDate || !factoryTimeEndDate) {
+      syncFactoryTimeRangeFromQuickFilter('7');
+    }
+
+    factoryDateState.open = true;
+    factoryDateState.activeField = 'startDate';
+    factoryDateState.draftStartDate = clampFactoryDateValue(factoryTimeStartDate);
+    factoryDateState.draftEndDate = clampFactoryDateValue(factoryTimeEndDate);
+    if (factoryDateState.draftStartDate && factoryDateState.draftEndDate && factoryDateState.draftStartDate > factoryDateState.draftEndDate) {
+      factoryDateState.draftStartDate = factoryDateState.draftEndDate;
+    }
+    syncFactoryDateView(factoryTimeStartDate || factoryTimeEndDate);
+    renderFactoryDateControl();
+  }
+
+  function applyFactoryDateFilters() {
+    const startDate = clampFactoryDateValue(factoryDateState.draftStartDate);
+    const endDate = clampFactoryDateValue(factoryDateState.draftEndDate);
+    factoryTimeStartDate = startDate && endDate && startDate > endDate ? endDate : startDate;
+    factoryTimeEndDate = startDate && endDate && startDate > endDate ? startDate : endDate;
+    currentTime = 'custom';
+    factoryDateState.open = false;
+    renderFactoryDateControl();
+    applyGlobalFilter();
+  }
+
+  syncFactoryTimeRangeFromQuickFilter(currentTime);
+
   // 绑定时间筛选
   bindGlobalFilter("gf-time", "time", val => {
     currentTime = val;
-    const popup    = document.getElementById('gf-date-popup');
     if (val === 'custom') {
-      if (popup) popup.classList.add('show');
+      openFactoryDatePicker();
     } else {
-      if (popup) popup.classList.remove('show');
+      syncFactoryTimeRangeFromQuickFilter(val);
+      closeFactoryDatePicker(false);
+      renderFactoryDateControl();
     }
   });
 
@@ -1389,47 +1812,22 @@
   };
   initFactoryModelDropdown();
 
-  // ══════════════════════════════════════════════════
-  // 8. 自定义日期弹窗
-  // ══════════════════════════════════════════════════
-  const datePopup   = document.getElementById('gf-date-popup');
-  const dateCancel  = document.getElementById('gf-date-cancel');
-  const dateConfirm = document.getElementById('gf-date-confirm');
+  document.addEventListener('click', (event) => {
+    const root = document.querySelector('[data-factory-date-root="true"]');
+    const timeTabs = document.getElementById('gf-time');
+    if (
+      factoryDateState.open
+      && root
+      && !root.contains(event.target)
+      && !timeTabs?.contains(event.target)
+    ) {
+      closeFactoryDatePicker();
+    }
+  });
 
-  // 取消
-  if (dateCancel) {
-    dateCancel.addEventListener('click', () => {
-      if (datePopup) datePopup.classList.remove('show');
-      // 回退到昨日
-      const tabs = document.querySelectorAll('#gf-time .gf-tab');
-      tabs.forEach(t => t.classList.remove('active'));
-      const defaultTab = document.querySelector('#gf-time .gf-tab[data-time="1"]');
-      if (defaultTab) { defaultTab.classList.add('active'); currentTime = '1'; }
-      applyGlobalFilter();
-    });
-  }
-
-  // 确认
-  if (dateConfirm) {
-    dateConfirm.addEventListener('click', () => {
-      if (datePopup) datePopup.classList.remove('show');
-      const startVal = document.getElementById('gf-date-start').value;
-      const endVal   = document.getElementById('gf-date-end').value;
-      if (startVal && endVal) {
-        const customBtn = document.getElementById('gf-custom-btn');
-        if (customBtn) customBtn.dataset.rangeLabel = `${startVal} ~ ${endVal}`;
-      }
-      applyGlobalFilter();
-    });
-  }
-
-  // 点击弹窗外关闭
-  document.addEventListener('click', (e) => {
-    if (datePopup && datePopup.classList.contains('show')) {
-      const customBtn = document.getElementById('gf-custom-btn');
-      if (!datePopup.contains(e.target) && e.target !== customBtn && !customBtn?.contains(e.target)) {
-        datePopup.classList.remove('show');
-      }
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeFactoryDatePicker();
     }
   });
 
@@ -1743,13 +2141,14 @@
   };
 
   const contributionScopeFactor = () => {
+    const timeRangeKey = getFactoryTimeRangeKey();
     let factor = currentBrand === '埃安' ? 1.18 : 1;
     if (currentQcScene === '邀约') factor *= 0.72;
     if (currentQcScene === '门店接待') factor *= 0.9;
     if (currentQcScene === '试乘试驾') factor *= 0.68;
-    if (currentTime === '7') factor *= 2.2;
-    if (currentTime === '15') factor *= 3.4;
-    if (currentTime === '30') factor *= 5.6;
+    if (timeRangeKey === '7') factor *= 2.2;
+    if (timeRangeKey === '15') factor *= 3.4;
+    if (timeRangeKey === '30') factor *= 5.6;
     if (currentRegion !== 'all') factor *= 0.56;
     if (currentZone !== 'all') factor *= 0.38;
     if (currentStore !== 'all') factor *= 0.18;
@@ -2400,9 +2799,9 @@
 
   // renderTrendChart 包装（供 renderTabContent 调用）
   const renderTrendChart = () => {
-    const range = (currentTime === 'custom' || !TREND_DATA[currentTime])
+    const range = !TREND_DATA[getFactoryTimeRangeKey()]
       ? '7'
-      : currentTime;
+      : getFactoryTimeRangeKey();
     buildChart(range);
   };
 
@@ -2829,10 +3228,11 @@
   };
 
   const contributionDelta = (index, tone = 'hit') => {
+    const timeRangeKey = getFactoryTimeRangeKey();
     let delta = currentBrand === '埃安' ? 1.4 : 0;
-    if (currentTime === '7') delta += 0.9;
-    if (currentTime === '15') delta += 1.6;
-    if (currentTime === '30') delta += 2.2;
+    if (timeRangeKey === '7') delta += 0.9;
+    if (timeRangeKey === '15') delta += 1.6;
+    if (timeRangeKey === '30') delta += 2.2;
     if (currentRegion !== 'all') delta -= 0.8;
     if (currentZone !== 'all') delta -= 1.3;
     if (currentStore !== 'all') delta -= 1.8;
@@ -2846,13 +3246,14 @@
   const countText = value => Number(value || 0).toLocaleString('zh-CN');
 
   const contributionCountFactor = () => {
+    const timeRangeKey = getFactoryTimeRangeKey();
     let factor = currentBrand === '埃安' ? 1.16 : 1;
     if (currentQcScene === '邀约') factor *= 0.72;
     if (currentQcScene === '门店接待') factor *= 0.9;
     if (currentQcScene === '试乘试驾') factor *= 0.68;
-    if (currentTime === '7') factor *= 2.2;
-    if (currentTime === '15') factor *= 3.4;
-    if (currentTime === '30') factor *= 5.6;
+    if (timeRangeKey === '7') factor *= 2.2;
+    if (timeRangeKey === '15') factor *= 3.4;
+    if (timeRangeKey === '30') factor *= 5.6;
     if (currentRegion !== 'all') factor *= 0.56;
     if (currentZone !== 'all') factor *= 0.38;
     if (currentStore !== 'all') factor *= 0.18;

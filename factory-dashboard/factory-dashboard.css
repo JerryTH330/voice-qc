@@ -5092,6 +5092,292 @@
   align-items: center;
 }
 
+.factory-dashboard-page .store-date-control-slot {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.factory-dashboard-page .store-date-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: auto;
+  min-width: 248px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(201, 210, 224, 0.88);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.factory-dashboard-page .store-date-root.is-open,
+.factory-dashboard-page .store-date-root:focus-within {
+  z-index: 140;
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.factory-dashboard-page .store-date-trigger {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.factory-dashboard-page .store-date-trigger,
+.factory-dashboard-page .store-date-trigger strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.factory-dashboard-page .store-date-trigger em {
+  color: #8a96ab;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.factory-dashboard-page .store-date-root .session-menu-panel-date {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  min-width: 0;
+  width: min(392px, calc(100vw - 80px));
+  max-width: min(392px, calc(100vw - 80px));
+  padding: 14px;
+  z-index: 150;
+  pointer-events: auto;
+}
+
+.factory-dashboard-page .store-date-root .session-menu-panel-date,
+.factory-dashboard-page .store-date-root .session-menu-panel-date * {
+  box-sizing: border-box;
+  font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.factory-dashboard-page .store-date-root .session-date-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-panel-copy span {
+  display: block;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.factory-dashboard-page .store-date-root .session-date-panel-copy strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.factory-dashboard-page .store-date-root .session-date-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(243, 247, 253, 0.96);
+}
+
+.factory-dashboard-page .store-date-root .session-date-nav strong {
+  min-width: 88px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.factory-dashboard-page .store-date-root .session-date-nav-btn {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.factory-dashboard-page .store-date-root .session-date-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-tab {
+  padding: 10px 12px;
+  border: 1px solid rgba(217, 226, 239, 0.92);
+  border-radius: 14px;
+  background: rgba(248, 250, 253, 0.96);
+  text-align: left;
+  cursor: pointer;
+}
+
+.factory-dashboard-page .store-date-root .session-date-tab span {
+  display: block;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.factory-dashboard-page .store-date-root .session-date-tab strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.factory-dashboard-page .store-date-root .session-date-tab.active {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.factory-dashboard-page .store-date-root .session-date-weekdays,
+.factory-dashboard-page .store-date-root .session-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-weekdays {
+  margin-top: 16px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-weekdays span {
+  text-align: center;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.factory-dashboard-page .store-date-root .session-date-grid {
+  margin-top: 8px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-empty,
+.factory-dashboard-page .store-date-root .session-date-day {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-empty {
+  display: block;
+}
+
+.factory-dashboard-page .store-date-root .session-date-day {
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.factory-dashboard-page .store-date-root .session-date-day:disabled,
+.factory-dashboard-page .store-date-root .session-date-day.is-disabled {
+  color: rgba(148, 163, 184, 0.78);
+  cursor: default;
+}
+
+.factory-dashboard-page .store-date-root .session-date-day:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.factory-dashboard-page .store-date-root .session-date-day:disabled:hover,
+.factory-dashboard-page .store-date-root .session-date-day.is-disabled:hover {
+  background: transparent;
+}
+
+.factory-dashboard-page .store-date-root .session-date-day.in-range {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--blue);
+}
+
+.factory-dashboard-page .store-date-root .session-date-day.is-start,
+.factory-dashboard-page .store-date-root .session-date-day.is-end {
+  background: linear-gradient(135deg, var(--blue), var(--blue-2));
+  color: #fff;
+}
+
+.factory-dashboard-page .store-date-root .session-date-day.is-today {
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.26);
+}
+
+.factory-dashboard-page .store-date-root .session-date-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-shortcut {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(217, 226, 239, 0.9);
+  border-radius: 999px;
+  background: rgba(248, 250, 253, 0.96);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.factory-dashboard-page .store-date-root .session-cascader-footer,
+.factory-dashboard-page .store-date-root .session-date-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(217, 226, 239, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.factory-dashboard-page .store-date-root .session-date-footer > span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.factory-dashboard-page .store-date-root .session-date-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.factory-dashboard-page .store-date-root .session-date-action-btn {
+  min-width: 94px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
 .factory-dashboard-page .gf-divider {
   width: 1px;
   height: 20px;
