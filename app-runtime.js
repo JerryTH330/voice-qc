@@ -2023,12 +2023,40 @@ function initStoreDashboardPage() {
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const getStoreHeroKpiItems = () => {
+    const selection = getStoreSceneSelection();
+    const singleScene = selection.activeScenes.length === 1 ? selection.activeScenes[0] : null;
+
+    if (singleScene === SCENE_KEYS.firstFollow
+      || singleScene === SCENE_KEYS.inviteStore
+      || singleScene === SCENE_KEYS.scheduleConfirm) {
+      return [{ key: 'invitation', isBiz: true }];
+    }
+
+    if (singleScene === SCENE_KEYS.storeReception) {
+      return [{ key: 'reception', isBiz: true }];
+    }
+
+    if (singleScene === SCENE_KEYS.testDrive) {
+      return [{ key: 'test_drive', isBiz: true }];
+    }
+
+    if (currentSource === SOURCE_KEYS.badge && selection.isAllSelected) {
+      return [
+        { key: 'reception', isBiz: true },
+        { key: 'test_drive', isBiz: true }
+      ];
+    }
+
+    return SCENE_KPI_MAP[selection.effectiveSceneKey] || SCENE_KPI_MAP.all;
+  };
+
   const renderHeroKPI = () => {
     const grid = document.getElementById("hero-kpi-grid");
     if (!grid) return;
 
-    const sceneKey = getEffectiveSceneKey();
-    const kpiItems = SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all;
+    const kpiItems = getStoreHeroKpiItems();
+    const isCompactKpi = kpiItems.length <= 2 && kpiItems.every(item => !item.pairedWith);
     const currentKpiData = buildStoreFilteredKpiData();
     const metricCards = [];
     const singleCards = [];
@@ -2039,7 +2067,11 @@ function initStoreDashboardPage() {
 
     const flushSingleCards = () => {
       if (!singleCards.length) return;
-      metricCards.push(`<div class="hm-single-grid">${singleCards.join('')}</div>`);
+      if (isCompactKpi) {
+        metricCards.push(...singleCards);
+      } else {
+        metricCards.push(`<div class="hm-single-grid">${singleCards.join('')}</div>`);
+      }
       singleCards.length = 0;
     };
 
@@ -4590,7 +4622,7 @@ grid.innerHTML = metricCards.join('');
           label: '线索管理',
           eyebrow: '03 / Leads',
           title: '线索列表',
-          desc: '与会话质检结果联动，便于按阶段、来源、车型与风险等级快速筛选重点线索。',
+          desc: '将客户在不同门店的线索统一归集，并关联录音分析、沉淀客户画像',
           noteTitle: '',
           noteText: '',
           userName: '销售经理 · 刘青',
@@ -4926,6 +4958,35 @@ grid.innerHTML = metricCards.join('');
         return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())} ${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
       }
 
+      function formatLeadLastContactValue(value, fallbackDateTime = '') {
+        const safeValue = String(value || '').trim()
+        const safeFallback = String(fallbackDateTime || '').trim()
+
+        if (!safeValue) {
+          return safeFallback ? `${safeFallback}:00` : ''
+        }
+
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(safeValue)) {
+          return safeValue
+        }
+
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(safeValue)) {
+          return `${safeValue}:00`
+        }
+
+        if (/^\d{2}-\d{2} \d{2}:\d{2}$/.test(safeValue)) {
+          const fallbackYear = safeFallback ? safeFallback.slice(0, 4) : '2026'
+          return `${fallbackYear}-${safeValue}:00`
+        }
+
+        const relativeTimeMatch = safeValue.match(/^(今天|昨天)\s+(\d{2}:\d{2})$/)
+        if (relativeTimeMatch && safeFallback) {
+          return `${safeFallback.slice(0, 10)} ${relativeTimeMatch[2]}:00`
+        }
+
+        return safeFallback ? `${safeFallback}:00` : safeValue
+      }
+
       function getDurationMinutes(duration) {
         const [minutes, seconds] = duration.split(':').map(Number)
         return minutes + Math.ceil(seconds / 60)
@@ -5152,6 +5213,8 @@ grid.innerHTML = metricCards.join('');
         const organizationMeta = getLeadOrganizationMeta(record.organizationPath, record.store)
         const aiIntentMeta = getLeadAiIntentMeta(record.aiIntentLevel || record.intentLevel, fallbackIndex)
         const leadSourceMeta = getLeadSourceHierarchyMeta(record, fallbackIndex)
+        const recordStartTime = record.recordStartTime || ''
+        const lastContact = formatLeadLastContactValue(record.lastContact, recordStartTime)
 
         return {
           ...record,
@@ -5160,6 +5223,8 @@ grid.innerHTML = metricCards.join('');
           store: organizationMeta.store,
           advisorName,
           owner: advisorName,
+          recordStartTime,
+          lastContact,
           intentGrade: record.intentGrade || leadIntentGradeValues[fallbackIndex % leadIntentGradeValues.length],
           aiIntentLevel: aiIntentMeta.label,
           aiIntentLevelClass: record.aiIntentLevelClass || aiIntentMeta.className,
@@ -5312,6 +5377,12 @@ grid.innerHTML = metricCards.join('');
         { label: '二级来源', value: 'secondSource' },
         { label: '三级来源', value: 'thirdSource' }
       ]
+      const leadCustomerSearchTargetOptions = [
+        { label: '客户名称', value: 'customerName' },
+        { label: '客户手机号', value: 'customerPhone' },
+        { label: '线索数', value: 'aggregateLeadCount' },
+        { label: '门店数', value: 'aggregateStoreCount' }
+      ]
       const leadCustomerNameOptions = ['全部', ...new Set(leadRecords.map((item) => item.customerName).filter(Boolean))]
       const leadCustomerPhoneOptions = ['全部', ...new Set(leadRecords.map((item) => item.customerPhone).filter(Boolean))]
       const leadCustomerStatusOptions = ['全部', ...leadStatusValues]
@@ -5320,10 +5391,13 @@ grid.innerHTML = metricCards.join('');
         organization: '全国',
         leadQueryTarget: 'customerName',
         leadQuery: '',
+        customerQueryTarget: 'customerName',
         intentGrade: '全部',
         leadStatus: '全部',
         customerQuery: '',
         customerStatus: '全部',
+        customerContactStartDate: '',
+        customerContactEndDate: '',
         startDate: '2026-03-08',
         endDate: '2026-03-12'
       }
@@ -5339,7 +5413,12 @@ grid.innerHTML = metricCards.join('');
         dateDraftStartDate: leadsDefaultFilters.startDate,
         dateDraftEndDate: leadsDefaultFilters.endDate,
         dateViewYear: Number(leadsDefaultFilters.startDate.slice(0, 4)),
-        dateViewMonth: Number(leadsDefaultFilters.startDate.slice(5, 7))
+        dateViewMonth: Number(leadsDefaultFilters.startDate.slice(5, 7)),
+        customerDateActiveField: 'startDate',
+        customerDateDraftStartDate: leadsDefaultFilters.customerContactStartDate,
+        customerDateDraftEndDate: leadsDefaultFilters.customerContactEndDate,
+        customerDateViewYear: Number(leadsDefaultFilters.endDate.slice(0, 4)),
+        customerDateViewMonth: Number(leadsDefaultFilters.endDate.slice(5, 7))
       }
       const leadsViewState = {
         mode: 'leads'
@@ -6850,20 +6929,42 @@ grid.innerHTML = metricCards.join('');
       }
 
       function renderLeadsCustomerSearchControl() {
+        const searchTarget = leadCustomerSearchTargetOptions.some((option) => option.value === leadsFilterState.customerQueryTarget)
+          ? leadsFilterState.customerQueryTarget
+          : 'customerName'
+        const searchTargetLabel = getLeadCustomerSearchTargetLabel(searchTarget)
+        const open = leadsMenuState.openMenu === 'customerQueryTarget'
+
         return `
-          <label class="session-toolbar-control session-toolbar-control-search" aria-label="客户姓名或手机号查询">
-            <span>客户查询</span>
-            <div class="session-search-field">
-              <input
-                type="text"
-                class="session-search-input"
-                data-leads-customer-query
-                value="${escapeHtml(leadsFilterState.customerQuery || '')}"
-                placeholder="请输入客户姓名或手机号"
-              />
-              <span class="session-search-icon" aria-hidden="true"></span>
+          <div class="session-toolbar-control session-toolbar-control-search session-toolbar-control-phone-search session-toolbar-menu${open ? ' is-open' : ''}" data-leads-menu-root="customerQueryTarget" aria-label="${escapeHtml(`${searchTargetLabel}查询`)}">
+            <div class="session-phone-search-main">
+              <div class="session-phone-target-select-wrap">
+                <button
+                  type="button"
+                  class="session-phone-target-trigger${open ? ' active' : ''}"
+                  data-leads-menu-trigger="customerQueryTarget"
+                  aria-label="客户查询字段"
+                  aria-haspopup="listbox"
+                  aria-expanded="${open ? 'true' : 'false'}"
+                >
+                  <strong>${escapeHtml(searchTargetLabel)}</strong>
+                  <span class="session-select-caret" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="session-search-field">
+                <input
+                  type="text"
+                  class="session-search-input"
+                  data-leads-customer-query
+                  value="${escapeHtml(leadsFilterState.customerQuery || '')}"
+                  aria-label="${escapeHtml(`${searchTargetLabel}输入`)}"
+                  placeholder="${escapeHtml(getLeadCustomerSearchPlaceholder(searchTarget))}"
+                />
+                <span class="session-search-icon" aria-hidden="true"></span>
+              </div>
             </div>
-          </label>
+            ${open ? renderLeadsOptionMenu('customerQueryTarget', leadCustomerSearchTargetOptions, searchTarget, 'session-phone-target-menu') : ''}
+          </div>
         `
       }
 
@@ -6926,6 +7027,30 @@ grid.innerHTML = metricCards.join('');
               <span class="session-date-icon" aria-hidden="true"></span>
             </button>
             ${open ? renderLeadsDateMenu() : ''}
+          </div>
+        `
+      }
+
+      function renderLeadsCustomerContactDateControl() {
+        const open = leadsMenuState.openMenu === 'customerContactDate'
+        const startDate = leadsFilterState.customerContactStartDate
+        const endDate = leadsFilterState.customerContactEndDate
+
+        return `
+          <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date${open ? ' is-open' : ''}" data-leads-menu-root="customerContactDate">
+            <span>最近一次联系时间</span>
+            <button
+              type="button"
+              class="session-date-trigger${open ? ' active' : ''}"
+              data-leads-menu-trigger="customerContactDate"
+              aria-label="最近一次联系时间筛选"
+              aria-haspopup="dialog"
+              aria-expanded="${open ? 'true' : 'false'}"
+            >
+              <strong>${escapeHtml(getLeadCustomerDateRangeText(startDate, endDate))}</strong>
+              <span class="session-date-icon" aria-hidden="true"></span>
+            </button>
+            ${open ? renderLeadsCustomerContactDateMenu() : ''}
           </div>
         `
       }
@@ -7097,6 +7222,84 @@ grid.innerHTML = metricCards.join('');
         `
       }
 
+      function renderLeadsCustomerContactDateMenu() {
+        const activeField = leadsMenuState.customerDateActiveField
+        const startDate = leadsMenuState.customerDateDraftStartDate
+        const endDate = leadsMenuState.customerDateDraftEndDate
+        const todayValue = formatSessionDateValue(new Date())
+        const cells = getSessionDateCells(leadsMenuState.customerDateViewYear, leadsMenuState.customerDateViewMonth)
+
+        return `
+          <div class="session-menu-panel session-menu-panel-date" data-leads-menu-panel="customerContactDate">
+            <div class="session-date-panel-head">
+              <div class="session-date-panel-copy">
+                <span>最近一次联系时间</span>
+                <strong>${escapeHtml(getLeadCustomerDateRangeText(startDate, endDate))}</strong>
+              </div>
+              <div class="session-date-nav">
+                <button type="button" class="session-date-nav-btn" data-leads-customer-date-nav="-1" aria-label="上一个月">
+                  <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
+                </button>
+                <strong>${escapeHtml(formatSessionMonthLabel(leadsMenuState.customerDateViewYear, leadsMenuState.customerDateViewMonth))}</strong>
+                <button type="button" class="session-date-nav-btn" data-leads-customer-date-nav="1" aria-label="下一个月">
+                  <i class="session-date-nav-arrow next" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="session-date-tabs">
+              <button type="button" class="session-date-tab${activeField === 'startDate' ? ' active' : ''}" data-leads-customer-date-field="startDate">
+                <span>开始日期</span>
+                <strong>${escapeHtml(formatSessionDateDisplay(startDate))}</strong>
+              </button>
+              <button type="button" class="session-date-tab${activeField === 'endDate' ? ' active' : ''}" data-leads-customer-date-field="endDate">
+                <span>结束日期</span>
+                <strong>${escapeHtml(formatSessionDateDisplay(endDate))}</strong>
+              </button>
+            </div>
+            <div class="session-date-weekdays">
+              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+            </div>
+            <div class="session-date-grid">
+              ${cells
+                .map((date) => {
+                  if (!date) {
+                    return '<span class="session-date-empty" aria-hidden="true"></span>'
+                  }
+                  const value = formatSessionDateValue(date)
+                  const inRange = startDate && endDate && value >= startDate && value <= endDate
+                  const isStart = value === startDate
+                  const isEnd = value === endDate
+                  const isToday = value === todayValue
+                  return `
+                    <button
+                      type="button"
+                      class="session-date-day${inRange ? ' in-range' : ''}${isStart ? ' is-start' : ''}${isEnd ? ' is-end' : ''}${isToday ? ' is-today' : ''}"
+                      data-leads-customer-date-value="${escapeHtml(value)}"
+                    >
+                      ${date.getDate()}
+                    </button>
+                  `
+                })
+                .join('')}
+            </div>
+            <div class="session-date-shortcuts">
+              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="yesterday">昨日</button>
+              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last7">近7天</button>
+              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last15">近半月</button>
+              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last30">近1月</button>
+              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="custom">自定义</button>
+            </div>
+            <div class="session-cascader-footer session-date-footer">
+              <span>${escapeHtml(`已选择 ${getLeadCustomerDateRangeText(startDate, endDate)}`)}</span>
+              <div class="session-date-actions">
+                <button type="button" class="btn session-date-action-btn" data-leads-customer-date-cancel="true">取消</button>
+                <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-leads-customer-date-apply="true">应用日期</button>
+              </div>
+            </div>
+          </div>
+        `
+      }
+
       function getFilteredLeadRecords() {
         const searchTarget = leadSearchTargetOptions.some((option) => option.value === leadsFilterState.leadQueryTarget)
           ? leadsFilterState.leadQueryTarget
@@ -7139,14 +7342,96 @@ grid.innerHTML = metricCards.join('');
         return String(value || '').trim().toLowerCase().replace(/\s+/g, '')
       }
 
+      function getLeadCustomerSearchTargetLabel(value) {
+        return leadCustomerSearchTargetOptions.find((option) => option.value === value)?.label || '客户名称'
+      }
+
+      function getLeadCustomerSearchPlaceholder(value) {
+        const label = getLeadCustomerSearchTargetLabel(value)
+        return `请输入${label}`
+      }
+
+      function getLeadCustomerLastContactDateValue(item) {
+        return String(item?.lastContact || '').slice(0, 10)
+      }
+
+      function getLeadCustomerSearchMatch(item, target, query) {
+        const normalizedQuery = normalizeLeadCustomerQueryValue(query)
+        if (!normalizedQuery) {
+          return true
+        }
+
+        if (target === 'aggregateLeadCount' || target === 'aggregateStoreCount') {
+          return String(item?.[target] ?? '') === normalizedQuery
+        }
+
+        const normalizedValue = normalizeLeadCustomerQueryValue(item?.[target] ?? '')
+        return normalizedValue.includes(normalizedQuery)
+      }
+
+      function shiftLeadCustomerReferenceDate(date, offsetDays) {
+        const nextDate = new Date(date)
+        nextDate.setDate(nextDate.getDate() + offsetDays)
+        return nextDate
+      }
+
+      function getLeadCustomerLastContactAnchorDate() {
+        const aggregatedRecords = buildLeadCustomerAggregateRecords(leadRecords)
+        let latestDate = null
+
+        aggregatedRecords.forEach((item) => {
+          const candidate = parseSessionDateValue(getLeadCustomerLastContactDateValue(item))
+          if (candidate && (!latestDate || candidate.getTime() > latestDate.getTime())) {
+            latestDate = candidate
+          }
+        })
+
+        return latestDate || new Date()
+      }
+
+      function getLeadCustomerRangeValues(rangeMode, anchorDateValue = '') {
+        const anchorDate = parseSessionDateValue(anchorDateValue) || getLeadCustomerLastContactAnchorDate()
+        let startDate = anchorDate
+        let endDate = anchorDate
+
+        if (rangeMode === 'yesterday') {
+          startDate = shiftLeadCustomerReferenceDate(anchorDate, -1)
+          endDate = startDate
+        } else if (rangeMode === 'last7') {
+          startDate = shiftLeadCustomerReferenceDate(anchorDate, -6)
+        } else if (rangeMode === 'last15') {
+          startDate = shiftLeadCustomerReferenceDate(anchorDate, -14)
+        } else if (rangeMode === 'last30') {
+          startDate = shiftLeadCustomerReferenceDate(anchorDate, -29)
+        }
+
+        return {
+          startDate: formatSessionDateValue(startDate),
+          endDate: formatSessionDateValue(endDate)
+        }
+      }
+
+      function getLeadCustomerDateRangeText(startDate, endDate) {
+        if (!startDate && !endDate) {
+          return '不限'
+        }
+        if (!startDate || !endDate) {
+          return formatSessionDateDisplay(startDate || endDate)
+        }
+        return getSessionDateRangeText(startDate, endDate)
+      }
+
       function getFilteredLeadCustomerRecords() {
-        const customerQuery = normalizeLeadCustomerQueryValue(leadsFilterState.customerQuery)
+        const customerQueryTarget = leadCustomerSearchTargetOptions.some((option) => option.value === leadsFilterState.customerQueryTarget)
+          ? leadsFilterState.customerQueryTarget
+          : 'customerName'
         return buildLeadCustomerAggregateRecords(leadRecords).filter((item) => {
-          const customerName = normalizeLeadCustomerQueryValue(item.customerName)
-          const customerPhone = normalizeLeadCustomerQueryValue(item.customerPhone)
-          const customerQueryMatch = !customerQuery || customerName.includes(customerQuery) || customerPhone.includes(customerQuery)
+          const lastContactDate = getLeadCustomerLastContactDateValue(item)
+          const customerQueryMatch = getLeadCustomerSearchMatch(item, customerQueryTarget, leadsFilterState.customerQuery)
           const customerStatusMatch = leadsFilterState.customerStatus === '全部' || item.leadStatus === leadsFilterState.customerStatus
-          return customerQueryMatch && customerStatusMatch
+          const startMatch = !leadsFilterState.customerContactStartDate || lastContactDate >= leadsFilterState.customerContactStartDate
+          const endMatch = !leadsFilterState.customerContactEndDate || lastContactDate <= leadsFilterState.customerContactEndDate
+          return customerQueryMatch && customerStatusMatch && startMatch && endMatch
         })
       }
 
@@ -7199,12 +7484,12 @@ grid.innerHTML = metricCards.join('');
         if (viewMode === 'customers') {
           return `
             <tr>
-              <th>客户姓名</th>
-              <th>客户号码</th>
-              <th>包含线索数</th>
+              <th>客户名称</th>
+              <th>客户手机</th>
+              <th>关联线索数</th>
               <th>涉及门店数</th>
               <th>线索状态</th>
-              <th>最近联系</th>
+              <th>最近一次联系时间</th>
               <th>操作</th>
             </tr>
           `
@@ -7217,11 +7502,11 @@ grid.innerHTML = metricCards.join('');
             <th>战区</th>
             <th>门店</th>
             <th>顾问姓名</th>
-            <th>客户姓名</th>
-            <th>客户号码</th>
+            <th>客户名称</th>
+            <th>客户手机</th>
             <th>意向级别</th>
             <th>线索状态</th>
-            <th>最近联系</th>
+            <th>最近一次联系时间</th>
             <th>线索来源</th>
             <th>二级来源</th>
             <th>三级来源</th>
@@ -7294,6 +7579,7 @@ grid.innerHTML = metricCards.join('');
           container.innerHTML = `
             ${renderLeadsCustomerSearchControl()}
             ${renderLeadsMenuControl('customerStatus', '线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
+            ${renderLeadsCustomerContactDateControl()}
             <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
           `
           return
@@ -7326,7 +7612,7 @@ grid.innerHTML = metricCards.join('');
         const validCount = document.getElementById('leadsValidCount')
         const remoteCount = document.getElementById('leadsRemoteCount')
         const pagination = document.getElementById('leadsPagination')
-        if (!tbody || !totalCount || !pendingCount || !followingCount || !orderedCount || !lostCount || !validCount || !remoteCount) return
+        if (!tbody || !totalCount) return
 
         if (thead) {
           thead.innerHTML = getLeadsTableHeaderMarkup(viewMode)
@@ -7335,12 +7621,12 @@ grid.innerHTML = metricCards.join('');
         tableWrap?.classList.toggle('customer-aggregate-wrap', viewMode === 'customers')
 
         totalCount.textContent = summaryRecords.length
-        pendingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '未跟进').length
-        followingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '跟进中').length
-        orderedCount.textContent = summaryRecords.filter((item) => item.leadStatus === '已下定').length
-        lostCount.textContent = summaryRecords.filter((item) => item.leadStatus === '战败').length
-        validCount.textContent = summaryRecords.filter((item) => item.leadStatus === '有效').length
-        remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
+        if (pendingCount) pendingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '未跟进').length
+        if (followingCount) followingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '跟进中').length
+        if (orderedCount) orderedCount.textContent = summaryRecords.filter((item) => item.leadStatus === '已下定').length
+        if (lostCount) lostCount.textContent = summaryRecords.filter((item) => item.leadStatus === '战败').length
+        if (validCount) validCount.textContent = summaryRecords.filter((item) => item.leadStatus === '有效').length
+        if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
           tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 7 : 15}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
@@ -7366,10 +7652,7 @@ grid.innerHTML = metricCards.join('');
                 <td>${escapeHtml(item.aggregateLeadCount)}</td>
                 <td>${escapeHtml(item.aggregateStoreCount)}</td>
                 <td>
-                  <span class="status-inline ${getLeadStatusClass(item.leadStatus)}">
-                    <span class="status-inline-dot" aria-hidden="true"></span>
-                    <span>${escapeHtml(item.leadStatus)}</span>
-                  </span>
+                  <span>${escapeHtml(item.leadStatus)}</span>
                 </td>
                 <td>${escapeHtml(item.lastContact)}</td>
                 <td>
@@ -7403,10 +7686,7 @@ grid.innerHTML = metricCards.join('');
                 <td>${escapeHtml(item.customerPhone)}</td>
                 <td><span class="pill-inline intent-grade-pill ${getLeadIntentGradeClass(item.intentGrade)}">${escapeHtml(item.intentGrade)}</span></td>
                 <td>
-                  <span class="status-inline ${getLeadStatusClass(item.leadStatus)}">
-                    <span class="status-inline-dot" aria-hidden="true"></span>
-                    <span>${escapeHtml(item.leadStatus)}</span>
-                  </span>
+                  <span>${escapeHtml(item.leadStatus)}</span>
                 </td>
                 <td>${escapeHtml(item.lastContact)}</td>
                 <td>${escapeHtml(item.leadSource)}</td>
@@ -7497,6 +7777,17 @@ grid.innerHTML = metricCards.join('');
               leadsMenuState.dateViewMonth = Number(leadsMenuState.dateDraftStartDate.slice(5, 7))
             }
 
+            if (nextMenu === 'customerContactDate') {
+              const anchorDate = getLeadCustomerLastContactAnchorDate()
+              const fallbackDateValue = formatSessionDateValue(anchorDate)
+              const endDate = leadsFilterState.customerContactEndDate || fallbackDateValue
+              leadsMenuState.customerDateActiveField = 'startDate'
+              leadsMenuState.customerDateDraftStartDate = leadsFilterState.customerContactStartDate
+              leadsMenuState.customerDateDraftEndDate = leadsFilterState.customerContactEndDate
+              leadsMenuState.customerDateViewYear = Number(endDate.slice(0, 4))
+              leadsMenuState.customerDateViewMonth = Number(endDate.slice(5, 7))
+            }
+
             renderLeadsFilters()
             bindLeadsFilterEvents()
           })
@@ -7506,7 +7797,7 @@ grid.innerHTML = metricCards.join('');
           node.addEventListener('click', () => {
             const filterKey = node.dataset.leadsSelectKey
             const nextValue = node.dataset.leadsSelectValue
-            if (filterKey === 'leadQueryTarget' && leadsFilterState[filterKey] !== nextValue) {
+            if ((filterKey === 'leadQueryTarget' || filterKey === 'customerQueryTarget') && leadsFilterState[filterKey] !== nextValue) {
               leadsPaginationState.page = 1
             }
             leadsFilterState[filterKey] = nextValue
@@ -7634,6 +7925,97 @@ grid.innerHTML = metricCards.join('');
           })
         })
 
+        pageHost.querySelectorAll('[data-leads-customer-date-field]').forEach((node) => {
+          node.addEventListener('click', () => {
+            leadsMenuState.customerDateActiveField = node.dataset.leadsCustomerDateField
+            const value = node.dataset.leadsCustomerDateField === 'startDate'
+              ? leadsMenuState.customerDateDraftStartDate
+              : leadsMenuState.customerDateDraftEndDate
+            const target = parseSessionDateValue(value)
+            if (target) {
+              leadsMenuState.customerDateViewYear = target.getFullYear()
+              leadsMenuState.customerDateViewMonth = target.getMonth() + 1
+            }
+            renderLeadsFilters()
+            bindLeadsFilterEvents()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-customer-date-nav]').forEach((node) => {
+          node.addEventListener('click', () => {
+            let nextYear = leadsMenuState.customerDateViewYear
+            let nextMonth = leadsMenuState.customerDateViewMonth + Number(node.dataset.leadsCustomerDateNav)
+            while (nextMonth < 1) { nextMonth += 12; nextYear -= 1 }
+            while (nextMonth > 12) { nextMonth -= 12; nextYear += 1 }
+            leadsMenuState.customerDateViewYear = nextYear
+            leadsMenuState.customerDateViewMonth = nextMonth
+            renderLeadsFilters()
+            bindLeadsFilterEvents()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-customer-date-value]').forEach((node) => {
+          node.addEventListener('click', () => {
+            const value = node.dataset.leadsCustomerDateValue
+            if (leadsMenuState.customerDateActiveField === 'startDate') {
+              leadsMenuState.customerDateDraftStartDate = value
+              if (!leadsMenuState.customerDateDraftEndDate || leadsMenuState.customerDateDraftEndDate < value) {
+                leadsMenuState.customerDateDraftEndDate = value
+              }
+              leadsMenuState.customerDateActiveField = 'endDate'
+            } else {
+              leadsMenuState.customerDateDraftEndDate = value
+              if (!leadsMenuState.customerDateDraftStartDate || leadsMenuState.customerDateDraftStartDate > value) {
+                leadsMenuState.customerDateDraftStartDate = value
+              }
+            }
+            renderLeadsFilters()
+            bindLeadsFilterEvents()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-customer-date-shortcut]').forEach((node) => {
+          node.addEventListener('click', () => {
+            const shortcut = node.dataset.leadsCustomerDateShortcut
+            if (shortcut === 'custom') {
+              leadsMenuState.customerDateActiveField = 'startDate'
+              renderLeadsFilters()
+              bindLeadsFilterEvents()
+              return
+            }
+
+            const anchorDateValue = formatSessionDateValue(getLeadCustomerLastContactAnchorDate())
+            const { startDate, endDate } = getLeadCustomerRangeValues(shortcut, anchorDateValue)
+            leadsMenuState.customerDateDraftStartDate = startDate
+            leadsMenuState.customerDateDraftEndDate = endDate
+            leadsMenuState.customerDateActiveField = 'endDate'
+            const endDateObject = parseSessionDateValue(endDate)
+            if (endDateObject) {
+              leadsMenuState.customerDateViewYear = endDateObject.getFullYear()
+              leadsMenuState.customerDateViewMonth = endDateObject.getMonth() + 1
+            }
+            renderLeadsFilters()
+            bindLeadsFilterEvents()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-customer-date-cancel]').forEach((node) => {
+          node.addEventListener('click', () => {
+            leadsMenuState.openMenu = null
+            renderLeadsPage()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-customer-date-apply]').forEach((node) => {
+          node.addEventListener('click', () => {
+            leadsFilterState.customerContactStartDate = leadsMenuState.customerDateDraftStartDate
+            leadsFilterState.customerContactEndDate = leadsMenuState.customerDateDraftEndDate
+            leadsMenuState.openMenu = null
+            leadsPaginationState.page = 1
+            renderLeadsPage()
+          })
+        })
+
         pageHost.querySelectorAll('[data-leads-action="reset"]').forEach((node) => {
           node.addEventListener('click', () => {
             Object.assign(leadsFilterState, leadsDefaultFilters)
@@ -7644,7 +8026,12 @@ grid.innerHTML = metricCards.join('');
               dateDraftStartDate: leadsDefaultFilters.startDate,
               dateDraftEndDate: leadsDefaultFilters.endDate,
               dateViewYear: Number(leadsDefaultFilters.startDate.slice(0, 4)),
-              dateViewMonth: Number(leadsDefaultFilters.startDate.slice(5, 7))
+              dateViewMonth: Number(leadsDefaultFilters.startDate.slice(5, 7)),
+              customerDateActiveField: 'startDate',
+              customerDateDraftStartDate: leadsDefaultFilters.customerContactStartDate,
+              customerDateDraftEndDate: leadsDefaultFilters.customerContactEndDate,
+              customerDateViewYear: Number(leadsDefaultFilters.endDate.slice(0, 4)),
+              customerDateViewMonth: Number(leadsDefaultFilters.endDate.slice(5, 7))
             })
             renderLeadsPage()
           })
@@ -9717,10 +10104,28 @@ grid.innerHTML = metricCards.join('');
         }
       }
 
-      function buildCustomerDetailPayload(selection = customerDetailSelection) {
+      function getCustomerDetailAggregateRecord(selection = customerDetailSelection) {
         const safeSelection = {
           ...customerDetailDefaultSelection,
           ...selection
+        }
+        const customerPhone = String(safeSelection.customerPhone || '').trim()
+        const customerName = String(safeSelection.customerName || '').trim()
+        const records = getFilteredLeadCustomerRecords()
+
+        return records.find((item) => {
+          const itemPhone = String(item.customerPhone || '').trim()
+          const itemName = String(item.customerName || '').trim()
+          return (customerPhone && itemPhone === customerPhone) || (customerName && itemName === customerName)
+        }) || null
+      }
+
+      function buildCustomerDetailPayload(selection = customerDetailSelection) {
+        const aggregateRecord = getCustomerDetailAggregateRecord(selection)
+        const safeSelection = {
+          ...customerDetailDefaultSelection,
+          ...selection,
+          ...(aggregateRecord || {})
         }
         const storeCountText = Number(safeSelection.aggregateStoreCount) > 1
           ? `${safeSelection.store} 等 ${safeSelection.aggregateStoreCount} 家门店`
@@ -9736,9 +10141,97 @@ grid.innerHTML = metricCards.join('');
           currentStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
           otherStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
           currentStoreBadge: safeSelection.store,
-          singleStoreLabel: `${safeSelection.store.replace(/门店$/, '')}<span class="customer-intention-scope">(单店视角)</span>`,
+          singleStoreName: safeSelection.store,
           mergedProfile: `有两个孩子、重视乘坐舒适性与价格方案的高意向客户，后续应围绕试驾体验、空间优势、金融免息和置换补贴做一致性跟进。`
         }
+      }
+
+      function normalizeCustomerStoreName(value) {
+        return String(value || '').replace(/\s+/g, '').trim()
+      }
+
+      function getCustomerStoreToneFromNode(node) {
+        if (!node) {
+          return ''
+        }
+        if (node.classList.contains('customer-journey-filter-btn-current') || node.classList.contains('customer-journey-item-current')) {
+          return 'current'
+        }
+        if (node.classList.contains('customer-journey-filter-btn-other') || node.classList.contains('customer-journey-item-other')) {
+          return 'other'
+        }
+        if (node.classList.contains('customer-journey-filter-btn-extra') || node.classList.contains('customer-journey-item-extra')) {
+          return 'extra'
+        }
+        return ''
+      }
+
+      function buildCustomerStoreToneMap() {
+        const toneMap = new Map()
+
+        pageHost.querySelectorAll('[data-customer-journey-filter]').forEach((button) => {
+          const filterKey = button.dataset.customerJourneyFilter
+          if (!filterKey || filterKey === 'all') {
+            return
+          }
+
+          const storeName = normalizeCustomerStoreName(button.textContent)
+          const tone = getCustomerStoreToneFromNode(button)
+          if (storeName && tone) {
+            toneMap.set(storeName, tone)
+          }
+        })
+
+        pageHost.querySelectorAll('.customer-journey-item .customer-journey-store-name').forEach((node) => {
+          const storeName = normalizeCustomerStoreName(node.textContent.split('·')[0])
+          const tone = getCustomerStoreToneFromNode(node.closest('.customer-journey-item'))
+          if (storeName && tone && !toneMap.has(storeName)) {
+            toneMap.set(storeName, tone)
+          }
+        })
+
+        return toneMap
+      }
+
+      function syncCustomerIntentionStoreTones() {
+        const toneMap = buildCustomerStoreToneMap()
+
+        pageHost.querySelectorAll('[data-customer-store-label]').forEach((node) => {
+          const storeName = normalizeCustomerStoreName(node.dataset.customerStoreLabel || node.textContent)
+          const textNode = node.querySelector('.customer-store-label-text')
+          const tone = toneMap.get(storeName) || ''
+
+          if (textNode) {
+            textNode.textContent = node.dataset.customerStoreLabel || textNode.textContent
+          }
+
+          if (tone) {
+            node.dataset.customerStoreTone = tone
+          } else {
+            delete node.dataset.customerStoreTone
+          }
+        })
+      }
+
+      function formatCustomerDetailDisplayDateText(value, fallbackYear = '2026') {
+        return String(value || '').replace(/(\d{2})\/(\d{2})(?:\s+(\d{2}:\d{2}))?/g, (_, month, day, time = '') => {
+          const safeDate = `${fallbackYear}-${month}-${day}`
+          return time ? `${safeDate} ${time}` : safeDate
+        })
+      }
+
+      function syncCustomerDetailDateDisplays() {
+        const selectors = [
+          '.customer-hero-store-fact span:last-child',
+          '.customer-hero-journey-date',
+          '.journey-time'
+        ]
+
+        selectors.forEach((selector) => {
+          pageHost.querySelectorAll(selector).forEach((node) => {
+            node.textContent = formatCustomerDetailDisplayDateText(node.textContent)
+          })
+        })
       }
 
       function applyCustomerDetailPayload(payload) {
@@ -9753,53 +10246,127 @@ grid.innerHTML = metricCards.join('');
           }
         }
 
-        setText('#customerDetailHeroTitle', payload.customer)
+        setText('#customerDetailHeroTitle', maskDisplayName(payload.customer))
         setText('#customerDetailHeroSubtitle', payload.subtitle)
         setText('#customerDetailCurrentStoreTitle', payload.currentStoreTitle)
         setText('#customerDetailCurrentStoreStatus', payload.currentStoreStatus)
         setText('#customerDetailOtherStoreStatus', payload.otherStoreStatus)
         setText('#customerDetailCurrentStoreBadgeLabel', payload.currentStoreBadge)
+        const singleStoreLabel = pageHost.querySelector('#customerDetailSingleStoreLabel')
+        if (singleStoreLabel) {
+          singleStoreLabel.dataset.customerStoreLabel = payload.singleStoreName
+          const textNode = singleStoreLabel.querySelector('.customer-store-label-text')
+          if (textNode) {
+            textNode.textContent = payload.singleStoreName
+          }
+        }
 
         const statusNode = pageHost.querySelector('#customerDetailHeroStatus')
         if (statusNode) {
           statusNode.textContent = payload.customerStatus
-          statusNode.className = `pill-inline customer-detail-status-pill ${getLeadStatusClass(payload.customerStatus)}`
+          statusNode.className = 'pill-inline customer-detail-status-pill'
         }
       }
 
       function initCustomerJourneyFilter() {
         const board = pageHost.querySelector('.customer-journey-board')
+        const timeline = board?.querySelector('.customer-journey-timeline')
         const buttons = Array.from(pageHost.querySelectorAll('[data-customer-journey-filter]'))
+        const sortButtons = Array.from(pageHost.querySelectorAll('[data-customer-journey-sort]'))
         const items = Array.from(pageHost.querySelectorAll('[data-customer-journey-store]'))
 
-        if (!board || buttons.length === 0 || items.length === 0) {
+        if (!board || !timeline || buttons.length === 0 || sortButtons.length === 0 || items.length === 0) {
           return
         }
 
-        const applyFilter = (filter) => {
-          const safeFilter = filter || 'all'
+        const allButton = buttons.find((button) => button.dataset.customerJourneyFilter === 'all') || null
+        const storeButtons = buttons.filter((button) => button.dataset.customerJourneyFilter && button.dataset.customerJourneyFilter !== 'all')
+        const storeSortedItems = [...items]
+        const timeSortedItems = [...items]
+          .map((item, index) => ({
+            item,
+            index,
+            time: parseDateTimeValue(item.querySelector('.journey-time')?.textContent.trim() || '1970-01-01 00:00')
+          }))
+          .sort((left, right) => {
+            const diff = right.time - left.time
+            return diff !== 0 ? diff : left.index - right.index
+          })
+          .map(({ item }) => item)
+        let selectedFilters = new Set(['all'])
+        let sortMode = 'store'
+
+        const applyFilter = () => {
+          const useAll = selectedFilters.has('all') || selectedFilters.size === 0
+
+          const orderedItems = sortMode === 'time' ? timeSortedItems : storeSortedItems
+          orderedItems.forEach((item) => {
+            timeline.appendChild(item)
+          })
+
+          sortButtons.forEach((button) => {
+            const isActive = (button.dataset.customerJourneySort || 'store') === sortMode
+            button.classList.toggle('is-active', isActive)
+            button.setAttribute('aria-pressed', String(isActive))
+          })
 
           buttons.forEach((button) => {
-            const isActive = button.dataset.customerJourneyFilter === safeFilter
+            const filterKey = button.dataset.customerJourneyFilter || ''
+            const isActive = useAll
+              ? filterKey === 'all'
+              : selectedFilters.has(filterKey)
             button.classList.toggle('is-active', isActive)
             button.setAttribute('aria-pressed', String(isActive))
           })
 
           items.forEach((item) => {
-            const shouldHide = safeFilter !== 'all' && item.dataset.customerJourneyStore !== safeFilter
+            const filterKey = item.dataset.customerJourneyStore || ''
+            const shouldHide = !useAll && !selectedFilters.has(filterKey)
             item.hidden = shouldHide
           })
 
-          board.classList.toggle('is-filtered', safeFilter !== 'all')
+          board.classList.toggle('is-filtered', !useAll)
         }
 
         buttons.forEach((button) => {
           button.addEventListener('click', () => {
-            applyFilter(button.dataset.customerJourneyFilter)
+            const filterKey = button.dataset.customerJourneyFilter || 'all'
+            if (filterKey === 'all') {
+              selectedFilters = new Set(['all'])
+              applyFilter()
+              return
+            }
+
+            if (selectedFilters.has('all')) {
+              selectedFilters = new Set([filterKey])
+            } else if (selectedFilters.has(filterKey)) {
+              selectedFilters.delete(filterKey)
+            } else {
+              selectedFilters.add(filterKey)
+            }
+
+            if (selectedFilters.size === 0) {
+              selectedFilters = new Set(['all'])
+            }
+
+            const allStoreSelected = storeButtons.length > 0
+              && storeButtons.every((storeButton) => selectedFilters.has(storeButton.dataset.customerJourneyFilter || ''))
+            if (allStoreSelected && allButton) {
+              selectedFilters.delete('all')
+            }
+
+            applyFilter()
           })
         })
 
-        applyFilter('all')
+        sortButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            sortMode = button.dataset.customerJourneySort || 'store'
+            applyFilter()
+          })
+        })
+
+        applyFilter()
       }
 
       function initCustomerHeroJourneyToggle() {
@@ -9846,7 +10413,9 @@ grid.innerHTML = metricCards.join('');
 
       function initCustomerDetailPage() {
         applyCustomerDetailPayload(buildCustomerDetailPayload())
+        syncCustomerDetailDateDisplays()
         initCustomerJourneyFilter()
+        syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
       }
 
