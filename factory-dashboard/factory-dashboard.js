@@ -97,15 +97,6 @@
 
   <div class="dashboard-content">
     <section class="hero-panel fade-in" aria-label="厂端核心指标">
-      <div class="factory-hero-identity hero-identity">
-        <div class="factory-hero-avatar hero-avatar" id="factoryHeroAvatar" aria-hidden="true">李</div>
-        <div class="factory-hero-meta hero-meta">
-          <div class="factory-hero-name-row hero-name-row">
-            <span class="factory-hero-name hero-name" id="factoryHeroName">李李</span>
-            <span class="factory-hero-subtitle hero-store" id="factoryHeroSubtitle">传祺-广州</span>
-          </div>
-        </div>
-      </div>
       <div class="hero-kpi-grid hero-metrics store-hero-metrics" id="hero-kpi-grid" aria-label="厂端关键指标">
         <svg class="hero-funnel-svg" id="hero-funnel-svg" aria-hidden="true"></svg>
       </div>
@@ -172,7 +163,7 @@
                   </div>
                   <div>
                     <h2 class="track-title" id="rank-title">质检排行</h2>
-                    <p class="track-sub" id="rank-sub">支持下钻：大区-省份-城市-门店</p>
+                    <p class="track-sub" id="rank-sub">支持下钻：大区-战区-门店，默认按照质检合格率降序排列</p>
                   </div>
                 </div>
               </div>
@@ -186,12 +177,13 @@
             <div class="card-header">
               <div>
                 <div class="card-title">录音复盘</div>
-                <div class="card-sub">按规则定位组织表现并支持下钻</div>
+                <div class="card-sub">支持规则排序，支持下钻查看各级组织表现</div>
               </div>
             </div>
             <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
               <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="advantage" role="tab" aria-selected="false">优势缺陷识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="advantage" role="tab" aria-selected="false">优势项识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="defect" role="tab" aria-selected="false">缺陷项识别</button>
               <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
             </div>
             <div class="issue-detail-section">
@@ -211,7 +203,7 @@
             <div class="trend-header">
               <div>
                 <h2 class="section-title">质检趋势分布图</h2>
-                <p class="section-sub">质检合格率vs城市平均</p>
+                <p class="section-sub">质检合格率vs全国质检合格率</p>
               </div>
             </div>
             <div class="trend-chart-wrap">
@@ -764,6 +756,19 @@
       return currentRegion;
     }
     return FACTORY_ALL_ORG_VALUE;
+  };
+
+  const getFactoryTrendSubjectLabel = () => {
+    if (currentStore !== 'all') {
+      return `${currentStore}质检合格率`;
+    }
+    if (currentZone !== 'all') {
+      return `${currentZone}质检合格率`;
+    }
+    if (currentRegion !== 'all') {
+      return `${currentRegion}质检合格率`;
+    }
+    return '质检合格率';
   };
 
   const formatFactoryOrganizationDisplay = (value) => {
@@ -2478,7 +2483,7 @@
       level = 'region';
       if (titleEl) titleEl.textContent = '质检排行';
     }
-    if (subEl) subEl.textContent = '支持下钻：大区-省份-城市-门店，按质检合格率排序';
+    if (subEl) subEl.textContent = '支持下钻：大区-战区-门店，默认按照质检合格率降序排列';
 
     // 排序
     const sorted = [...rows].sort((a, b) => {
@@ -2501,7 +2506,10 @@
 
     // 行 HTML 生成
     const rowHtml = (r, i) => {
-      const hasChildren = level === 'region' && r.zones?.length > 0;
+      const hasChildren = level !== 'store' && (
+        (level === 'region' && r.zones?.length > 0) ||
+        (level === 'zone' && r.stores?.length > 0)
+      );
       const counts = rankRecordingCounts(r);
       const rowId = `rank-row-${r.name.replace(/\s/g, '_')}`;
       const expandId = `rank-expand-${r.name.replace(/\s/g, '_')}`;
@@ -2526,7 +2534,7 @@
           <td><span class="factory-rank-rate">${r.hitRate}%</span></td>
           <td><span class="factory-rank-rate factory-rank-pass">${r.passRate}%</span></td>
         </tr>
-        ${hasChildren ? `
+        ${hasChildren && level === 'region' ? `
         <tr id="${expandId}" class="rank-expand-panel" style="display:none">
           <td colspan="7" style="padding:0">
             <table class="factory-qc-rank-table factory-qc-rank-nested">
@@ -2568,6 +2576,25 @@
                         }).join('')}
                       </table>
                     </td>
+                  </tr>`;
+              }).join('')}
+            </table>
+          </td>
+        </tr>` : hasChildren && level === 'zone' ? `
+        <tr id="${expandId}" class="rank-expand-panel" style="display:none">
+          <td colspan="7" style="padding:0">
+            <table class="factory-qc-rank-table factory-qc-rank-nested factory-qc-rank-store">
+              ${(r.stores || []).map(s => {
+                const sCounts = rankRecordingCounts(s);
+                return `
+                  <tr>
+                    <td><span class="factory-rank-index factory-rank-index-store"></span></td>
+                    <td><span class="factory-rank-name factory-rank-name-store">${s.name}</span></td>
+                    <td><span class="factory-rank-number">${sCounts.invitation}</span></td>
+                    <td><span class="factory-rank-number">${sCounts.testDrive}</span></td>
+                    <td><span class="factory-rank-number">${sCounts.reception}</span></td>
+                    <td><span class="factory-rank-rate">${s.hitRate}%</span></td>
+                    <td><span class="factory-rank-rate factory-rank-pass">${s.passRate}%</span></td>
                   </tr>`;
               }).join('')}
             </table>
@@ -2669,6 +2696,12 @@
     if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
 
     const d = TREND_DATA[range] || TREND_DATA['7'];
+    const trendSubjectLabel = getFactoryTrendSubjectLabel();
+
+    const trendSubEl = document.querySelector('#panel-sop-execution .trend-header .section-sub');
+    if (trendSubEl) {
+      trendSubEl.textContent = `${trendSubjectLabel}vs全国质检合格率`;
+    }
 
     // 根据场景选择业务量数据
     let volData, volLabel;
@@ -2694,7 +2727,7 @@
     const legendEl = document.getElementById('chart-legend');
     if (legendEl) {
       legendEl.innerHTML = `
-        <span class="legend-item"><span class="legend-dot" style="background:#3B82F6"></span>质检合格率</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3B82F6"></span>${trendSubjectLabel}</span>
         <span class="legend-item"><span class="legend-dot" style="background:#F59E0B;border-radius:0;height:2px;width:12px;margin-top:3px;display:inline-block"></span>全国质检合格率</span>
         <span class="legend-item"><span class="legend-dot" style="background:rgba(59,130,246,0.28);border-radius:2px"></span>${volLabel}</span>`;
     }
@@ -2705,7 +2738,7 @@
         labels: d.labels,
         datasets: [
           {
-            label: '质检合格率',
+            label: trendSubjectLabel,
             data: d.passRate,
             borderColor: '#3B82F6',
             backgroundColor: 'rgba(59,130,246,0.08)',
@@ -5261,12 +5294,12 @@
       ]
     },
     advantage: {
-      label: '优势缺陷识别',
+      label: '优势项识别',
       metricLabel: '命中率',
       countLabel: '命中/样本',
-      emptyText: '暂无匹配优势缺陷规则',
+      emptyText: '暂无匹配优势项规则',
       topTitle: '优势组织 TOP5',
-      bottomTitle: '短板组织 BOT5',
+      bottomTitle: '优势待提升 BOT5',
       rules: [
         makeIssueRule('adv-need', '深度需求挖掘', '需求洞察', 83, 980),
         makeIssueRule('adv-product-value', '本品价值塑造', '产品表达', 76, 960),
@@ -5278,6 +5311,26 @@
         makeIssueRule('adv-retain-lead', '留人稳线索', '线索承接', 52, 760),
         makeIssueRule('adv-invite', '到店邀约推进', '到店邀约', 49, 740),
         makeIssueRule('adv-boundary', '承诺与风险边界', '风险边界', 45, 680)
+      ]
+    },
+    defect: {
+      label: '缺陷项识别',
+      metricLabel: '缺陷出现率',
+      countLabel: '缺陷/样本',
+      emptyText: '暂无匹配缺陷项规则',
+      topTitle: '缺陷最高 TOP5',
+      bottomTitle: '缺陷最低 BOT5',
+      rules: [
+        makeIssueRule('defect-need', '深度需求挖掘不足', '需求洞察', 68, 980),
+        makeIssueRule('defect-product-value', '本品价值塑造偏弱', '产品表达', 63, 960),
+        makeIssueRule('defect-competitor', '竞品对比缺少差异点', '产品表达', 59, 930),
+        makeIssueRule('defect-price', '价格异议承接不到位', '异议处理', 55, 890),
+        makeIssueRule('defect-version', '版本配置引导不清晰', '产品表达', 52, 850),
+        makeIssueRule('defect-store', '门店/公司优势未建立', '信任建立', 48, 820),
+        makeIssueRule('defect-wechat', '微信留资承接缺失', '留资承接', 45, 800),
+        makeIssueRule('defect-retain-lead', '线索承接节奏断档', '线索承接', 42, 760),
+        makeIssueRule('defect-invite', '到店邀约推进不足', '到店邀约', 39, 740),
+        makeIssueRule('defect-boundary', '承诺边界表达不清', '风险边界', 35, 680)
       ]
     },
     risk: {
@@ -5371,10 +5424,13 @@
     const sampleBase = org.level === 'region' ? 980 : org.level === 'zone' ? 360 : 118;
     const sampleCount = Math.max(30, sampleBase - index * 23 + (textHash(org.name) % 37));
     const orgSopRate = Number(org.sopRate || 75);
+    const orgWeakItems = Number(org.weakItems || 4);
     const orgRiskRate = Number(org.riskHit || 6);
-    const rate = tab === 'risk'
-      ? clampPercent(rule.rate + (orgRiskRate - 6) * 3.4 + hashOffset + levelOffset)
-      : clampPercent(rule.rate + (orgSopRate - 75) * 0.56 + hashOffset + levelOffset);
+    const rate = tab === 'defect'
+      ? clampPercent(rule.rate + (orgWeakItems - 4) * 6.2 + hashOffset + levelOffset)
+      : tab === 'risk'
+        ? clampPercent(rule.rate + (orgRiskRate - 6) * 3.4 + hashOffset + levelOffset)
+        : clampPercent(rule.rate + (orgSopRate - 75) * 0.56 + hashOffset + levelOffset);
 
     return {
       name: org.name,

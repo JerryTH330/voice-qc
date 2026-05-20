@@ -10258,8 +10258,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        const allButton = buttons.find((button) => button.dataset.customerJourneyFilter === 'all') || null
-        const storeButtons = buttons.filter((button) => button.dataset.customerJourneyFilter && button.dataset.customerJourneyFilter !== 'all')
+        const storeButtons = buttons.filter((button) => button.dataset.customerJourneyFilter)
         const storeSortedItems = [...items]
         const timeSortedItems = [...items]
           .map((item, index) => ({
@@ -10272,11 +10271,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return diff !== 0 ? diff : left.index - right.index
           })
           .map(({ item }) => item)
-        let selectedFilters = new Set(['all'])
+        let selectedFilters = new Set(
+          storeButtons
+            .map((button) => button.dataset.customerJourneyFilter || '')
+            .filter(Boolean)
+        )
         let sortMode = 'store'
 
         const applyFilter = () => {
-          const useAll = selectedFilters.has('all') || selectedFilters.size === 0
+          const allStoreSelected = storeButtons.length > 0
+            && storeButtons.every((storeButton) => selectedFilters.has(storeButton.dataset.customerJourneyFilter || ''))
 
           const orderedItems = sortMode === 'time' ? timeSortedItems : storeSortedItems
           orderedItems.forEach((item) => {
@@ -10291,47 +10295,39 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
           buttons.forEach((button) => {
             const filterKey = button.dataset.customerJourneyFilter || ''
-            const isActive = useAll
-              ? filterKey === 'all'
-              : selectedFilters.has(filterKey)
+            const isActive = selectedFilters.has(filterKey)
             button.classList.toggle('is-active', isActive)
             button.setAttribute('aria-pressed', String(isActive))
           })
 
           items.forEach((item) => {
             const filterKey = item.dataset.customerJourneyStore || ''
-            const shouldHide = !useAll && !selectedFilters.has(filterKey)
+            const shouldHide = !selectedFilters.has(filterKey)
             item.hidden = shouldHide
           })
 
-          board.classList.toggle('is-filtered', !useAll)
+          board.classList.toggle('is-filtered', !allStoreSelected)
         }
 
         buttons.forEach((button) => {
           button.addEventListener('click', () => {
-            const filterKey = button.dataset.customerJourneyFilter || 'all'
-            if (filterKey === 'all') {
-              selectedFilters = new Set(['all'])
-              applyFilter()
+            const filterKey = button.dataset.customerJourneyFilter || ''
+            if (!filterKey) {
               return
             }
 
-            if (selectedFilters.has('all')) {
-              selectedFilters = new Set([filterKey])
-            } else if (selectedFilters.has(filterKey)) {
+            if (selectedFilters.has(filterKey)) {
               selectedFilters.delete(filterKey)
             } else {
               selectedFilters.add(filterKey)
             }
 
             if (selectedFilters.size === 0) {
-              selectedFilters = new Set(['all'])
-            }
-
-            const allStoreSelected = storeButtons.length > 0
-              && storeButtons.every((storeButton) => selectedFilters.has(storeButton.dataset.customerJourneyFilter || ''))
-            if (allStoreSelected && allButton) {
-              selectedFilters.delete('all')
+              selectedFilters = new Set(
+                storeButtons
+                  .map((storeButton) => storeButton.dataset.customerJourneyFilter || '')
+                  .filter(Boolean)
+              )
             }
 
             applyFilter()
