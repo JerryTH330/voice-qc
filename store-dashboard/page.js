@@ -1,7 +1,7 @@
 /* 门店看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
 (function loadPageRuntime() {
-  const version = '20260518101740';
+  const version = '20260520214000';
   const scripts = [`../dashboard-filter-utils.js?v=${version}`, `../app-runtime.js?v=${version}`];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

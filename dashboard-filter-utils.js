@@ -163,12 +163,11 @@
   }
 
   function toggleSceneSelection(source, scenes, targetScene) {
+    const allowed = getAllowedScenes(source);
     if (targetScene === SCENE_KEYS.all) {
-      const normalized = normalizeSceneSelection(source, scenes);
-      return normalized.isAllSelected ? [] : [SCENE_KEYS.all];
+      return [SCENE_KEYS.all];
     }
 
-    const allowed = getAllowedScenes(source);
     if (!allowed.includes(targetScene)) {
       const current = normalizeSceneSelection(source, scenes);
       return current.isAllSelected ? [SCENE_KEYS.all] : current.activeScenes;

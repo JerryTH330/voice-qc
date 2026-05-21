@@ -39,22 +39,23 @@ test('badge source removes cloud-only scenes and keeps badge defaults', () => {
   assert.equal(normalized.effectiveSceneKey, SCENE_KEYS.storeReception);
 });
 
-test('all source keeps only all when all is clicked', () => {
-  const next = toggleSceneSelection(SOURCE_KEYS.all, [SCENE_KEYS.firstFollow], SCENE_KEYS.all);
-  assert.deepEqual(next, [SCENE_KEYS.all]);
+test('changing all source defaults to all individual scenes', () => {
+  assert.deepEqual(
+    setSourceSelection(SOURCE_KEYS.all),
+    [SCENE_KEYS.all]
+  );
 });
 
-test('clicking all again from all-selected state clears current selection', () => {
-  const next = toggleSceneSelection(SOURCE_KEYS.all, [SCENE_KEYS.all], SCENE_KEYS.all);
-  assert.deepEqual(next, []);
-});
-
-test('all-selected master state deselecting one child keeps the rest selected', () => {
-  const next = toggleSceneSelection(SOURCE_KEYS.cloud, [SCENE_KEYS.all], SCENE_KEYS.firstFollow);
+test('all-selected scene set deselecting one child keeps the rest selected', () => {
+  const next = toggleSceneSelection(
+    SOURCE_KEYS.cloud,
+    [SCENE_KEYS.firstFollow, SCENE_KEYS.inviteStore, SCENE_KEYS.scheduleConfirm],
+    SCENE_KEYS.firstFollow
+  );
   assert.deepEqual(next, [SCENE_KEYS.inviteStore, SCENE_KEYS.scheduleConfirm]);
 });
 
-test('cloud source collapses back to all when every allowed scene is selected', () => {
+test('cloud source keeps every allowed scene selected when all children are selected', () => {
   const next = toggleSceneSelection(
     SOURCE_KEYS.cloud,
     [SCENE_KEYS.firstFollow, SCENE_KEYS.inviteStore],
@@ -111,6 +112,16 @@ test('all selection reports 全部 label semantics through empty active scenes',
   assert.equal(normalized.effectiveSceneKey, SCENE_KEYS.all);
 });
 
+test('clicking all scene always returns all token', () => {
+  const next = toggleSceneSelection(
+    SOURCE_KEYS.cloud,
+    [SCENE_KEYS.firstFollow],
+    SCENE_KEYS.all
+  );
+
+  assert.deepEqual(next, [SCENE_KEYS.all]);
+});
+
 test('cloud source deselecting down to none returns empty state', () => {
   const next = toggleSceneSelection(
     SOURCE_KEYS.cloud,
@@ -157,11 +168,18 @@ test('scene volume labels match spec wording', () => {
 
 test('business metric keys follow source and scene selection rules', () => {
   assert.deepEqual(
-    getBusinessMetricKeysForSelection(SOURCE_KEYS.cloud, [SCENE_KEYS.all]),
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.cloud, [
+      SCENE_KEYS.firstFollow,
+      SCENE_KEYS.inviteStore,
+      SCENE_KEYS.scheduleConfirm
+    ]),
     ['invitation']
   );
   assert.deepEqual(
-    getBusinessMetricKeysForSelection(SOURCE_KEYS.badge, [SCENE_KEYS.all]),
+    getBusinessMetricKeysForSelection(SOURCE_KEYS.badge, [
+      SCENE_KEYS.storeReception,
+      SCENE_KEYS.testDrive
+    ]),
     ['reception', 'test_drive']
   );
   assert.deepEqual(

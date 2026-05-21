@@ -5,9 +5,9 @@
 本规范适用于录音列表页顶部筛选区域，对应页面与代码位置：
 
 - 页面入口：`/session/index.html?route=session`
-- 容器模板：[session/index.html](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/session/index.html:123)
-- 渲染逻辑：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:6282)
-- 主样式：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:5401)
+- 容器模板：[session/index.html](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/session/index.html:123)
+- 渲染逻辑：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:6282)
+- 主样式：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:5401)
 
 目标对象是这张筛选卡片：
 
@@ -68,7 +68,7 @@
 - `质检场景`
 - `AI意向等级`
 
-结构来源：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5937)
+结构来源：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5937)
 
 规则：
 
@@ -85,7 +85,7 @@
 - `车系`
 - `录音状态`
 
-结构来源：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5920)
+结构来源：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5920)
 
 规则：
 
@@ -100,7 +100,7 @@
 
 - `组织`
 
-结构来源：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5888)
+结构来源：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5888)
 
 规则：
 
@@ -114,7 +114,7 @@
 
 - `顾问号码` 这一组查询
 
-结构来源：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5982)
+结构来源：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:5982)
 
 规则：
 
@@ -129,7 +129,7 @@
 
 - `日期`
 
-结构来源：[app-runtime.js](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:6016)
+结构来源：[app-runtime.js](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/app-runtime.js:6016)
 
 规则：
 
@@ -150,7 +150,7 @@
 - 内边距：`20px`
 - 阴影：`var(--shadow-soft)`
 
-来源：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:5401)
+来源：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:5401)
 
 ### 5.2 工具栏布局
 
@@ -161,7 +161,7 @@
 - 第一行下内边距：`16px`
 - 第二行上内边距：`16px`
 
-来源：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6476)
+来源：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6476)
 
 ### 5.3 筛选框基础样式
 
@@ -175,7 +175,7 @@
 - 阴影：`0 8px 20px rgba(15, 23, 42, 0.04)`
 - 内部横向间距：`12px`
 
-来源：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6501)
+来源：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6501)
 
 ### 5.4 字体层级
 
@@ -185,8 +185,8 @@
 
 来源：
 
-- 基础值：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6518)
-- 页面级提升：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:7696)
+- 基础值：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:6518)
+- 页面级提升：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:7696)
 
 ### 5.5 交互态
 
@@ -256,7 +256,7 @@
 - 第一行搜索框最小宽度收缩到 `260px`
 - 第二行变成 `3 列 + 重置按钮`
 
-来源：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:10817)
+来源：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:10817)
 
 ### 7.3 小屏
 
@@ -266,7 +266,7 @@
 - 每个筛选控件宽度 100%
 - 日期面板、菜单面板宽度改为 100%
 
-来源：[voice-qc-admin.css](/Users/linxianxin/Documents/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:10922)
+来源：[voice-qc-admin.css](/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/voice-qc-admin.css:10922)
 
 ## 8. 设计禁区
 

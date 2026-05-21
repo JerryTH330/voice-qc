@@ -2195,9 +2195,6 @@ function initStoreDashboardPage() {
     const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
     const selection = getStoreSceneSelection();
     const allowed = new Set(getAllowedScenes(currentSource));
-    const visibleAllowedScenes = selection.allowedScenes.filter((scene) => allowed.has(scene));
-    const activeVisibleScenes = selection.isAllSelected ? visibleAllowedScenes : selection.activeScenes.filter((scene) => allowed.has(scene));
-    const isIndeterminate = !selection.isAllSelected && activeVisibleScenes.length > 0 && activeVisibleScenes.length < visibleAllowedScenes.length;
 
     sourceTabs.forEach((tab) => {
       const isActive = tab.dataset.source === currentSource;
@@ -2207,20 +2204,22 @@ function initStoreDashboardPage() {
 
     sceneTabs.forEach((tab) => {
       const scene = tab.dataset.scene;
-      const isAll = scene === SCENE_KEYS.all;
-      const isAllowed = isAll || allowed.has(scene);
-      const isActive = isAll
+      const isAllTab = scene === SCENE_KEYS.all;
+      const isAllowed = isAllTab || allowed.has(scene);
+      const isActive = isAllTab
         ? selection.isAllSelected
-        : activeVisibleScenes.includes(scene);
+        : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
+      const isIndeterminate = isAllTab && !selection.isAllSelected && !selection.isNoneSelected;
+      const isHidden = isAllTab || !isAllowed;
 
-      tab.classList.toggle('is-hidden', !isAllowed);
+      tab.classList.toggle('is-hidden', isHidden);
       tab.classList.toggle('disabled', !isAllowed);
       tab.classList.toggle('active', isActive);
-      tab.classList.toggle('is-indeterminate', isAll && isIndeterminate);
+      tab.classList.toggle('is-indeterminate', isIndeterminate);
       tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      tab.setAttribute('aria-checked', isAll && isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
-      tab.setAttribute('aria-hidden', !isAllowed ? 'true' : 'false');
-      tab.tabIndex = isAllowed ? 0 : -1;
+      tab.setAttribute('aria-checked', isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
+      tab.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
+      tab.tabIndex = isHidden ? -1 : (isAllowed ? 0 : -1);
     });
   };
 
@@ -3192,8 +3191,10 @@ function initStoreDashboardPage() {
 
   document.getElementById('gf-scene')?.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-scene]');
-    if (!tab || tab.classList.contains('disabled')) return;
-    currentScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    if (!tab || tab.classList.contains('disabled') || tab.classList.contains('is-hidden')) return;
+    const nextScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    if (Array.isArray(nextScenes) && nextScenes.length === 0) return;
+    currentScenes = nextScenes;
     syncStoreSceneTabs();
     applyGlobalFilter();
   });
@@ -3733,6 +3734,362 @@ function initStoreDashboardPage() {
   // 录音库弹窗
   let storeRecordingLibraryState = null;
 
+  const getStoreRecordingFilterDateValue = (time) => {
+    const match = String(time || '').match(/(\d{1,2})[-/](\d{1,2})/);
+    if (!match) return '';
+    const month = match[1].padStart(2, '0');
+    const day = match[2].padStart(2, '0');
+    return `2026-${month}-${day}`;
+  };
+
+  const getStoreRecordingDateLimitRange = (records = []) => {
+    const values = records
+      .map((record) => getStoreRecordingFilterDateValue(record.time))
+      .filter(Boolean)
+      .sort();
+
+    if (!values.length) {
+      const todayValue = formatSessionDateValue(new Date());
+      const todayDate = parseSessionDateValue(todayValue) || new Date();
+      return {
+        minValue: todayValue,
+        maxValue: todayValue,
+        minDate: todayDate,
+        maxDate: todayDate
+      };
+    }
+
+    const minValue = values[0];
+    const maxValue = values[values.length - 1];
+    return {
+      minValue,
+      maxValue,
+      minDate: parseSessionDateValue(minValue) || new Date(),
+      maxDate: parseSessionDateValue(maxValue) || new Date()
+    };
+  };
+
+  const syncStoreRecordingDateView = (value) => {
+    const { maxDate } = getStoreRecordingDateLimitRange(storeRecordingLibraryState?.records || []);
+    const target = parseSessionDateValue(value) || maxDate;
+    storeRecordingLibraryState.dateViewYear = target.getFullYear();
+    storeRecordingLibraryState.dateViewMonth = target.getMonth() + 1;
+  };
+
+  const shiftStoreRecordingDateView = (offset) => {
+    const { minDate, maxDate } = getStoreRecordingDateLimitRange(storeRecordingLibraryState?.records || []);
+    const minMonthIndex = minDate.getFullYear() * 12 + minDate.getMonth();
+    const maxMonthIndex = maxDate.getFullYear() * 12 + maxDate.getMonth();
+    const currentMonthIndex = storeRecordingLibraryState.dateViewYear * 12 + storeRecordingLibraryState.dateViewMonth - 1;
+    const nextMonthIndex = Math.min(maxMonthIndex, Math.max(minMonthIndex, currentMonthIndex + offset));
+
+    storeRecordingLibraryState.dateViewYear = Math.floor(nextMonthIndex / 12);
+    storeRecordingLibraryState.dateViewMonth = (nextMonthIndex % 12) + 1;
+  };
+
+  const renderStoreRecordingDateMenu = () => {
+    if (!storeRecordingLibraryState) return '';
+
+    const { minDate, maxDate, minValue, maxValue } = getStoreRecordingDateLimitRange(storeRecordingLibraryState.records || []);
+    const selectedValue = storeRecordingLibraryState.dateDraftDate || storeRecordingLibraryState.dateValue || '';
+    const cells = getSessionDateCells(storeRecordingLibraryState.dateViewYear, storeRecordingLibraryState.dateViewMonth);
+    const minMonthIndex = minDate.getFullYear() * 12 + minDate.getMonth();
+    const maxMonthIndex = maxDate.getFullYear() * 12 + maxDate.getMonth();
+    const currentMonthIndex = storeRecordingLibraryState.dateViewYear * 12 + storeRecordingLibraryState.dateViewMonth - 1;
+    const disablePrevMonth = currentMonthIndex <= minMonthIndex;
+    const disableNextMonth = currentMonthIndex >= maxMonthIndex;
+
+    return `
+      <div class="session-menu-panel session-menu-panel-date">
+        <div class="session-date-panel-head">
+          <div class="session-date-panel-copy">
+            <span>选择日期</span>
+            <strong>${escapeHtml(selectedValue ? formatSessionDateDisplay(selectedValue) : '未选择')}</strong>
+          </div>
+          <div class="session-date-nav">
+            <button type="button" class="session-date-nav-btn" data-store-recording-date-nav="-1" aria-label="上一个月"${disablePrevMonth ? ' disabled' : ''}>
+              <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
+            </button>
+            <strong>${escapeHtml(formatSessionMonthLabel(storeRecordingLibraryState.dateViewYear, storeRecordingLibraryState.dateViewMonth))}</strong>
+            <button type="button" class="session-date-nav-btn" data-store-recording-date-nav="1" aria-label="下一个月"${disableNextMonth ? ' disabled' : ''}>
+              <i class="session-date-nav-arrow next" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="session-date-weekdays">
+          <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+        </div>
+        <div class="session-date-grid">
+          ${cells.map((date) => {
+            if (!date) {
+              return '<span class="session-date-empty" aria-hidden="true"></span>';
+            }
+
+            const dateValue = formatSessionDateValue(date);
+            const isDisabled = dateValue < minValue || dateValue > maxValue;
+            const isSelected = dateValue === selectedValue;
+            return `
+              <button
+                type="button"
+                class="session-date-day${isDisabled ? ' is-disabled' : ''}${isSelected ? ' is-start is-end in-range' : ''}"
+                ${isDisabled ? 'disabled' : `data-store-recording-date-value="${escapeHtml(dateValue)}"`}
+              >
+                ${date.getDate()}
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <div class="session-date-shortcuts">
+          <button type="button" class="session-date-shortcut" data-store-recording-date-shortcut="${escapeHtml(minValue)}">最早一天</button>
+          <button type="button" class="session-date-shortcut" data-store-recording-date-shortcut="${escapeHtml(maxValue)}">最近一天</button>
+          ${storeRecordingLibraryState.dateValue ? '<button type="button" class="session-date-shortcut" data-store-recording-date-clear="true">清空日期</button>' : ''}
+        </div>
+        <div class="session-cascader-footer session-date-footer">
+          <span>${escapeHtml(selectedValue ? `已选择 ${formatSessionDateDisplay(selectedValue)}` : '未选择日期')}</span>
+          <div class="session-date-actions">
+            <button type="button" class="btn session-date-action-btn" data-store-recording-date-cancel="true">取消</button>
+            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-store-recording-date-apply="true">应用日期</button>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const closeStoreRecordingDatePicker = () => {
+    if (!storeRecordingLibraryState?.dateOpen) return;
+    storeRecordingLibraryState.dateOpen = false;
+    renderStoreRecordingDateControl();
+  };
+
+  const getStoreRecordingFilterLabel = (value) => {
+    const labelMap = {
+      advisor: '按销售姓名',
+      customer: '按客户姓名',
+      id: '按录音ID'
+    };
+    return labelMap[value] || '按销售姓名';
+  };
+
+  const getStoreRecordingFilterPlaceholder = (value) => {
+    const placeholderMap = {
+      advisor: '输入销售姓名',
+      customer: '输入客户姓名',
+      id: '输入录音ID'
+    };
+    return placeholderMap[value] || '输入筛选关键词';
+  };
+
+  const renderStoreRecordingFilterMenu = () => {
+    if (!storeRecordingLibraryState?.filterOpen) return '';
+    return `
+      <div class="recording-library-filter-panel session-menu-panel">
+        <div class="session-menu-option-list">
+          ${['advisor', 'customer', 'id'].map((value) => `
+            <button
+              type="button"
+              class="recording-library-filter-option session-menu-option${storeRecordingLibraryState.filterType === value ? ' active' : ''}"
+              data-store-recording-filter-value="${value}">
+              <span>${getStoreRecordingFilterLabel(value)}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  };
+
+  const closeStoreRecordingFilterMenu = () => {
+    if (!storeRecordingLibraryState?.filterOpen) return;
+    storeRecordingLibraryState.filterOpen = false;
+    renderStoreRecordingFilterControl();
+  };
+
+  const bindStoreRecordingFilterEvents = () => {
+    const host = document.getElementById('issue-recording-library-filter-control');
+    if (!host) return;
+
+    host.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    host.querySelectorAll('[data-store-recording-filter-trigger]').forEach((node) => {
+      node.addEventListener('click', () => {
+        if (!storeRecordingLibraryState) return;
+        if (storeRecordingLibraryState.filterOpen) {
+          closeStoreRecordingFilterMenu();
+          return;
+        }
+        if (storeRecordingLibraryState.dateOpen) {
+          closeStoreRecordingDatePicker();
+        }
+        storeRecordingLibraryState.filterOpen = true;
+        renderStoreRecordingFilterControl();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-filter-value]').forEach((node) => {
+      node.addEventListener('click', () => {
+        if (!storeRecordingLibraryState) return;
+        storeRecordingLibraryState.filterType = node.dataset.storeRecordingFilterValue || 'advisor';
+        storeRecordingLibraryState.filterOpen = false;
+        storeRecordingLibraryState.query = '';
+        storeRecordingLibraryState.page = 1;
+        renderStoreRecordingFilterControl();
+        renderStoreRecordingLibraryList();
+        setTimeout(() => {
+          document.getElementById('issue-recording-library-search')?.focus();
+        }, 0);
+      });
+    });
+
+    host.querySelectorAll('#issue-recording-library-search').forEach((node) => {
+      node.addEventListener('input', (event) => {
+        if (!storeRecordingLibraryState) return;
+        storeRecordingLibraryState.query = event.target.value;
+        storeRecordingLibraryState.page = 1;
+        renderStoreRecordingLibraryList();
+      });
+    });
+  };
+
+  const renderStoreRecordingFilterControl = () => {
+    const host = document.getElementById('issue-recording-library-filter-control');
+    if (!host || !storeRecordingLibraryState) return;
+
+    host.innerHTML = `
+      <div class="recording-library-filter-select-wrap">
+        <button
+          type="button"
+          class="recording-library-filter-trigger${storeRecordingLibraryState.filterOpen ? ' active' : ''}"
+          data-store-recording-filter-trigger="true"
+          aria-label="选择筛选字段">
+          <span>${getStoreRecordingFilterLabel(storeRecordingLibraryState.filterType)}</span>
+          <span class="session-select-caret" aria-hidden="true"></span>
+        </button>
+        ${renderStoreRecordingFilterMenu()}
+      </div>
+      <div class="recording-library-search-field">
+        <input
+          id="issue-recording-library-search"
+          type="search"
+          placeholder="${escapeHtml(getStoreRecordingFilterPlaceholder(storeRecordingLibraryState.filterType))}"
+          autocomplete="off"
+          value="${escapeHtml(storeRecordingLibraryState.query || '')}">
+        <span class="session-search-icon" aria-hidden="true"></span>
+      </div>
+    `;
+
+    bindStoreRecordingFilterEvents();
+  };
+
+  const openStoreRecordingDatePicker = () => {
+    if (!storeRecordingLibraryState) return;
+    if (storeRecordingLibraryState.filterOpen) {
+      storeRecordingLibraryState.filterOpen = false;
+      renderStoreRecordingFilterControl();
+    }
+    storeRecordingLibraryState.dateOpen = true;
+    storeRecordingLibraryState.dateDraftDate = storeRecordingLibraryState.dateValue || '';
+    syncStoreRecordingDateView(storeRecordingLibraryState.dateDraftDate);
+    renderStoreRecordingDateControl();
+  };
+
+  const applyStoreRecordingDateFilter = () => {
+    if (!storeRecordingLibraryState) return;
+    storeRecordingLibraryState.dateValue = storeRecordingLibraryState.dateDraftDate || '';
+    storeRecordingLibraryState.dateOpen = false;
+    storeRecordingLibraryState.page = 1;
+    renderStoreRecordingDateControl();
+    renderStoreRecordingLibraryList();
+  };
+
+  const clearStoreRecordingDateFilter = () => {
+    if (!storeRecordingLibraryState) return;
+    storeRecordingLibraryState.dateValue = '';
+    storeRecordingLibraryState.dateDraftDate = '';
+    storeRecordingLibraryState.dateOpen = false;
+    storeRecordingLibraryState.page = 1;
+    renderStoreRecordingDateControl();
+    renderStoreRecordingLibraryList();
+  };
+
+  const bindStoreRecordingDateEvents = () => {
+    const host = document.getElementById('issue-recording-library-date-control');
+    if (!host) return;
+
+    host.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    host.querySelectorAll('[data-store-recording-date-trigger]').forEach((node) => {
+      node.addEventListener('click', () => {
+        if (storeRecordingLibraryState?.dateOpen) {
+          closeStoreRecordingDatePicker();
+          return;
+        }
+        openStoreRecordingDatePicker();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-nav]').forEach((node) => {
+      node.addEventListener('click', () => {
+        shiftStoreRecordingDateView(Number(node.dataset.storeRecordingDateNav));
+        renderStoreRecordingDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-value]').forEach((node) => {
+      node.addEventListener('click', () => {
+        storeRecordingLibraryState.dateDraftDate = node.dataset.storeRecordingDateValue || '';
+        renderStoreRecordingDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-shortcut]').forEach((node) => {
+      node.addEventListener('click', () => {
+        storeRecordingLibraryState.dateDraftDate = node.dataset.storeRecordingDateShortcut || '';
+        syncStoreRecordingDateView(storeRecordingLibraryState.dateDraftDate);
+        renderStoreRecordingDateControl();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-clear]').forEach((node) => {
+      node.addEventListener('click', () => {
+        clearStoreRecordingDateFilter();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-cancel]').forEach((node) => {
+      node.addEventListener('click', () => {
+        closeStoreRecordingDatePicker();
+      });
+    });
+
+    host.querySelectorAll('[data-store-recording-date-apply]').forEach((node) => {
+      node.addEventListener('click', () => {
+        applyStoreRecordingDateFilter();
+      });
+    });
+  };
+
+  const renderStoreRecordingDateControl = () => {
+    const host = document.getElementById('issue-recording-library-date-control');
+    if (!host || !storeRecordingLibraryState) return;
+
+    const selectedValue = storeRecordingLibraryState.dateValue;
+    host.innerHTML = `
+      <div class="recording-library-date-root${storeRecordingLibraryState.dateOpen ? ' is-open' : ''}">
+        <button type="button" class="session-date-trigger${storeRecordingLibraryState.dateOpen ? ' active' : ''}" data-store-recording-date-trigger="true" aria-label="日期筛选">
+          <span>日期</span>
+          <strong>${escapeHtml(selectedValue ? formatSessionDateDisplay(selectedValue) : '请选择日期')}</strong>
+          <span class="session-date-icon" aria-hidden="true"></span>
+        </button>
+        ${storeRecordingLibraryState.dateOpen ? renderStoreRecordingDateMenu() : ''}
+      </div>
+    `;
+
+    bindStoreRecordingDateEvents();
+  };
+
   window.openStoreIssueRecordingLibrary = function(type, index) {
     const items = type === 'weakness' ? getFilteredWeaknessData()
       : type === 'strength' ? getFilteredStrengthData()
@@ -3765,7 +4122,21 @@ function initStoreDashboardPage() {
       orgPath: `${r.orgPath || advisorOrgMap[r.advisor] || r.advisor}-${r.customer || `${r.advisor || '顾问'}相关客户`}`
     }));
 
-    storeRecordingLibraryState = { type, issue, records, query: '', filterType: 'advisor', page: 1 };
+    const { maxDate } = getStoreRecordingDateLimitRange(records);
+    storeRecordingLibraryState = {
+      type,
+      issue,
+      records,
+      query: '',
+      dateValue: '',
+      dateDraftDate: '',
+      dateOpen: false,
+      dateViewYear: maxDate.getFullYear(),
+      dateViewMonth: maxDate.getMonth() + 1,
+      filterType: 'advisor',
+      filterOpen: false,
+      page: 1
+    };
 
     const overlay = document.createElement('div');
     overlay.id = 'issue-recording-library-overlay';
@@ -3780,20 +4151,24 @@ function initStoreDashboardPage() {
           <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
         </div>
         <div class="recording-library-summary">
-          <div><strong>${records.length}</strong><span>全部录音</span></div>
-          <div><strong>${issue.advisor_count || 0}/${allAdvisors.length}</strong><span>涉及顾问</span></div>
+          ${renderStoreRecordingSummaryCard({
+            icon: 'list',
+            tone: 'violet',
+            label: '全部录音',
+            value: String(records.length)
+          })}
+          ${renderStoreRecordingSummaryCard({
+            icon: 'users',
+            tone: 'blue',
+            label: '涉及顾问',
+            value: `${issue.advisor_count || 0}/${allAdvisors.length}`
+          })}
         </div>
         <div class="recording-library-tools">
           <label class="recording-library-search">
-            <span>搜索</span>
-            <div class="recording-library-filter-control">
-              <select id="issue-recording-library-filter-type" aria-label="选择筛选字段">
-                <option value="advisor">按销售姓名</option>
-                <option value="customer">按客户姓名</option>
-                <option value="date">按日期</option>
-                <option value="id">按录音ID</option>
-              </select>
-              <input id="issue-recording-library-search" type="search" placeholder="输入销售姓名" autocomplete="off">
+            <div class="recording-library-filter-group">
+              <div class="recording-library-filter-control" id="issue-recording-library-filter-control"></div>
+              <div class="recording-library-date-control" id="issue-recording-library-date-control"></div>
             </div>
           </label>
         </div>
@@ -3801,46 +4176,25 @@ function initStoreDashboardPage() {
           <span id="issue-recording-library-result"></span>
         </div>
         <div class="recording-library-list" id="issue-recording-library-list"></div>
-        <div class="recording-library-footer">
-          <button type="button" id="issue-recording-library-more" class="recording-library-more" hidden>加载更多</button>
-        </div>
       </section>`;
 
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) closeStoreIssueRecordingLibrary();
     });
+    overlay.querySelector('.issue-recording-library-page')?.addEventListener('click', () => {
+      if (storeRecordingLibraryState?.dateOpen) {
+        closeStoreRecordingDatePicker();
+      }
+      if (storeRecordingLibraryState?.filterOpen) {
+        closeStoreRecordingFilterMenu();
+      }
+    });
     document.body.appendChild(overlay);
 
-    const searchInput = document.getElementById('issue-recording-library-search');
-    const filterSelect = document.getElementById('issue-recording-library-filter-type');
-    const updateSearchPlaceholder = () => {
-      const placeholderMap = {
-        advisor: '输入销售姓名',
-        customer: '输入客户姓名',
-        date: '输入日期，如 3-25',
-        id: '输入录音ID'
-      };
-      if (searchInput) {
-        searchInput.placeholder = placeholderMap[storeRecordingLibraryState?.filterType] || '输入筛选关键词';
-      }
-    };
-    filterSelect?.addEventListener('change', (event) => {
-      storeRecordingLibraryState.filterType = event.target.value;
-      storeRecordingLibraryState.query = '';
-      storeRecordingLibraryState.page = 1;
-      if (searchInput) searchInput.value = '';
-      updateSearchPlaceholder();
-      renderStoreRecordingLibraryList();
-    });
-    searchInput?.addEventListener('input', (event) => {
-      storeRecordingLibraryState.query = event.target.value;
-      storeRecordingLibraryState.page = 1;
-      renderStoreRecordingLibraryList();
-    });
-
-    updateSearchPlaceholder();
+    renderStoreRecordingFilterControl();
+    renderStoreRecordingDateControl();
     renderStoreRecordingLibraryList();
-    setTimeout(() => searchInput?.focus(), 0);
+    setTimeout(() => document.getElementById('issue-recording-library-search')?.focus(), 0);
   };
 
   window.closeStoreIssueRecordingLibrary = function() {
@@ -3849,25 +4203,47 @@ function initStoreDashboardPage() {
     storeRecordingLibraryState = null;
   };
 
+  function renderStoreRecordingSummaryCard(metric) {
+    return `
+      <div class="recording-library-summary-card execution-metric tone-${metric.tone}">
+        <div class="execution-metric-main">
+          <div class="execution-metric-icon tone-${metric.tone}">
+            ${getExecutionMetricIcon(metric.icon, metric.tone)}
+          </div>
+          <div class="execution-metric-body">
+            <div class="execution-metric-label">${metric.label}</div>
+            <div class="execution-metric-value">${metric.value}</div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   const renderStoreRecordingLibraryList = () => {
     if (!storeRecordingLibraryState) return;
-    const { records, query, filterType, page } = storeRecordingLibraryState;
+    const { records, query, dateValue, filterType, page } = storeRecordingLibraryState;
     const listEl = document.getElementById('issue-recording-library-list');
     const resultEl = document.getElementById('issue-recording-library-result');
     const loadMoreBtn = document.getElementById('issue-recording-library-more');
-    if (!listEl || !resultEl || !loadMoreBtn) return;
+    if (!listEl || !resultEl) return;
 
     const PAGE_SIZE = 10;
     const normalizedQuery = String(query || '').trim();
     const getFilterTarget = (record) => {
       if (filterType === 'customer') return record.customer || '';
-      if (filterType === 'date') return record.time || '';
       if (filterType === 'id') return record.id || '';
       return record.advisor || '';
     };
-    const filtered = normalizedQuery
-      ? records.filter(r => String(getFilterTarget(r)).includes(normalizedQuery))
-      : records;
+    const normalizedDateValue = String(dateValue || '').trim();
+    const filtered = records.filter((r) => {
+      const matchPrimary = normalizedQuery
+        ? String(getFilterTarget(r)).includes(normalizedQuery)
+        : true;
+      const matchDate = normalizedDateValue
+        ? getStoreRecordingFilterDateValue(r.time) === normalizedDateValue
+        : true;
+      return matchPrimary && matchDate;
+    });
 
     const total = filtered.length;
     const start = (page - 1) * PAGE_SIZE;
@@ -3875,7 +4251,7 @@ function initStoreDashboardPage() {
     const hasMore = start + PAGE_SIZE < total;
 
     resultEl.textContent = `共 ${total} 条`;
-    loadMoreBtn.hidden = !hasMore;
+    if (loadMoreBtn) loadMoreBtn.hidden = !hasMore;
 
     if (pageRecords.length === 0) {
       listEl.innerHTML = '<div class="recording-library-empty">暂无匹配录音</div>';
@@ -3885,7 +4261,10 @@ function initStoreDashboardPage() {
     const html = pageRecords.map(r => `
       <div class="recording-library-row">
         <div class="recording-library-play">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg width="18" height="18" viewBox="0 0 1024 1024" fill="none" aria-hidden="true">
+            <path d="M515.6 635.7c51 0 99.1-20 135.4-56.3 36.3-36.3 56.3-84.4 56.3-135.4V256.5c0-51-20-99.1-56.3-135.4-36.3-36.3-84.4-56.3-135.4-56.3s-99.1 20-135.4 56.3C344 157.4 324 205.5 324 256.5v187.6c0 51 20 99.1 56.3 135.4 36.2 36.2 84.3 56.2 135.3 56.2zM394 256.5c0-67.1 54.6-121.6 121.6-121.6 67.1 0 121.6 54.6 121.6 121.6v187.6c0 67.1-54.6 121.6-121.6 121.6-67.1 0-121.6-54.6-121.6-121.6V256.5z" fill="currentColor"></path>
+            <path d="M787.7 436.9c-19.3 0-35 15.7-35 35 0 128.1-104.3 232.4-232.4 232.4H511c-128.1 0-232.4-104.3-232.4-232.4 0-19.3-15.7-35-35-35s-35 15.7-35 35c0 40.7 8 80.2 23.9 117.5 15.3 36 37.1 68.3 64.9 96.1 27.8 27.8 60.1 49.6 96.1 64.9 28.1 11.9 57.4 19.4 87.6 22.4V889h-66.5c-19 0-34.6 15.6-34.6 34.6s15.6 34.6 34.6 34.6H620c19 0 34.6-15.6 34.6-34.6S639 889 620 889h-69.7V772.8c30.1-3 59.5-10.5 87.6-22.4 36-15.3 68.3-37.1 96.1-64.9 27.8-27.8 49.6-60.1 64.9-96.1 15.8-37.3 23.9-76.8 23.9-117.5-0.1-19.3-15.8-35-35.1-35z" fill="currentColor"></path>
+          </svg>
         </div>
         <div class="recording-library-main">
           <strong>${r.orgPath}</strong>
@@ -4051,6 +4430,8 @@ function initStoreDashboardPage() {
   const nationalDiffVal = document.getElementById("sop-national-diff");
   const periodChangeValueEl = periodChangeVal?.querySelector('.sop-period-change-value');
   const nationalDiffValueEl = nationalDiffVal?.querySelector('.sop-national-diff-value');
+  const nationalDiffLabelEl = nationalDiffVal?.querySelector('.sop-national-diff-label');
+  const nationalDiffArrowEl = nationalDiffVal?.querySelector('.sop-national-diff-arrow');
   const teamEfficiencyDialFrames = new Set();
   const SOP_NATIONAL_AVG = 73;
   const SOP_PERIOD_DELTA = 3;
@@ -4151,10 +4532,10 @@ function initStoreDashboardPage() {
       dialFill.style.strokeDashoffset = 2 * Math.PI * 65;
     }
 
-    document.querySelector('.sop-dial')?.setAttribute('aria-label', `全店质检合格率 ${team}%`);
+    document.querySelector('.sop-metric-card-store')?.setAttribute('aria-label', `门店质检合格率 ${team}%`);
     if (periodChangeVal) {
       const periodDelta = SOP_PERIOD_DELTA;
-      const periodText = `${periodDelta >= 0 ? '+' : ''}${periodDelta}% ${periodDelta >= 0 ? '↑' : '↓'}`;
+      const periodText = `环比 ${periodDelta >= 0 ? '+' : ''}${periodDelta}%`;
       if (periodChangeValueEl) {
         periodChangeValueEl.textContent = periodText;
       } else {
@@ -4163,14 +4544,17 @@ function initStoreDashboardPage() {
       periodChangeVal.classList.toggle('up', periodDelta >= 0);
       periodChangeVal.classList.toggle('down', periodDelta < 0);
     }
-    if (nationalAvgVal) nationalAvgVal.textContent = `${SOP_NATIONAL_AVG}%`;
+    if (nationalAvgVal) nationalAvgVal.textContent = `${SOP_NATIONAL_AVG}`;
     if (nationalDiffVal) {
       const nationalDiff = Math.round(team - SOP_NATIONAL_AVG);
-      const diffText = `${nationalDiff >= 0 ? '+' : ''}${nationalDiff}%`;
+      const diffText = `${Math.abs(nationalDiff)}%`;
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
+        if (nationalDiffLabelEl) {
+          nationalDiffLabelEl.textContent = nationalDiff >= 0 ? '提升' : '落后';
+        }
       } else {
-        nationalDiffVal.textContent = `vs大区 ${diffText}`;
+        nationalDiffVal.textContent = `${nationalDiff >= 0 ? '提升' : '落后'} ${diffText}`;
       }
       nationalDiffVal.classList.toggle('up', nationalDiff >= 0);
       nationalDiffVal.classList.toggle('down', nationalDiff < 0);
@@ -12793,6 +13177,33 @@ function initStoreDashboardPage() {
                     <stop stop-color="#4ADE80"></stop>
                     <stop offset="0.54" stop-color="#22C55E"></stop>
                     <stop offset="1" stop-color="#16A34A"></stop>
+                  </linearGradient>
+                </defs>
+              </svg>
+            `
+          case 'users':
+            return `
+              <svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
+                <path d="M20.2035 13.7434C22.4274 13.7434 24.2301 11.9407 24.2301 9.71674C24.2301 7.4928 22.4274 5.69006 20.2035 5.69006C17.9795 5.69006 16.1768 7.4928 16.1768 9.71674C16.1768 11.9407 17.9795 13.7434 20.2035 13.7434Z" fill="url(#${iconId}-a)"/>
+                <path d="M10.1967 14.7567C12.7006 14.7567 14.7301 12.7271 14.7301 10.2232C14.7301 7.71933 12.7006 5.68982 10.1967 5.68982C7.69276 5.68982 5.66325 7.71933 5.66325 10.2232C5.66325 12.7271 7.69276 14.7567 10.1967 14.7567Z" fill="url(#${iconId}-b)"/>
+                <path d="M20.2033 15.2633C17.172 15.2633 14.7067 17.7287 14.7067 20.76V21.7733C14.7067 22.3333 15.1653 22.7933 15.7267 22.7933H24.68C25.2413 22.7933 25.7 22.3333 25.7 21.7733V20.76C25.7 17.7287 23.2347 15.2633 20.2033 15.2633Z" fill="url(#${iconId}-c)"/>
+                <path d="M10.1966 16.2767C6.75989 16.2767 3.97322 19.0633 3.97322 22.5C3.97322 23.06 4.43189 23.52 4.99322 23.52H15.4C15.9613 23.52 16.42 23.06 16.42 22.5C16.42 19.0633 13.6333 16.2767 10.1966 16.2767Z" fill="url(#${iconId}-d)"/>
+                <defs>
+                  <linearGradient id="${iconId}-a" x1="16.1768" y1="5.69006" x2="24.2301" y2="13.7434" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#60A5FA"></stop>
+                    <stop offset="1" stop-color="#2563EB"></stop>
+                  </linearGradient>
+                  <linearGradient id="${iconId}-b" x1="5.66325" y1="5.68982" x2="14.7301" y2="14.7567" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#BFDBFE"></stop>
+                    <stop offset="1" stop-color="#3B82F6"></stop>
+                  </linearGradient>
+                  <linearGradient id="${iconId}-c" x1="14.7067" y1="15.2633" x2="25.7" y2="22.7933" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#93C5FD"></stop>
+                    <stop offset="1" stop-color="#2563EB"></stop>
+                  </linearGradient>
+                  <linearGradient id="${iconId}-d" x1="3.97322" y1="16.2767" x2="16.42" y2="23.52" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#DBEAFE"></stop>
+                    <stop offset="1" stop-color="#60A5FA"></stop>
                   </linearGradient>
                 </defs>
               </svg>
