@@ -5884,6 +5884,68 @@ body::before {
   border-bottom: 0;
 }
 
+.customer-journey-toolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.customer-journey-control-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.customer-journey-control-label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.customer-journey-sort {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.customer-journey-sort-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #60748f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.customer-journey-sort-btn.is-active {
+  border-color: rgba(37, 99, 235, 0.18);
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(239, 246, 255, 0.94));
+  color: #1d4ed8;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
 .customer-journey-filter {
   display: inline-flex;
   flex-wrap: wrap;
@@ -6313,6 +6375,22 @@ body::before {
   font-weight: 800;
 }
 
+.customer-detail-page .customer-store-label-text {
+  color: inherit;
+}
+
+.customer-detail-page [data-customer-store-tone="current"] .customer-store-label-text {
+  color: #2563eb;
+}
+
+.customer-detail-page [data-customer-store-tone="other"] .customer-store-label-text {
+  color: #b77905;
+}
+
+.customer-detail-page [data-customer-store-tone="extra"] .customer-store-label-text {
+  color: #059669;
+}
+
 .customer-detail-page .intention-item-content {
   font-size: 14px;
   line-height: 1.75;
@@ -6386,7 +6464,7 @@ body::before {
 
 .customer-intention-merged-title {
   margin-bottom: 8px;
-  color: var(--blue);
+  color: #0f766e;
   font-size: 15px;
   line-height: 1.5;
   font-weight: 800;
@@ -10735,6 +10813,9 @@ body::before {
     flex-direction: column;
   }
 
+  .customer-journey-control-group,
+  .customer-journey-toolbar,
+  .customer-journey-sort,
   .customer-journey-filter {
     justify-content: flex-start;
   }

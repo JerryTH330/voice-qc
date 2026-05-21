@@ -3,12 +3,30 @@ const FILTERS = [
   { key: "time", label: "时间", options: [{ label: "昨日", value: "1" }, { label: "近7天", value: "7" }, { label: "近半月", value: "15" }, { label: "近1月", value: "30" }, { label: "自定义", value: "custom" }] }
 ];
 
+const SOURCE_FILTER = {
+  key: "source",
+  label: "数据来源",
+  options: [
+    { label: "全部", value: "all" },
+    { label: "云外呼", value: "云外呼" },
+    { label: "数字工牌", value: "数字工牌" }
+  ]
+};
+
 const SCENE_FILTER = { key: "scene", label: "质检场景", options: [
   { label: "全部", value: "all" },
-  { label: "首触邀约", value: "首触邀约" },
+  { label: "首触跟进", value: "首触跟进" },
+  { label: "邀约进店", value: "邀约进店" },
+  { label: "排程确认", value: "排程确认" },
   { label: "门店接待", value: "门店接待" },
   { label: "试乘试驾", value: "试乘试驾" }
 ]};
+
+const SOURCE_SCENE_MAP = {
+  all: ["all"],
+  "云外呼": ["首触跟进", "邀约进店", "排程确认"],
+  "数字工牌": ["门店接待", "试乘试驾"]
+};
 
 const BRAND_MODEL_OPTIONS = {
   "all": [
@@ -418,7 +436,8 @@ const state = {
   region: "all",
   zone: "all",
   store: "all",
-  scene: "all",
+  source: "all",
+  scene: ["all"],
   time: "7",
   model: "M8",
   selectedCategory: "需求特征",
@@ -443,14 +462,22 @@ const normalizeRecordsForFactoryFilters = () => {
     record.zone = org.zone;
     record.store = org.store;
 
-    const scenes = ["首触邀约", "门店接待", "试乘试驾"];
-    record.scene = scenes[index % scenes.length];
+    const sourceScenePairs = [
+      { source: "云外呼", scene: "首触跟进" },
+      { source: "云外呼", scene: "邀约进店" },
+      { source: "云外呼", scene: "排程确认" },
+      { source: "数字工牌", scene: "门店接待" },
+      { source: "数字工牌", scene: "试乘试驾" }
+    ];
+    const sourceScene = sourceScenePairs[index % sourceScenePairs.length];
+    record.source = sourceScene.source;
+    record.scene = sourceScene.scene;
 
-    // 模拟线索ID，部分线索会在多条录音中重复命中
+    // 模拟全部线索ID
     const clueIds = [];
     const clueBase = index * 600;
     for (let ci = 0; ci < record.clueCount; ci++) {
-      // 前30%的线索ID使用公共池（模拟跨录音重复）
+      // 前30%的线索ID使用公共池，模拟不同记录下的部分线索重合
       if (ci < record.clueCount * 0.3) {
         clueIds.push(`CLUE-${ci % 200}`);
       } else {
@@ -458,6 +485,18 @@ const normalizeRecordsForFactoryFilters = () => {
       }
     }
     record.clueIds = clueIds;
+
+    // 模拟“至少命中1条录音”的线索ID：
+    // 这里让部分有效录音落在同一条线索上，避免把“有效录音数”误当成“覆盖线索数”
+    const coveredClueIds = [];
+    const coveredClueTarget = Math.min(
+      clueIds.length,
+      Math.max(1, Math.round(record.validCount * 0.82))
+    );
+    for (let ri = 0; ri < record.validCount; ri++) {
+      coveredClueIds.push(clueIds[ri % coveredClueTarget]);
+    }
+    record.coveredClueIds = coveredClueIds;
 
     if (record.tags["意向车型"]) {
       record.tags["意向车型"].forEach(tag => {
@@ -513,6 +552,33 @@ const currentModelFilter = () => ({
   options: currentModelOptions()
 });
 
+const currentSceneOptions = () => {
+  return SCENE_FILTER.options;
+};
+
+const currentSceneFilter = () => ({
+  key: "scene",
+  label: "质检场景",
+  options: currentSceneOptions(),
+  multiple: true
+});
+
+const applySourceSceneDefaults = () => {
+  state.scene = [...SOURCE_SCENE_MAP[state.source]];
+};
+
+const ensureValidSceneForSource = () => {
+  const availableScenes = state.source === "all"
+    ? currentSceneOptions().map(option => option.value)
+    : SOURCE_SCENE_MAP[state.source];
+  const validScenes = state.scene.filter(scene => availableScenes.includes(scene));
+  if (validScenes.length === 0 || (state.source === "all" && !validScenes.includes("all"))) {
+    applySourceSceneDefaults();
+    return;
+  }
+  state.scene = validScenes;
+};
+
 const ensureValidModelForBrand = () => {
   if (!currentModelOptions().some(option => option.value === state.model)) {
     state.model = "all";
@@ -525,9 +591,10 @@ const matchesState = record => {
   const passRegion = state.region === "all" || record.org === state.region;
   const passZone = state.zone === "all" || record.zone === state.zone;
   const passStore = state.store === "all" || record.store === state.store;
+  const passSource = state.source === "all" || record.source === state.source;
   const passModel = state.model === "all" || record.model === modelFilterValue();
-  const passScene = state.scene === "all" || record.scene === state.scene;
-  return passTime && passBrand && passRegion && passZone && passStore && passModel && passScene;
+  const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
+  return passTime && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
 };
 
 const getFilteredRecords = () => RECORDS.filter(matchesState);
@@ -625,9 +692,10 @@ const getPreviousRecords = () => {
     const passRegion = state.region === "all" || record.org === state.region;
     const passZone = state.zone === "all" || record.zone === state.zone;
     const passStore = state.store === "all" || record.store === state.store;
+    const passSource = state.source === "all" || record.source === state.source;
     const passModel = state.model === "all" || record.model === modelFilterValue();
-    const passScene = state.scene === "all" || record.scene === state.scene;
-    return passPreviousWindow && passBrand && passRegion && passZone && passStore && passModel && passScene;
+    const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
+    return passPreviousWindow && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
   });
 };
 
@@ -672,9 +740,17 @@ const buildMetrics = records => {
 
   const clueTrend = getTrend(clueCount, prevClueCount);
 
-  // 录音覆盖率 = 有效录音数 / 线索数（1条线索命中多条录音记作1条）
-  const coverageRate = clueCount ? ((validCount / clueCount) * 100).toFixed(1) : 0;
-  const prevCoverageRate = prevClueCount ? ((previousCount / prevClueCount) * 100).toFixed(1) : 0;
+  // 录音覆盖率 = 至少命中1条录音的线索数 / 全部线索数
+  const coveredClueSet = new Set();
+  records.forEach(r => (r.coveredClueIds || []).forEach(id => coveredClueSet.add(id)));
+  const coveredClueCount = coveredClueSet.size;
+
+  const prevCoveredClueSet = new Set();
+  previous.forEach(r => (r.coveredClueIds || []).forEach(id => prevCoveredClueSet.add(id)));
+  const prevCoveredClueCount = prevCoveredClueSet.size;
+
+  const coverageRate = clueCount ? ((coveredClueCount / clueCount) * 100).toFixed(1) : 0;
+  const prevCoverageRate = prevClueCount ? ((prevCoveredClueCount / prevClueCount) * 100).toFixed(1) : 0;
   const coverageTrend = getTrendPercent(parseFloat(coverageRate), parseFloat(prevCoverageRate));
 
   return [
@@ -713,7 +789,7 @@ const buildMetrics = records => {
     {
       title: "录音覆盖率",
       value: `${coverageRate}%`,
-      copy: "有效录音数/线索数",
+      copy: "至少命中1条录音的线索数/线索数",
       trendValue: coverageTrend.text,
       trendTone: coverageTrend.tone,
       sparkColor: "#f59e0b",
@@ -769,11 +845,13 @@ const getTrendPercent = (current, previous) => {
 
 const renderFilters = () => {
   ensureValidModelForBrand();
+  ensureValidSceneForSource();
   const filterGrid = document.querySelector("#filterGrid");
   filterGrid.innerHTML = `
     ${tabFilterMarkup(FILTERS[0], "gf-brand-group")}
     ${orgFilterMarkup()}
-    ${tabFilterMarkup(SCENE_FILTER)}
+    ${tabFilterMarkup(SOURCE_FILTER)}
+    ${tabFilterMarkup(currentSceneFilter())}
     ${tabFilterMarkup(FILTERS[1])}
     ${tabFilterMarkup(currentModelFilter())}
   `;
@@ -784,13 +862,27 @@ const tabFilterMarkup = (group, extraClass = "") => `
     <span class="gf-label">${group.label}</span>
     <div class="gf-tabs">
       ${group.options.map(option => `
-        <button class="gf-tab ${state[group.key] === option.value ? "active" : ""}" data-filter="${group.key}" data-value="${escapeHtml(option.value)}" type="button">
+        <button class="gf-tab ${isFilterOptionActive(group, option) ? "active" : ""} ${isFilterOptionDisabled(group, option) ? "disabled" : ""}" data-filter="${group.key}" data-value="${escapeHtml(option.value)}" type="button" ${isFilterOptionDisabled(group, option) ? "disabled aria-disabled=\"true\"" : ""}>
           ${option.value === "custom" ? calendarIconMarkup() : ""}${escapeHtml(option.label)}
         </button>
       `).join("")}
     </div>
   </div>
 `;
+
+const isFilterOptionActive = (group, option) => {
+  if (group.multiple) {
+    return state[group.key].includes(option.value);
+  }
+  return state[group.key] === option.value;
+};
+
+const isFilterOptionDisabled = (group, option) => {
+  if (group.key !== "scene" || state.source === "all") {
+    return false;
+  }
+  return !SOURCE_SCENE_MAP[state.source].includes(option.value);
+};
 
 const orgFilterMarkup = () => `
   <div class="gf-group gf-org-group">
@@ -1326,6 +1418,7 @@ const renderHeatmap = records => {
 
 const render = () => {
   ensureValidModelForBrand();
+  ensureValidSceneForSource();
   const records = getFilteredRecords();
   renderFilters();
   renderSummary(records);
@@ -1340,9 +1433,20 @@ const render = () => {
 document.addEventListener("click", event => {
   const filterButton = event.target.closest("[data-filter]");
   if (filterButton) {
-    state[filterButton.dataset.filter] = filterButton.dataset.value;
-    if (filterButton.dataset.filter === "brand") {
+    const filterKey = filterButton.dataset.filter;
+    const filterValue = filterButton.dataset.value;
+
+    if (filterKey === "scene") {
+      toggleSceneFilter(filterValue);
+    } else {
+      state[filterKey] = filterValue;
+    }
+
+    if (filterKey === "brand") {
       state.model = "all";
+    }
+    if (filterKey === "source") {
+      applySourceSceneDefaults();
     }
     state.heatmapPage = 1;
     render();
@@ -1410,6 +1514,33 @@ document.addEventListener("change", event => {
   render();
 });
 
+const toggleSceneFilter = sceneValue => {
+  if (state.source === "all") {
+    state.scene = ["all"];
+    return;
+  }
+
+  if (sceneValue === "all") {
+    state.scene = ["all"];
+    return;
+  }
+
+  if (!SCENE_FILTER.options.some(option => option.value === sceneValue)) return;
+
+  if (state.scene.includes("all")) {
+    state.scene = [sceneValue];
+    return;
+  }
+
+  if (state.scene.includes(sceneValue)) {
+    if (state.scene.length === 1) return;
+    state.scene = state.scene.filter(scene => scene !== sceneValue);
+    return;
+  }
+
+  state.scene = [...state.scene, sceneValue];
+};
+
 const resetButton = document.querySelector("#resetButton");
 if (resetButton) {
   resetButton.addEventListener("click", () => {
@@ -1418,6 +1549,8 @@ if (resetButton) {
       region: "all",
       zone: "all",
       store: "all",
+      source: "all",
+      scene: ["all"],
       time: "7",
       model: "M8",
       selectedCategory: "需求特征",
