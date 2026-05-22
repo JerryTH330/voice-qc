@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css" />
+        <link rel="stylesheet" href="./page.css?v=20260520214000" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -145,7 +145,7 @@
             <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-intent">
               <span class="gf-label">业务场景</span>
               <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
-                <button class="gf-tab todo-filter-tab active" data-scene="all" aria-pressed="true">全部</button>
+                <button class="gf-tab todo-filter-tab active is-hidden" data-scene="all" aria-pressed="true" aria-hidden="true" tabindex="-1">全部</button>
                 <button class="gf-tab todo-filter-tab" data-scene="first_follow" aria-pressed="false">首触跟进</button>
                 <button class="gf-tab todo-filter-tab" data-scene="invite_store" aria-pressed="false">邀约进店</button>
                 <button class="gf-tab todo-filter-tab" data-scene="schedule_confirm" aria-pressed="false">排程确认</button>
@@ -289,39 +289,69 @@
                   </div>
                 </div>
                 <div class="track-body">
-                  <div class="sop-dial-wrap">
-                    <div class="sop-dial">
-                      <svg class="dial-svg" viewBox="0 0 160 160">
-                        <defs>
-                          <linearGradient id="factoryDialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#1E40AF"/>
-                            <stop offset="100%" style="stop-color:#3B82F6"/>
-                          </linearGradient>
-                        </defs>
-                        <circle class="dial-track" cx="80" cy="80" r="65" />
-                        <circle class="dial-fill" id="sop-dial-fill" cx="80" cy="80" r="65" />
-                      </svg>
-                      <div class="dial-center">
-                        <div class="dial-val" id="sop-score-val">82<span>%</span></div>
-                        <div class="dial-lbl">质检合格率</div>
-                        <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3% ↑</span></div>
+                  <div class="sop-overview-grid">
+                    <div class="sop-metric-row">
+                      <div class="sop-metric-card sop-metric-card-store">
+                        <div class="sop-metric-label">门店质检合格率</div>
+                        <div class="sop-metric-score-wrap">
+                          <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
+                          <div class="sop-period-change up" id="sop-period-change">
+                            <span class="sop-period-change-value">环比 +3%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sop-metric-vs" aria-hidden="true">
+                        <img class="sop-metric-vs-image" src="../assets/store-overview-vs.png" alt="" aria-hidden="true">
+                      </div>
+                      <div class="sop-metric-cluster">
+                        <div class="sop-metric-card sop-metric-card-zone">
+                          <div class="sop-metric-label">大区质检合格率</div>
+                          <div class="sop-metric-score-wrap">
+                            <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                          </div>
+                        </div>
+                        <div class="sop-improve up" id="sop-national-diff">
+                          <span class="sop-improve-copy">
+                            <span class="sop-improve-label sop-national-diff-label">提升</span>
+                            <span class="sop-improve-value sop-national-diff-value">9%</span>
+                          </span>
+                          <img class="sop-improve-arrow-image sop-national-diff-arrow" src="../assets/store-overview-arrow-up-hover.gif" alt="" aria-hidden="true">
+                        </div>
                       </div>
                     </div>
-                    <div class="sop-dial-meta">
-                      <div class="sop-compare-line">
-                        <div class="sop-compare">
-                          <span class="sop-compare-label">大区质检合格率</span>
-                          <span class="sop-compare-val" id="sop-national-avg">73%</span>
-                        </div>
-                        <span class="sop-national-diff up" id="sop-national-diff"><span class="sop-national-diff-label">vs大区</span><strong class="sop-national-diff-value">+9%</strong></span>
-                      </div>
-                      <div id="sop-ai-summary" class="sop-ai-summary">SOP执行平平稳，竞品对比、试驾邀约仍是需要优先改善的SOP短板项</div>
+                    <div id="sop-ai-summary" class="sop-ai-summary">
+                      <img class="hint-icon" src="../assets/sales-local-complete-icon.svg" alt="" aria-hidden="true">
+                      <span class="hint-text">SOP执行平平稳，竞品对比、试驾邀约仍是需要优先改善的SOP短板项</span>
                     </div>
                   </div>
                   <div class="summary-list">
-                    <div class="summary-item success" id="sop-summary-trend"><strong id="sop-summary-trend-title">优势发掘</strong><span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span></div>
-                    <div class="summary-item warning" id="sop-summary-weakness"><strong>短板改善</strong><span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span></div>
-                    <div class="summary-item danger" id="sop-summary-risk"><strong>风险管控</strong><span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span></div>
+                    <div class="summary-item success" id="sop-summary-trend">
+                      <div class="summary-item-head">
+                        <span class="summary-item-icon-shell" aria-hidden="true">
+                          <img class="summary-item-icon" src="../assets/store-summary-strength.svg" alt="" aria-hidden="true">
+                        </span>
+                        <strong id="sop-summary-trend-title">优势发掘</strong>
+                      </div>
+                      <span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span>
+                    </div>
+                    <div class="summary-item warning" id="sop-summary-weakness">
+                      <div class="summary-item-head">
+                        <span class="summary-item-icon-shell" aria-hidden="true">
+                          <img class="summary-item-icon" src="../assets/store-summary-weakness.svg" alt="" aria-hidden="true">
+                        </span>
+                        <strong>短板改善</strong>
+                      </div>
+                      <span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span>
+                    </div>
+                    <div class="summary-item danger" id="sop-summary-risk">
+                      <div class="summary-item-head">
+                        <span class="summary-item-icon-shell" aria-hidden="true">
+                          <img class="summary-item-icon" src="../assets/store-summary-risk.svg" alt="" aria-hidden="true">
+                        </span>
+                        <strong>风险管控</strong>
+                      </div>
+                      <span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -781,6 +811,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260518101740"></script>
+    <script src="./page.js?v=20260520214000"></script>
   </body>
 </html>
