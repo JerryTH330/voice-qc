@@ -123,64 +123,76 @@
             <section class="card scriptlib-filter-card">
               <div class="panel-header">
                 <div class="panel-title">
-                  <h3>筛选条件</h3>
-                  <p>支持按业务场景、能力维度和话术模板收敛优秀话术，快速定位适合复用的高转化表达。</p>
+                  <h3>主题库筛选</h3>
+                  <p>按主题范围、业务场景与训练目标切换当前训练视图，支持在长期主题库与月度新增主题之间快速切换。</p>
                 </div>
-                <div class="mini-pill">优秀录音沉淀</div>
+                <div class="mini-pill" id="scriptLibraryModeHint">长期沉淀主题</div>
               </div>
               <div class="scriptlib-filter-stack">
                 <div class="scriptlib-filter-row">
-                  <span class="scriptlib-filter-label">按业务场景</span>
+                  <span class="scriptlib-filter-label">主题范围</span>
+                  <div class="scriptlib-chip-group" id="scriptViewFilters"></div>
+                </div>
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">业务场景</span>
                   <div class="scriptlib-chip-group" id="scriptSceneFilters"></div>
                 </div>
                 <div class="scriptlib-filter-row">
-                  <span class="scriptlib-filter-label">按能力维度</span>
-                  <div class="scriptlib-chip-group" id="scriptAbilityFilters"></div>
+                  <span class="scriptlib-filter-label">主题标签</span>
+                  <div class="scriptlib-chip-group" id="scriptTagFilters"></div>
                 </div>
                 <div class="scriptlib-filter-row">
-                  <span class="scriptlib-filter-label">按话术模板</span>
-                  <div class="scriptlib-chip-group" id="scriptTemplateFilters"></div>
+                  <span class="scriptlib-filter-label">训练目标</span>
+                  <div class="scriptlib-chip-group" id="scriptGoalFilters"></div>
+                </div>
+                <div class="scriptlib-filter-row" id="scriptStatusFilterRow" hidden>
+                  <span class="scriptlib-filter-label">状态筛选</span>
+                  <div class="scriptlib-chip-group" id="scriptStatusFilters"></div>
+                </div>
+                <div class="scriptlib-filter-row" id="scriptMonthFilterRow" hidden>
+                  <span class="scriptlib-filter-label">月份范围</span>
+                  <div class="scriptlib-chip-group" id="scriptMonthFilters"></div>
                 </div>
               </div>
             </section>
-    
+
             <div class="scriptlib-stats-grid">
               <div class="stat-card scriptlib-stat-card">
-                <div class="stat-label">优秀话术</div>
-                <div class="stat-value">1,286</div>
-                <p>已沉淀门店优秀录音拆解模板，供复盘与培训复用。</p>
+                <div class="stat-label" id="scriptStatOneLabel">主题数</div>
+                <div class="stat-value" id="scriptStatOneValue">0</div>
+                <p id="scriptStatOneDesc">-</p>
               </div>
               <div class="stat-card scriptlib-stat-card">
-                <div class="stat-label">高转化话术</div>
-                <div class="stat-value">327</div>
-                <p>重点关注成交率、到店率和试驾转化提升表现优异的话术。</p>
+                <div class="stat-label" id="scriptStatTwoLabel">命中数</div>
+                <div class="stat-value" id="scriptStatTwoValue">0</div>
+                <p id="scriptStatTwoDesc">-</p>
               </div>
               <div class="stat-card scriptlib-stat-card">
-                <div class="stat-label">本周新增</div>
-                <div class="stat-value">42</div>
-                <p>新增样本已完成场景、能力和模板标签归档。</p>
+                <div class="stat-label" id="scriptStatThreeLabel">核心标签</div>
+                <div class="stat-value" id="scriptStatThreeValue">-</div>
+                <p id="scriptStatThreeDesc">-</p>
               </div>
             </div>
-    
-            <div class="stack-16">
+
+            <div class="layout-split scriptlib-content-grid">
               <section class="card scriptlib-list-card">
                 <div class="panel-header">
                   <div class="panel-title">
-                    <h3>话术列表</h3>
-                    <p>优先展示可复用、可培训、可直接落地的一线优秀表达。</p>
+                    <h3 id="scriptListTitle">长期主题库</h3>
+                    <p id="scriptListDescription">沉淀跨月份可复用的长期主题，便于持续培训复用。</p>
                   </div>
-                  <div class="mini-pill" id="scriptMatchCount"></div>
+                  <div class="mini-pill" id="scriptMatchCount">匹配 0 个主题</div>
                 </div>
                 <div class="scriptlib-list" id="scriptLibraryList"></div>
               </section>
-    
+
               <section class="card scriptlib-detail-card">
                 <div class="panel-header">
                   <div class="panel-title">
-                    <h3>话术详情</h3>
-                    <p id="scriptDetailSubtitle">点击列表中的“查看详情”查看推荐话术拆解。</p>
+                    <h3>主题详情</h3>
+                    <p id="scriptDetailSubtitle">暂无主题详情</p>
                   </div>
-                  <div class="mini-pill" id="scriptDetailBadge">模板详情</div>
+                  <div class="mini-pill" id="scriptDetailBadge">主题详情</div>
                 </div>
                 <div id="scriptLibraryDetail"></div>
               </section>

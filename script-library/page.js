@@ -1,7 +1,7 @@
 /* 优秀话术库 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'script-library';
 (function loadPageRuntime() {
-  const scripts = ["../app-runtime.js"];
+  const scripts = ["./script-library-contract.js", "./script-library-utils.js", "../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');

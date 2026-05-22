@@ -4673,141 +4673,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
-      const scriptLibraryOptions = {
-        scene: ['全部', '试驾', '邀约', '到店接待', '成交'],
-        ability: ['全部', '开场破冰', '需求挖掘', '产品介绍', '竞品对比', '逼单技巧', '客户异议应答'],
-        template: ['全部', '价格优惠话术', '续航疑虑回应', '金融方案推荐', '交车仪式话术']
-      }
-
-      const scriptLibraryState = {
-        scene: '全部',
-        ability: '全部',
-        template: '全部',
-        selectedId: 'script-001'
-      }
-
-      const scriptLibraryData = [
-        {
-          id: 'script-001',
-          title: '试驾邀约首通破冰话术',
-          scene: '邀约',
-          ability: '开场破冰',
-          template: '价格优惠话术',
-          quality: '高转化',
-          conversionLift: '+18%',
-          usageCount: 86,
-          updateText: '近 7 天新增 6 次复用',
-          summary: '用“确认意向 + 试驾权益 + 时间锚点”三步完成首通邀约，减少客户直接拒绝。',
-          snippet: '您昨天重点看了 E9 的空间表现，今天店里刚好有现车试驾，我给您预留一个 30 分钟体验时段，您下午还是晚上更方便？',
-          steps: ['先复述客户已关注的信息，建立“你是被认真记住的客户”感受。', '再给出明确试驾权益或体验亮点，不急着谈价格。', '最后抛出二选一时间锚点，减少客户做开放式决策的负担。'],
-          tips: ['适合首次电话邀约或线索唤醒场景。', '客户尚未表露兴趣时，避免直接强调优惠幅度。', '若客户犹豫，可顺势补一句“先体验再决定，不耽误您太久”。']
-        },
-        {
-          id: 'script-002',
-          title: '家庭场景需求挖掘五问法',
-          scene: '到店接待',
-          ability: '需求挖掘',
-          template: '金融方案推荐',
-          quality: '优秀样本',
-          conversionLift: '+14%',
-          usageCount: 63,
-          updateText: '本周被培训复用 12 次',
-          summary: '围绕“家庭成员、通勤半径、周末场景、预算边界、换购计划”形成连续追问，让客户更快暴露真实诉求。',
-          snippet: '您平时这台车主要是谁开？如果周末一家人一起出行，您更在意第二排乘坐舒适度，还是后备厢和装载空间？',
-          steps: ['先问使用人群，再问高频用车场景。', '把预算问题放在中后段，降低客户防御。', '把客户答案映射到配置版本，为后续方案推荐铺路。'],
-          tips: ['适合到店初访和展厅接待。', '每轮追问都要承接客户原话，避免像问卷。', '记录关键词，方便后续推荐车型和金融方案。']
-        },
-        {
-          id: 'script-003',
-          title: '试驾前产品价值三段式介绍',
-          scene: '试驾',
-          ability: '产品介绍',
-          template: '续航疑虑回应',
-          quality: '高转化',
-          conversionLift: '+16%',
-          usageCount: 58,
-          updateText: '近 30 天触发到店转试驾 41 次',
-          summary: '按照“客户最关心的一个点 + 试驾可感知亮点 + 对比结论”组织介绍，缩短冗长讲车时间。',
-          snippet: '您刚才最在意的是高速静谧性和二排舒适度，我们待会试驾时会重点感受这两项，回来再和您对比竞品的差异。',
-          steps: ['只抓一个客户最在意的价值点开题。', '说明试驾过程中要感受的两个具体动作。', '试驾结束后立刻回收感受，形成对比结论。'],
-          tips: ['适合试驾前 2 分钟介绍环节。', '不要一口气讲完整个配置表。', '重点强调“待会你能亲自感知到”的卖点。']
-        },
-        {
-          id: 'script-004',
-          title: '价格异议缓冲与权益置换',
-          scene: '成交',
-          ability: '客户异议应答',
-          template: '价格优惠话术',
-          quality: '高转化',
-          conversionLift: '+21%',
-          usageCount: 79,
-          updateText: '近 30 天成交前引用 32 次',
-          summary: '不直接和客户在裸车价上拉扯，而是先承接预算压力，再把权益、交付和增值服务打包说明。',
-          snippet: '我理解您现在卡在总预算上，我们先不急着只看裸车价，我把金融贴息、置换补贴和交付礼包一起给您算一版，您会更清楚真实落地成本。',
-          steps: ['先共情客户预算压力，避免立刻反驳。', '把价格问题转换成“总成本与权益包”问题。', '用一版清晰的落地方案收口，促成下一步。'],
-          tips: ['适合成交前价格谈判。', '不要空口承诺“还能再便宜”。', '权益要具体到金额、周期或交付节点。']
-        },
-        {
-          id: 'script-005',
-          title: '竞品对比反问法',
-          scene: '试驾',
-          ability: '竞品对比',
-          template: '续航疑虑回应',
-          quality: '优秀样本',
-          conversionLift: '+11%',
-          usageCount: 46,
-          updateText: '竞品对比场景命中率 44%',
-          summary: '通过反问客户真实比较标准，避免被动跟着竞品节奏走，把比较维度拉回自身优势。',
-          snippet: '您现在重点在比续航、空间还是智能体验？如果我们只选一个最影响您决定的点，我建议先把它拉出来单独比较。',
-          steps: ['先问客户真正比较的维度，而不是自己设题。', '把维度压缩到 1 到 2 个，降低信息噪音。', '回到本品的核心优势点，不盲目跟竞品逐项对打。'],
-          tips: ['适合试驾中后段和到店复访。', '不要直接攻击竞品。', '尽量用客户自己刚说过的话作为反问前提。']
-        },
-        {
-          id: 'script-006',
-          title: '金融方案推荐转化话术',
-          scene: '成交',
-          ability: '逼单技巧',
-          template: '金融方案推荐',
-          quality: '高转化',
-          conversionLift: '+19%',
-          usageCount: 71,
-          updateText: '本周新增成交跟进样本 9 条',
-          summary: '把客户犹豫点从“总价高”切换为“月供是否可接受”，通过低门槛方案推动进入成交决策。',
-          snippet: '如果我们把首付和月供拆开看，您现在更担心一次性支出，还是每个月现金流压力？我可以先给您做一版最稳妥的方案。',
-          steps: ['先确认客户怕的是总价还是现金流。', '推荐一版保守方案降低决策门槛。', '顺势强调当前权益的时效性，推进定金动作。'],
-          tips: ['适合客户预算卡点但意向仍高的场景。', '避免一开始就堆多个复杂方案。', '先给“最稳妥的一版”，更容易让客户点头。']
-        },
-        {
-          id: 'script-007',
-          title: '交车仪式收口话术',
-          scene: '成交',
-          ability: '产品介绍',
-          template: '交车仪式话术',
-          quality: '优秀样本',
-          conversionLift: '+9%',
-          usageCount: 38,
-          updateText: '客户满意度评价提升 12%',
-          summary: '通过交车前情绪确认、功能复述与售后交接，提升客户对成交体验的完整感知。',
-          snippet: '今天您提车后，最先会用到的其实就是导航和辅助泊车，我先带您把这两个高频功能走一遍，确保您开出去就顺手。',
-          steps: ['先确认客户此刻最期待解决的使用问题。', '只讲最常用的 2 到 3 个功能，不做全量培训。', '最后补上售后和服务群交接，形成闭环。'],
-          tips: ['适合交车仪式、交付前讲解。', '用“上手无压力”取代“功能很多很强”。', '尽量让客户亲手操作一次。']
-        },
-        {
-          id: 'script-008',
-          title: '续航疑虑预处理邀约话术',
-          scene: '邀约',
-          ability: '客户异议应答',
-          template: '续航疑虑回应',
-          quality: '优秀样本',
-          conversionLift: '+13%',
-          usageCount: 54,
-          updateText: '近 30 天疑虑转试驾 27 次',
-          summary: '在客户还未到店前先处理续航担忧，用真实使用场景替代参数争论，把客户顺利拉到试驾。',
-          snippet: '您平时一周通勤大概多少公里？如果按您现在的通勤半径，这台车一周充一次基本够用，我建议您来店里试驾时顺便感受下能耗显示会更直观。',
-          steps: ['先问客户真实通勤半径和补能习惯。', '把参数转译成客户能理解的使用场景。', '最后把疑虑处理和到店试驾动作绑定在一起。'],
-          tips: ['适合电话邀约和线上私聊。', '不要直接和客户争论官方参数。', '尽量把疑虑回答和试驾体验挂钩。']
-        }
-      ]
+      const scriptLibraryContract = window.__scriptLibraryContract || {}
+      const scriptLibraryUtils = window.__scriptLibraryUtils || {}
+      const scriptLibraryPayload = scriptLibraryContract.scriptLibraryExamplePayload || { monthly_packages: [], global_pool: {} }
+      const scriptLibraryState = typeof scriptLibraryUtils.getDefaultScriptLibraryState === 'function'
+        ? scriptLibraryUtils.getDefaultScriptLibraryState(scriptLibraryPayload)
+        : {
+            view: 'global',
+            scene: 'invite',
+            tag: 'all',
+            goal: 'all',
+            status: 'all',
+            month: '',
+            selectedTopicId: null
+          }
 
       const sessionRecordSeeds = [
         {
@@ -5412,78 +5291,92 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .replace(/'/g, '&#39;')
       }
 
-      function getFilteredScriptLibraryItems() {
-        return scriptLibraryData.filter((item) => {
-          const sceneMatch = scriptLibraryState.scene === '全部' || item.scene === scriptLibraryState.scene
-          const abilityMatch = scriptLibraryState.ability === '全部' || item.ability === scriptLibraryState.ability
-          const templateMatch = scriptLibraryState.template === '全部' || item.template === scriptLibraryState.template
-          return sceneMatch && abilityMatch && templateMatch
-        })
-      }
-
-      function renderScriptLibraryChipGroup(containerId, groupKey) {
+      function renderScriptLibraryChipGroup(containerId, options, selectedValue, dataKey) {
         const container = document.getElementById(containerId)
         if (!container) {
           return
         }
 
-        container.innerHTML = scriptLibraryOptions[groupKey]
+        container.innerHTML = (options || [])
           .map((option) => {
-            const active = scriptLibraryState[groupKey] === option ? ' active' : ''
-            return `<button type="button" class="scriptlib-chip${active}" data-script-filter="${groupKey}" data-script-value="${escapeHtml(option)}">${escapeHtml(option)}</button>`
+            const active = selectedValue === option.value ? ' active' : ''
+            return `<button type="button" class="scriptlib-chip${active}" data-script-filter="${escapeHtml(dataKey)}" data-script-value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</button>`
           })
           .join('')
       }
 
-      function renderScriptLibraryList(items) {
+      function renderScriptLibraryStats(stats) {
+        const statSlots = [
+          ['scriptStatOneLabel', 'scriptStatOneValue', 'scriptStatOneDesc'],
+          ['scriptStatTwoLabel', 'scriptStatTwoValue', 'scriptStatTwoDesc'],
+          ['scriptStatThreeLabel', 'scriptStatThreeValue', 'scriptStatThreeDesc']
+        ]
+
+        statSlots.forEach(([labelId, valueId, descId], index) => {
+          const stat = stats[index] || { label: '-', value: '-', desc: '-' }
+          const labelNode = document.getElementById(labelId)
+          const valueNode = document.getElementById(valueId)
+          const descNode = document.getElementById(descId)
+          if (labelNode) labelNode.textContent = stat.label || '-'
+          if (valueNode) valueNode.textContent = stat.value || '-'
+          if (descNode) descNode.textContent = stat.desc || '-'
+        })
+      }
+
+      function renderScriptLibraryList(model) {
         const list = document.getElementById('scriptLibraryList')
         const count = document.getElementById('scriptMatchCount')
+        const listTitle = document.getElementById('scriptListTitle')
+        const listDescription = document.getElementById('scriptListDescription')
         if (!list || !count) {
           return
         }
 
-        count.textContent = `匹配 ${items.length} 条`
+        if (listTitle) {
+          listTitle.textContent = model.listTitle
+        }
+        if (listDescription) {
+          listDescription.textContent = model.listDescription
+        }
+        count.textContent = model.matchCountLabel
 
-        if (!items.length) {
+        if (!model.sceneMeta.hasSceneData || !model.topics.length) {
           list.innerHTML = `
             <div class="empty-state-card">
               <div class="empty-state-icon"></div>
-              <strong>当前筛选下暂无匹配话术</strong>
-              <span>可以切换业务场景、能力维度或模板后再试一次。</span>
+              <strong>${escapeHtml(model.sceneMeta.emptyTitle)}</strong>
+              <span>${escapeHtml(model.sceneMeta.emptyDescription)}</span>
             </div>
           `
           return
         }
 
-        list.innerHTML = items
-          .map((item) => {
-            const selected = item.id === scriptLibraryState.selectedId ? ' selected' : ''
+        list.innerHTML = model.topics
+          .map((topic) => {
+            const selected = model.state.selectedTopicId === topic.topic_id ? ' selected' : ''
+            const tags = (topic.display_tag_names || []).map((tagName) => `<span class="mini-pill">${escapeHtml(tagName)}</span>`).join('')
             return `
-              <article class="scriptlib-item${selected}">
+              <article class="scriptlib-item${selected}" data-script-select="${escapeHtml(topic.topic_id)}">
                 <div class="scriptlib-item-head">
                   <div>
                     <div class="scriptlib-item-title-row">
-                      <h4>${escapeHtml(item.title)}</h4>
-                      <span class="status ${item.quality === '高转化' ? 'green' : 'blue'}">${escapeHtml(item.quality)}</span>
+                      <h4>${escapeHtml(topic.display_title)}</h4>
+                      <span class="status ${topic.display_status_class}">${escapeHtml(topic.display_status_label)}</span>
                     </div>
-                    <p>${escapeHtml(item.summary)}</p>
+                    <p>${escapeHtml(topic.display_summary)}</p>
                   </div>
                   <div class="scriptlib-item-metric">
-                    <strong>${escapeHtml(item.conversionLift)}</strong>
-                    <span>转化提升</span>
+                    <strong>${escapeHtml(String(topic.display_sample_count || 0))}</strong>
+                    <span>样本数</span>
                   </div>
                 </div>
-                <div class="scriptlib-item-tags">
-                  <span class="mini-pill">${escapeHtml(item.scene)}</span>
-                  <span class="mini-pill">${escapeHtml(item.ability)}</span>
-                  <span class="mini-pill">${escapeHtml(item.template)}</span>
-                </div>
+                <div class="scriptlib-item-tags">${tags}</div>
                 <div class="scriptlib-item-foot">
                   <div class="scriptlib-item-meta">
-                    <span>近 30 天引用 ${escapeHtml(item.usageCount)} 次</span>
-                    <span>${escapeHtml(item.updateText)}</span>
+                    <span>${escapeHtml(topic.display_training_goal)}</span>
+                    <span>${escapeHtml(topic.display_time_text)}</span>
                   </div>
-                  <button type="button" class="btn scriptlib-detail-trigger" data-script-select="${escapeHtml(item.id)}">查看详情</button>
+                  <button type="button" class="btn scriptlib-detail-trigger" data-script-select="${escapeHtml(topic.topic_id)}">查看详情</button>
                 </div>
               </article>
             `
@@ -5491,7 +5384,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .join('')
       }
 
-      function renderScriptLibraryDetail(item) {
+      function renderScriptLibraryDetail(model) {
         const subtitle = document.getElementById('scriptDetailSubtitle')
         const badge = document.getElementById('scriptDetailBadge')
         const detail = document.getElementById('scriptLibraryDetail')
@@ -5499,54 +5392,84 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        if (!item) {
-          subtitle.textContent = '点击列表中的“查看详情”查看推荐话术拆解。'
-          badge.textContent = '暂无详情'
+        subtitle.textContent = model.detailSubtitle
+
+        if (!model.selectedTopic) {
+          badge.textContent = model.sceneMeta.sceneLabel
           detail.innerHTML = `
             <div class="empty-state-card">
               <div class="empty-state-icon"></div>
-              <strong>暂无可展示的详情内容</strong>
-              <span>调整筛选条件后重新选择话术查看。</span>
+              <strong>${escapeHtml(model.sceneMeta.emptyTitle)}</strong>
+              <span>${escapeHtml(model.sceneMeta.emptyDescription)}</span>
             </div>
           `
           return
         }
 
-        subtitle.textContent = `${item.scene} · ${item.ability} · ${item.template}`
-        badge.textContent = item.template
+        const topic = model.selectedTopic
+        const trainingPoints = topic.display_training_points || []
+        const applyWhen = topic.display_apply_when || []
+        const avoidWhen = topic.display_avoid_when || []
+        const representativeSamples = topic.display_representative_samples || []
+
+        badge.textContent = model.sceneMeta.sceneLabel
         detail.innerHTML = `
           <div class="scriptlib-detail-hero">
             <div class="scriptlib-detail-copy">
-              <h4>${escapeHtml(item.title)}</h4>
-              <p>${escapeHtml(item.summary)}</p>
+              <h4>${escapeHtml(topic.display_title)}</h4>
+              <p>${escapeHtml(topic.display_summary)}</p>
             </div>
             <div class="scriptlib-detail-kpis">
               <div class="scriptlib-detail-kpi">
-                <span>转化提升</span>
-                <strong>${escapeHtml(item.conversionLift)}</strong>
+                <span>样本数</span>
+                <strong>${escapeHtml(String(topic.display_sample_count || 0))}</strong>
               </div>
               <div class="scriptlib-detail-kpi">
-                <span>近 30 天引用</span>
-                <strong>${escapeHtml(item.usageCount)}</strong>
+                <span>训练目标</span>
+                <strong>${escapeHtml(topic.display_training_goal)}</strong>
               </div>
             </div>
           </div>
           <div class="scriptlib-detail-snippet">
-            <span class="scriptlib-detail-label">示例片段</span>
-            <blockquote>${escapeHtml(item.snippet)}</blockquote>
+            <span class="scriptlib-detail-label">推荐话术</span>
+            <blockquote>${escapeHtml(topic.recommended_script || '暂无推荐话术')}</blockquote>
           </div>
           <div class="scriptlib-detail-grid">
             <div class="scriptlib-detail-block">
-              <span class="scriptlib-detail-label">话术拆解</span>
+              <span class="scriptlib-detail-label">训练要点</span>
               <ol class="scriptlib-step-list">
-                ${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+                ${trainingPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join('') || '<li>暂无训练要点</li>'}
               </ol>
             </div>
             <div class="scriptlib-detail-block">
-              <span class="scriptlib-detail-label">使用提示</span>
+              <span class="scriptlib-detail-label">适用场景</span>
               <ul class="scriptlib-tip-list">
-                ${item.tips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
+                ${applyWhen.map((entry) => `<li>${escapeHtml(entry)}</li>`).join('') || '<li>暂无适用场景</li>'}
               </ul>
+            </div>
+          </div>
+          <div class="scriptlib-detail-grid">
+            <div class="scriptlib-detail-block">
+              <span class="scriptlib-detail-label">避免场景</span>
+              <ul class="scriptlib-tip-list">
+                ${avoidWhen.map((entry) => `<li>${escapeHtml(entry)}</li>`).join('') || '<li>暂无避免场景</li>'}
+              </ul>
+            </div>
+            <div class="scriptlib-detail-block scriptlib-sample-quote-card">
+              <span class="scriptlib-detail-label">代表样本引用</span>
+              ${representativeSamples.length ? `
+                <div class="scriptlib-sample-list">
+                  ${representativeSamples.map((sample) => `
+                    <div class="scriptlib-sample-card">
+                      <div class="scriptlib-item-meta">
+                        <span>${escapeHtml(sample.display_tag_name)}</span>
+                        <span>${escapeHtml(sample.display_success_result)}</span>
+                      </div>
+                      <blockquote>${escapeHtml(sample.display_quote)}</blockquote>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : '<p>暂无代表样本引用</p>'}
             </div>
           </div>
         `
@@ -5557,30 +5480,52 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           node.addEventListener('click', () => {
             const { scriptFilter, scriptValue } = node.dataset
             scriptLibraryState[scriptFilter] = scriptValue
+            if (scriptFilter !== 'selectedTopicId') {
+              scriptLibraryState.selectedTopicId = null
+            }
             renderScriptLibraryPage()
           })
         })
 
         pageHost.querySelectorAll('[data-script-select]').forEach((node) => {
           node.addEventListener('click', () => {
-            scriptLibraryState.selectedId = node.dataset.scriptSelect
+            scriptLibraryState.selectedTopicId = node.dataset.scriptSelect
             renderScriptLibraryPage()
           })
         })
       }
 
       function renderScriptLibraryPage() {
-        renderScriptLibraryChipGroup('scriptSceneFilters', 'scene')
-        renderScriptLibraryChipGroup('scriptAbilityFilters', 'ability')
-        renderScriptLibraryChipGroup('scriptTemplateFilters', 'template')
-
-        const items = getFilteredScriptLibraryItems()
-        if (!items.some((item) => item.id === scriptLibraryState.selectedId)) {
-          scriptLibraryState.selectedId = items[0] ? items[0].id : null
+        if (typeof scriptLibraryUtils.buildScriptLibraryViewModel !== 'function') {
+          return
         }
 
-        renderScriptLibraryList(items)
-        renderScriptLibraryDetail(items.find((item) => item.id === scriptLibraryState.selectedId) || null)
+        const model = scriptLibraryUtils.buildScriptLibraryViewModel(scriptLibraryPayload, scriptLibraryState)
+        Object.assign(scriptLibraryState, model.state)
+
+        const modeHint = document.getElementById('scriptLibraryModeHint')
+        const statusFilterRow = document.getElementById('scriptStatusFilterRow')
+        const monthFilterRow = document.getElementById('scriptMonthFilterRow')
+
+        if (modeHint) {
+          modeHint.textContent = model.modeHint
+        }
+        if (statusFilterRow) {
+          statusFilterRow.hidden = !model.flags.showStatusFilter
+        }
+        if (monthFilterRow) {
+          monthFilterRow.hidden = !model.flags.showMonthFilter
+        }
+
+        renderScriptLibraryChipGroup('scriptViewFilters', model.filters.viewOptions, model.state.view, 'view')
+        renderScriptLibraryChipGroup('scriptSceneFilters', model.filters.sceneOptions, model.state.scene, 'scene')
+        renderScriptLibraryChipGroup('scriptTagFilters', model.filters.tagOptions, model.state.tag, 'tag')
+        renderScriptLibraryChipGroup('scriptGoalFilters', model.filters.goalOptions, model.state.goal, 'goal')
+        renderScriptLibraryChipGroup('scriptStatusFilters', model.filters.statusOptions, model.state.status, 'status')
+        renderScriptLibraryChipGroup('scriptMonthFilters', model.filters.monthOptions, model.state.month, 'month')
+        renderScriptLibraryStats(model.stats)
+        renderScriptLibraryList(model)
+        renderScriptLibraryDetail(model)
         bindScriptLibraryEvents()
       }
 
