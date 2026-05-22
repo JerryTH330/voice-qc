@@ -44,7 +44,7 @@
       </div>
       <div class="gf-divider"></div>
       <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
-      <div class="gf-group store-filter-box">
+      <div class="gf-group store-filter-box" id="gf-source-group">
         <span class="gf-label">数据来源</span>
         <div class="gf-tabs" id="gf-source">
           <button class="gf-tab active" data-source="all">全部</button>
@@ -52,7 +52,7 @@
           <button class="gf-tab" data-source="badge">工牌</button>
         </div>
       </div>
-      <div class="gf-group store-filter-box">
+      <div class="gf-group store-filter-box" id="gf-scene-group">
         <span class="gf-label">业务场景</span>
         <div class="gf-tabs" id="gf-scene">
           <button class="gf-tab active" data-scene="all">全部</button>
@@ -93,6 +93,7 @@
         </div>
       </div>
     </section>
+    <section class="sop-analysis-filter-shell" id="sop-analysis-filter-shell" aria-label="SOP策略洞察分析模式" hidden></section>
   </div>
 
   <div class="dashboard-content">
@@ -219,122 +220,16 @@
       <section class="main-panel" id="panel-sop-improvement" role="tabpanel" aria-labelledby="tab-sop-improvement">
         <section class="sop-column sop-strategy-column" aria-label="SOP策略洞察">
 
-          <!-- 分析闭环漏斗 -->
-          <section class="track si-funnel-track" aria-label="销售行为分析闭环">
-            <div class="track-header">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div class="track-icon strategy">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                </div>
-                <div>
-                  <h2 class="track-title">销售行为 → 成交结果 分析闭环</h2>
-                  <p class="track-sub">基于录音分析，建立SOP执行质量与成交结果的数据链路</p>
-                </div>
-              </div>
-            </div>
-            <div class="track-body">
-              <div class="si-funnel">
-                <div class="si-funnel-nodes">
-                  <div class="si-funnel-node">
-                    <div class="si-fn-icon si-fn-icon--blue">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="si-fn-value" id="si-fn-recordings">32</div>
-                    <div class="si-fn-label">分析录音</div>
-                    <div class="si-fn-unit">条</div>
-                  </div>
-                  <div class="si-funnel-arrow">→</div>
-                  <div class="si-funnel-node">
-                    <div class="si-fn-icon si-fn-icon--violet">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    </div>
-                    <div class="si-fn-value" id="si-fn-hit-rate">78.0</div>
-                    <div class="si-fn-label">话术命中率</div>
-                    <div class="si-fn-unit">%</div>
-                  </div>
-                  <div class="si-funnel-arrow">→</div>
-                  <div class="si-funnel-node si-funnel-node--split">
-                    <div class="si-fn-split-item si-fn-split--success">
-                      <div class="si-fn-icon si-fn-icon--green">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                      </div>
-                      <div class="si-fn-value si-fn-value--green" id="si-fn-order">4</div>
-                      <div class="si-fn-label">下订用户</div>
-                      <div class="si-fn-unit">人</div>
-                    </div>
-                    <div class="si-fn-split-divider">vs</div>
-                    <div class="si-fn-split-item si-fn-split--danger">
-                      <div class="si-fn-icon si-fn-icon--red">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                      </div>
-                      <div class="si-fn-value si-fn-value--red" id="si-fn-loss">14</div>
-                      <div class="si-fn-label">战败用户</div>
-                      <div class="si-fn-unit">人</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="si-funnel-insight" id="si-funnel-insight"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 三角色洞察卡片 -->
-          <div class="si-role-grid" role="tablist" aria-label="角色视角洞察">
-
-            <button class="si-role-card active" id="sop-hit-summary" type="button"
-              data-sop-summary="hit" role="tab" aria-selected="true" aria-controls="sop-active-detail-panel">
-              <div class="si-rc-header">
-                <div class="si-rc-badge si-rc-badge--ops">运营视角</div>
-                <div class="si-rc-question">哪些SOP应该强化？</div>
-              </div>
-              <div class="si-rc-body">
-                <div class="si-rc-rule" id="si-hit-rule">—</div>
-                <div class="si-rc-desc" id="si-hit-desc">对下订成交命中优势贡献最高的SOP规则</div>
-              </div>
-              <div class="si-rc-metrics" id="si-hit-metrics"></div>
-              <div class="si-rc-cta">查看明细分析 →</div>
-            </button>
-
-            <button class="si-role-card" id="sop-loss-summary" type="button"
-              data-sop-summary="loss" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel">
-              <div class="si-rc-header">
-                <div class="si-rc-badge si-rc-badge--mgmt">管理层视角</div>
-                <div class="si-rc-question">为什么战败？</div>
-              </div>
-              <div class="si-rc-body">
-                <div class="si-rc-rule" id="si-loss-rule">—</div>
-                <div class="si-rc-desc" id="si-loss-desc">战败用户中未命中率最高的SOP缺失</div>
-              </div>
-              <div class="si-rc-metrics" id="si-loss-metrics"></div>
-              <div class="si-rc-cta">查看明细分析 →</div>
-            </button>
-
-            <button class="si-role-card" id="sop-risk-summary" type="button"
-              data-sop-summary="risk" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel">
-              <div class="si-rc-header">
-                <div class="si-rc-badge si-rc-badge--train">培训视角</div>
-                <div class="si-rc-question">哪些行为真正影响成交？</div>
-              </div>
-              <div class="si-rc-body">
-                <div class="si-rc-rule" id="si-risk-rule">—</div>
-                <div class="si-rc-desc" id="si-risk-desc">战败用户中风险命中率显著偏高的话术行为</div>
-              </div>
-              <div class="si-rc-metrics" id="si-risk-metrics"></div>
-              <div class="si-rc-cta">查看明细分析 →</div>
-            </button>
-
-          </div>
-
           <!-- 明细分析面板 -->
-          <section class="track contribution-track" id="sop-active-detail-panel" role="tabpanel" aria-labelledby="sop-hit-summary" aria-label="SOP策略洞察明细">
+          <section class="track contribution-track" id="sop-active-detail-panel" aria-label="SOP策略洞察明细">
             <div class="track-header">
               <div style="display:flex;align-items:center;gap:10px">
                 <div class="track-icon deal" id="sop-active-detail-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 </div>
                 <div>
-                  <h2 class="track-title" id="sop-active-detail-title">下订用户话术命中率分析明细</h2>
-                  <p class="track-sub" id="sop-active-detail-sub">选择对比维度，查看同一质检规则的话术命中差异</p>
+                  <h2 class="track-title" id="sop-active-detail-title">SOP规则分析明细</h2>
+                  <p class="track-sub" id="sop-active-detail-sub">按规则查看命中差异，并支持搜索和排序</p>
                 </div>
               </div>
               <div id="sop-active-detail-controls"></div>
@@ -637,6 +532,33 @@
     'test_drive'
   ]);
 
+  const SOP_ANALYSIS_MODE_OPTIONS = [
+    { key: 'view', label: '合并分析模式' },
+    { key: 'compare', label: '对比分析模式' }
+  ];
+
+  const SOP_LEAD_STATUS_OPTIONS = [
+    '全部',
+    '已下订',
+    '战败',
+    '战败申请中',
+    '跟进中',
+    '无效',
+    '有效',
+    '异地成交'
+  ];
+
+  const SOP_LEAD_STATUS_PROFILE_MAP = {
+    '全部': { share: 1, hitDelta: 0, riskDelta: 0, missDelta: 0 },
+    '已下订': { share: 0.22, hitDelta: 10, riskDelta: -6, missDelta: -8 },
+    '战败': { share: 0.28, hitDelta: -8, riskDelta: 10, missDelta: 12 },
+    '战败申请中': { share: 0.12, hitDelta: -3, riskDelta: 7, missDelta: 8 },
+    '跟进中': { share: 0.26, hitDelta: 2, riskDelta: 2, missDelta: 1 },
+    '无效': { share: 0.1, hitDelta: -11, riskDelta: 5, missDelta: 10 },
+    '有效': { share: 0.3, hitDelta: 5, riskDelta: -1, missDelta: -2 },
+    '异地成交': { share: 0.08, hitDelta: 7, riskDelta: -4, missDelta: -4 }
+  };
+
 
   // ══════════════════════════════════════════════════
   // 3. 全局状态变量
@@ -655,9 +577,25 @@
   let currentModel  = 'all';   // 车型
   let currentTab    = 'sop-execution'; // 当前激活 Tab（SOP执行质检 / SOP策略洞察）
   let currentHitCompareTarget = 'loss';      // 话术命中率对比维度：loss / nonOrder
-  let currentHitSortMetric = 'contribution'; // 下订话术明细排序：contribution / diff
+  let currentHitSortMetric = 'diff';         // 下订话术明细排序：contribution / diff
   let currentRiskCompareTarget = 'order';    // 风险命中率对比维度：order / nonLoss
-  let currentSOPDetail = 'hit';              // SOP策略洞察当前明细：hit / risk / loss
+  let currentSOPAnalysisMode = 'view';
+  let currentSOPAnalysisListSort = 'diff-desc';
+  let currentSOPAnalysisListPage = 1;
+  const sopAnalysisListFilterState = {
+    type: 'rule',
+    keyword: ''
+  };
+  const DEFAULT_SOP_LEAD_STATUS_GROUPS = {
+    view: ['全部'],
+    groupA: ['已下订'],
+    groupB: ['战败']
+  };
+  const currentSOPLeadStatusGroups = {
+    view: [...DEFAULT_SOP_LEAD_STATUS_GROUPS.view],
+    groupA: [...DEFAULT_SOP_LEAD_STATUS_GROUPS.groupA],
+    groupB: [...DEFAULT_SOP_LEAD_STATUS_GROUPS.groupB]
+  };
   const factoryOrgMenuState = {
     open: false,
     draftPath: FACTORY_ALL_ORG_VALUE,
@@ -692,6 +630,22 @@
     'sop-loss-miss': 0,
     'sop-risk-compare': 0
   };
+  const SOP_ANALYSIS_LIST_SORT_OPTIONS = [
+    { key: 'diff-desc', label: '相对差值从高到低' },
+    { key: 'diff-asc', label: '相对差值从低到高' },
+    { key: 'scene-asc', label: '业务场景正序' },
+    { key: 'scene-desc', label: '业务场景倒序' }
+  ];
+  const SOP_ANALYSIS_LIST_FILTER_OPTIONS = [
+    { key: 'rule', label: '规则名称' },
+    { key: 'scene', label: '业务场景' }
+  ];
+  const SOP_SCENE_SORT_ORDER = {
+    '首触邀约': 1,
+    '门店接待': 2,
+    '试乘试驾': 3
+  };
+  const SOP_ANALYSIS_LIST_PAGE_SIZE = 10;
 
   // ══════════════════════════════════════════════════
   // 4. 顶部时间渲染
@@ -1232,6 +1186,37 @@
     factoryPage.appendChild(overlay);
   };
 
+  window.closeSOPCompareModal = function() {
+    const overlay = document.getElementById('sop-compare-modal-overlay');
+    if (overlay) overlay.remove();
+  };
+
+  window.openSOPCompareModal = function(message) {
+    const existing = document.getElementById('sop-compare-modal-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'sop-compare-modal-overlay';
+    overlay.className = 'rec-modal-overlay';
+    overlay.innerHTML = `
+      <div class="rec-modal sop-compare-modal" role="dialog" aria-modal="true" aria-label="对比提示">
+        <div class="rec-modal-head">
+          <div>
+            <div class="rec-modal-eyebrow">状态选择提示</div>
+            <div class="rec-modal-title">当前不能直接对比</div>
+          </div>
+          <button class="rec-modal-close" onclick="closeSOPCompareModal()" aria-label="关闭">×</button>
+        </div>
+        <div class="rec-modal-body">
+          <div><strong>提示说明</strong><span>${escapeHtml(message)}</span></div>
+          <div><strong>建议操作</strong><span>请让 A组 和 B组 选择不同的线索状态后，再继续查看对比结果。</span></div>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) window.closeSOPCompareModal();
+    });
+    factoryPage.appendChild(overlay);
+  };
+
   // ══════════════════════════════════════════════════
   // 6. Tab 切换逻辑（SOP执行质检 / SOP策略洞察）
   // ══════════════════════════════════════════════════
@@ -1258,6 +1243,7 @@
         tabId === 'sop-improvement' ? 'SOP策略洞察筛选' : 'SOP执行质检筛选'
       );
     }
+    renderSOPAnalysisFilterPanel();
     renderHeroKPI();
     // 切换 tab 后刷新当前 panel 的内容
     renderTabContent(tabId);
@@ -1348,6 +1334,228 @@
 
   const getFactorySceneSelection = () => normalizeSceneSelection(currentSource, currentScenes);
   const getEffectiveSceneKey = () => getFactorySceneSelection().effectiveSceneKey;
+
+  const normalizeSOPLeadStatuses = (statuses, fallback = ['全部']) => {
+    const list = Array.isArray(statuses)
+      ? statuses.filter(status => SOP_LEAD_STATUS_OPTIONS.includes(status))
+      : [];
+    if (!list.length) return [...fallback];
+    if (list.includes('全部')) return ['全部'];
+    return [...new Set(list)];
+  };
+
+  const toggleSOPLeadStatus = (groupKey, status) => {
+    const currentSelection = normalizeSOPLeadStatuses(currentSOPLeadStatusGroups[groupKey], ['全部']);
+    if (status === '全部') {
+      currentSOPLeadStatusGroups[groupKey] = ['全部'];
+      return;
+    }
+    const nextSelection = currentSelection.includes('全部') ? [] : [...currentSelection];
+    const statusIndex = nextSelection.indexOf(status);
+    if (statusIndex >= 0) {
+      nextSelection.splice(statusIndex, 1);
+    } else {
+      nextSelection.push(status);
+    }
+    currentSOPLeadStatusGroups[groupKey] = normalizeSOPLeadStatuses(
+      nextSelection.length ? nextSelection : ['全部'],
+      ['全部']
+    );
+  };
+
+  const formatSOPLeadStatusLabel = (statuses) => {
+    const list = normalizeSOPLeadStatuses(statuses, ['全部']);
+    return list.includes('全部') ? '全部' : list.join('、');
+  };
+
+  const resetSOPLeadStatusGroupsForMode = (mode) => {
+    if (mode === 'compare') {
+      currentSOPLeadStatusGroups.groupA = [...DEFAULT_SOP_LEAD_STATUS_GROUPS.groupA];
+      currentSOPLeadStatusGroups.groupB = [...DEFAULT_SOP_LEAD_STATUS_GROUPS.groupB];
+      return;
+    }
+    currentSOPLeadStatusGroups.view = [...DEFAULT_SOP_LEAD_STATUS_GROUPS.view];
+  };
+
+  const resetSOPAnalysisListState = () => {
+    currentSOPAnalysisListSort = 'diff-desc';
+    currentSOPAnalysisListPage = 1;
+    sopAnalysisListFilterState.type = 'rule';
+    sopAnalysisListFilterState.keyword = '';
+  };
+
+  const isSameSOPLeadStatusSelection = (leftStatuses, rightStatuses) => {
+    const left = normalizeSOPLeadStatuses(leftStatuses, ['全部']).slice().sort().join('|');
+    const right = normalizeSOPLeadStatuses(rightStatuses, ['全部']).slice().sort().join('|');
+    return left === right;
+  };
+
+  const getSOPLeadStatusProfile = (statuses, fallbackLabel = '全部') => {
+    const list = normalizeSOPLeadStatuses(statuses, [fallbackLabel]);
+    if (list.includes('全部')) {
+      return {
+        statuses: ['全部'],
+        fullLabel: '全部',
+        shortLabel: '全部',
+        share: 1,
+        hitDelta: 0,
+        riskDelta: 0,
+        missDelta: 0,
+        countBonus: 1
+      };
+    }
+
+    let shareSum = 0;
+    let hitWeighted = 0;
+    let riskWeighted = 0;
+    let missWeighted = 0;
+    list.forEach(status => {
+      const profile = SOP_LEAD_STATUS_PROFILE_MAP[status] || SOP_LEAD_STATUS_PROFILE_MAP['全部'];
+      shareSum += profile.share;
+      hitWeighted += profile.hitDelta * profile.share;
+      riskWeighted += profile.riskDelta * profile.share;
+      missWeighted += profile.missDelta * profile.share;
+    });
+
+    const denominator = shareSum || 1;
+    const share = Math.max(0.08, Math.min(0.95, shareSum));
+    return {
+      statuses: list,
+      fullLabel: list.join('、'),
+      shortLabel: list.length === 1 ? list[0] : `${list[0]}等${list.length}项`,
+      share,
+      hitDelta: hitWeighted / denominator,
+      riskDelta: riskWeighted / denominator,
+      missDelta: missWeighted / denominator,
+      countBonus: 1 + Math.max(0, list.length - 1) * 0.08
+    };
+  };
+
+  const getSOPAnalysisContext = () => {
+    const isCompare = currentSOPAnalysisMode === 'compare';
+    const hasInvalidCompare = isCompare && isSameSOPLeadStatusSelection(
+      currentSOPLeadStatusGroups.groupA,
+      currentSOPLeadStatusGroups.groupB
+    );
+    const primary = getSOPLeadStatusProfile(
+      isCompare ? currentSOPLeadStatusGroups.groupA : currentSOPLeadStatusGroups.view,
+      '已下订'
+    );
+    const secondary = isCompare
+      ? getSOPLeadStatusProfile(currentSOPLeadStatusGroups.groupB, '战败')
+      : {
+          statuses: ['全部'],
+          fullLabel: '整体样本',
+          shortLabel: '整体样本',
+          share: 1,
+          hitDelta: 0,
+          riskDelta: 0,
+          missDelta: 0,
+          countBonus: 1,
+          isBenchmark: true
+        };
+
+    return {
+      isCompare,
+      isView: !isCompare,
+      hasInvalidCompare,
+      compareWarning: hasInvalidCompare ? 'A组和B组选中了相同的线索状态，请改成不同状态后再做对比。' : '',
+      primary,
+      secondary,
+      primaryGroupName: isCompare ? 'A组' : '线索状态',
+      secondaryGroupName: isCompare ? 'B组' : '整体样本'
+    };
+  };
+
+  const renderSOPAnalysisFilterPanel = () => {
+    const shell = document.getElementById('sop-analysis-filter-shell');
+    if (!shell) return;
+
+    if (currentTab !== 'sop-improvement') {
+      shell.hidden = true;
+      shell.innerHTML = '';
+      return;
+    }
+
+    const analysis = getSOPAnalysisContext();
+    const renderStatusButtons = (groupKey, label) => {
+      const activeStatuses = normalizeSOPLeadStatuses(currentSOPLeadStatusGroups[groupKey], ['全部']);
+      return `
+        <div class="sop-analysis-status-row">
+          <div class="sop-analysis-status-head">
+            <span class="sop-analysis-status-title">${label}</span>
+            <span class="sop-analysis-status-selected">${formatSOPLeadStatusLabel(activeStatuses)}</span>
+          </div>
+          <div class="sop-analysis-status-tabs">
+            ${SOP_LEAD_STATUS_OPTIONS.map(status => `
+              <button
+                type="button"
+                class="sop-analysis-status-tab${activeStatuses.includes(status) ? ' active' : ''}"
+                data-sop-status-group="${groupKey}"
+                data-sop-status="${status}"
+                aria-pressed="${activeStatuses.includes(status) ? 'true' : 'false'}"
+              >
+                <span class="sop-analysis-status-check" aria-hidden="true"></span>
+                <span class="sop-analysis-status-text">${status}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>`;
+    };
+
+    shell.hidden = false;
+    shell.innerHTML = `
+      <div class="sop-analysis-mode-row">
+        <div class="sop-analysis-mode-label">
+          <span class="sop-analysis-mode-title">分析模式</span>
+          <span class="sop-analysis-mode-hint">合并分析模式展示单组状态，对比分析模式展示 A/B 两组状态。</span>
+        </div>
+        <div class="sop-analysis-mode-tabs" role="tablist" aria-label="分析模式切换">
+          ${SOP_ANALYSIS_MODE_OPTIONS.map(option => `
+            <button
+              type="button"
+              class="sop-analysis-mode-tab${currentSOPAnalysisMode === option.key ? ' active' : ''}"
+              data-sop-mode="${option.key}"
+              role="tab"
+              aria-selected="${currentSOPAnalysisMode === option.key ? 'true' : 'false'}"
+            >${option.label}</button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="sop-analysis-status-stack">
+        ${analysis.isCompare
+          ? `${renderStatusButtons('groupA', 'A组')}${renderStatusButtons('groupB', 'B组')}`
+          : renderStatusButtons('view', '线索状态')}
+      </div>
+    `;
+
+    shell.querySelectorAll('[data-sop-mode]').forEach(button => {
+      button.onclick = () => {
+        const nextMode = button.dataset.sopMode || 'view';
+        if (nextMode === currentSOPAnalysisMode) return;
+        window.closeSOPCompareModal?.();
+        currentSOPAnalysisMode = nextMode;
+        resetSOPLeadStatusGroupsForMode(nextMode);
+        resetSOPAnalysisListState();
+        renderSOPAnalysisFilterPanel();
+        applyGlobalFilter();
+      };
+    });
+
+    shell.querySelectorAll('[data-sop-status]').forEach(button => {
+      button.onclick = () => {
+        toggleSOPLeadStatus(button.dataset.sopStatusGroup, button.dataset.sopStatus);
+        renderSOPAnalysisFilterPanel();
+        applyGlobalFilter();
+        const nextAnalysis = getSOPAnalysisContext();
+        if (nextAnalysis.hasInvalidCompare) {
+          window.openSOPCompareModal(nextAnalysis.compareWarning);
+        } else {
+          window.closeSOPCompareModal?.();
+        }
+      };
+    });
+  };
 
   // 绑定人员筛选
   bindGlobalFilter("gf-role", "role", val => {
@@ -2079,6 +2287,10 @@
 
     const sceneKey = getEffectiveSceneKey();
     const isContributionTab = currentTab === 'sop-improvement';
+    if (isContributionTab) {
+      renderSOPContributionHero(grid);
+      return;
+    }
     const kpiData = isContributionTab ? buildContributionKPIData() : buildFactoryFilteredKpiData();
     const kpiItems = isContributionTab ? SOP_CONTRIBUTION_KPI_MAP : (SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all);
     const metricCards = [];
@@ -2166,31 +2378,174 @@
     return Number.isInteger(value) ? String(value) : value.toFixed(1);
   };
 
+  const analysisCount = (base, group) => {
+    const share = Number(group?.share || 1);
+    const bonus = Number(group?.countBonus || 1);
+    return Math.max(1, Math.round(base * share * bonus));
+  };
+
   const buildContributionKPIData = () => {
+    const analysis = getSOPAnalysisContext();
     const factor = contributionScopeFactor();
     const sceneDelta = currentQcScene === '邀约' ? -3 : currentQcScene === '试乘试驾' ? 4 : currentQcScene === '门店接待' ? 2 : 0;
     const brandDelta = currentBrand === '埃安' ? 2 : 0;
-    const users = Math.max(3, Math.round(18 * factor));
+    const baseUsers = Math.max(12, Math.round(52 * factor));
+    const primaryUsers = analysisCount(baseUsers, analysis.primary);
+    const secondaryUsers = analysis.isCompare
+      ? analysisCount(baseUsers, analysis.secondary)
+      : Math.max(primaryUsers + 4, Math.round(baseUsers * 0.82));
+    const users = analysis.isCompare ? primaryUsers + secondaryUsers : primaryUsers;
     const recordings = Math.max(users + 1, Math.round(users * (currentQcScene === '试乘试驾' ? 1.55 : 1.78)));
-    const orderUsers = Math.max(1, Math.round(users * (currentQcScene === '邀约' ? 0.16 : 0.24)));
-    const orderRecordings = Math.max(orderUsers + 1, Math.round(orderUsers * 2.15));
-    const lostUsers = Math.max(1, users - orderUsers);
-    const lostRecordings = Math.max(lostUsers + 1, recordings - orderRecordings);
+    const orderRecordings = Math.max(primaryUsers + 1, Math.round(primaryUsers * 2.15));
+    const lostRecordings = Math.max(secondaryUsers + 1, Math.round(secondaryUsers * 2.05));
     return {
       ...ALL_KPI_DATA,
       analysis_users:          { ...ALL_KPI_DATA.analysis_users, num: String(users), trend: currentBrand === '埃安' ? '↑4' : '↑3' },
       contribution_recordings: { ...ALL_KPI_DATA.contribution_recordings, num: String(recordings), trend: currentBrand === '埃安' ? '↑8' : '↑6' },
-      order_users:             { ...ALL_KPI_DATA.order_users, num: String(orderUsers), trend: orderUsers >= 3 ? '↑1' : '→0', trendDir: orderUsers >= 3 ? 'up' : 'flat' },
+      order_users:             { ...ALL_KPI_DATA.order_users, num: String(primaryUsers), trend: primaryUsers >= 3 ? '↑1' : '→0', trendDir: primaryUsers >= 3 ? 'up' : 'flat' },
       order_recordings:        { ...ALL_KPI_DATA.order_recordings, num: String(orderRecordings), trend: orderRecordings >= 6 ? '↑2' : '↑1' },
-      lost_users:              { ...ALL_KPI_DATA.lost_users, num: String(lostUsers), trend: lostUsers > 8 ? '↓1' : '→0', trendDir: lostUsers > 8 ? 'down' : 'flat' },
+      lost_users:              { ...ALL_KPI_DATA.lost_users, num: String(secondaryUsers), trend: secondaryUsers > 8 ? '↓1' : '→0', trendDir: secondaryUsers > 8 ? 'down' : 'flat' },
       lost_recordings:         { ...ALL_KPI_DATA.lost_recordings, num: String(lostRecordings), trend: lostRecordings > 12 ? '↓3' : '↓1' },
-      sop_hit_rate:            { ...ALL_KPI_DATA.sop_hit_rate, num: pct(78, brandDelta + sceneDelta) },
-      sop_pass_rate:           { ...ALL_KPI_DATA.sop_pass_rate, num: pct(80, brandDelta + sceneDelta - 1) },
-      order_sop_hit_rate:      { ...ALL_KPI_DATA.order_sop_hit_rate, num: pct(86, brandDelta + Math.max(0, sceneDelta)) },
-      order_sop_pass_rate:     { ...ALL_KPI_DATA.order_sop_pass_rate, num: pct(88, brandDelta + Math.max(0, sceneDelta) - 1) },
-      lost_sop_hit_rate:       { ...ALL_KPI_DATA.lost_sop_hit_rate, num: pct(62, brandDelta + sceneDelta - 2) },
-      lost_sop_pass_rate:      { ...ALL_KPI_DATA.lost_sop_pass_rate, num: pct(60, brandDelta + sceneDelta - 2) }
+      sop_hit_rate:            { ...ALL_KPI_DATA.sop_hit_rate, num: pct(76, brandDelta + sceneDelta + analysis.primary.hitDelta * 0.45) },
+      sop_pass_rate:           { ...ALL_KPI_DATA.sop_pass_rate, num: pct(78, brandDelta + sceneDelta + analysis.primary.hitDelta * 0.4 - 1) },
+      order_sop_hit_rate:      { ...ALL_KPI_DATA.order_sop_hit_rate, num: pct(80, brandDelta + Math.max(0, sceneDelta) + analysis.primary.hitDelta * 0.6) },
+      order_sop_pass_rate:     { ...ALL_KPI_DATA.order_sop_pass_rate, num: pct(82, brandDelta + Math.max(0, sceneDelta) + analysis.primary.hitDelta * 0.52 - 1) },
+      lost_sop_hit_rate:       { ...ALL_KPI_DATA.lost_sop_hit_rate, num: pct(analysis.isCompare ? 68 : 72, brandDelta + sceneDelta * 0.6 + analysis.secondary.hitDelta * (analysis.isCompare ? 0.55 : 0.18) - (analysis.isCompare ? 1 : 0)) },
+      lost_sop_pass_rate:      { ...ALL_KPI_DATA.lost_sop_pass_rate, num: pct(analysis.isCompare ? 66 : 70, brandDelta + sceneDelta * 0.55 + analysis.secondary.hitDelta * (analysis.isCompare ? 0.5 : 0.15) - 1) }
     };
+  };
+
+  const buildSOPOverviewMetrics = (group, groupName) => {
+    const factor = contributionScopeFactor();
+    const sceneLeadFactor = currentQcScene === '邀约'
+      ? 0.82
+      : currentQcScene === '试乘试驾'
+        ? 0.64
+        : currentQcScene === '门店接待'
+          ? 0.92
+          : 1;
+    const sceneRateDelta = currentQcScene === '邀约'
+      ? -2
+      : currentQcScene === '试乘试驾'
+        ? 4
+        : currentQcScene === '门店接待'
+          ? 1
+          : 0;
+    const brandLeadFactor = currentBrand === '埃安' ? 1.12 : 1;
+    const brandRateDelta = currentBrand === '埃安' ? 2 : 0;
+    const groupStatusCount = Array.isArray(group?.statuses) ? group.statuses.length : 1;
+    const groupCountBoost = group?.statuses?.includes('全部') ? 1 : Math.min(1.18, 1 + Math.max(0, groupStatusCount - 1) * 0.05);
+    const baseLeads = Math.max(18, Math.round(136 * factor * sceneLeadFactor * brandLeadFactor));
+    const leads = group?.statuses?.includes('全部')
+      ? baseLeads
+      : Math.max(4, Math.round(baseLeads * Number(group?.share || 1) * groupCountBoost));
+    const coverageRate = Math.max(
+      48,
+      Math.min(
+        96,
+        71
+          + brandRateDelta
+          + sceneRateDelta
+          + Number(group?.hitDelta || 0) * 0.32
+          - Number(group?.riskDelta || 0) * 0.12
+          + Number(group?.share || 0) * 6
+      )
+    );
+    const recordings = Math.max(1, Math.round(leads * coverageRate / 100));
+    const hitRate = Math.max(
+      42,
+      Math.min(98, 75 + brandRateDelta + sceneRateDelta + Number(group?.hitDelta || 0) * 0.52)
+    );
+    const passRate = Math.max(
+      36,
+      Math.min(
+        98,
+        77
+          + brandRateDelta
+          + sceneRateDelta * 0.8
+          + Number(group?.hitDelta || 0) * 0.46
+          - Number(group?.riskDelta || 0) * 0.12
+          - 1
+      )
+    );
+    const riskRate = Math.max(
+      1,
+      Math.min(
+        46,
+        12
+          + Math.max(0, sceneRateDelta)
+          + (currentQcScene === '试乘试驾' ? 2 : 0)
+          + (currentBrand === '埃安' ? 1 : 0)
+          + Number(group?.riskDelta || 0) * 0.58
+          - Number(group?.hitDelta || 0) * 0.08
+      )
+    );
+
+    return {
+      groupName,
+      fullLabel: group?.fullLabel || '全部',
+      statusSummary: group?.statuses?.includes('全部')
+        ? '覆盖全部线索状态'
+        : `已聚合 ${groupStatusCount} 个线索状态`,
+      metrics: [
+        { label: '线索数', value: countText(leads), unit: '条' },
+        { label: '分析录音数', value: countText(recordings), unit: '条' },
+        { label: '录音覆盖率', value: formatRate(coverageRate), unit: '%' },
+        { label: '话术命中率', value: formatRate(hitRate), unit: '%' },
+        { label: '质检合格率', value: formatRate(passRate), unit: '%' },
+        { label: '风险命中率', value: formatRate(riskRate), unit: '%' }
+      ]
+    };
+  };
+
+  const renderSOPOverviewMetricCard = (metric) => `
+    <div class="sop-overview-metric-card">
+      <span class="sop-overview-metric-label">${metric.label}</span>
+      <div class="sop-overview-metric-value">
+        <strong>${metric.value}</strong>
+        <small>${metric.unit}</small>
+      </div>
+    </div>
+  `;
+
+  const renderSOPOverviewBoard = (snapshot) => `
+    <section class="sop-overview-board" aria-label="${escapeHtml(snapshot.groupName)}指标看板">
+      <div class="sop-overview-board-head">
+        <div>
+          <div class="sop-overview-board-title-row">
+            <span class="sop-overview-board-badge">${escapeHtml(snapshot.groupName)}</span>
+            <h3 class="sop-overview-board-title">${escapeHtml(snapshot.fullLabel)}</h3>
+          </div>
+          <p class="sop-overview-board-sub">${escapeHtml(snapshot.statusSummary)}</p>
+        </div>
+        <span class="sop-overview-board-tip">基于所选线索状态聚合输出</span>
+      </div>
+      <div class="sop-overview-metric-grid">
+        ${snapshot.metrics.map(renderSOPOverviewMetricCard).join('')}
+      </div>
+    </section>
+  `;
+
+  const renderSOPContributionHero = (grid) => {
+    const analysis = getSOPAnalysisContext();
+    grid.className = `hero-kpi-grid hero-metrics store-hero-metrics sop-overview-hero-grid${analysis.isCompare ? ' compare-mode' : ''}`;
+    if (analysis.hasInvalidCompare) {
+      grid.innerHTML = `
+        <section class="sop-overview-warning-card" aria-label="对比模式提示">
+          <strong>当前不能做 A/B 对比</strong>
+          <p>${escapeHtml(analysis.compareWarning)}</p>
+        </section>`;
+      return;
+    }
+
+    const snapshots = analysis.isCompare
+      ? [
+          buildSOPOverviewMetrics(analysis.primary, 'A组'),
+          buildSOPOverviewMetrics(analysis.secondary, 'B组')
+        ]
+      : [buildSOPOverviewMetrics(analysis.primary, '线索状态')];
+
+    grid.innerHTML = snapshots.map(renderSOPOverviewBoard).join('');
   };
 
   // ══════════════════════════════════════════════════
@@ -3217,7 +3572,11 @@
     currentRegion,
     currentZone,
     currentStore,
-    currentModel
+    currentModel,
+    currentSOPAnalysisMode,
+    formatSOPLeadStatusLabel(currentSOPLeadStatusGroups.view),
+    formatSOPLeadStatusLabel(currentSOPLeadStatusGroups.groupA),
+    formatSOPLeadStatusLabel(currentSOPLeadStatusGroups.groupB)
   ].join('|');
 
   const contributionScopeShift = (index, tone = 'deal') => {
@@ -3230,6 +3589,7 @@
   };
 
   const contributionTotal = base => Math.max(1, Math.round(base * contributionScopeFactor()));
+  const clampPositiveGap = (value) => Math.max(0, Number(value || 0));
 
   const QC_SCENE_TO_LABEL = {
     '邀约': '首触邀约',
@@ -3315,6 +3675,22 @@
   const estimateUserCount = (recordings, ratio, min = 1) =>
     Math.max(min, Math.round(Number(recordings || 0) * ratio));
 
+  const buildCoverageLeadCount = (recordings, scene, index, groupKey) => {
+    const baseRatio = {
+      '首触邀约': 0.74,
+      '门店接待': 0.68,
+      '试乘试驾': 0.62
+    }[scene] || 0.66;
+    const ratio = Math.max(
+      0.45,
+      Math.min(0.92, baseRatio + contributionScopeShift(index, `${groupKey}-lead`) * 0.012)
+    );
+    return Math.min(
+      Number(recordings || 0),
+      Math.max(1, Math.round(Number(recordings || 0) * ratio))
+    );
+  };
+
   const contributionSampleCount = (item, key, fallback) => {
     const value = Number(item.sample?.[key]);
     return Number.isFinite(value) ? value : fallback;
@@ -3322,8 +3698,8 @@
 
   const buildHitContributionRows = (rows, diffKey) => {
     const rawScores = rows.map(item => {
-      const positiveDiff = Math.max(Number(item[diffKey] || 0), 0);
-      return item.orderRecordings * positiveDiff / 100;
+      const positiveDiff = clampPositiveGap(item[diffKey]);
+      return item.primaryRecordings * positiveDiff / 100;
     });
     const totalScore = rawScores.reduce((sum, score) => sum + score, 0);
     return rows.map((item, index) => ({
@@ -3343,58 +3719,77 @@
   };
 
   const buildContributionRows = () => {
+    const analysis = getSOPAnalysisContext();
     return activeContributionRules().map((item, index) => {
-    const hitDelta = contributionDelta(index, 'hit');
-    const riskDelta = contributionDelta(index, 'risk');
-    const recordingTotals = contributionRecordingTotals(item.scene);
-    const orderRecordings = contributionSampleCount(item, 'orderRecordings', estimateUserCount(recordingTotals.orderRecordings, 0.56));
-    const lossRecordings = contributionSampleCount(item, 'lossRecordings', Math.max(orderRecordings + 1, estimateUserCount(recordingTotals.lossRecordings, 0.52)));
-    const nonOrderRecordings = contributionSampleCount(item, 'nonOrderRecordings', Math.max(orderRecordings + 2, estimateUserCount(recordingTotals.nonOrderRecordings, 0.5)));
-    const nonLossRecordings = contributionSampleCount(item, 'nonLossRecordings', Math.max(lossRecordings + 1, estimateUserCount(recordingTotals.nonLossRecordings, 0.51)));
-    const orderHitSeed = clampRate(item.orderHit + hitDelta);
-    const lossHitSeed = clampRate(item.lossHit + hitDelta * 0.48 - contributionScopeShift(index, 'loss') * 0.35);
-    const nonOrderHitSeed = clampRate(lossHitSeed + 7.2 + contributionScopeShift(index, 'nonOrderHit') * 0.8);
-    const orderRiskSeed = clampRate(item.orderRisk + riskDelta);
-    const lossRiskSeed = clampRate(item.lossRisk + riskDelta * 0.52 + contributionScopeShift(index, 'riskLoss') * 0.45);
-    const nonLossRiskSeed = clampRate(orderRiskSeed + 3.8 + contributionScopeShift(index, 'nonLossRisk') * 0.8);
-    const orderHitCount = Math.round(orderRecordings * orderHitSeed / 100);
-    const lossHitCount = Math.round(lossRecordings * lossHitSeed / 100);
-    const nonOrderHitCount = Math.round(nonOrderRecordings * nonOrderHitSeed / 100);
-    const orderRiskCount = Math.round(orderRecordings * orderRiskSeed / 100);
-    const lossRiskCount = Math.round(lossRecordings * lossRiskSeed / 100);
-    const nonLossRiskCount = Math.round(nonLossRecordings * nonLossRiskSeed / 100);
-    const lossMissCount = Math.max(0, lossRecordings - lossHitCount);
-    const orderHit = countRate(orderHitCount, orderRecordings);
-    const lossHit = countRate(lossHitCount, lossRecordings);
-    const nonOrderHit = countRate(nonOrderHitCount, nonOrderRecordings);
-    const orderRisk = countRate(orderRiskCount, orderRecordings);
-    const lossRisk = countRate(lossRiskCount, lossRecordings);
-    const nonLossRisk = countRate(nonLossRiskCount, nonLossRecordings);
-    return {
-      ...item,
-      orderRecordings,
-      orderHitCount,
-      orderRiskCount,
-      lossRecordings,
-      lossHitCount,
-      lossRiskCount,
-      lossMissCount,
-      nonOrderRecordings,
-      nonOrderHitCount,
-      nonLossRecordings,
-      nonLossRiskCount,
-      orderHit,
-      lossHit,
-      nonOrderHit,
-      hitDiff: orderHit - lossHit,
-      nonOrderHitDiff: orderHit - nonOrderHit,
-      missRate: countRate(lossMissCount, lossRecordings),
-      orderRisk,
-      lossRisk,
-      nonLossRisk,
-      riskDiff: lossRisk - orderRisk,
-      nonLossRiskDiff: lossRisk - nonLossRisk
-    };
+      const hitDelta = contributionDelta(index, 'hit');
+      const riskDelta = contributionDelta(index, 'risk');
+      const recordingTotals = contributionRecordingTotals(item.scene);
+      const primaryRecordings = Math.max(
+        1,
+        Math.round(estimateUserCount(recordingTotals.orderRecordings, 0.56) * analysis.primary.share * analysis.primary.countBonus)
+      );
+      const secondaryRecordings = analysis.isCompare
+        ? Math.max(
+            1,
+            Math.round(estimateUserCount(recordingTotals.lossRecordings, 0.52) * analysis.secondary.share * analysis.secondary.countBonus)
+          )
+        : Math.max(primaryRecordings + 2, estimateUserCount(recordingTotals.nonOrderRecordings, 0.5));
+      const primaryHitSeed = clampRate(item.orderHit + hitDelta + analysis.primary.hitDelta * 0.62);
+      const secondaryHitSeed = analysis.isCompare
+        ? clampRate(item.lossHit + hitDelta * 0.42 + analysis.secondary.hitDelta * 0.58 - contributionScopeShift(index, 'loss') * 0.3)
+        : clampRate(((item.orderHit + item.lossHit) / 2) + hitDelta * 0.2 + contributionScopeShift(index, 'benchmarkHit') * 0.45);
+      const primaryRiskSeed = clampRate(item.orderRisk + riskDelta + analysis.primary.riskDelta * 0.45);
+      const secondaryRiskSeed = analysis.isCompare
+        ? clampRate(item.lossRisk + riskDelta * 0.46 + analysis.secondary.riskDelta * 0.5 + contributionScopeShift(index, 'riskLoss') * 0.36)
+        : clampRate(((item.orderRisk + item.lossRisk) / 2) + 4 + riskDelta * 0.16 + contributionScopeShift(index, 'benchmarkRisk') * 0.4);
+      const primaryHitCount = Math.round(primaryRecordings * primaryHitSeed / 100);
+      const secondaryHitCount = Math.round(secondaryRecordings * secondaryHitSeed / 100);
+      const primaryRiskCount = Math.round(primaryRecordings * primaryRiskSeed / 100);
+      const secondaryRiskCount = Math.round(secondaryRecordings * secondaryRiskSeed / 100);
+      const primaryLeadCount = buildCoverageLeadCount(primaryRecordings, item.scene, index, 'primary');
+      const secondaryLeadCount = buildCoverageLeadCount(secondaryRecordings, item.scene, index, 'secondary');
+      const primaryHit = countRate(primaryHitCount, primaryRecordings);
+      const secondaryHit = countRate(secondaryHitCount, secondaryRecordings);
+      const primaryRisk = countRate(primaryRiskCount, primaryRecordings);
+      const secondaryRisk = countRate(secondaryRiskCount, secondaryRecordings);
+      const primaryMissCount = Math.max(0, primaryRecordings - primaryHitCount);
+      const secondaryMissCount = Math.max(0, secondaryRecordings - secondaryHitCount);
+      const primaryMissRate = countRate(primaryMissCount, primaryRecordings);
+      const secondaryMissRate = countRate(secondaryMissCount, secondaryRecordings);
+
+      return {
+        ...item,
+        primaryRecordings,
+        primaryLeadCount,
+        primaryHitCount,
+        primaryRiskCount,
+        primaryMissCount,
+        primaryHit,
+        primaryRisk,
+        primaryMissRate,
+        secondaryRecordings,
+        secondaryLeadCount,
+        secondaryHitCount,
+        secondaryRiskCount,
+        secondaryMissCount,
+        secondaryHit,
+        secondaryRisk,
+        secondaryMissRate,
+        hitDiff: primaryHit - secondaryHit,
+        missRate: analysis.isCompare ? secondaryMissRate : primaryMissRate,
+        riskDiff: analysis.isCompare ? (secondaryRisk - primaryRisk) : (primaryRisk - secondaryRisk),
+        orderRecordings: primaryRecordings,
+        orderHitCount: primaryHitCount,
+        orderRiskCount: primaryRiskCount,
+        lossRecordings: secondaryRecordings,
+        lossHitCount: secondaryHitCount,
+        lossRiskCount: secondaryRiskCount,
+        lossMissCount: secondaryMissCount,
+        orderHit: primaryHit,
+        lossHit: secondaryHit,
+        orderRisk: primaryRisk,
+        lossRisk: secondaryRisk
+      };
     });
   };
 
@@ -3415,6 +3810,231 @@
   };
 
   const signedRateText = value => `${value >= 0 ? '+' : ''}${rateText(value)}`;
+
+  const getSOPAnalysisListPlaceholder = () => (
+    sopAnalysisListFilterState.type === 'scene'
+      ? '输入业务场景，例如：首触邀约'
+      : '输入规则名称'
+  );
+
+  const sortSOPAnalysisListRows = (rows) => {
+    const sortMode = currentSOPAnalysisListSort;
+    return [...rows].sort((left, right) => {
+      if (sortMode === 'diff-asc') {
+        return (Number(left.hitDiff || 0) - Number(right.hitDiff || 0))
+          || (Number(right.primaryHit || 0) - Number(left.primaryHit || 0));
+      }
+      if (sortMode === 'scene-asc' || sortMode === 'scene-desc') {
+        const direction = sortMode === 'scene-desc' ? -1 : 1;
+        return (
+          (SOP_SCENE_SORT_ORDER[left.scene] || 99) - (SOP_SCENE_SORT_ORDER[right.scene] || 99)
+        ) * direction
+          || (Number(right.hitDiff || 0) - Number(left.hitDiff || 0))
+          || String(left.rule).localeCompare(String(right.rule), 'zh-CN');
+      }
+      return (Number(right.hitDiff || 0) - Number(left.hitDiff || 0))
+        || (Number(right.primaryHit || 0) - Number(left.primaryHit || 0));
+    });
+  };
+
+  const filterSOPAnalysisListRows = (rows) => {
+    const keyword = String(sopAnalysisListFilterState.keyword || '').trim();
+    if (!keyword) return [...rows];
+    const loweredKeyword = keyword.toLowerCase();
+    return rows.filter(item => {
+      const targetText = sopAnalysisListFilterState.type === 'scene'
+        ? String(item.scene || '')
+        : String(item.rule || '');
+      return targetText.toLowerCase().includes(loweredKeyword);
+    });
+  };
+
+  const renderSOPAnalysisList = (containerId = null, focusSearch = false) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const analysis = getSOPAnalysisContext();
+    const allRows = buildHitContributionRows(buildContributionRows(), 'hitDiff');
+    const visibleRows = sortSOPAnalysisListRows(filterSOPAnalysisListRows(allRows));
+    const pageCount = Math.max(1, Math.ceil(visibleRows.length / SOP_ANALYSIS_LIST_PAGE_SIZE));
+    const currentPage = Math.min(Math.max(1, currentSOPAnalysisListPage), pageCount);
+    currentSOPAnalysisListPage = currentPage;
+    const startIndex = (currentPage - 1) * SOP_ANALYSIS_LIST_PAGE_SIZE;
+    const pageRows = visibleRows.slice(startIndex, startIndex + SOP_ANALYSIS_LIST_PAGE_SIZE);
+    const compareNoteHtml = analysis.isCompare
+      ? `
+        <div class="sop-analysis-compare-note" role="note" aria-label="A组和B组线索状态说明">
+          <span class="sop-analysis-compare-note-label">当前对比说明</span>
+          <div class="sop-analysis-compare-note-groups">
+            <span class="sop-analysis-compare-note-chip"><strong>A组</strong><em>${escapeHtml(analysis.primary.fullLabel)}</em></span>
+            <span class="sop-analysis-compare-note-chip"><strong>B组</strong><em>${escapeHtml(analysis.secondary.fullLabel)}</em></span>
+          </div>
+        </div>`
+      : `
+        <div class="sop-analysis-compare-note" role="note" aria-label="当前合并线索状态说明">
+          <span class="sop-analysis-compare-note-label">当前合并说明</span>
+          <div class="sop-analysis-compare-note-groups">
+            <span class="sop-analysis-compare-note-chip"><strong>线索状态</strong><em>${escapeHtml(analysis.primary.fullLabel)}</em></span>
+          </div>
+        </div>`;
+    const toolbarHtml = `
+      <div class="sop-analysis-list-toolbar">
+        <label class="sop-analysis-list-field">
+          <span>筛选方式</span>
+          <select class="sop-analysis-list-select" data-sop-list-filter-type>
+            ${SOP_ANALYSIS_LIST_FILTER_OPTIONS.map(option => `
+              <option value="${option.key}"${sopAnalysisListFilterState.type === option.key ? ' selected' : ''}>按${option.label}</option>
+            `).join('')}
+          </select>
+        </label>
+        <label class="sop-analysis-list-field sop-analysis-list-field--search">
+          <span>搜索内容</span>
+          <input
+            class="sop-analysis-list-input"
+            type="search"
+            value="${escapeHtml(sopAnalysisListFilterState.keyword)}"
+            placeholder="${escapeHtml(getSOPAnalysisListPlaceholder())}"
+            autocomplete="off"
+            data-sop-list-filter-keyword
+          >
+        </label>
+        <label class="sop-analysis-list-field">
+          <span>排序方式</span>
+          <select class="sop-analysis-list-select" data-sop-list-sort>
+            ${SOP_ANALYSIS_LIST_SORT_OPTIONS.map(option => `
+              <option value="${option.key}"${currentSOPAnalysisListSort === option.key ? ' selected' : ''}>${option.label}</option>
+            `).join('')}
+          </select>
+        </label>
+        <div class="sop-analysis-list-meta">共 ${countText(visibleRows.length)} 条规则</div>
+      </div>`;
+    if (!visibleRows.length) {
+      container.innerHTML = `
+        <div class="sop-analysis-list-shell">
+          ${compareNoteHtml}
+          ${toolbarHtml}
+          <div class="sop-analysis-empty-state">
+            <strong>没有找到匹配的规则</strong>
+            <span>请切换筛选方式，或修改搜索内容后再试。</span>
+          </div>
+        </div>`;
+      bindSOPAnalysisListEvents(focusSearch);
+      return;
+    }
+    const headers = analysis.isCompare
+      ? [
+          '序号',
+          '规则名称',
+          '业务场景',
+          'A组录音数',
+          'A组覆盖线索数',
+          'A组命中率',
+          'B组录音数',
+          'B组覆盖线索数',
+          'B组命中率',
+          '相对差值（A组vsB组）'
+        ]
+      : [
+          '序号',
+          '规则名称',
+          '业务场景',
+          '录音数',
+          '覆盖线索数',
+          '命中率',
+          '相对差值 vs全部'
+        ];
+    const rowsHtml = pageRows.map((item, index) => {
+      const displayIndex = startIndex + index + 1;
+      const baseCells = `
+        <td><span class="sop-analysis-rank">${displayIndex}</span></td>
+        <td><div class="sop-analysis-rule">${escapeHtml(item.rule)}</div></td>
+        <td><span class="sop-analysis-scene">${escapeHtml(item.scene)}</span></td>`;
+      if (analysis.isCompare) {
+        return `
+          <tr class="sop-analysis-list-row">
+            ${baseCells}
+            <td>${countCell(item.primaryRecordings)}</td>
+            <td>${countCell(item.primaryLeadCount)}</td>
+            <td>${rateCell(item.primaryHit, 'deal')}</td>
+            <td>${countCell(item.secondaryRecordings)}</td>
+            <td>${countCell(item.secondaryLeadCount)}</td>
+            <td>${rateCell(item.secondaryHit, 'loss')}</td>
+            <td>${diffPill(item.hitDiff)}</td>
+          </tr>`;
+      }
+      return `
+        <tr class="sop-analysis-list-row">
+          ${baseCells}
+          <td>${countCell(item.primaryRecordings)}</td>
+          <td>${countCell(item.primaryLeadCount)}</td>
+          <td>${rateCell(item.primaryHit, 'deal')}</td>
+          <td>${diffPill(item.hitDiff)}</td>
+        </tr>`;
+    }).join('');
+    const paginationHtml = pageCount > 1
+      ? `
+        <div class="sop-analysis-list-footer">
+          <span>共 ${countText(visibleRows.length)} 条，当前第 ${currentPage}/${pageCount} 页</span>
+          <div class="sop-analysis-list-pager" aria-label="SOP规则明细分页">
+            <button type="button" class="sop-analysis-list-page-btn" data-sop-list-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+            <button type="button" class="sop-analysis-list-page-btn" data-sop-list-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
+          </div>
+        </div>`
+      : '';
+    container.innerHTML = `
+      <div class="sop-analysis-list-shell">
+        ${compareNoteHtml}
+        ${toolbarHtml}
+        <div class="sop-analysis-list-table-wrap">
+          <table class="sop-analysis-table sop-hit-menu-table${analysis.isCompare ? ' is-compare' : ''}">
+            <thead><tr>${headers.map(label => `<th>${label}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+        ${paginationHtml}
+      </div>`;
+    bindSOPAnalysisListEvents(focusSearch);
+  };
+
+  const bindSOPAnalysisListEvents = (focusSearch = false) => {
+    const typeSelect = document.querySelector('[data-sop-list-filter-type]');
+    const keywordInput = document.querySelector('[data-sop-list-filter-keyword]');
+    const sortSelect = document.querySelector('[data-sop-list-sort]');
+
+    typeSelect?.addEventListener('change', (event) => {
+      sopAnalysisListFilterState.type = event.target.value || 'rule';
+      currentSOPAnalysisListPage = 1;
+      renderActiveSOPDetail(true);
+    });
+
+    keywordInput?.addEventListener('input', (event) => {
+      sopAnalysisListFilterState.keyword = event.target.value || '';
+      currentSOPAnalysisListPage = 1;
+      renderActiveSOPDetail(true);
+    });
+
+    sortSelect?.addEventListener('change', (event) => {
+      currentSOPAnalysisListSort = event.target.value || 'diff-desc';
+      currentSOPAnalysisListPage = 1;
+      renderActiveSOPDetail();
+    });
+
+    document.querySelectorAll('[data-sop-list-page-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.sopListPageAction;
+        if (action === 'prev') currentSOPAnalysisListPage = Math.max(1, currentSOPAnalysisListPage - 1);
+        if (action === 'next') currentSOPAnalysisListPage += 1;
+        renderActiveSOPDetail();
+      });
+    });
+
+    if (focusSearch && keywordInput) {
+      const position = keywordInput.value.length;
+      requestAnimationFrame(() => {
+        keywordInput.focus();
+        keywordInput.setSelectionRange(position, position);
+      });
+    }
+  };
 
   const contributionCell = value => {
     const safeValue = Math.max(0, Number(value || 0));
@@ -3443,42 +4063,48 @@
 
   const contributionHelpPanel = tableKey => {
     if (tableKey !== 'sop-hit-compare' || !contributionHelpVisible[tableKey]) return '';
-    const compareLabel = currentHitCompareTarget === 'nonOrder' ? '未下订用户命中率' : '战败用户命中率';
+    const analysis = getSOPAnalysisContext();
+    const primaryLabel = analysis.isCompare ? 'A组命中率' : `${analysis.primary.fullLabel}命中率`;
+    const compareLabel = analysis.isCompare ? 'B组命中率' : '整体样本命中率';
     return `
       <div class="sop-contribution-popover" id="${contributionHelpPanelId(tableKey)}" role="dialog" aria-label="贡献值计算方式">
         <div class="sop-contribution-popover-head">
           <div class="sop-contribution-help-title">贡献值计算方式</div>
           <button class="sop-popover-close" type="button" data-contribution-help-close="${tableKey}" aria-label="关闭贡献值说明">×</button>
         </div>
-        <div>贡献值用于衡量某条质检规则对“下订话术命中优势”的相对贡献，权重会参考下订用户数。</div>
+        <div>贡献值用于衡量某条质检规则对“主要观察组命中优势”的相对贡献，权重会参考主要观察组样本数。</div>
         <div class="sop-contribution-formula">
-          单项有效贡献量 = 下订用户数 × max(下订用户命中率 - ${compareLabel}, 0)<br>
+          单项有效贡献量 = 主要观察组样本数 × max(${primaryLabel} - ${compareLabel}, 0)<br>
           贡献值 = 单项有效贡献量 ÷ 全部规则有效贡献量之和 × 100%
         </div>
-        <div>下订用户数越多、命中率差异越大，贡献值越高；差异小于或等于 0 时按 0 计算。</div>
+        <div>主要观察组样本数越多、命中率差异越大，贡献值越高；差异小于或等于 0 时按 0 计算。</div>
       </div>`;
   };
 
   const formulaHelpMeta = key => {
-    const hitTarget = currentHitCompareTarget === 'nonOrder' ? {
-      group: '未下订用户',
-      rateLabel: '未下订用户命中率'
+    const analysis = getSOPAnalysisContext();
+    const hitPrimaryLabel = analysis.isCompare ? 'A组命中率' : `${analysis.primary.fullLabel}命中率`;
+    const hitTarget = analysis.isCompare ? {
+      group: 'B组',
+      rateLabel: 'B组命中率'
     } : {
-      group: '战败用户',
-      rateLabel: '战败用户命中率'
+      group: '整体样本',
+      rateLabel: '整体样本命中率'
     };
-    const riskTarget = currentRiskCompareTarget === 'nonLoss' ? {
-      group: '未战败用户',
-      rateLabel: '未战败用户风险命中率'
+    const missGroup = analysis.isCompare ? 'B组' : analysis.primary.fullLabel;
+    const riskPrimaryLabel = analysis.isCompare ? 'A组风险命中率' : `${analysis.primary.fullLabel}风险命中率`;
+    const riskTarget = analysis.isCompare ? {
+      group: 'B组',
+      rateLabel: 'B组风险命中率'
     } : {
-      group: '下订用户',
-      rateLabel: '下订用户风险命中率'
+      group: '整体样本',
+      rateLabel: '整体样本风险命中率'
     };
     const metaMap = {
       'hit-order-rate': {
-        title: '下订用户命中率计算方式',
-        desc: '衡量下订用户中该质检规则被命中的用户占比。',
-        formula: '下订用户命中率 = 下订规则命中用户数 ÷ 下订样本用户数 × 100%'
+        title: `${hitPrimaryLabel}计算方式`,
+        desc: '衡量主要观察组中该质检规则被命中的样本占比。',
+        formula: `${hitPrimaryLabel} = 主要观察组规则命中样本数 ÷ 主要观察组样本数 × 100%`
       },
       'hit-target-rate': {
         title: `${hitTarget.rateLabel}计算方式`,
@@ -3487,13 +4113,13 @@
       },
       'loss-miss-rate': {
         title: '未命中率计算方式',
-        desc: '衡量战败用户中该质检规则缺失的用户占比。',
-        formula: '未命中率 = 战败规则未命中用户数 ÷ 战败样本用户数 × 100%'
+        desc: `衡量${missGroup}中该质检规则缺失的用户占比。`,
+        formula: `未命中率 = ${missGroup}规则未命中用户数 ÷ ${missGroup}样本用户数 × 100%`
       },
       'risk-loss-rate': {
-        title: '战败用户风险命中率计算方式',
-        desc: '衡量战败用户中该风险规则被命中的用户占比。',
-        formula: '战败用户风险命中率 = 战败规则命中用户数 ÷ 战败样本用户数 × 100%'
+        title: `${riskPrimaryLabel}计算方式`,
+        desc: '衡量主要观察组中该风险规则被命中的样本占比。',
+        formula: `${riskPrimaryLabel} = 主要观察组规则命中样本数 ÷ 主要观察组样本数 × 100%`
       },
       'risk-target-rate': {
         title: `${riskTarget.rateLabel}计算方式`,
@@ -3604,56 +4230,6 @@
           </div>
         </td>
       </tr>`;
-  };
-
-  const renderModuleSummary = (containerId, config) => {
-    // 新版本：更新角色卡片内容（不再依赖旧的 sop-module-summary DOM 结构）
-    const { item, metrics = [] } = config || {};
-    if (!item) return;
-    const keyMap = {
-      'sop-hit-summary':  { rule: 'si-hit-rule',  metrics: 'si-hit-metrics' },
-      'sop-loss-summary': { rule: 'si-loss-rule', metrics: 'si-loss-metrics' },
-      'sop-risk-summary': { rule: 'si-risk-rule', metrics: 'si-risk-metrics' }
-    };
-    const ids = keyMap[containerId];
-    if (!ids) return;
-    const ruleEl = document.getElementById(ids.rule);
-    const metricsEl = document.getElementById(ids.metrics);
-    if (ruleEl) ruleEl.textContent = item.rule;
-    if (metricsEl) {
-      metricsEl.innerHTML = metrics.map(m => `
-        <div class="si-rc-metric">
-          <span class="si-rc-metric-label">${m.label}</span>
-          <strong class="si-rc-metric-value">${m.value}</strong>
-        </div>`).join('');
-    }
-    // 同步激活状态
-    const el = document.getElementById(containerId);
-    if (el) {
-      const isActive = (el.dataset.sopSummary || '') === currentSOPDetail;
-      el.classList.toggle('active', isActive);
-      el.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    }
-  };
-
-  const syncSOPDetailPanels = () => {
-    document.querySelectorAll('[data-sop-summary]').forEach(card => {
-      const isActive = card.dataset.sopSummary === currentSOPDetail;
-      card.classList.toggle('active', isActive);
-      card.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    });
-    const detailPanel = document.getElementById('sop-active-detail-panel');
-    if (detailPanel) detailPanel.setAttribute('aria-labelledby', `sop-${currentSOPDetail}-summary`);
-  };
-
-  const setupSOPSummaryCards = () => {
-    document.querySelectorAll('[data-sop-summary]').forEach(card => {
-      card.onclick = () => {
-        currentSOPDetail = card.dataset.sopSummary || 'hit';
-        renderActiveSOPDetail();
-      };
-    });
-    syncSOPDetailPanels();
   };
 
   const renderContributionTable = (containerId, headers, rows, tableKey = containerId) => {
@@ -3791,168 +4367,28 @@
         riskDiffKey: 'riskDiff'
       };
 
-  const renderHitCompare = (containerId = null) => {
-    const target = compareTargetMeta(currentHitCompareTarget);
-    const sortedRows = sortHitCompareRows(buildHitContributionRows(buildContributionRows(), target.hitDiffKey), target);
-    const top = sortedRows[0];
-    renderModuleSummary('sop-hit-summary', {
-      item: top,
-      tone: 'deal',
-      eyebrow: '下订话术命中率分析小结',
-      title: currentHitSortMetric === 'diff' ? `${top.rule} 的下订命中优势最明显` : `${top.rule} 对下订命中优势贡献最高`,
-      roleLabel: '运营视角：哪些SOP应该强化',
-      metrics: [
-        { label: '下订用户数', value: countText(top.orderRecordings) },
-        { label: '差异', value: signedRateText(top[target.hitDiffKey]) },
-        { label: '贡献值', value: rateText(top.contributionValue) }
-      ]
-    });
+  const renderHitCompare = (containerId = null, focusSearch = false) => {
     if (!containerId) return;
-    const rows = sortedRows
-      .map((item, index) => {
-        const isSelected = contributionSelectedRow['sop-hit-compare'] === index;
-        const isLowSample = item.orderRecordings < 20;
-        const rowClass = ['sop-data-row', isSelected ? 'is-selected' : '', isLowSample ? 'is-low-sample' : ''].filter(Boolean).join(' ');
-        return `
-        <tr class="${rowClass}" data-sop-row="${index}" tabindex="0" aria-selected="${isSelected ? 'true' : 'false'}">
-          <td><span class="sop-analysis-rank">${index + 1}</span></td>
-          <td><div class="sop-analysis-rule">${item.rule}</div></td>
-          <td><span class="sop-analysis-scene">${item.scene}</span></td>
-          <td>${countCell(item.orderRecordings)}</td>
-          <td>${countCell(item.orderHitCount)}</td>
-          <td>${rateCell(item.orderHit, 'deal')}</td>
-          <td>${countCell(item[target.countKey])}</td>
-          <td>${countCell(item[target.hitCountKey])}</td>
-          <td>${rateCell(item[target.hitRateKey], 'loss')}</td>
-          <td>${diffPill(item[target.hitDiffKey])}</td>
-          <td>${contributionCell(item.contributionValue)}</td>
-        </tr>
-        ${isSelected ? contributionRowDetail(item, index, 'sop-hit-compare', 11) : ''}`;
-      });
-    renderContributionTable(containerId, ['排序', '质检规则', '所属质检场景', '下订用户数', '规则命中数', formulaHeader('下订用户命中率', 'hit-order-rate'), target.countLabel, '规则命中数', formulaHeader(target.hitRateLabel, 'hit-target-rate'), '差异', contributionHeader('sop-hit-compare')], rows, 'sop-hit-compare');
-  };
-
-  const renderLossMiss = (containerId = null) => {
-    const sortedRows = buildContributionRows()
-      .sort((a, b) => b.missRate - a.missRate);
-    const top = sortedRows[0];
-    renderModuleSummary('sop-loss-summary', {
-      item: top,
-      tone: 'loss',
-      eyebrow: '战败用户SOP缺失识别小结',
-      title: `${top.rule} 是战败用户最突出的 SOP 缺失`,
-      roleLabel: '管理层视角：为什么战败',
-      metrics: [
-        { label: '战败用户数', value: countText(top.lossRecordings) },
-        { label: '规则未命中数', value: countText(top.lossMissCount) },
-        { label: '未命中率', value: rateText(top.missRate) }
-      ]
-    });
-    if (!containerId) return;
-    const rows = sortedRows
-      .map((item, index) => {
-        const isSelected = contributionSelectedRow['sop-loss-miss'] === index;
-        const isLowSample = item.lossRecordings < 20;
-        const rowClass = ['sop-data-row', isSelected ? 'is-selected' : '', isLowSample ? 'is-low-sample' : ''].filter(Boolean).join(' ');
-        return `
-        <tr class="${rowClass}" data-sop-row="${index}" tabindex="0" aria-selected="${isSelected ? 'true' : 'false'}">
-          <td><span class="sop-analysis-rank">${index + 1}</span></td>
-          <td><div class="sop-analysis-rule">${item.rule}</div></td>
-          <td><span class="sop-analysis-scene">${item.scene}</span></td>
-          <td>${countCell(item.lossRecordings)}</td>
-          <td>${countCell(item.lossMissCount)}</td>
-          <td>${rateCell(item.missRate, 'loss')}</td>
-        </tr>
-        ${isSelected ? contributionRowDetail(item, index, 'sop-loss-miss', 6) : ''}`;
-      });
-    renderContributionTable(containerId, ['排序', '质检规则', '所属质检场景', '战败用户数', '规则未命中数', formulaHeader('未命中率', 'loss-miss-rate')], rows, 'sop-loss-miss');
-  };
-
-  const renderRiskCompare = (containerId = null) => {
-    const target = riskTargetMeta(currentRiskCompareTarget);
-    const sortedRows = buildContributionRows()
-      .sort((a, b) => b[target.riskDiffKey] - a[target.riskDiffKey]);
-    const top = sortedRows[0];
-    renderModuleSummary('sop-risk-summary', {
-      item: top,
-      tone: 'risk',
-      eyebrow: '战败风险命中率分析小结',
-      title: `${top.rule} 在战败用户中风险命中更突出`,
-      roleLabel: '培训视角：哪些行为真正影响成交',
-      metrics: [
-        { label: '战败风险命中率', value: rateText(top.lossRisk) },
-        { label: target.riskRateLabel, value: rateText(top[target.riskRateKey]) },
-        { label: '差异', value: `+${rateText(top[target.riskDiffKey])}` }
-      ]
-    });
-    if (!containerId) return;
-    const rows = sortedRows
-      .map((item, index) => {
-        const isSelected = contributionSelectedRow['sop-risk-compare'] === index;
-        const isLowSample = item.lossRecordings < 20;
-        const rowClass = ['sop-data-row', isSelected ? 'is-selected' : '', isLowSample ? 'is-low-sample' : ''].filter(Boolean).join(' ');
-        return `
-        <tr class="${rowClass}" data-sop-row="${index}" tabindex="0" aria-selected="${isSelected ? 'true' : 'false'}">
-          <td><span class="sop-analysis-rank">${index + 1}</span></td>
-          <td><div class="sop-analysis-rule">${item.rule}</div></td>
-          <td><span class="sop-analysis-scene">${item.scene}</span></td>
-          <td>${countCell(item.lossRecordings)}</td>
-          <td>${countCell(item.lossRiskCount)}</td>
-          <td>${rateCell(item.lossRisk, 'loss')}</td>
-          <td>${countCell(item[target.countKey])}</td>
-          <td>${countCell(item[target.riskCountKey])}</td>
-          <td>${rateCell(item[target.riskRateKey], 'risk')}</td>
-          <td>${diffPill(item[target.riskDiffKey], true)}</td>
-        </tr>
-        ${isSelected ? contributionRowDetail(item, index, 'sop-risk-compare', 10) : ''}`;
-      });
-    renderContributionTable(containerId, ['排序', '质检规则', '所属质检场景', '战败用户数', '规则命中数', formulaHeader('战败用户风险命中率', 'risk-loss-rate'), target.countLabel, '规则命中数', formulaHeader(target.riskRateLabel, 'risk-target-rate'), '差异'], rows, 'sop-risk-compare');
+    renderSOPAnalysisList(containerId, focusSearch);
   };
 
   const activeDetailMeta = () => {
-    const icons = {
-      hit: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
-      risk: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>',
-      loss: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>'
-    };
+    const analysis = getSOPAnalysisContext();
     return {
-      hit: {
-        title: '下订用户话术命中率分析明细',
-        sub: '选择对比维度，查看同一质检规则的话术命中差异',
-        iconClass: 'track-icon deal',
-        icon: icons.hit,
-        controls: `<div class="sop-detail-control-set">
-          <div class="sop-compare-switch" role="group" aria-label="话术命中率对比维度">
-            <button class="sop-compare-option" type="button" data-compare-table="hit" data-compare-target="loss">vs战败</button>
-            <button class="sop-compare-option" type="button" data-compare-table="hit" data-compare-target="nonOrder">vs未下订</button>
-          </div>
-          <div class="sop-sort-switch" role="group" aria-label="下订话术明细排序方式">
-            <button class="sop-sort-option" type="button" data-sort-table="hit" data-sort-key="contribution">按贡献值</button>
-            <button class="sop-sort-option" type="button" data-sort-table="hit" data-sort-key="diff">按差异</button>
-          </div>
-        </div>`
-      },
-      risk: {
-        title: '战败用户风险命中率分析明细',
-        sub: '选择对比维度，查看战败用户与其他结果用户的风险命中差异',
-        iconClass: 'track-icon loss',
-        icon: icons.risk,
-        controls: `<div class="sop-compare-switch" role="group" aria-label="风险命中率对比维度">
-          <button class="sop-compare-option" type="button" data-compare-table="risk" data-compare-target="order">vs下订</button>
-          <button class="sop-compare-option" type="button" data-compare-table="risk" data-compare-target="nonLoss">vs未战败</button>
-        </div>`
-      },
-      loss: {
-        title: '战败用户SOP缺失识别明细',
-        sub: '识别战败用户中未命中率最高的质检规则',
-        iconClass: 'track-icon loss',
-        icon: icons.loss,
-        controls: ''
-      }
-    }[currentSOPDetail] || {};
+      title: 'SOP规则分析明细',
+      sub: analysis.isCompare ? '按规则查看 A/B 两组命中差异排行，默认按相对差值降序。' : '按规则查看当前状态相对全部样本的命中差异，默认按相对差值降序。',
+      iconClass: 'track-icon deal',
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
+      controls: ''
+    };
   };
 
-  const renderActiveSOPDetail = () => {
+  const renderActiveSOPDetail = (focusSearch = false) => {
+    const analysis = getSOPAnalysisContext();
+    if (analysis.hasInvalidCompare) {
+      renderSOPCompareBlockedState();
+      return;
+    }
     const meta = activeDetailMeta();
     const titleEl = document.getElementById('sop-active-detail-title');
     const subEl = document.getElementById('sop-active-detail-sub');
@@ -3965,60 +4401,36 @@
       iconEl.innerHTML = meta.icon || '';
     }
     if (controlsEl) controlsEl.innerHTML = meta.controls || '';
-    syncSOPDetailPanels();
-    if (currentSOPDetail === 'risk') renderRiskCompare('sop-active-detail-table');
-    else if (currentSOPDetail === 'loss') renderLossMiss('sop-active-detail-table');
-    else renderHitCompare('sop-active-detail-table');
-    setupSOPCompareToggles();
+    renderHitCompare('sop-active-detail-table', focusSearch);
   };
 
-  const syncCompareSwitches = () => {
-    document.querySelectorAll('.sop-compare-option').forEach(btn => {
-      const table = btn.dataset.compareTable;
-      const currentTarget = table === 'risk' ? currentRiskCompareTarget : currentHitCompareTarget;
-      const isActive = btn.dataset.compareTarget === currentTarget;
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-  };
-
-  const syncSOPSortSwitches = () => {
-    document.querySelectorAll('.sop-sort-option').forEach(btn => {
-      const isActive = btn.dataset.sortKey === currentHitSortMetric;
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-  };
-
-  const setupSOPCompareToggles = () => {
-    document.querySelectorAll('.sop-compare-option').forEach(btn => {
-      btn.onclick = () => {
-        const target = btn.dataset.compareTarget || 'loss';
-        if (btn.dataset.compareTable === 'risk') {
-          currentRiskCompareTarget = target;
-          currentSOPDetail = 'risk';
-        } else {
-          currentHitCompareTarget = target;
-          currentSOPDetail = 'hit';
-        }
-        renderActiveSOPDetail();
-        syncCompareSwitches();
-      };
-    });
-    document.querySelectorAll('.sop-sort-option').forEach(btn => {
-      btn.onclick = () => {
-        currentHitSortMetric = btn.dataset.sortKey || 'contribution';
-        currentSOPDetail = 'hit';
-        renderActiveSOPDetail();
-        syncSOPSortSwitches();
-      };
-    });
-    syncCompareSwitches();
-    syncSOPSortSwitches();
+  const renderSOPCompareBlockedState = () => {
+    const analysis = getSOPAnalysisContext();
+    const message = analysis.compareWarning || 'A组和B组当前状态一致，请重新选择不同的线索状态。';
+    const titleEl = document.getElementById('sop-active-detail-title');
+    const subEl = document.getElementById('sop-active-detail-sub');
+    const iconEl = document.getElementById('sop-active-detail-icon');
+    const controlsEl = document.getElementById('sop-active-detail-controls');
+    const tableEl = document.getElementById('sop-active-detail-table');
+    if (titleEl) titleEl.textContent = 'A/B 对比暂不可用';
+    if (subEl) subEl.textContent = message;
+    if (iconEl) {
+      iconEl.className = 'track-icon risk';
+      iconEl.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+    }
+    if (controlsEl) controlsEl.innerHTML = '';
+    if (tableEl) {
+      tableEl.innerHTML = `
+        <div class="sop-analysis-empty-state">
+          <strong>请选择不同的线索状态再进行 A/B 对比</strong>
+          <span>${escapeHtml(message)}</span>
+        </div>`;
+    }
   };
 
   // ── renderSIFunnel：渲染分析闭环漏斗顶部数字 ─────
   const renderSIFunnel = () => {
+    const analysis = getSOPAnalysisContext();
     const kpi = buildContributionKPIData();
     const orderHitRate = parseFloat(kpi.order_sop_hit_rate.num);
     const lossHitRate = parseFloat(kpi.lost_sop_hit_rate.num);
@@ -4029,26 +4441,28 @@
     set('si-fn-hit-rate', kpi.sop_hit_rate.num);
     set('si-fn-order', kpi.order_users.num);
     set('si-fn-loss', kpi.lost_users.num);
+    set('si-fn-primary-label', analysis.isCompare ? 'A组' : analysis.primary.shortLabel);
+    set('si-fn-secondary-label', analysis.isCompare ? 'B组' : '整体样本');
 
     const insightEl = document.getElementById('si-funnel-insight');
     if (insightEl) {
       const orderHitEl = `<strong style="color:#16A34A">${kpi.order_sop_hit_rate.num}%</strong>`;
       const lossHitEl = `<strong style="color:#DC2626">${kpi.lost_sop_hit_rate.num}%</strong>`;
       const gapEl = `<strong>${gap.toFixed(1)}pp</strong>`;
-      const msg = gap > 10
-        ? `下订用户话术命中率 ${orderHitEl} 显著高于战败用户 ${lossHitEl}，差距 ${gapEl}。SOP执行质量与成交结果高度相关。`
-        : `下订用户话术命中率 ${orderHitEl}，战败用户 ${lossHitEl}，差距 ${gapEl}。建议持续追踪SOP执行对成交的影响。`;
+      const msg = analysis.isCompare
+        ? `A组（${analysis.primary.fullLabel}）话术命中率 ${orderHitEl}，B组（${analysis.secondary.fullLabel}）为 ${lossHitEl}，差距 ${gapEl}。适合直接查看两组 SOP 执行差异。`
+        : `当前选中的 ${analysis.primary.fullLabel} 话术命中率 ${orderHitEl}，整体样本为 ${lossHitEl}，差距 ${gapEl}。适合先看该状态自己的 SOP 表现。`;
       insightEl.innerHTML = `<span class="si-funnel-insight-icon">💡</span><span>${msg}</span>`;
     }
   };
 
   // ── renderSOPImprovementTab：SOP策略洞察总调度 ─────
   const renderSOPImprovementTab = () => {
-    renderSIFunnel();
-    renderHitCompare();
-    renderLossMiss();
-    renderRiskCompare();
-    setupSOPSummaryCards();
+    const analysis = getSOPAnalysisContext();
+    if (analysis.hasInvalidCompare) {
+      renderSOPCompareBlockedState();
+      return;
+    }
     renderActiveSOPDetail();
   };
 
@@ -6312,6 +6726,7 @@
   const applyGlobalFilter = () => {
     // 全局区更新
     updateFactoryHeroIdentity();
+    renderSOPAnalysisFilterPanel();
     renderHeroKPI();
     // 调度当前激活 Tab 的内容
     renderTabContent(currentTab);
@@ -6321,6 +6736,7 @@
   // 初始渲染
   // ══════════════════════════════════════════════════
   syncFactorySceneTabs();
+  renderSOPAnalysisFilterPanel();
   updateFactoryHeroIdentity();
   renderHeroKPI();
   switchTab(currentTab);
