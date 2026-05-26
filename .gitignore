@@ -3,3 +3,5 @@ node_modules/
 .env
 *.log
 handoff-log.md
+.claude/settings.local.json
+script-library/__pycache__/
