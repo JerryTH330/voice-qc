@@ -4939,11 +4939,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           label: '优秀话术库',
           eyebrow: '06 / Script Library',
           title: '优秀话术库',
-          desc: '沉淀门店优秀录音中的高转化表达，支持按业务场景、能力维度和话术模板快速筛选与复用。',
+          desc: '围绕月度优秀样本沉淀主题，兼顾培训讲解、自主学习和代表样本回溯，优先展示可复用的高价值动作。',
           noteTitle: '',
           noteText: '',
           userName: '培训运营 · 许诺',
-          userMeta: '今日新增样本 8 条',
+          userMeta: '月度沉淀已更新',
           actions: [],
           filters: [],
           templateId: 'tpl-script-library'
@@ -5058,140 +5058,461 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       const scriptLibraryOptions = {
-        scene: ['全部', '试驾', '邀约', '到店接待', '成交'],
-        ability: ['全部', '开场破冰', '需求挖掘', '产品介绍', '竞品对比', '逼单技巧', '客户异议应答'],
-        template: ['全部', '价格优惠话术', '续航疑虑回应', '金融方案推荐', '交车仪式话术']
+        page: ['话术速查', '月度训练重点'],
+        quickScene: ['全部', '邀约', '接待', '试驾'],
+        quickRecommendation: ['全部', '推荐', '慎用'],
+        monthlyScene: ['邀约', '接待', '试驾'],
+        monthlyPriority: ['全部', '优先训练', '持续有效', '持续观察', '暂不推荐'],
+        monthlyCoachingMode: ['全部', '晨会讲解', '班组复盘', '一对一辅导', '陪练'],
+        monthlyMonth: ['2026-04', '2026-03', '2026-02']
       }
 
       const scriptLibraryState = {
-        scene: '全部',
-        ability: '全部',
-        template: '全部',
-        selectedId: 'script-001'
+        page: '话术速查',
+        quickScene: '全部',
+        quickRecommendation: '全部',
+        monthlyScene: '邀约',
+        monthlyPriority: '全部',
+        monthlyCoachingMode: '全部',
+        monthlyMonth: '2026-04',
+        search: '',
+        searchDraft: '',
+        evidenceWindow: 'last_3m',
+        selectedId: 'invite-active-time-anchor'
       }
 
-      const scriptLibraryData = [
-        {
-          id: 'script-001',
-          title: '试驾邀约首通破冰话术',
-          scene: '邀约',
-          ability: '开场破冰',
-          template: '价格优惠话术',
-          quality: '高转化',
-          conversionLift: '+18%',
-          usageCount: 86,
-          updateText: '近 7 天新增 6 次复用',
-          summary: '用“确认意向 + 试驾权益 + 时间锚点”三步完成首通邀约，减少客户直接拒绝。',
-          snippet: '您昨天重点看了 E9 的空间表现，今天店里刚好有现车试驾，我给您预留一个 30 分钟体验时段，您下午还是晚上更方便？',
-          steps: ['先复述客户已关注的信息，建立“你是被认真记住的客户”感受。', '再给出明确试驾权益或体验亮点，不急着谈价格。', '最后抛出二选一时间锚点，减少客户做开放式决策的负担。'],
-          tips: ['适合首次电话邀约或线索唤醒场景。', '客户尚未表露兴趣时，避免直接强调优惠幅度。', '若客户犹豫，可顺势补一句“先体验再决定，不耽误您太久”。']
+      const scriptLibraryData = {
+        globalPool: {
+          invite: {
+            overview: {
+              topTags: ['邀约动作待收口', '客户顾虑待化解'],
+              recommendedTopics: 2,
+              highValueTopics: 2
+            },
+            problemScenarios: [
+              {
+                id: 'problem-invite-window-drop',
+                problemName: '客户有兴趣但迟迟不定到店时间',
+                responseStrategy: '先确认兴趣，再用二选一时间降低客户决策负担。',
+                trainingPriority: '高',
+                problemFrequencyLevel: '高频',
+                recommendedResponseGoal: '把泛泛兴趣推进到具体到店动作。',
+                commonMistake: '讲太多优惠，迟迟不给明确时间选项。',
+                coachFocus: '训练销售在出现兴趣信号后 20 秒内完成动作收口。'
+              },
+              {
+                id: 'problem-budget-pressure',
+                problemName: '客户在电话里提前暴露预算压力',
+                responseStrategy: '先共情预算，再把讨论从总价拆到月供和节奏感知。',
+                trainingPriority: '中',
+                problemFrequencyLevel: '中频',
+                recommendedResponseGoal: '降低价格阻力，恢复继续了解意愿。',
+                commonMistake: '直接承诺还能便宜，导致客户只盯价格。',
+                coachFocus: '训练销售先拆支付结构，再回到来店体验。'
+              }
+            ],
+            topics: [
+              {
+                id: 'invite-active-time-anchor',
+                scene: '邀约',
+                topicName: '确认兴趣后立刻给时间锚点',
+                summary: '优秀邀约不是继续讲很多权益，而是在客户已出现兴趣信号时，快速给出明确到店时间选择，减少继续拖延。',
+                actionPattern: '兴趣确认 → 权益一句话 → 二选一时间',
+                bestLine: '您这周既然已经打算抽空看看，我先把时间定轻一点：明天下午还是后天晚上，您选一个方便的时间。',
+                recommendedScript: '您刚才提到这周正好想抽空看看，那我先帮您把时间定轻一点：明天下午还是后天晚上，您选一个方便的时间来店里坐一坐就行。',
+                applyWhen: '客户已明确表达兴趣、窗口期或愿意继续了解。',
+                avoidWhen: '客户仍停留在基础信息阶段，或对到店本身存在明显抵触。',
+                trainingGoal: '提升到店确认率',
+                trainingValueScore: 92,
+                trainingValueLevel: '高价值',
+                trainingValueReason: '样本量充足、连续 3 月验证有效，且动作简洁，适合快速标准化。',
+                recommendedCoachingMode: '晨会讲解',
+                replicabilityLevel: '高',
+                stabilityLevel: '高',
+                priorityForThisMonth: '是',
+                managerAction: '安排晨会统一讲 1 次，并抽取近 7 天录音检查是否做到二选一收口。',
+                coachFocus: '训练销售在客户兴趣出现后，不继续铺陈卖点，而是马上完成时间锚定。',
+                commonMistake: '确认了兴趣，却继续讲很多配置和优惠，没有把决定变成具体时间动作。',
+                status: '优先训练',
+                firstSeenMonth: '2026-02',
+                lastSeenMonth: '2026-04',
+                sourceMonths: ['2026-02', '2026-03', '2026-04'],
+                recent3mCount: 3,
+                sourceSampleCount: 18,
+                linkedProblemIds: ['problem-invite-window-drop'],
+                resultEvidence: {
+                  last_3m: {
+                    matchedSampleCount: 18,
+                    convertedCount: 7,
+                    conversionLabel: '到店'
+                  },
+                  last_1m: {
+                    matchedSampleCount: 6,
+                    convertedCount: 3,
+                    conversionLabel: '到店'
+                  },
+                  note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                },
+                representativeSamples: [
+                  {
+                    quote: '您周末本来就打算带家里人看看车，我先给您占一个周六上午的试驾位，您到了直接体验。',
+                    replicablePoint: '把客户原本计划和门店动作无缝接起来。',
+                    level: 'A',
+                    confidence: '92%',
+                    month: '2026-04'
+                  },
+                  {
+                    quote: '如果您担心白跑一趟，我先帮您把车和顾问都约好，您明晚下班过来最省事。',
+                    replicablePoint: '提前消除到店成本顾虑。',
+                    level: 'A',
+                    confidence: '89%',
+                    month: '2026-03'
+                  },
+                  {
+                    quote: '今天先不做复杂决定，您选个方便时间来体验一下，很多问题到现场两分钟就能讲清楚。',
+                    replicablePoint: '把决策门槛从买不买降到来看看。',
+                    level: 'A',
+                    confidence: '87%',
+                    month: '2026-02'
+                  }
+                ]
+              },
+              {
+                id: 'invite-observing-scenario-confirm',
+                scene: '邀约',
+                topicName: '先确认真实使用场景再回应顾虑',
+                summary: '优秀顾虑处理不是先争论参数，而是先问清真实通勤或家庭使用场景，再把回应落到客户能感知的生活半径。',
+                actionPattern: '场景追问 → 参数翻译 → 绑定到店体验',
+                bestLine: '我先不急着讲参数，想确认一下您平时主要是市区通勤，还是周末会带家人跑长途？',
+                recommendedScript: '我先不急着和您讲参数，想先确认一下，您平时主要是市区通勤，还是周末会带家人跑长途？这样我给您的建议会更贴近实际。',
+                applyWhen: '客户已抛出续航、空间、补能等顾虑，但还愿意继续沟通。',
+                avoidWhen: '客户只想尽快确定到店时间，不适合再拉长探询。',
+                trainingGoal: '提升到店意愿',
+                trainingValueScore: 76,
+                trainingValueLevel: '中价值',
+                trainingValueReason: '问题常见、训练价值明确，但表达路径依赖销售提问能力，适合针对性复盘。',
+                recommendedCoachingMode: '班组复盘',
+                replicabilityLevel: '中',
+                stabilityLevel: '中',
+                priorityForThisMonth: '否',
+                managerAction: '挑 2-3 条好坏样本做班组复盘，重点对比“先问场景”和“直接讲参数”的效果。',
+                coachFocus: '训练销售先用一个场景问题收窄客户顾虑，再把产品点翻译成客户能理解的生活表达。',
+                commonMistake: '客户一提顾虑就马上反驳或堆参数，没有先问清真实使用半径。',
+                status: '持续有效',
+                firstSeenMonth: '2026-03',
+                lastSeenMonth: '2026-04',
+                sourceMonths: ['2026-03', '2026-04'],
+                recent3mCount: 2,
+                sourceSampleCount: 11,
+                linkedProblemIds: ['problem-budget-pressure'],
+                resultEvidence: {
+                  last_3m: {
+                    matchedSampleCount: 11,
+                    convertedCount: 4,
+                    conversionLabel: '到店'
+                  },
+                  last_1m: {
+                    matchedSampleCount: 5,
+                    convertedCount: 2,
+                    conversionLabel: '到店'
+                  },
+                  note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                },
+                representativeSamples: [
+                  {
+                    quote: '如果您每天就是上下班 30 多公里，这个续航其实完全够用，您来店里时我再带您看一下真实能耗显示。',
+                    replicablePoint: '先贴合场景，再把疑虑绑定到现场验证。',
+                    level: 'A',
+                    confidence: '90%',
+                    month: '2026-04'
+                  },
+                  {
+                    quote: '您更在意的是补能麻烦，还是冬天续航变化？我先按您最在意的那个点跟您说。',
+                    replicablePoint: '主动帮客户收窄问题范围。',
+                    level: 'B',
+                    confidence: '85%',
+                    month: '2026-03'
+                  }
+                ]
+              },
+              {
+                id: 'invite-stale-benefit-stack',
+                scene: '邀约',
+                topicName: '连续堆优惠促到店',
+                summary: '单纯连续堆权益虽然短期能吸引注意，但复用后容易变成只谈优惠的话术习惯，最近验证效果明显弱于动作收口类主题。',
+                actionPattern: '多权益堆叠 → 期待刺激',
+                bestLine: '权益可以讲，但最好控制在一句话内，重点还是尽快回到到店动作。',
+                recommendedScript: '我们现在活动比较多，但更建议把优惠控制在一句话内，重点还是尽快把客户带到到店动作上。',
+                applyWhen: '只适合做反例提醒，帮助团队识别常见误区。',
+                avoidWhen: '不要把它作为正向标准话术去培训。',
+                trainingGoal: '提升到店意愿',
+                trainingValueScore: 42,
+                trainingValueLevel: '观察',
+                trainingValueReason: '历史上出现过，但近期没有持续验证，更适合作为反例提醒而非主推动作。',
+                recommendedCoachingMode: '一对一辅导',
+                replicabilityLevel: '低',
+                stabilityLevel: '低',
+                priorityForThisMonth: '否',
+                managerAction: '仅在个别录音辅导时点出，不作为晨会统一讲解主题。',
+                coachFocus: '提醒销售不要把邀约做成优惠罗列，任何权益都要服务后续动作收口。',
+                commonMistake: '一开口就连续列优惠，最后却没有明确推进客户到店。',
+                status: '暂不推荐',
+                firstSeenMonth: '2026-02',
+                lastSeenMonth: '2026-02',
+                sourceMonths: ['2026-02'],
+                recent3mCount: 1,
+                sourceSampleCount: 5,
+                linkedProblemIds: [],
+                resultEvidence: {
+                  last_3m: {
+                    matchedSampleCount: 5,
+                    convertedCount: 1,
+                    conversionLabel: '到店'
+                  },
+                  last_1m: {
+                    matchedSampleCount: 0,
+                    convertedCount: 0,
+                    conversionLabel: '到店'
+                  },
+                  note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                },
+                representativeSamples: [
+                  {
+                    quote: '我们现在现金优惠、金融补贴、置换补贴都有，您抽空来店里看看。',
+                    replicablePoint: '只有利益点，没有动作设计。',
+                    level: 'B',
+                    confidence: '78%',
+                    month: '2026-02'
+                  }
+                ]
+              }
+            ]
+          },
+          reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+          test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
         },
-        {
-          id: 'script-002',
-          title: '家庭场景需求挖掘五问法',
-          scene: '到店接待',
-          ability: '需求挖掘',
-          template: '金融方案推荐',
-          quality: '优秀样本',
-          conversionLift: '+14%',
-          usageCount: 63,
-          updateText: '本周被培训复用 12 次',
-          summary: '围绕“家庭成员、通勤半径、周末场景、预算边界、换购计划”形成连续追问，让客户更快暴露真实诉求。',
-          snippet: '您平时这台车主要是谁开？如果周末一家人一起出行，您更在意第二排乘坐舒适度，还是后备厢和装载空间？',
-          steps: ['先问使用人群，再问高频用车场景。', '把预算问题放在中后段，降低客户防御。', '把客户答案映射到配置版本，为后续方案推荐铺路。'],
-          tips: ['适合到店初访和展厅接待。', '每轮追问都要承接客户原话，避免像问卷。', '记录关键词，方便后续推荐车型和金融方案。']
-        },
-        {
-          id: 'script-003',
-          title: '试驾前产品价值三段式介绍',
-          scene: '试驾',
-          ability: '产品介绍',
-          template: '续航疑虑回应',
-          quality: '高转化',
-          conversionLift: '+16%',
-          usageCount: 58,
-          updateText: '近 30 天触发到店转试驾 41 次',
-          summary: '按照“客户最关心的一个点 + 试驾可感知亮点 + 对比结论”组织介绍，缩短冗长讲车时间。',
-          snippet: '您刚才最在意的是高速静谧性和二排舒适度，我们待会试驾时会重点感受这两项，回来再和您对比竞品的差异。',
-          steps: ['只抓一个客户最在意的价值点开题。', '说明试驾过程中要感受的两个具体动作。', '试驾结束后立刻回收感受，形成对比结论。'],
-          tips: ['适合试驾前 2 分钟介绍环节。', '不要一口气讲完整个配置表。', '重点强调“待会你能亲自感知到”的卖点。']
-        },
-        {
-          id: 'script-004',
-          title: '价格异议缓冲与权益置换',
-          scene: '成交',
-          ability: '客户异议应答',
-          template: '价格优惠话术',
-          quality: '高转化',
-          conversionLift: '+21%',
-          usageCount: 79,
-          updateText: '近 30 天成交前引用 32 次',
-          summary: '不直接和客户在裸车价上拉扯，而是先承接预算压力，再把权益、交付和增值服务打包说明。',
-          snippet: '我理解您现在卡在总预算上，我们先不急着只看裸车价，我把金融贴息、置换补贴和交付礼包一起给您算一版，您会更清楚真实落地成本。',
-          steps: ['先共情客户预算压力，避免立刻反驳。', '把价格问题转换成“总成本与权益包”问题。', '用一版清晰的落地方案收口，促成下一步。'],
-          tips: ['适合成交前价格谈判。', '不要空口承诺“还能再便宜”。', '权益要具体到金额、周期或交付节点。']
-        },
-        {
-          id: 'script-005',
-          title: '竞品对比反问法',
-          scene: '试驾',
-          ability: '竞品对比',
-          template: '续航疑虑回应',
-          quality: '优秀样本',
-          conversionLift: '+11%',
-          usageCount: 46,
-          updateText: '竞品对比场景命中率 44%',
-          summary: '通过反问客户真实比较标准，避免被动跟着竞品节奏走，把比较维度拉回自身优势。',
-          snippet: '您现在重点在比续航、空间还是智能体验？如果我们只选一个最影响您决定的点，我建议先把它拉出来单独比较。',
-          steps: ['先问客户真正比较的维度，而不是自己设题。', '把维度压缩到 1 到 2 个，降低信息噪音。', '回到本品的核心优势点，不盲目跟竞品逐项对打。'],
-          tips: ['适合试驾中后段和到店复访。', '不要直接攻击竞品。', '尽量用客户自己刚说过的话作为反问前提。']
-        },
-        {
-          id: 'script-006',
-          title: '金融方案推荐转化话术',
-          scene: '成交',
-          ability: '逼单技巧',
-          template: '金融方案推荐',
-          quality: '高转化',
-          conversionLift: '+19%',
-          usageCount: 71,
-          updateText: '本周新增成交跟进样本 9 条',
-          summary: '把客户犹豫点从“总价高”切换为“月供是否可接受”，通过低门槛方案推动进入成交决策。',
-          snippet: '如果我们把首付和月供拆开看，您现在更担心一次性支出，还是每个月现金流压力？我可以先给您做一版最稳妥的方案。',
-          steps: ['先确认客户怕的是总价还是现金流。', '推荐一版保守方案降低决策门槛。', '顺势强调当前权益的时效性，推进定金动作。'],
-          tips: ['适合客户预算卡点但意向仍高的场景。', '避免一开始就堆多个复杂方案。', '先给“最稳妥的一版”，更容易让客户点头。']
-        },
-        {
-          id: 'script-007',
-          title: '交车仪式收口话术',
-          scene: '成交',
-          ability: '产品介绍',
-          template: '交车仪式话术',
-          quality: '优秀样本',
-          conversionLift: '+9%',
-          usageCount: 38,
-          updateText: '客户满意度评价提升 12%',
-          summary: '通过交车前情绪确认、功能复述与售后交接，提升客户对成交体验的完整感知。',
-          snippet: '今天您提车后，最先会用到的其实就是导航和辅助泊车，我先带您把这两个高频功能走一遍，确保您开出去就顺手。',
-          steps: ['先确认客户此刻最期待解决的使用问题。', '只讲最常用的 2 到 3 个功能，不做全量培训。', '最后补上售后和服务群交接，形成闭环。'],
-          tips: ['适合交车仪式、交付前讲解。', '用“上手无压力”取代“功能很多很强”。', '尽量让客户亲手操作一次。']
-        },
-        {
-          id: 'script-008',
-          title: '续航疑虑预处理邀约话术',
-          scene: '邀约',
-          ability: '客户异议应答',
-          template: '续航疑虑回应',
-          quality: '优秀样本',
-          conversionLift: '+13%',
-          usageCount: 54,
-          updateText: '近 30 天疑虑转试驾 27 次',
-          summary: '在客户还未到店前先处理续航担忧，用真实使用场景替代参数争论，把客户顺利拉到试驾。',
-          snippet: '您平时一周通勤大概多少公里？如果按您现在的通勤半径，这台车一周充一次基本够用，我建议您来店里试驾时顺便感受下能耗显示会更直观。',
-          steps: ['先问客户真实通勤半径和补能习惯。', '把参数转译成客户能理解的使用场景。', '最后把疑虑处理和到店试驾动作绑定在一起。'],
-          tips: ['适合电话邀约和线上私聊。', '不要直接和客户争论官方参数。', '尽量把疑虑回答和试驾体验挂钩。']
+        monthlyPackages: {
+          '2026-04': {
+            invite: {
+              overview: {
+                topTags: ['邀约动作待收口', '客户顾虑待化解'],
+                recommendedTopics: 2,
+                highValueTopics: 2
+              },
+              problemScenarios: [
+                {
+                  id: 'monthly-problem-2026-04-window',
+                  problemName: '客户愿意了解但总说改天再看',
+                  responseStrategy: '围绕客户空闲窗口和门店可安排资源做轻量收口。',
+                  trainingPriority: '高',
+                  problemFrequencyLevel: '高频',
+                  recommendedResponseGoal: '把愿意了解推进到明确到店时间。',
+                  commonMistake: '一直泛泛跟进，没有给到轻量时间选项。',
+                  coachFocus: '训练销售把“愿意看看”快速转换成“选时间”。'
+                },
+                {
+                  id: 'monthly-problem-2026-04-budget',
+                  problemName: '客户一上来就强调预算不够',
+                  responseStrategy: '先拆总价压力，再引导客户按月供和节奏判断。',
+                  trainingPriority: '中',
+                  problemFrequencyLevel: '中频',
+                  recommendedResponseGoal: '降低预算顾虑，避免客户直接流失。',
+                  commonMistake: '直接承诺再便宜，导致谈判失控。',
+                  coachFocus: '训练销售先共情再拆结构。'
+                }
+              ],
+              topics: [
+                {
+                  id: 'monthly-2026-04-invite-window',
+                  scene: '邀约',
+                  month: '2026-04',
+                  topicName: '用到店窗口替代泛泛跟进',
+                  summary: '4 月新增优秀样本里，表现最好的一类动作是直接围绕客户的空闲窗口和门店可安排资源完成邀约，而不是继续泛泛跟进。',
+                  actionPattern: '确认窗口 → 给资源 → 轻量收口',
+                  bestLine: '您这两天如果刚好能抽 30 分钟，我把试驾车和接待时间一起给您约好，您到了不用等。',
+                  recommendedScript: '您这两天如果刚好能抽 30 分钟，我把试驾车和接待时间一起给您约好，您到了不用等。',
+                  applyWhen: '客户已经愿意了解，但迟迟没有明确来店动作。',
+                  avoidWhen: '客户仍在强烈对比竞品价格，不适合直接推进时间。',
+                  trainingGoal: '提升到店确认率',
+                  trainingValueScore: 88,
+                  trainingValueLevel: '高价值',
+                  trainingValueReason: '是本月最集中出现的优秀动作，表达清晰，适合直接推广到一线。',
+                  recommendedCoachingMode: '晨会讲解',
+                  replicabilityLevel: '高',
+                  stabilityLevel: '中',
+                  priorityForThisMonth: '是',
+                  managerAction: '本周晨会先统一讲 1 次，下周抽查录音看是否真正给了时间和资源。',
+                  coachFocus: '训练销售把到店动作说具体，说轻量，说省时间。',
+                  commonMistake: '客户说有空再看，销售顺着结束，没有继续把动作落到时间和资源。',
+                  status: '优先训练',
+                  recent3mCount: 1,
+                  sourceSampleCount: 7,
+                  linkedProblemIds: ['monthly-problem-2026-04-window'],
+                  resultEvidence: {
+                    last_3m: {
+                      matchedSampleCount: 7,
+                      convertedCount: 3,
+                      conversionLabel: '到店'
+                    },
+                    last_1m: {
+                      matchedSampleCount: 7,
+                      convertedCount: 3,
+                      conversionLabel: '到店'
+                    },
+                    note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                  },
+                  representativeSamples: [
+                    {
+                      quote: '您下班路上拐一下店里就行，我把车停门口，您体验完再决定后面聊不聊。',
+                      replicablePoint: '降低到店门槛，突出顺路与轻量。',
+                      level: 'A',
+                      confidence: '93%',
+                      month: '2026-04'
+                    },
+                    {
+                      quote: '我先给您占一个不排队的时间，您只要来体验，其他我们现场再说。',
+                      replicablePoint: '突出节省时间，减少客户负担。',
+                      level: 'A',
+                      confidence: '90%',
+                      month: '2026-04'
+                    }
+                  ]
+                },
+                {
+                  id: 'monthly-2026-04-invite-budget',
+                  scene: '邀约',
+                  month: '2026-04',
+                  topicName: '预算顾虑先拆总价再拆到月供',
+                  summary: '当客户在电话里提前暴露预算压力时，优秀样本倾向先拆总成本结构，再把讨论切到客户可接受的支付节奏。',
+                  actionPattern: '预算共情 → 拆成本结构 → 转月供感知',
+                  bestLine: '您如果现在卡在预算，我们先不急着只看裸车价，我帮您拆一下首付、月供和现阶段权益。',
+                  recommendedScript: '您如果现在卡在预算，我们先不急着只看裸车价，我帮您拆一下首付、月供和现阶段权益，您会更容易判断适不适合。',
+                  applyWhen: '客户明确表达预算压力，但并未完全拒绝继续了解。',
+                  avoidWhen: '客户只是想确认现价，不需要立刻展开金融结构。',
+                  trainingGoal: '降低价格顾虑',
+                  trainingValueScore: 72,
+                  trainingValueLevel: '中价值',
+                  trainingValueReason: '对价格异议有明显帮助，但需要销售具备一定金融拆解能力，适合定向训练。',
+                  recommendedCoachingMode: '一对一辅导',
+                  replicabilityLevel: '中',
+                  stabilityLevel: '中',
+                  priorityForThisMonth: '否',
+                  managerAction: '先让高成交销售示范，再针对预算异议薄弱人员做一对一纠偏。',
+                  coachFocus: '训练销售先共情压力，再把抽象总价转成可承受节奏。',
+                  commonMistake: '一听预算就直接说还能便宜，反而让客户只盯价格。',
+                  status: '持续观察',
+                  recent3mCount: 1,
+                  sourceSampleCount: 5,
+                  linkedProblemIds: ['monthly-problem-2026-04-budget'],
+                  resultEvidence: {
+                    last_3m: {
+                      matchedSampleCount: 5,
+                      convertedCount: 2,
+                      conversionLabel: '到店'
+                    },
+                    last_1m: {
+                      matchedSampleCount: 5,
+                      convertedCount: 2,
+                      conversionLabel: '到店'
+                    },
+                    note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                  },
+                  representativeSamples: [
+                    {
+                      quote: '先别急着把这件事想成一次性大支出，我给您拆成每个月更容易判断。',
+                      replicablePoint: '主动降低心理压力。',
+                      level: 'A',
+                      confidence: '88%',
+                      month: '2026-04'
+                    }
+                  ]
+                }
+              ]
+            },
+            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
+          },
+          '2026-03': {
+            invite: {
+              overview: {
+                topTags: ['客户需求待确认'],
+                recommendedTopics: 1,
+                highValueTopics: 1
+              },
+              problemScenarios: [
+                {
+                  id: 'monthly-problem-2026-03-family',
+                  problemName: '客户愿意了解，但销售切口和家庭场景不匹配',
+                  responseStrategy: '先问谁在用车，再决定邀约时强调的体验点。',
+                  trainingPriority: '中',
+                  problemFrequencyLevel: '中频',
+                  recommendedResponseGoal: '让客户觉得来店体验对自己有必要。',
+                  commonMistake: '没问使用人群，就直接推通用卖点。',
+                  coachFocus: '训练销售第一问先锁定人群。'
+                }
+              ],
+              topics: [
+                {
+                  id: 'monthly-2026-03-invite-need',
+                  scene: '邀约',
+                  month: '2026-03',
+                  topicName: '先问家庭用车人群再定邀约切口',
+                  summary: '3 月新增主题更强调先问使用人群，再决定后续邀约切口，适合高客单家庭场景。',
+                  actionPattern: '人群确认 → 场景切入 → 邀约收口',
+                  bestLine: '这台车平时主要是谁开？如果周末经常带家人出行，我建议您来现场重点感受一下二排和后备厢。',
+                  recommendedScript: '这台车平时主要是谁开？如果周末经常带家人出行，我建议您来现场重点感受一下二排和后备厢，会比电话里更直观。',
+                  applyWhen: '客户尚未明确主要使用人群，且产品体验依赖现场感受。',
+                  avoidWhen: '客户已明确只想比较价格，不适合延长探询。',
+                  trainingGoal: '提升到店意愿',
+                  trainingValueScore: 68,
+                  trainingValueLevel: '中价值',
+                  trainingValueReason: '适合高客单家庭场景，但样本量仍偏少，建议作为补充训练主题。',
+                  recommendedCoachingMode: '班组复盘',
+                  replicabilityLevel: '中',
+                  stabilityLevel: '中',
+                  priorityForThisMonth: '否',
+                  managerAction: '挑家庭场景录音做复盘，统一第一问的人群探询口径。',
+                  coachFocus: '训练销售把“家庭成员谁在用”变成后续邀约体验点的依据。',
+                  commonMistake: '没有先问人群，就直接讲配置和优惠。',
+                  status: '持续观察',
+                  recent3mCount: 1,
+                  sourceSampleCount: 4,
+                  linkedProblemIds: ['monthly-problem-2026-03-family'],
+                  resultEvidence: {
+                    last_3m: {
+                      matchedSampleCount: 4,
+                      convertedCount: 1,
+                      conversionLabel: '到店'
+                    },
+                    last_1m: {
+                      matchedSampleCount: 4,
+                      convertedCount: 1,
+                      conversionLabel: '到店'
+                    },
+                    note: '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。'
+                  },
+                  representativeSamples: [
+                    {
+                      quote: '如果是家里老人孩子都要坐，很多感受电话里讲不清，您来现场坐一下判断会更快。',
+                      replicablePoint: '把场景变成到店必要性。',
+                      level: 'A',
+                      confidence: '86%',
+                      month: '2026-03'
+                    }
+                  ]
+                }
+              ]
+            },
+            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
+          },
+          '2026-02': {
+            invite: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
+          }
         }
-      ]
+      }
 
       const sessionRecordSeeds = [
         {
@@ -5787,6 +6108,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         mode: 'leads'
       }
 
+      const scriptLibraryPageUtils = (typeof module !== 'undefined' && module.exports)
+        ? require('./script-library-page-utils.js')
+        : (window.__scriptLibraryPageUtils || {});
+      const getScriptLibraryListBadge = scriptLibraryPageUtils.getScriptLibraryListBadge || ((mode, count) => mode === 'quick' ? `匹配 ${count} 条话术` : `匹配 ${count} 条主题`);
+      const shouldRenderMonthlySummaryStats = scriptLibraryPageUtils.shouldRenderMonthlySummaryStats || (() => false);
+      const shouldRenderQuickLookupHeroBadge = scriptLibraryPageUtils.shouldRenderQuickLookupHeroBadge || (() => false);
+
       function escapeHtml(value) {
         return String(value)
           .replace(/&/g, '&amp;')
@@ -5796,175 +6124,537 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .replace(/'/g, '&#39;')
       }
 
-      function getFilteredScriptLibraryItems() {
-        return scriptLibraryData.filter((item) => {
-          const sceneMatch = scriptLibraryState.scene === '全部' || item.scene === scriptLibraryState.scene
-          const abilityMatch = scriptLibraryState.ability === '全部' || item.ability === scriptLibraryState.ability
-          const templateMatch = scriptLibraryState.template === '全部' || item.template === scriptLibraryState.template
-          return sceneMatch && abilityMatch && templateMatch
-        })
+      function getScriptLibrarySceneKey(scene) {
+        if (scene === '邀约') {
+          return 'invite'
+        }
+        if (scene === '接待') {
+          return 'reception'
+        }
+        if (scene === '试驾') {
+          return 'test_drive'
+        }
+        return 'invite'
       }
 
-      function renderScriptLibraryChipGroup(containerId, groupKey) {
-        const container = document.getElementById(containerId)
-        if (!container) {
+      function getScriptLibraryTopicsByScene(scene, source) {
+        if (scene === '全部') {
+          return ['invite', 'reception', 'test_drive'].flatMap((key) => {
+            const sceneData = source[key]
+            return Array.isArray(sceneData)
+              ? sceneData
+              : sceneData && Array.isArray(sceneData.topics)
+                ? sceneData.topics
+                : []
+          })
+        }
+        const sceneData = source[getScriptLibrarySceneKey(scene)]
+        return Array.isArray(sceneData)
+          ? sceneData
+          : sceneData && Array.isArray(sceneData.topics)
+            ? sceneData.topics
+            : []
+      }
+
+      function getQuickLookupItems() {
+        return getScriptLibraryTopicsByScene(scriptLibraryState.quickScene, scriptLibraryData.globalPool)
+          .filter((item) => {
+            const recommendationMatch = scriptLibraryState.quickRecommendation === '全部'
+              || (scriptLibraryState.quickRecommendation === '推荐' ? item.status !== '暂不推荐' : item.status === '暂不推荐')
+            const searchMatch = matchesScriptLibrarySearch([
+              item.topicName,
+              item.bestLine,
+              item.recommendedScript,
+              item.summary,
+              item.applyWhen,
+              item.trainingGoal,
+              item.trainingValueReason,
+              item.commonMistake,
+              item.scene
+            ])
+            return recommendationMatch && searchMatch
+          })
+          .filter((item) => item.status !== '暂不推荐' || scriptLibraryState.quickRecommendation === '慎用')
+          .sort((left, right) => (right.trainingValueScore || 0) - (left.trainingValueScore || 0))
+      }
+
+      function getMonthlyTrainingPackage() {
+        return scriptLibraryData.monthlyPackages[scriptLibraryState.monthlyMonth] || {}
+      }
+
+      function getMonthlyTrainingSceneData() {
+        return getMonthlyTrainingPackage()[getScriptLibrarySceneKey(scriptLibraryState.monthlyScene)] || { overview: {}, problemScenarios: [], topics: [] }
+      }
+
+      function getMonthlyTrainingItems() {
+        return (getMonthlyTrainingSceneData().topics || [])
+          .filter((item) => {
+            const priorityMatch = scriptLibraryState.monthlyPriority === '全部' || item.status === scriptLibraryState.monthlyPriority
+            const coachingMatch = scriptLibraryState.monthlyCoachingMode === '全部' || item.recommendedCoachingMode === scriptLibraryState.monthlyCoachingMode
+            const searchMatch = matchesScriptLibrarySearch([
+              item.topicName,
+              item.summary,
+              item.trainingValueReason,
+              item.managerAction,
+              item.coachFocus,
+              item.commonMistake,
+              item.recommendedScript,
+              item.scene
+            ])
+            return priorityMatch && coachingMatch && searchMatch
+          })
+          .sort((left, right) => (right.trainingValueScore || 0) - (left.trainingValueScore || 0))
+      }
+
+      function getMonthlyTrainingProblems(items) {
+        const allProblems = getMonthlyTrainingSceneData().problemScenarios || []
+        const linkedIds = new Set(items.flatMap((item) => item.linkedProblemIds || []))
+        return allProblems.filter((problem) => linkedIds.size === 0 || linkedIds.has(problem.id))
+      }
+
+      function renderScriptLibraryTabs() {
+        const tabs = document.getElementById('scriptLibraryTabs')
+        if (!tabs) {
           return
         }
-
-        container.innerHTML = scriptLibraryOptions[groupKey]
-          .map((option) => {
-            const active = scriptLibraryState[groupKey] === option ? ' active' : ''
-            return `<button type="button" class="scriptlib-chip${active}" data-script-filter="${groupKey}" data-script-value="${escapeHtml(option)}">${escapeHtml(option)}</button>`
-          })
+        tabs.innerHTML = scriptLibraryOptions.page
+          .map((page) => `<button type="button" class="scriptlib-tab${scriptLibraryState.page === page ? ' active' : ''}" data-script-tab="${escapeHtml(page)}">${escapeHtml(page)}</button>`)
           .join('')
       }
 
-      function renderScriptLibraryList(items) {
-        const list = document.getElementById('scriptLibraryList')
-        const count = document.getElementById('scriptMatchCount')
-        if (!list || !count) {
-          return
+      function renderScriptLibraryChipGroup(options, stateKey) {
+        return options
+          .map((option) => `<button type="button" class="scriptlib-chip${scriptLibraryState[stateKey] === option ? ' active' : ''}" data-script-filter="${stateKey}" data-script-value="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+          .join('')
+      }
+
+      function getScriptLibraryEvidenceLabel(scene) {
+        return scene === '邀约' ? '到店' : '下订'
+      }
+
+      function normalizeScriptLibrarySearchText(value) {
+        return String(value || '')
+          .toLowerCase()
+          .replace(/\s+/g, '')
+          .replace(/[，。、“”‘’：；！!？?（）()【】\[\]\-_/]/g, '')
+      }
+
+      function isScriptLibrarySubsequenceMatch(haystack, query) {
+        if (!query) {
+          return true
         }
+        let queryIndex = 0
+        for (const char of haystack) {
+          if (char === query[queryIndex]) {
+            queryIndex += 1
+            if (queryIndex === query.length) {
+              return true
+            }
+          }
+        }
+        return false
+      }
 
-        count.textContent = `匹配 ${items.length} 条`
+      function matchesScriptLibrarySearch(fields) {
+        const keyword = normalizeScriptLibrarySearchText(scriptLibraryState.search)
+        if (!keyword) {
+          return true
+        }
+        const haystack = normalizeScriptLibrarySearchText(fields.filter(Boolean).join(' '))
+        return haystack.includes(keyword) || isScriptLibrarySubsequenceMatch(haystack, keyword)
+      }
 
-        if (!items.length) {
-          list.innerHTML = `
-            <div class="empty-state-card">
-              <div class="empty-state-icon"></div>
-              <strong>当前筛选下暂无匹配话术</strong>
-              <span>可以切换业务场景、能力维度或模板后再试一次。</span>
+      function getScriptLibraryResultEvidence(item) {
+        const evidence = item && item.resultEvidence ? item.resultEvidence : {}
+        const windowKey = scriptLibraryState.evidenceWindow
+        const windowData = evidence[windowKey] || {
+          matchedSampleCount: 0,
+          convertedCount: 0,
+          conversionLabel: getScriptLibraryEvidenceLabel(item ? item.scene : '邀约')
+        }
+        return {
+          note: evidence.note || '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。',
+          windowData
+        }
+      }
+
+      function renderScriptLibraryResultEvidence(item) {
+        const { note, windowData } = getScriptLibraryResultEvidence(item)
+        return `
+          <div class="scriptlib-detail-sample-block">
+            <div class="scriptlib-detail-block">
+              <div class="scriptlib-evidence-head">
+                <span class="scriptlib-detail-label">结果证据</span>
+                <div class="scriptlib-evidence-tabs">
+                  <button type="button" class="scriptlib-evidence-tab${scriptLibraryState.evidenceWindow === 'last_3m' ? ' active' : ''}" data-script-filter="evidenceWindow" data-script-value="last_3m">近3月</button>
+                  <button type="button" class="scriptlib-evidence-tab${scriptLibraryState.evidenceWindow === 'last_1m' ? ' active' : ''}" data-script-filter="evidenceWindow" data-script-value="last_1m">近1月</button>
+                </div>
+              </div>
+              <div class="scriptlib-evidence-grid">
+                <article class="scriptlib-evidence-card">
+                  <span class="scriptlib-detail-label">命中该行为样本</span>
+                  <strong>${escapeHtml(String(windowData.matchedSampleCount || 0))}</strong>
+                </article>
+                <article class="scriptlib-evidence-card">
+                  <span class="scriptlib-detail-label">最终${escapeHtml(windowData.conversionLabel || getScriptLibraryEvidenceLabel(item.scene))}</span>
+                  <strong>${escapeHtml(String(windowData.convertedCount || 0))}</strong>
+                </article>
+              </div>
+              <p class="scriptlib-evidence-note">${escapeHtml(note)}</p>
             </div>
-          `
-          return
+          </div>
+        `
+      }
+
+      function renderQuickLookupPage() {
+        const items = getQuickLookupItems()
+        const selectedItem = items.find((item) => item.id === scriptLibraryState.selectedId) || items[0] || null
+        if (selectedItem) {
+          scriptLibraryState.selectedId = selectedItem.id
         }
 
-        list.innerHTML = items
-          .map((item) => {
-            const selected = item.id === scriptLibraryState.selectedId ? ' selected' : ''
-            return `
-              <article class="scriptlib-item${selected}">
-                <div class="scriptlib-item-head">
-                  <div>
-                    <div class="scriptlib-item-title-row">
-                      <h4>${escapeHtml(item.title)}</h4>
-                      <span class="status ${item.quality === '高转化' ? 'green' : 'blue'}">${escapeHtml(item.quality)}</span>
+        return `
+          <div class="scriptlib-subpage">
+            <section class="scriptlib-subhero">
+              <div>
+                <h4>话术速查</h4>
+                <p>面向一线，优先回答“现在该怎么说”。先搜，再看推荐表达，再看适用边界。</p>
+              </div>
+              ${shouldRenderQuickLookupHeroBadge() ? `<div class="mini-pill">${escapeHtml(getScriptLibraryListBadge('quick', items.length))}</div>` : ''}
+            </section>
+            <section class="scriptlib-toolbar-card">
+              <div class="scriptlib-search-row">
+                <span class="scriptlib-search-label">搜索话术</span>
+                <div class="scriptlib-search-group">
+                  <input class="scriptlib-search-input" id="scriptLibrarySearch" type="search" placeholder="搜索主题、推荐表达、适用时机" value="${escapeHtml(scriptLibraryState.searchDraft)}" />
+                  <button type="button" class="scriptlib-search-btn" data-script-search-submit>搜索</button>
+                </div>
+              </div>
+              <div class="scriptlib-filter-stack">
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">业务场景</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.quickScene, 'quickScene')}</div>
+                </div>
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">是否推荐</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.quickRecommendation, 'quickRecommendation')}</div>
+                </div>
+              </div>
+            </section>
+            <div class="scriptlib-body-grid">
+              <section class="card scriptlib-list-card">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h3>可直接复用的话术</h3>
+                    <p>只保留查话术真正有用的筛选，避免无效按钮干扰。</p>
+                  </div>
+                  <div class="mini-pill">${escapeHtml(getScriptLibraryListBadge('quick', items.length))}</div>
+                </div>
+                <div class="scriptlib-list">
+                  ${items.length ? items.map((item) => `
+                    <article class="scriptlib-item${selectedItem && selectedItem.id === item.id ? ' selected' : ''}" data-script-select="${escapeHtml(item.id)}" tabindex="0">
+                      <div class="scriptlib-item-head">
+                        <div>
+                          <div class="scriptlib-item-title-row">
+                            <h4>${escapeHtml(item.topicName)}</h4>
+                            <span class="mini-pill">${escapeHtml(item.scene)}</span>
+                          </div>
+                          <p>${escapeHtml(item.summary)}</p>
+                        </div>
+                      </div>
+                      <div class="scriptlib-item-snippet">
+                        <span class="scriptlib-detail-label">推荐表达一句</span>
+                        <blockquote>${escapeHtml(item.bestLine || item.recommendedScript || '暂无推荐表达')}</blockquote>
+                      </div>
+                      <div class="scriptlib-item-foot">
+                        <div class="scriptlib-item-meta">
+                          <span>${escapeHtml(item.applyWhen || '适用时机待补充')}</span>
+                          <span>${escapeHtml(item.status || '推荐')}</span>
+                        </div>
+                        <button type="button" class="btn scriptlib-detail-trigger" data-script-select="${escapeHtml(item.id)}">查看详情</button>
+                      </div>
+                    </article>
+                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>暂无匹配话术</strong><span>换一个场景、问题或搜索词再试一次。</span></div>'}
+                </div>
+              </section>
+              <section class="card scriptlib-detail-card">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h3>话术详情</h3>
+                    <p>${selectedItem ? escapeHtml(selectedItem.scene) : '选择左侧话术后查看详情'}</p>
+                  </div>
+                </div>
+                ${selectedItem ? `
+                  <div class="scriptlib-detail-snippet">
+                    <span class="scriptlib-detail-label">推荐话术</span>
+                    <blockquote>${escapeHtml(selectedItem.recommendedScript || selectedItem.bestLine || '暂无推荐话术')}</blockquote>
+                  </div>
+                  <div class="scriptlib-detail-grid">
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">适用时机</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>${escapeHtml(selectedItem.applyWhen || '待补充')}</li>
+                      </ul>
                     </div>
-                    <p>${escapeHtml(item.summary)}</p>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">慎用边界</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>${escapeHtml(selectedItem.avoidWhen || '待补充')}</li>
+                      </ul>
+                    </div>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">为什么推荐</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>${escapeHtml(selectedItem.trainingValueReason || '待补充')}</li>
+                      </ul>
+                    </div>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">代表样本</span>
+                      <div class="scriptlib-sample-list">
+                        ${(selectedItem.representativeSamples || []).slice(0, 2).map((sample) => `
+                          <article class="scriptlib-sample-item">
+                            <blockquote>${escapeHtml(sample.quote || '暂无原句')}</blockquote>
+                            <p>${escapeHtml(sample.replicablePoint || '暂无可复制点')}</p>
+                          </article>
+                        `).join('')}
+                      </div>
+                    </div>
                   </div>
-                  <div class="scriptlib-item-metric">
-                    <strong>${escapeHtml(item.conversionLift)}</strong>
-                    <span>转化提升</span>
-                  </div>
-                </div>
-                <div class="scriptlib-item-tags">
-                  <span class="mini-pill">${escapeHtml(item.scene)}</span>
-                  <span class="mini-pill">${escapeHtml(item.ability)}</span>
-                  <span class="mini-pill">${escapeHtml(item.template)}</span>
-                </div>
-                <div class="scriptlib-item-foot">
-                  <div class="scriptlib-item-meta">
-                    <span>近 30 天引用 ${escapeHtml(item.usageCount)} 次</span>
-                    <span>${escapeHtml(item.updateText)}</span>
-                  </div>
-                  <button type="button" class="btn scriptlib-detail-trigger" data-script-select="${escapeHtml(item.id)}">查看详情</button>
-                </div>
-              </article>
-            `
-          })
-          .join('')
+                  ${renderScriptLibraryResultEvidence(selectedItem)}
+                ` : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>暂无可展示详情</strong><span>先从左侧选一条话术。</span></div>'}
+              </section>
+            </div>
+          </div>
+        `
       }
 
-      function renderScriptLibraryDetail(item) {
-        const subtitle = document.getElementById('scriptDetailSubtitle')
-        const badge = document.getElementById('scriptDetailBadge')
-        const detail = document.getElementById('scriptLibraryDetail')
-        if (!subtitle || !badge || !detail) {
-          return
+      function renderMonthlyTrainingPage() {
+        const items = getMonthlyTrainingItems()
+        const problems = getMonthlyTrainingProblems(items)
+        const selectedItem = items.find((item) => item.id === scriptLibraryState.selectedId) || items[0] || null
+        if (selectedItem) {
+          scriptLibraryState.selectedId = selectedItem.id
         }
 
-        if (!item) {
-          subtitle.textContent = '点击列表中的“查看详情”查看推荐话术拆解。'
-          badge.textContent = '暂无详情'
-          detail.innerHTML = `
-            <div class="empty-state-card">
-              <div class="empty-state-icon"></div>
-              <strong>暂无可展示的详情内容</strong>
-              <span>调整筛选条件后重新选择话术查看。</span>
-            </div>
-          `
-          return
-        }
-
-        subtitle.textContent = `${item.scene} · ${item.ability} · ${item.template}`
-        badge.textContent = item.template
-        detail.innerHTML = `
-          <div class="scriptlib-detail-hero">
-            <div class="scriptlib-detail-copy">
-              <h4>${escapeHtml(item.title)}</h4>
-              <p>${escapeHtml(item.summary)}</p>
-            </div>
-            <div class="scriptlib-detail-kpis">
-              <div class="scriptlib-detail-kpi">
-                <span>转化提升</span>
-                <strong>${escapeHtml(item.conversionLift)}</strong>
+        return `
+          <div class="scriptlib-subpage">
+            <section class="scriptlib-subhero">
+              <div>
+                <h4>月度训练重点</h4>
+                <p>面向主管和培训负责人，优先回答“这个月该训什么、为什么、怎么训”。</p>
               </div>
-              <div class="scriptlib-detail-kpi">
-                <span>近 30 天引用</span>
-                <strong>${escapeHtml(item.usageCount)}</strong>
+              <div class="mini-pill">${escapeHtml(scriptLibraryState.monthlyMonth)} · ${escapeHtml(scriptLibraryState.monthlyScene)}</div>
+            </section>
+            <section class="scriptlib-toolbar-card">
+              <div class="scriptlib-search-row">
+                <span class="scriptlib-search-label">搜索训练主题</span>
+                <div class="scriptlib-search-group">
+                  <input class="scriptlib-search-input" id="scriptLibrarySearch" type="search" placeholder="搜索主题、问题场景、培训建议" value="${escapeHtml(scriptLibraryState.searchDraft)}" />
+                  <button type="button" class="scriptlib-search-btn" data-script-search-submit>搜索</button>
+                </div>
               </div>
-            </div>
-          </div>
-          <div class="scriptlib-detail-snippet">
-            <span class="scriptlib-detail-label">示例片段</span>
-            <blockquote>${escapeHtml(item.snippet)}</blockquote>
-          </div>
-          <div class="scriptlib-detail-grid">
-            <div class="scriptlib-detail-block">
-              <span class="scriptlib-detail-label">话术拆解</span>
-              <ol class="scriptlib-step-list">
-                ${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
-              </ol>
-            </div>
-            <div class="scriptlib-detail-block">
-              <span class="scriptlib-detail-label">使用提示</span>
-              <ul class="scriptlib-tip-list">
-                ${item.tips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
-              </ul>
+              <div class="scriptlib-filter-stack">
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">月份</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyMonth, 'monthlyMonth')}</div>
+                </div>
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">业务场景</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyScene, 'monthlyScene')}</div>
+                </div>
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">训练优先级</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyPriority, 'monthlyPriority')}</div>
+                </div>
+                <div class="scriptlib-filter-row">
+                  <span class="scriptlib-filter-label">培训方式</span>
+                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyCoachingMode, 'monthlyCoachingMode')}</div>
+                </div>
+              </div>
+            </section>
+            <div class="scriptlib-body-grid">
+              <section class="card scriptlib-list-card">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h3>本月训练主题</h3>
+                    <p>按训练价值分排序，只保留主管视角真正要用的信息。</p>
+                  </div>
+                  <div class="mini-pill">${escapeHtml(getScriptLibraryListBadge('monthly', items.length))}</div>
+                </div>
+                <div class="scriptlib-list">
+                  ${items.length ? items.map((item) => `
+                    <article class="scriptlib-item${selectedItem && selectedItem.id === item.id ? ' selected' : ''}" data-script-select="${escapeHtml(item.id)}" tabindex="0">
+                      <div class="scriptlib-item-head">
+                        <div>
+                          <div class="scriptlib-item-title-row">
+                            <h4>${escapeHtml(item.topicName)}</h4>
+                            <span class="status ${(item.trainingValueScore || 0) >= 80 ? 'green' : 'amber'}">${escapeHtml(item.status || '持续观察')}</span>
+                          </div>
+                          <p>${escapeHtml(item.trainingValueReason || item.summary)}</p>
+                        </div>
+                        <div class="scriptlib-item-metric">
+                          <strong>${escapeHtml(String(item.trainingValueScore || 0))}</strong>
+                          <span>训练价值分</span>
+                        </div>
+                      </div>
+                      <div class="scriptlib-item-tags">
+                        <span class="mini-pill">${escapeHtml(item.recommendedCoachingMode || '待补充')}</span>
+                        <span class="mini-pill">样本 ${escapeHtml(String(item.sourceSampleCount || 0))}</span>
+                      </div>
+                    </article>
+                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>当前月份暂无训练主题</strong><span>可切换月份或场景继续查看。</span></div>'}
+                </div>
+              </section>
+              <section class="card scriptlib-detail-card">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h3>训练建议与证据</h3>
+                    <p>${selectedItem ? escapeHtml(selectedItem.recommendedCoachingMode || '培训方式待补充') : '选择左侧主题后查看详情'}</p>
+                  </div>
+                </div>
+                ${selectedItem ? `
+                  <div class="scriptlib-detail-grid">
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">为什么本月要训</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>${escapeHtml(selectedItem.trainingValueReason || '待补充')}</li>
+                        <li>训练价值分：${escapeHtml(String(selectedItem.trainingValueScore || 0))}</li>
+                        <li>主题状态：${escapeHtml(selectedItem.status || '持续观察')}</li>
+                      </ul>
+                    </div>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">怎么训</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>建议方式：${escapeHtml(selectedItem.recommendedCoachingMode || '待补充')}</li>
+                        <li>主管动作：${escapeHtml(selectedItem.managerAction || '待补充')}</li>
+                        <li>训练重点：${escapeHtml(selectedItem.coachFocus || '待补充')}</li>
+                      </ul>
+                    </div>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">常见错误</span>
+                      <ul class="scriptlib-tip-list">
+                        <li>${escapeHtml(selectedItem.commonMistake || '待补充')}</li>
+                      </ul>
+                    </div>
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">推荐话术</span>
+                      <blockquote>${escapeHtml(selectedItem.recommendedScript || selectedItem.bestLine || '暂无推荐话术')}</blockquote>
+                    </div>
+                  </div>
+                  ${renderScriptLibraryResultEvidence(selectedItem)}
+                  <div class="scriptlib-detail-sample-block">
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">关联问题场景</span>
+                      ${problems.length ? `<div class="scriptlib-problem-list">${problems.map((problem) => `
+                        <article class="scriptlib-problem-item">
+                          <div class="scriptlib-problem-head">
+                            <strong>${escapeHtml(problem.problemName || '问题场景')}</strong>
+                            <span class="mini-pill">${escapeHtml(problem.trainingPriority || '观察')}</span>
+                          </div>
+                          <p>${escapeHtml(problem.responseStrategy || '暂无应对策略')}</p>
+                        </article>
+                      `).join('')}</div>` : '<div class="empty-inline-state">当前暂无关联问题场景。</div>'}
+                    </div>
+                  </div>
+                  <div class="scriptlib-detail-sample-block">
+                    <div class="scriptlib-detail-block">
+                      <span class="scriptlib-detail-label">代表样本</span>
+                      <div class="scriptlib-sample-list">
+                        ${(selectedItem.representativeSamples || []).map((sample) => `
+                          <article class="scriptlib-sample-item">
+                            <div class="scriptlib-sample-head">
+                              <span class="mini-pill">${escapeHtml(sample.level || '样本')}</span>
+                              <span class="scriptlib-sample-meta">${escapeHtml(sample.month || scriptLibraryState.monthlyMonth)}</span>
+                            </div>
+                            <blockquote>${escapeHtml(sample.quote || '暂无原句')}</blockquote>
+                            <p>${escapeHtml(sample.replicablePoint || '暂无可复制点')}</p>
+                          </article>
+                        `).join('')}
+                      </div>
+                    </div>
+                  </div>
+                ` : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>暂无训练详情</strong><span>先从左侧选一个训练主题。</span></div>'}
+              </section>
             </div>
           </div>
         `
       }
 
       function bindScriptLibraryEvents() {
-        pageHost.querySelectorAll('[data-script-filter]').forEach((node) => {
+        pageHost.querySelectorAll('[data-script-tab]').forEach((node) => {
           node.addEventListener('click', () => {
-            const { scriptFilter, scriptValue } = node.dataset
-            scriptLibraryState[scriptFilter] = scriptValue
+            scriptLibraryState.page = node.dataset.scriptTab
+            scriptLibraryState.search = ''
+            scriptLibraryState.searchDraft = ''
+            scriptLibraryState.selectedId = null
             renderScriptLibraryPage()
           })
         })
 
-        pageHost.querySelectorAll('[data-script-select]').forEach((node) => {
+        pageHost.querySelectorAll('[data-script-filter]').forEach((node) => {
           node.addEventListener('click', () => {
+            const { scriptFilter, scriptValue } = node.dataset
+            scriptLibraryState[scriptFilter] = scriptValue
+            if (scriptFilter !== 'evidenceWindow') {
+              scriptLibraryState.selectedId = null
+            }
+            renderScriptLibraryPage()
+          })
+        })
+
+        const searchInput = document.getElementById('scriptLibrarySearch')
+        if (searchInput) {
+          const commitSearch = () => {
+            scriptLibraryState.searchDraft = searchInput.value || ''
+            scriptLibraryState.search = scriptLibraryState.searchDraft.trim()
+            scriptLibraryState.selectedId = null
+            renderScriptLibraryPage()
+          }
+
+          searchInput.addEventListener('input', () => {
+            scriptLibraryState.searchDraft = searchInput.value || ''
+          })
+          searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              commitSearch()
+            }
+          })
+
+          pageHost.querySelectorAll('[data-script-search-submit]').forEach((node) => {
+            node.addEventListener('click', commitSearch)
+          })
+        }
+
+        pageHost.querySelectorAll('[data-script-select]').forEach((node) => {
+          const selectItem = () => {
             scriptLibraryState.selectedId = node.dataset.scriptSelect
             renderScriptLibraryPage()
+          }
+          node.addEventListener('click', selectItem)
+          node.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              selectItem()
+            }
           })
         })
       }
 
       function renderScriptLibraryPage() {
-        renderScriptLibraryChipGroup('scriptSceneFilters', 'scene')
-        renderScriptLibraryChipGroup('scriptAbilityFilters', 'ability')
-        renderScriptLibraryChipGroup('scriptTemplateFilters', 'template')
-
-        const items = getFilteredScriptLibraryItems()
-        if (!items.some((item) => item.id === scriptLibraryState.selectedId)) {
-          scriptLibraryState.selectedId = items[0] ? items[0].id : null
+        const badge = document.getElementById('scriptLibraryDataBadge')
+        const body = document.getElementById('scriptLibraryPageBody')
+        if (!body) {
+          return
         }
 
-        renderScriptLibraryList(items)
-        renderScriptLibraryDetail(items.find((item) => item.id === scriptLibraryState.selectedId) || null)
+        renderScriptLibraryTabs()
+        if (badge) {
+          badge.textContent = scriptLibraryState.page
+        }
+        body.innerHTML = scriptLibraryState.page === '话术速查'
+          ? renderQuickLookupPage()
+          : renderMonthlyTrainingPage()
         bindScriptLibraryEvents()
       }
 
