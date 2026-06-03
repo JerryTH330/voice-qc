@@ -31,69 +31,75 @@
     </div>
   </div>
 
-  <div class="store-filter-shell">
-    <!-- 全局筛选栏 -->
-    <section class="global-filter-bar" aria-label="全局筛选">
-      <div class="gf-group store-filter-box">
-        <span class="gf-label">品牌</span>
-        <div class="gf-tabs" id="gf-brand">
-          <button class="gf-tab" data-brand="all">全部</button>
-          <button class="gf-tab active" data-brand="传祺">传祺</button>
-          <button class="gf-tab" data-brand="埃安">埃安</button>
+  <section class="global-filter-bar session-filter-card" aria-label="全局筛选">
+    <div class="store-filter-shell session-filter-toolbar">
+      <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-primary">
+        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-brand">
+          <span class="gf-label">品牌</span>
+          <div class="gf-tabs todo-filter-tabs" id="gf-brand" role="group" aria-label="品牌">
+            <button class="gf-tab todo-filter-tab" data-brand="all" aria-pressed="false">全部</button>
+            <button class="gf-tab todo-filter-tab active" data-brand="传祺" aria-pressed="true">传祺</button>
+            <button class="gf-tab todo-filter-tab" data-brand="埃安" aria-pressed="false">埃安</button>
+          </div>
         </div>
-      </div>
-      <div class="gf-divider"></div>
-      <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
-      <div class="gf-group store-filter-box">
-        <span class="gf-label">数据来源</span>
-        <div class="gf-tabs" id="gf-source">
-          <button class="gf-tab active" data-source="all">全部</button>
-          <button class="gf-tab" data-source="cloud">云外呼</button>
-          <button class="gf-tab" data-source="badge">工牌</button>
-        </div>
-      </div>
-      <div class="gf-group store-filter-box">
-        <span class="gf-label">业务场景</span>
-        <div class="gf-tabs" id="gf-scene">
-          <button class="gf-tab active" data-scene="all">全部</button>
-          <button class="gf-tab" data-scene="first_follow">首触跟进</button>
-          <button class="gf-tab" data-scene="invite_store">邀约进店</button>
-          <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
-          <button class="gf-tab" data-scene="store_reception">进店接待</button>
-          <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
-        </div>
-      </div>
-      <div class="gf-group gf-time-group store-filter-box">
-        <span class="gf-label">时间</span>
-        <div class="gf-tabs" id="gf-time">
-          <button class="gf-tab active" data-time="1">昨日</button>
-          <button class="gf-tab" data-time="7">近7天</button>
-          <button class="gf-tab" data-time="15">近半月</button>
-          <button class="gf-tab" data-time="30">近1月</button>
-          <button class="gf-tab gf-tab-custom" data-time="custom" id="gf-custom-btn">自定义</button>
-        </div>
-      </div>
-      <div class="gf-group store-date-filter-shell" id="store-date-filter-shell" hidden>
-        <div class="store-date-control-slot" id="store-date-control"></div>
-      </div>
-      <div class="gf-group store-filter-box">
-        <div class="store-model-dropdown factory-model-dropdown" id="factory-model-dropdown">
-          <span class="gf-label">车系</span>
-          <button type="button" class="store-model-trigger" id="factory-model-trigger" aria-haspopup="listbox" aria-expanded="false">
-            <strong id="factory-model-display">全部车系</strong>
-            <span class="store-model-caret"></span>
-          </button>
-          <div class="store-model-panel" id="factory-model-panel">
-            <div class="store-model-option active" data-model="all"><span>全部车系</span></div>
-            <div class="store-model-option" data-model="M8"><span>传祺M8</span></div>
-            <div class="store-model-option" data-model="S7"><span>传祺S7</span></div>
-            <div class="store-model-option" data-model="GS8"><span>传祺GS8</span></div>
-            <div class="store-model-option" data-model="E8"><span>传祺E8</span></div>
+        <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
+        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-source">
+          <span class="gf-label">数据来源</span>
+          <div class="gf-tabs todo-filter-tabs" id="gf-source" role="group" aria-label="数据来源">
+            <button class="gf-tab todo-filter-tab active" data-source="all" aria-pressed="true">全部</button>
+            <button class="gf-tab todo-filter-tab" data-source="cloud" aria-pressed="false">云外呼</button>
+            <button class="gf-tab todo-filter-tab" data-source="badge" aria-pressed="false">工牌</button>
           </div>
         </div>
       </div>
-    </section>
-  </div>
+      <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-secondary">
+        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-scene">
+          <span class="gf-label">业务场景</span>
+          <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
+            <button class="gf-tab todo-filter-tab active is-hidden" data-scene="all" aria-pressed="true" aria-hidden="true" tabindex="-1">全部</button>
+            <button class="gf-tab todo-filter-tab" data-scene="first_follow" aria-pressed="false">首触跟进</button>
+            <button class="gf-tab todo-filter-tab" data-scene="invite_store" aria-pressed="false">邀约进店</button>
+            <button class="gf-tab todo-filter-tab" data-scene="schedule_confirm" aria-pressed="false">排程确认</button>
+            <button class="gf-tab todo-filter-tab" data-scene="store_reception" aria-pressed="false">进店接待</button>
+            <button class="gf-tab todo-filter-tab" data-scene="test_drive" aria-pressed="false">试乘试驾</button>
+          </div>
+        </div>
+        <div class="gf-group gf-time-group store-filter-box session-toolbar-control session-toolbar-segment-control store-toolbar-control-time">
+          <span class="gf-label">时间</span>
+          <div class="gf-tabs todo-filter-tabs" id="gf-time" role="group" aria-label="时间">
+            <button class="gf-tab todo-filter-tab active" data-time="1" aria-pressed="true">昨日</button>
+            <button class="gf-tab todo-filter-tab" data-time="7" aria-pressed="false">近7天</button>
+            <button class="gf-tab todo-filter-tab" data-time="15" aria-pressed="false">近半月</button>
+            <button class="gf-tab todo-filter-tab" data-time="30" aria-pressed="false">近1月</button>
+            <button class="gf-tab gf-tab-custom todo-filter-tab" data-time="custom" id="gf-custom-btn" aria-pressed="false">自定义</button>
+          </div>
+        </div>
+      </div>
+      <div class="session-filter-row session-filter-row-main factory-filter-row-main">
+        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-menu session-toolbar-control-car store-model-dropdown factory-model-dropdown" id="factory-model-dropdown">
+          <span class="gf-label">车系</span>
+          <button type="button" class="store-model-trigger session-select-trigger" id="factory-model-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <strong id="factory-model-display">全部车系</strong>
+            <span class="store-model-caret session-select-caret"></span>
+          </button>
+          <div class="store-model-panel session-menu-panel" id="factory-model-panel">
+            <div class="session-menu-option-list">
+              <button type="button" class="store-model-option session-menu-option active" data-model="all"><span>全部车系</span></button>
+              <button type="button" class="store-model-option session-menu-option" data-model="M8"><span>传祺M8</span></button>
+              <button type="button" class="store-model-option session-menu-option" data-model="S7"><span>传祺S7</span></button>
+              <button type="button" class="store-model-option session-menu-option" data-model="GS8"><span>传祺GS8</span></button>
+              <button type="button" class="store-model-option session-menu-option" data-model="E8"><span>传祺E8</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="session-filter-row session-filter-row-main factory-filter-row-date" id="factory-filter-date-row" hidden>
+        <div class="gf-group store-date-filter-shell session-toolbar-control" id="store-date-filter-shell" hidden>
+          <div class="store-date-control-slot" id="store-date-control"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <div class="dashboard-content">
     <section class="hero-panel fade-in" aria-label="厂端核心指标">
@@ -107,10 +113,7 @@
           <div class="tab-left-stack">
             <section class="track sop-overview-track" aria-label="质检概览">
               <div class="track-header">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div class="track-icon sop">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  </div>
+                <div class="track-header-main">
                   <div>
                     <h2 class="track-title">质检概览</h2>
                     <p class="track-sub">质检合格率 · 质检小结</p>
@@ -118,54 +121,78 @@
                 </div>
               </div>
               <div class="track-body">
-                <div class="sop-dial-wrap">
-                  <div class="sop-dial">
-                    <svg class="dial-svg" viewBox="0 0 160 160">
-                      <defs>
-                        <linearGradient id="factoryDialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" style="stop-color:#1E40AF"/>
-                          <stop offset="100%" style="stop-color:#3B82F6"/>
-                        </linearGradient>
-                      </defs>
-                      <circle class="dial-track" cx="80" cy="80" r="65" />
-                      <circle class="dial-fill" id="sop-dial-fill" cx="80" cy="80" r="65" />
-                    </svg>
-                    <div class="dial-center">
-                      <div class="dial-val" id="sop-score-val">82<span>%</span></div>
-                      <div class="dial-lbl">质检合格率</div>
-                      <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3% ↑</span></div>
+                <div class="sop-overview-grid">
+                  <div class="sop-metric-row">
+                    <div class="sop-metric-card sop-metric-card-store">
+                      <div class="sop-metric-label">质检合格率</div>
+                      <div class="sop-metric-score-wrap">
+                        <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
+                        <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3%</span></div>
+                      </div>
+                    </div>
+                    <div class="sop-metric-vs" aria-hidden="true">
+                      <img class="sop-metric-vs-image" src="../assets/store-overview-vs.png" alt="" aria-hidden="true">
+                    </div>
+                    <div class="sop-metric-cluster">
+                      <div class="sop-metric-card sop-metric-card-zone">
+                        <div class="sop-metric-label">全国均值</div>
+                        <div class="sop-metric-score-wrap">
+                          <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                        </div>
+                      </div>
+                      <div class="sop-improve up" id="sop-national-diff">
+                        <span class="sop-improve-copy">
+                          <span class="sop-improve-label sop-national-diff-label">提升</span>
+                          <span class="sop-improve-value sop-national-diff-value">9%</span>
+                        </span>
+                        <img class="sop-improve-arrow-image sop-national-diff-arrow" src="../assets/store-overview-arrow-up-hover.gif" alt="" aria-hidden="true">
+                      </div>
                     </div>
                   </div>
-                  <div class="sop-dial-meta">
-                    <div class="sop-compare-line">
-                      <div class="sop-compare">
-                        <span class="sop-compare-label">全国均值</span>
-                        <span class="sop-compare-val" id="sop-national-avg">73%</span>
-                      </div>
-                      <span class="sop-national-diff up" id="sop-national-diff"><span class="sop-national-diff-label">VS.全国</span><strong class="sop-national-diff-value">+9%</strong></span>
-                    </div>
-                    <div id="sop-ai-summary" class="sop-ai-summary">全品牌SOP执行整体平稳，竞品对比话术和试驾邀约环节仍是最大短板。</div>
+                  <div id="sop-ai-summary" class="sop-ai-summary">
+                    <img class="hint-icon" src="../assets/sales-local-complete-icon.svg" alt="" aria-hidden="true">
+                    <span class="hint-text">全品牌SOP执行整体平稳，竞品对比话术和试驾邀约环节仍是最大短板。</span>
                   </div>
                 </div>
                 <div class="summary-list">
-                  <div class="summary-item success" id="sop-summary-trend"><strong id="sop-summary-trend-title">优势发掘</strong><span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span></div>
-                  <div class="summary-item warning" id="sop-summary-weakness"><strong>短板改善</strong><span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span></div>
-                  <div class="summary-item danger" id="sop-summary-risk"><strong>风险管控</strong><span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span></div>
+                  <div class="summary-item success" id="sop-summary-trend">
+                    <div class="summary-item-head">
+                      <span class="summary-item-icon-shell" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-summary-strength.svg" alt="" aria-hidden="true">
+                      </span>
+                      <strong id="sop-summary-trend-title">优势发掘</strong>
+                    </div>
+                    <span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span>
+                  </div>
+                  <div class="summary-item warning" id="sop-summary-weakness">
+                    <div class="summary-item-head">
+                      <span class="summary-item-icon-shell" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-summary-weakness.svg" alt="" aria-hidden="true">
+                      </span>
+                      <strong>短板改善</strong>
+                    </div>
+                    <span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span>
+                  </div>
+                  <div class="summary-item danger" id="sop-summary-risk">
+                    <div class="summary-item-head">
+                      <span class="summary-item-icon-shell" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-summary-risk.svg" alt="" aria-hidden="true">
+                      </span>
+                      <strong>风险管控</strong>
+                    </div>
+                    <span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span>
+                  </div>
                 </div>
               </div>
             </section>
 
             <section class="track sop-rank-track" aria-label="质检排行">
-              <div class="track-header">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div class="track-icon compete">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                  </div>
-                  <div>
-                    <h2 class="track-title" id="rank-title">质检排行</h2>
-                    <p class="track-sub" id="rank-sub">支持下钻：大区-战区-门店，默认按照质检合格率降序排列</p>
-                  </div>
+              <div class="section-title-bar">
+                <div>
+                  <h2 class="section-title" id="rank-title">质检排行</h2>
+                  <p class="section-sub" id="rank-sub">支持下钻：大区-战区-门店，默认按照质检合格率降序排列</p>
                 </div>
+                <button type="button" class="rank-action-btn" id="rank-expand-toggle" hidden>一键展开</button>
               </div>
               <div class="track-body">
                 <div id="rank-table-wrap"></div>
@@ -980,7 +1007,7 @@
       : getCurrentFactoryOrgPath();
 
     slot.innerHTML = `
-      <div class="session-toolbar-control session-toolbar-menu${open ? ' is-open' : ''} session-toolbar-control-org" data-factory-org-root="true">
+      <div class="store-filter-box session-toolbar-control session-toolbar-menu${open ? ' is-open' : ''} session-toolbar-control-org" data-factory-org-root="true">
         <span>组织</span>
         <div class="session-select-trigger session-select-trigger-search${open ? ' active' : ''}">
           <div class="session-select-trigger-search-main">
@@ -1330,7 +1357,9 @@
     const allowed = new Set(getAllowedScenes(currentSource));
 
     sourceTabs.forEach((tab) => {
-      tab.classList.toggle('active', tab.dataset.source === currentSource);
+      const isActive = tab.dataset.source === currentSource;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 
     sceneTabs.forEach((tab) => {
@@ -1339,10 +1368,18 @@
       const isAllowed = isAll || allowed.has(scene);
       const isActive = isAll
         ? selection.isAllSelected
-        : (!selection.isAllSelected && selection.activeScenes.includes(scene));
+        : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
+      const isIndeterminate = isAll && !selection.isAllSelected && !selection.isNoneSelected;
+      const isHidden = isAll || !isAllowed;
 
+      tab.classList.toggle('is-hidden', isHidden);
       tab.classList.toggle('disabled', !isAllowed);
       tab.classList.toggle('active', isActive);
+      tab.classList.toggle('is-indeterminate', isIndeterminate);
+      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      tab.setAttribute('aria-checked', isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
+      tab.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
+      tab.tabIndex = isHidden ? -1 : (isAllowed ? 0 : -1);
     });
   };
 
@@ -1365,8 +1402,10 @@
 
   document.getElementById('gf-scene')?.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-scene]');
-    if (!tab || tab.classList.contains('disabled')) return;
-    currentScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    if (!tab || tab.classList.contains('disabled') || tab.classList.contains('is-hidden')) return;
+    const nextScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
+    if (Array.isArray(nextScenes) && nextScenes.length === 0) return;
+    currentScenes = nextScenes;
     syncFactorySceneTabs();
     applyGlobalFilter();
   });
@@ -1669,6 +1708,7 @@
   function renderFactoryDateControl() {
     const host = document.getElementById('store-date-control');
     const shell = document.getElementById('store-date-filter-shell');
+    const row = document.getElementById('factory-filter-date-row');
     if (!host) {
       return;
     }
@@ -1678,11 +1718,17 @@
       if (shell) {
         shell.hidden = true;
       }
+      if (row) {
+        row.hidden = true;
+      }
       return;
     }
 
     if (shell) {
       shell.hidden = false;
+    }
+    if (row) {
+      row.hidden = false;
     }
 
     host.innerHTML = `
@@ -2053,6 +2099,48 @@
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const renderExecutionHeroKpiLayout = (kpiData, kpiItems) => {
+    const topFlowCards = [];
+    const bottomMetricCards = [];
+    let previousSummaryTone = null;
+
+    kpiItems.forEach((item) => {
+      const primaryMetricRaw = kpiData[item.key];
+      const secondaryMetricRaw = item.pairedWith ? kpiData[item.pairedWith] : null;
+      if (!primaryMetricRaw) return;
+
+      const primaryMetric = buildFactoryHeroMetric(item.key, primaryMetricRaw);
+      const secondaryMetric = secondaryMetricRaw ? buildFactoryHeroMetric(item.pairedWith, secondaryMetricRaw) : null;
+
+      if (secondaryMetric && SUMMARY_GROUP_METRIC_KEYS.has(item.key)) {
+        if (topFlowCards.length) {
+          topFlowCards.push(renderFlowLink(previousSummaryTone, primaryMetric.tone || 'cyan'));
+        }
+        topFlowCards.push(renderGroupedKpiMetric(primaryMetric, secondaryMetric, { summary: true, hideSubRow: true }));
+        previousSummaryTone = primaryMetric.tone || 'blue';
+        return;
+      }
+
+      bottomMetricCards.push(renderSingleKpiMetric(primaryMetric));
+      if (secondaryMetric) {
+        bottomMetricCards.push(renderSingleKpiMetric(secondaryMetric));
+      }
+    });
+
+    const layoutSections = [];
+    if (topFlowCards.length) {
+      layoutSections.push(`<div class="hm-layout-top">${topFlowCards.join('')}</div>`);
+    }
+    if (topFlowCards.length && bottomMetricCards.length) {
+      layoutSections.push('<div class="hm-layout-divider" aria-hidden="true"></div>');
+    }
+    if (bottomMetricCards.length) {
+      layoutSections.push(`<div class="hm-layout-bottom">${bottomMetricCards.join('')}</div>`);
+    }
+
+    return layoutSections.join('');
+  };
+
   const buildFactoryFilteredKpiData = () => {
     const sceneKey = getEffectiveSceneKey();
     const nextData = Object.fromEntries(Object.entries(ALL_KPI_DATA).map(([key, value]) => [key, { ...value }]));
@@ -2081,6 +2169,7 @@
     const isContributionTab = currentTab === 'sop-improvement';
     const kpiData = isContributionTab ? buildContributionKPIData() : buildFactoryFilteredKpiData();
     const kpiItems = isContributionTab ? SOP_CONTRIBUTION_KPI_MAP : (SCENE_KPI_MAP[sceneKey] || SCENE_KPI_MAP.all);
+    const isExecutionLayout = !isContributionTab;
     const metricCards = [];
     const singleCards = [];
     let lastWasSummaryGroup = false;
@@ -2088,11 +2177,17 @@
     let hasSummaryCluster = false;
     let hasInsertedSummaryDivider = false;
 
-    grid.className = 'hero-kpi-grid hero-metrics store-hero-metrics';
+    grid.className = `hero-kpi-grid hero-metrics store-hero-metrics${isExecutionLayout ? ' factory-hero-metrics-layout' : ''}`;
 
     const funnelSvg = document.getElementById('hero-funnel-svg');
     if (!funnelSvg) {
       grid.insertAdjacentHTML('afterbegin', '<svg class="hero-funnel-svg" id="hero-funnel-svg" aria-hidden="true"></svg>');
+    }
+
+    if (isExecutionLayout) {
+      grid.innerHTML = `<svg class="hero-funnel-svg" id="hero-funnel-svg" aria-hidden="true"></svg>${renderExecutionHeroKpiLayout(kpiData, kpiItems)}`;
+      window.requestAnimationFrame(() => animateFactoryHeroCounters(grid));
+      return;
     }
 
     const flushSingleCards = () => {
@@ -2426,6 +2521,7 @@
   // ── 排行榜排序状态 ────────────────────────────────
   let rankSortKey = 'passRate';
   let rankSortDesc = true;
+  let syncRankExpandToggle = () => {};
 
   const rankRecordingCounts = (r) => {
     const total = Number(r.validRec) || 0;
@@ -2447,6 +2543,7 @@
   // ── renderRankTable：支持三级展开 / 排序 ──────────
   const renderRankTable = () => {
     const wrap = document.getElementById('rank-table-wrap');
+    const expandToggleBtn = document.getElementById('rank-expand-toggle');
     if (!wrap) return;
 
     // 动态标题
@@ -2491,8 +2588,19 @@
       return rankSortDesc ? bv - av : av - bv;
     });
 
+    const rankColgroup = `
+      <colgroup>
+        <col style="width:87px">
+        <col style="width:116px">
+        <col style="width:156px">
+        <col style="width:156px">
+        <col style="width:156px">
+        <col style="width:156px">
+        <col style="width:156px">
+      </colgroup>`;
+
     // 表头排序按钮
-    const thBtn = (key, label, align = 'center') => {
+    const thBtn = (key, label, align = 'left') => {
       if (!key) {
         return `<th class="rank-th" style="text-align:${align};white-space:nowrap">${label}</th>`;
       }
@@ -2517,14 +2625,15 @@
       return `
         <tr class="rank-row${hasChildren ? ' rank-expandable' : ''}"
             id="${rowId}"
+            ${hasChildren ? `data-expand-id="${expandId}"` : ''}
             style="cursor:${hasChildren ? 'pointer' : 'default'}"
             ${hasChildren ? `onclick="window._rankToggle('${expandId}', this)"` : ''}>
           <td>
             <span class="factory-rank-index">
-              <span class="factory-rank-index-num">${i + 1}</span>
               ${hasChildren
-                ? `<svg class="rank-expand-icon" id="icon-${expandId}" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>`
+                ? `<svg class="rank-expand-icon" id="icon-${expandId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>`
                 : ''}
+              <span class="factory-rank-index-num">${i + 1}</span>
             </span>
           </td>
           <td><span class="factory-rank-name">${r.name}</span></td>
@@ -2538,17 +2647,19 @@
         <tr id="${expandId}" class="rank-expand-panel" style="display:none">
           <td colspan="7" style="padding:0">
             <table class="factory-qc-rank-table factory-qc-rank-nested">
+              ${rankColgroup}
               ${r.zones.map((z, zi) => {
                 const zRowId   = `rank-row-${z.name.replace(/\s/g, '_')}`;
                 const zExpandId = `rank-expand-${z.name.replace(/\s/g, '_')}`;
                 const zCounts = rankRecordingCounts(z);
                 return `
                   <tr class="rank-row rank-expandable" id="${zRowId}"
+                      data-expand-id="${zExpandId}"
                       style="cursor:pointer"
                       onclick="window._rankToggle('${zExpandId}', this)">
                     <td>
                       <span class="factory-rank-index factory-rank-index-child">
-                        <svg class="rank-expand-icon" id="icon-${zExpandId}" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg class="rank-expand-icon" id="icon-${zExpandId}" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                       </span>
                     </td>
                     <td><span class="factory-rank-name factory-rank-name-child">${z.name}</span></td>
@@ -2561,6 +2672,7 @@
                   <tr id="${zExpandId}" class="rank-expand-panel" style="display:none">
                     <td colspan="7" style="padding:0">
                       <table class="factory-qc-rank-table factory-qc-rank-nested factory-qc-rank-store">
+                        ${rankColgroup}
                         ${z.stores.map(s => {
                           const sCounts = rankRecordingCounts(s);
                           return `
@@ -2584,6 +2696,7 @@
         <tr id="${expandId}" class="rank-expand-panel" style="display:none">
           <td colspan="7" style="padding:0">
             <table class="factory-qc-rank-table factory-qc-rank-nested factory-qc-rank-store">
+              ${rankColgroup}
               ${(r.stores || []).map(s => {
                 const sCounts = rankRecordingCounts(s);
                 return `
@@ -2604,6 +2717,7 @@
 
     wrap.innerHTML = `
       <table class="factory-qc-rank-table">
+        ${rankColgroup}
         <thead>
           <tr>
             ${thBtn('', '排行', 'left')}
@@ -2634,17 +2748,51 @@
         renderRankTable();
       });
     });
+
+    syncRankExpandToggle = () => {
+      if (!expandToggleBtn) return;
+      const rows = Array.from(wrap.querySelectorAll('.rank-row.rank-expandable[data-expand-id]'));
+      if (!rows.length) {
+        expandToggleBtn.hidden = true;
+        return;
+      }
+      const allOpen = rows.every(row => row.classList.contains('is-open'));
+      expandToggleBtn.hidden = false;
+      expandToggleBtn.textContent = allOpen ? '一键收起' : '一键展开';
+      expandToggleBtn.setAttribute('aria-pressed', allOpen ? 'true' : 'false');
+    };
+
+    if (expandToggleBtn) {
+      expandToggleBtn.onclick = () => {
+        const rows = Array.from(wrap.querySelectorAll('.rank-row.rank-expandable[data-expand-id]'));
+        if (!rows.length) return;
+        const shouldOpen = rows.some(row => !row.classList.contains('is-open'));
+        rows.forEach(row => {
+          const expandId = row.dataset.expandId;
+          if (!expandId) return;
+          window._rankToggle(expandId, row, shouldOpen);
+        });
+      };
+    }
+
+    syncRankExpandToggle();
   };
 
   // 展开/收起子行（全局函数，供内联 onclick 调用）
-  window._rankToggle = function(expandId, rowEl) {
+  window._rankToggle = function(expandId, rowEl, forceOpen) {
     const panel = document.getElementById(expandId);
     const icon  = document.getElementById('icon-' + expandId);
     if (!panel) return;
     const isOpen = panel.style.display !== 'none';
-    panel.style.display = isOpen ? 'none' : 'table-row';
-    if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
-    if (rowEl) rowEl.style.background = isOpen ? '' : 'rgba(59,130,246,0.06)';
+    const nextOpen = typeof forceOpen === 'boolean' ? forceOpen : !isOpen;
+    panel.style.display = nextOpen ? 'table-row' : 'none';
+    panel.classList.toggle('is-open', nextOpen);
+    if (icon) icon.style.transform = nextOpen ? 'rotate(90deg)' : '';
+    if (rowEl) {
+      rowEl.style.background = nextOpen ? 'rgba(59,130,246,0.06)' : '';
+      rowEl.classList.toggle('is-open', nextOpen);
+    }
+    syncRankExpandToggle();
   };
 
   // ── TREND_DATA — 按时间段的静态趋势数据 ──────────
@@ -2767,6 +2915,9 @@
             label: volLabel,
             data: volData,
             backgroundColor: 'rgba(59,130,246,0.13)',
+            borderColor: 'rgba(37, 99, 235, 0.92)',
+            borderWidth: 1.5,
+            borderSkipped: 'bottom',
             borderRadius: 4,
             barPercentage: 0.55,
             categoryPercentage: 0.7,
@@ -5359,7 +5510,13 @@
     path: []
   };
 
-  const ISSUE_RULE_PAGE_SIZE = 5;
+  const ISSUE_RULE_PAGE_SIZE = 10;
+  const ISSUE_RULE_SORT_OPTIONS = [
+    { value: 'rate-desc', label: '命中率从高到低' },
+    { value: 'rate-asc', label: '命中率从低到高' },
+    { value: 'count-desc', label: '命中数量优先' },
+    { value: 'sample-desc', label: '样本数量优先' }
+  ];
 
   const clampPercent = (value) => Math.max(1, Math.min(98, Math.round(value)));
 
@@ -5368,6 +5525,7 @@
   const getActiveIssueRuleConfig = () => ISSUE_RULE_TABS[issueRuleAnalysisState.activeTab] || ISSUE_RULE_TABS.sop;
 
   const getActiveIssueRule = () => getActiveIssueRuleConfig().rules.find(rule => rule.id === issueRuleAnalysisState.selectedRuleId) || null;
+  const getIssueRuleSortLabel = (value) => ISSUE_RULE_SORT_OPTIONS.find(option => option.value === value)?.label || ISSUE_RULE_SORT_OPTIONS[0].label;
 
   const getIssueRuleBaseOrg = () => {
     const region = currentRegion !== 'all'
@@ -5467,8 +5625,10 @@
     const rows = visibleRules.map(rule => `
       <button type="button" class="issue-rule-row" data-rule-id="${rule.id}">
         <span class="issue-rule-name">
-          <strong>${escapeHtml(rule.name)}</strong>
-          <em>${escapeHtml(rule.category)}</em>
+          <span class="issue-rule-name-line">
+            <strong>${escapeHtml(rule.name)}</strong>
+            <em>${escapeHtml(rule.category)}</em>
+          </span>
         </span>
         <span class="issue-rule-rate">${rule.rate}%</span>
         <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
@@ -5482,38 +5642,60 @@
           <span>搜索规则</span>
           <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称" autocomplete="off">
         </label>
-        <label class="issue-rule-sort">
+        <div class="issue-rule-sort">
           <span>排序</span>
-          <select class="issue-rule-sort-select">
-            <option value="rate-desc"${issueRuleAnalysisState.sort === 'rate-desc' ? ' selected' : ''}>命中率从高到低</option>
-            <option value="rate-asc"${issueRuleAnalysisState.sort === 'rate-asc' ? ' selected' : ''}>命中率从低到高</option>
-            <option value="count-desc"${issueRuleAnalysisState.sort === 'count-desc' ? ' selected' : ''}>命中数量优先</option>
-            <option value="sample-desc"${issueRuleAnalysisState.sort === 'sample-desc' ? ' selected' : ''}>样本数量优先</option>
-          </select>
-        </label>
+          <div class="issue-rule-sort-dropdown">
+            <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+              <span class="issue-rule-sort-value">${escapeHtml(getIssueRuleSortLabel(issueRuleAnalysisState.sort))}</span>
+              <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式">
+              <div class="session-menu-option-list">
+                ${ISSUE_RULE_SORT_OPTIONS.map(option => `
+                  <button
+                    type="button"
+                    class="issue-rule-sort-option store-model-option session-menu-option${issueRuleAnalysisState.sort === option.value ? ' active' : ''}"
+                    data-sort-value="${option.value}"
+                    role="option"
+                    aria-selected="${issueRuleAnalysisState.sort === option.value ? 'true' : 'false'}"
+                  ><span>${escapeHtml(option.label)}</span></button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="issue-rule-list-head">
-        <span>规则项</span>
-        <span>${config.metricLabel}</span>
-        <span>${config.countLabel}</span>
-        <span>操作</span>
-      </div>
-      <div class="issue-rule-list">
-        ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
-      </div>
-      <div class="issue-rule-footer">
-        <span>共 ${rules.length} 条，当前第 ${currentPage}/${pageCount} 页</span>
-        <div class="issue-rule-pager" aria-label="规则分页">
-          <button type="button" class="issue-rule-page-btn" data-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
-          <button type="button" class="issue-rule-page-btn" data-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
+      <div class="issue-rule-list-shell">
+        <div class="issue-rule-list-head">
+          <span>规则项</span>
+          <span>${config.metricLabel}</span>
+          <span>${config.countLabel}</span>
+          <span>操作</span>
+        </div>
+        <div class="issue-rule-list">
+          ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
+        </div>
+        <div class="issue-rule-footer">
+          <span>共 ${rules.length} 条，当前第 ${currentPage}/${pageCount} 页</span>
+          <div class="issue-rule-pager" aria-label="规则分页">
+            <button type="button" class="issue-rule-page-btn" data-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+            <button type="button" class="issue-rule-page-btn" data-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
+          </div>
         </div>
       </div>
     `;
   };
 
-  const renderOrgRankList = (title, rows, tone = '') => `
+  const renderOrgRankList = (title, rows, config, tone = '') => `
     <div class="issue-org-rank-card ${tone}">
-      <div class="issue-org-rank-title">${title}</div>
+      <div class="issue-org-list-head">
+        <span>${title}</span>
+        <span>${config.metricLabel}</span>
+        <span>${config.countLabel}</span>
+        <span>操作</span>
+      </div>
       <div class="issue-org-rank-list">
         ${rows.map((row, index) => `
           <button type="button" class="issue-org-row${row.drillable ? '' : ' disabled'}" data-org-name="${escapeHtml(row.name)}" ${row.drillable ? '' : 'disabled'}>
@@ -5523,12 +5705,48 @@
             </span>
             <span class="issue-org-rate">${row.rate}%</span>
             <span class="issue-org-count">${row.hitCount}/${row.sampleCount}</span>
-            <span class="issue-org-drill">${row.drillable ? '下钻' : '门店层'}</span>
+            <span class="issue-org-drill${row.drillable ? ' drill-link' : ''}">${row.drillable ? '下钻' : '门店层'}</span>
           </button>
         `).join('')}
       </div>
     </div>
   `;
+
+  const renderIssueSelectedMetricIcon = (type) => {
+    if (type === 'count') {
+      return `
+        <svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
+          <path opacity="0.96" d="M6.77684 10.5133C7.61631 10.5133 8.29684 9.83276 8.29684 8.99329C8.29684 8.15382 7.61631 7.47329 6.77684 7.47329C5.93736 7.47329 5.25684 8.15382 5.25684 8.99329C5.25684 9.83276 5.93736 10.5133 6.77684 10.5133Z" fill="url(#issue-count-0)"/>
+          <path opacity="0.88" d="M6.77684 16.7199C7.61631 16.7199 8.29684 16.0394 8.29684 15.1999C8.29684 14.3605 7.61631 13.6799 6.77684 13.6799C5.93736 13.6799 5.25684 14.3605 5.25684 15.1999C5.25684 16.0394 5.93736 16.7199 6.77684 16.7199Z" fill="url(#issue-count-1)"/>
+          <path opacity="0.8" d="M6.77684 22.9266C7.61631 22.9266 8.29684 22.246 8.29684 21.4066C8.29684 20.5671 7.61631 19.8866 6.77684 19.8866C5.93736 19.8866 5.25684 20.5671 5.25684 21.4066C5.25684 22.246 5.93736 22.9266 6.77684 22.9266Z" fill="url(#issue-count-2)"/>
+          <path d="M22.2302 7.40991H11.9702C11.0958 7.40991 10.3869 8.11879 10.3869 8.99325C10.3869 9.8677 11.0958 10.5766 11.9702 10.5766H22.2302C23.1047 10.5766 23.8136 9.8677 23.8136 8.99325C23.8136 8.11879 23.1047 7.40991 22.2302 7.40991Z" fill="url(#issue-count-3)"/>
+          <path opacity="0.9" d="M22.2302 13.6167H11.9702C11.0958 13.6167 10.3869 14.3255 10.3869 15.2C10.3869 16.0744 11.0958 16.7833 11.9702 16.7833H22.2302C23.1047 16.7833 23.8136 16.0744 23.8136 15.2C23.8136 14.3255 23.1047 13.6167 22.2302 13.6167Z" fill="url(#issue-count-4)"/>
+          <path opacity="0.8" d="M22.2302 19.8233H11.9702C11.0958 19.8233 10.3869 20.5322 10.3869 21.4066C10.3869 22.2811 11.0958 22.99 11.9702 22.99H22.2302C23.1047 22.99 23.8136 22.2811 23.8136 21.4066C23.8136 20.5322 23.1047 19.8233 22.2302 19.8233Z" fill="url(#issue-count-5)"/>
+          <defs>
+            <linearGradient id="issue-count-0" x1="5.06684" y1="3.79996" x2="25.3335" y2="26.6" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+            <linearGradient id="issue-count-1" x1="5.06684" y1="3.79993" x2="25.3335" y2="26.5999" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+            <linearGradient id="issue-count-2" x1="5.06684" y1="3.7999" x2="25.3335" y2="26.5999" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+            <linearGradient id="issue-count-3" x1="5.06691" y1="3.79991" x2="25.3336" y2="26.5999" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+            <linearGradient id="issue-count-4" x1="5.06691" y1="3.79998" x2="25.3336" y2="26.6" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+            <linearGradient id="issue-count-5" x1="5.06691" y1="3.79996" x2="25.3336" y2="26.6" gradientUnits="userSpaceOnUse"><stop stop-color="#A78BFA"/><stop offset="0.54" stop-color="#8B5CF6"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+          </defs>
+        </svg>
+      `;
+    }
+
+    return `
+      <svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
+        <path d="M15.2 4.2 24 7.4v6.58c0 4.94-3.28 9.56-8.8 12.22-5.52-2.66-8.8-7.28-8.8-12.22V7.4l8.8-3.2Z" fill="url(#issue-rate-a)"/>
+        <path d="M15.2 9.26a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Zm0 2.22a2.48 2.48 0 1 0 0 4.96 2.48 2.48 0 0 0 0-4.96Z" fill="url(#issue-rate-b)"/>
+        <path d="M15.2 7.14c3.9 0 7.06 3.16 7.06 7.06 0 .87-.16 1.7-.45 2.46l-1.97-.76c.2-.53.3-1.1.3-1.7a4.94 4.94 0 1 0-9.88 0c0 2.73 2.21 4.94 4.94 4.94.84 0 1.64-.21 2.33-.58l1.05 1.83a7.02 7.02 0 0 1-3.38.86 7.06 7.06 0 0 1 0-14.1Z" fill="url(#issue-rate-c)"/>
+        <defs>
+          <linearGradient id="issue-rate-a" x1="7.17" y1="5.08" x2="25.31" y2="24.86" gradientUnits="userSpaceOnUse"><stop stop-color="#86EFAC"/><stop offset="0.58" stop-color="#22C55E"/><stop offset="1" stop-color="#16A34A"/></linearGradient>
+          <linearGradient id="issue-rate-b" x1="10.5" y1="9.9" x2="20.55" y2="19.53" gradientUnits="userSpaceOnUse"><stop stop-color="#F0FDF4"/><stop offset="1" stop-color="#BBF7D0"/></linearGradient>
+          <linearGradient id="issue-rate-c" x1="8.94" y1="7.14" x2="23.36" y2="20.72" gradientUnits="userSpaceOnUse"><stop stop-color="#DCFCE7"/><stop offset="1" stop-color="#22C55E"/></linearGradient>
+        </defs>
+      </svg>
+    `;
+  };
 
   const renderOrgDrillView = (config, rule) => {
     const children = getCurrentOrgChildren().map((org, index) => buildOrgRuleStats(rule, org, index));
@@ -5536,16 +5754,36 @@
     const canBackLevel = issueRuleAnalysisState.path.length > 0;
 
     return `
+      <div class="issue-selected-metrics">
+        <div class="issue-selected-metric-card">
+          <div class="issue-selected-metric-main">
+            <div class="issue-selected-metric-icon tone-green">
+              ${renderIssueSelectedMetricIcon('rate')}
+            </div>
+            <div class="issue-selected-metric-body">
+              <span class="issue-selected-metric-label">${config.metricLabel}</span>
+              <strong class="issue-selected-metric-value">${rule.rate}%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="issue-selected-metric-card">
+          <div class="issue-selected-metric-main">
+            <div class="issue-selected-metric-icon tone-violet">
+              ${renderIssueSelectedMetricIcon('count')}
+            </div>
+            <div class="issue-selected-metric-body">
+              <span class="issue-selected-metric-label">${config.countLabel}</span>
+              <strong class="issue-selected-metric-value">${rule.hitCount}/${rule.sampleCount}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="issue-drill-actions">
         <button type="button" class="issue-rule-back">返回规则列表</button>
         ${canBackLevel ? '<button type="button" class="issue-org-back">返回上一级</button>' : ''}
       </div>
-      <div class="issue-selected-metrics">
-        <div><strong>${rule.rate}%</strong><span>${config.metricLabel}</span></div>
-        <div><strong>${rule.hitCount}/${rule.sampleCount}</strong><span>${config.countLabel}</span></div>
-      </div>
       <div class="issue-org-rank-grid">
-        ${renderOrgRankList('当前组织列表', sortedRows)}
+        ${renderOrgRankList('当前组织列表', sortedRows, config)}
       </div>
     `;
   };
@@ -5570,9 +5808,36 @@
       }
     }
 
-    root.querySelector('.issue-rule-sort-select')?.addEventListener('change', (event) => {
-      issueRuleAnalysisState.sort = event.target.value;
+    const sortTrigger = root.querySelector('.issue-rule-sort-trigger');
+    const sortPanel = root.querySelector('.issue-rule-sort-panel');
+    const closeSortPanel = () => {
+      if (!sortTrigger || !sortPanel) return;
+      sortPanel.classList.remove('show');
+      sortTrigger.classList.remove('active');
+      sortTrigger.setAttribute('aria-expanded', 'false');
+    };
+    const openSortPanel = () => {
+      if (!sortTrigger || !sortPanel) return;
+      sortPanel.classList.add('show');
+      sortTrigger.classList.add('active');
+      sortTrigger.setAttribute('aria-expanded', 'true');
+    };
+
+    sortTrigger?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (sortPanel?.classList.contains('show')) {
+        closeSortPanel();
+      } else {
+        openSortPanel();
+      }
+    });
+
+    sortPanel?.addEventListener('click', (event) => {
+      const option = event.target.closest('.issue-rule-sort-option');
+      if (!option || !option.dataset.sortValue) return;
+      issueRuleAnalysisState.sort = option.dataset.sortValue;
       issueRuleAnalysisState.page = 1;
+      closeSortPanel();
       renderIssueRuleAnalysis();
     });
 
@@ -5620,6 +5885,32 @@
         renderIssueRuleAnalysis();
       });
     });
+
+    if (!document.body.dataset.issueRuleSortBound) {
+      document.body.dataset.issueRuleSortBound = 'true';
+
+      document.addEventListener('click', (event) => {
+        const activeRoot = document.getElementById('issue-rule-analysis-root');
+        const activeTrigger = activeRoot?.querySelector('.issue-rule-sort-trigger');
+        const activePanel = activeRoot?.querySelector('.issue-rule-sort-panel');
+        if (!activeTrigger || !activePanel) return;
+        if (activeTrigger.contains(event.target) || activePanel.contains(event.target)) return;
+        activePanel.classList.remove('show');
+        activeTrigger.classList.remove('active');
+        activeTrigger.setAttribute('aria-expanded', 'false');
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const activeRoot = document.getElementById('issue-rule-analysis-root');
+        const activeTrigger = activeRoot?.querySelector('.issue-rule-sort-trigger');
+        const activePanel = activeRoot?.querySelector('.issue-rule-sort-panel');
+        if (!activeTrigger || !activePanel) return;
+        activePanel.classList.remove('show');
+        activeTrigger.classList.remove('active');
+        activeTrigger.setAttribute('aria-expanded', 'false');
+      });
+    }
   };
 
   const renderIssueRuleAnalysis = (focusSearch = false) => {
@@ -5637,32 +5928,33 @@
   // ── renderSOPDial：圆环动画 ─────────────────────────
   const renderSOPDial = () => {
     const fill = document.getElementById('sop-dial-fill');
-    if (!fill) return;
-    const circumference = 2 * Math.PI * 65; // ~408.4
-    const offset = circumference * (1 - SOP_DIAL.score / 100);
-    requestAnimationFrame(() => { fill.style.strokeDashoffset = offset; });
+    if (fill) {
+      const circumference = 2 * Math.PI * 65; // ~408.4
+      const offset = circumference * (1 - SOP_DIAL.score / 100);
+      requestAnimationFrame(() => { fill.style.strokeDashoffset = offset; });
+    }
     const valEl = document.getElementById('sop-score-val');
     if (valEl) valEl.innerHTML = `${SOP_DIAL.score}<span>%</span>`;
     const periodEl = document.getElementById('sop-period-change');
     const periodValueEl = periodEl?.querySelector('.sop-period-change-value');
     if (periodEl) {
       const periodDelta = Number(SOP_DIAL.periodDelta || 0);
-      const periodText = `${periodDelta >= 0 ? '+' : ''}${periodDelta}% ${periodDelta >= 0 ? '↑' : '↓'}`;
+      const periodText = `${periodDelta >= 0 ? '+' : ''}${periodDelta}%`;
       if (periodValueEl) {
         periodValueEl.textContent = periodText;
       } else {
-        periodEl.textContent = periodText;
+        periodEl.textContent = `环比 ${periodText}`;
       }
       periodEl.classList.toggle('up', periodDelta >= 0);
       periodEl.classList.toggle('down', periodDelta < 0);
     }
     const avgEl = document.getElementById('sop-national-avg');
-    if (avgEl) avgEl.textContent = SOP_DIAL.nationalAvg + '%';
+    if (avgEl) avgEl.textContent = String(SOP_DIAL.nationalAvg);
     const nationalDiffEl = document.getElementById('sop-national-diff');
     const nationalDiffValueEl = nationalDiffEl?.querySelector('.sop-national-diff-value');
     if (nationalDiffEl) {
       const diff = SOP_DIAL.score - SOP_DIAL.nationalAvg;
-      const diffText = `${diff >= 0 ? '+' : ''}${diff}%`;
+      const diffText = `${diff >= 0 ? diff : diff}%`;
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
       } else {
@@ -5672,7 +5964,12 @@
       nationalDiffEl.classList.toggle('down', diff < 0);
     }
     const sumEl = document.getElementById('sop-ai-summary');
-    if (sumEl) sumEl.textContent = SOP_DIAL.summary;
+    const sumTextEl = sumEl?.querySelector('.hint-text');
+    if (sumTextEl) {
+      sumTextEl.textContent = SOP_DIAL.summary;
+    } else if (sumEl) {
+      sumEl.textContent = SOP_DIAL.summary;
+    }
   };
 
   // ── renderSOPWeakness / Risk：严格沿用门店看板 TOP5 ──
