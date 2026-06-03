@@ -1,5 +1,77 @@
 /* Shared runtime extracted from index.html for independent menu pages. */
 
+const escapeInsightTop5Html = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+function renderSharedInsightTop5Rank(index, options = {}) {
+  const {
+    baseClass = 'issue-rank',
+    iconClass = 'issue-rank-icon'
+  } = options;
+  const rank = index + 1;
+  if (rank <= 3) {
+    return `<div class="${baseClass} has-rank-icon"><img class="${iconClass}" src="../assets/insight-rank-${rank}.png" alt="${rank}"></div>`;
+  }
+  return `<div class="${baseClass}">${rank}</div>`;
+}
+
+function renderSharedInsightTop5Cards(items, options = {}) {
+  const {
+    cardTag = 'div',
+    baseCardClass = 'issue-card',
+    getCardClassSuffix = () => '',
+    getCardAttrs = () => '',
+    headerClass = 'issue-header issue-header-stacked-actions',
+    rankClass = 'issue-rank',
+    rankIconClass = 'issue-rank-icon',
+    infoClass = 'issue-info',
+    titleRowClass = 'issue-title-row',
+    titleClass = 'issue-title',
+    barRowClass = 'issue-bar-row',
+    barTrackClass = 'issue-bar-track',
+    barFillClass = 'issue-bar-fill',
+    statClass = 'issue-stat',
+    actionStackClass = 'issue-actions-stack',
+    valueAttrName = 'data-issue-target',
+    getTitle = (item) => item?.title || '',
+    getValue = (item) => item?.score || 0,
+    getScopeHtml = () => '',
+    getActionHtml = () => ''
+  } = options;
+
+  return items.map((item, index) => {
+    const suffix = String(getCardClassSuffix(item, index) || '').trim();
+    const className = `${baseCardClass}${suffix ? ` ${suffix}` : ''}`;
+    const attrs = String(getCardAttrs(item, index) || '').trim();
+    const tagAttrs = attrs ? ` ${attrs}` : '';
+    const value = getValue(item, index);
+    const title = escapeInsightTop5Html(String(getTitle(item, index) || ''));
+    const scopeHtml = getScopeHtml(item, index) || '';
+    const actionHtml = getActionHtml(item, index) || '';
+
+    return `<${cardTag} class="${className}"${tagAttrs}>
+      <div class="${headerClass}">
+        ${renderSharedInsightTop5Rank(index, { baseClass: rankClass, iconClass: rankIconClass })}
+        <div class="${infoClass}">
+          <div class="${titleRowClass}"><span class="${titleClass}">${title}</span></div>
+          <div class="${barRowClass}">
+            <div class="${barTrackClass}"><div class="${barFillClass}" ${valueAttrName}="${value}" style="width:0%"></div></div>
+            <span class="${statClass}" ${valueAttrName}="${value}">0%</span>
+          </div>
+        </div>
+        <div class="${actionStackClass}">
+          ${scopeHtml}
+          ${actionHtml}
+        </div>
+      </div>
+    </${cardTag}>`;
+  }).join('');
+}
+
 function initStoreDashboardPage() {
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const {
@@ -3627,30 +3699,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     if (weaknessEl) {
       weaknessEl.style.height = 'auto';
-      weaknessEl.innerHTML = weaknessItems.map((w, i) => {
-        const pct = w.animated_ratio;
-        const rankContent = i < 3
-          ? `<img class="issue-rank-icon" src="../assets/insight-rank-${i + 1}.png" alt="${i + 1}">`
-          : `${i + 1}`;
-        return `<div class="issue-card rank-${i+1}">
-          <div class="issue-header issue-header-stacked-actions">
-            <div class="issue-rank${i < 3 ? ' has-rank-icon' : ''}">${rankContent}</div>
-            <div class="issue-info">
-              <div class="issue-title-row"><span class="issue-title">${w.title}</span></div>
-              <div class="issue-bar-row">
-                <div class="issue-bar-track"><div class="issue-bar-fill" data-issue-target="${pct}" style="width:0%"></div></div>
-                <span class="issue-stat" data-issue-target="${pct}">0%</span>
-              </div>
-            </div>
-            <div class="issue-actions-stack">
-              ${scopeText(w.advisor_count)}
-              <button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('weakness', ${i})">
-                <span>查看</span>
-              </button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      weaknessEl.innerHTML = renderSharedInsightTop5Cards(weaknessItems, {
+        getCardClassSuffix: (_item, index) => `rank-${index + 1}`,
+        getValue: (item) => item.animated_ratio,
+        getScopeHtml: (item) => scopeText(item.advisor_count),
+        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('weakness', ${index})"><span>查看</span></button>`
+      });
     }
   };
 
@@ -3660,30 +3714,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     if (strengthEl) {
       strengthEl.style.height = 'auto';
-      strengthEl.innerHTML = strengthItems.map((s, i) => {
-        const pct = s.animated_ratio;
-        const rankContent = i < 3
-          ? `<img class="issue-rank-icon" src="../assets/insight-rank-${i + 1}.png" alt="${i + 1}">`
-          : `${i + 1}`;
-        return `<div class="issue-card strength rank-${i+1}">
-          <div class="issue-header issue-header-stacked-actions">
-            <div class="issue-rank${i < 3 ? ' has-rank-icon' : ''}">${rankContent}</div>
-            <div class="issue-info">
-              <div class="issue-title-row"><span class="issue-title">${s.title}</span></div>
-              <div class="issue-bar-row">
-                <div class="issue-bar-track"><div class="issue-bar-fill" data-issue-target="${pct}" style="width:0%"></div></div>
-                <span class="issue-stat" data-issue-target="${pct}">0%</span>
-              </div>
-            </div>
-            <div class="issue-actions-stack">
-              ${scopeText(s.advisor_count)}
-              <button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('strength', ${i})">
-                <span>查看</span>
-              </button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      strengthEl.innerHTML = renderSharedInsightTop5Cards(strengthItems, {
+        getCardClassSuffix: (_item, index) => `strength rank-${index + 1}`,
+        getValue: (item) => item.animated_ratio,
+        getScopeHtml: (item) => scopeText(item.advisor_count),
+        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('strength', ${index})"><span>查看</span></button>`
+      });
     }
   };
 
@@ -3693,30 +3729,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     if (riskEl) {
       riskEl.style.height = 'auto';
-      riskEl.innerHTML = riskItems.map((r, i) => {
-        const barW = r.animated_ratio;
-        const rankContent = i < 3
-          ? `<img class="issue-rank-icon" src="../assets/insight-rank-${i + 1}.png" alt="${i + 1}">`
-          : `${i + 1}`;
-        return `<div class="issue-card risk rank-${i+1}">
-          <div class="issue-header issue-header-stacked-actions">
-            <div class="issue-rank${i < 3 ? ' has-rank-icon' : ''}">${rankContent}</div>
-            <div class="issue-info">
-              <div class="issue-title-row"><span class="issue-title">${r.title}</span></div>
-              <div class="issue-bar-row">
-                <div class="issue-bar-track"><div class="issue-bar-fill" data-issue-target="${barW}" style="width:0%"></div></div>
-                <span class="issue-stat" data-issue-target="${barW}">0%</span>
-              </div>
-            </div>
-            <div class="issue-actions-stack">
-              ${scopeText(r.advisor_count)}
-              <button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('risk', ${i})">
-                <span>查看</span>
-              </button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      riskEl.innerHTML = renderSharedInsightTop5Cards(riskItems, {
+        getCardClassSuffix: (_item, index) => `risk rank-${index + 1}`,
+        getValue: (item) => item.animated_ratio,
+        getScopeHtml: (item) => scopeText(item.advisor_count),
+        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('risk', ${index})"><span>查看</span></button>`
+      });
     }
   };
 
@@ -13913,7 +13931,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderSalesReviewScope(count, total = SALES_REVIEW_TOTAL_PEOPLE) {
-        return ''
+        const meta = getSalesReviewScopeMeta(count, total)
+        return `<span class="issue-scope-text scope-${meta.type}">${meta.label}·${count}/${total}</span>`
       }
 
       function buildSalesReviewRecording(typeIndex, recordIndex, role, tab) {
@@ -14169,33 +14188,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
-      function renderSalesReviewInsightCard(item, index, role, tab) {
-        return `
-          <article class="sales-review-issue-card" data-sales-review-card>
-            <div class="sales-review-issue-header sales-review-issue-header-stacked-actions">
-              ${renderSalesReviewRank(index)}
-              <div class="sales-review-issue-info">
-                <div class="sales-review-issue-title-row">
-                  <span class="sales-review-issue-title">${escapeHtml(item.title)}</span>
-                </div>
-                <div class="sales-review-issue-bar-row">
-                  <div class="sales-review-issue-bar-track" aria-hidden="true">
-                    <div class="sales-review-issue-bar-fill" data-target="${item.score}"></div>
-                  </div>
-                  <span class="sales-review-issue-stat" data-target="${item.score}">0%</span>
-                </div>
-              </div>
-              <div class="issue-actions-stack sales-review-issue-actions">
-                ${renderSalesReviewScope(item.scopeCount)}
-                <button type="button" class="issue-rec-more" onclick="openSalesReviewRecordingLibrary('${escapeHtml(role)}','${escapeHtml(tab)}',${index})">
-                  <span>查看</span>
-                </button>
-              </div>
-            </div>
-          </article>
-        `
-      }
-
       function animateSalesReviewInsightCards(root) {
         clearSalesReviewCounterAnimations()
         root?.querySelectorAll('.sales-review-issue-bar-fill').forEach((bar, index) => {
@@ -14237,9 +14229,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           tab.setAttribute('aria-selected', String(active))
         })
 
-        list.innerHTML = getSalesReviewInsightItems(role, activeTab)
-          .map((item, index) => renderSalesReviewInsightCard(item, index, role, activeTab))
-          .join('')
+        list.innerHTML = renderSharedInsightTop5Cards(getSalesReviewInsightItems(role, activeTab), {
+          cardTag: 'article',
+          baseCardClass: 'sales-review-issue-card',
+          getCardAttrs: () => 'data-sales-review-card',
+          headerClass: 'sales-review-issue-header sales-review-issue-header-stacked-actions',
+          rankClass: 'sales-review-issue-rank',
+          rankIconClass: 'sales-review-issue-rank-icon',
+          infoClass: 'sales-review-issue-info',
+          titleRowClass: 'sales-review-issue-title-row',
+          titleClass: 'sales-review-issue-title',
+          barRowClass: 'sales-review-issue-bar-row',
+          barTrackClass: 'sales-review-issue-bar-track',
+          barFillClass: 'sales-review-issue-bar-fill',
+          statClass: 'sales-review-issue-stat',
+          actionStackClass: 'issue-actions-stack sales-review-issue-actions',
+          valueAttrName: 'data-target',
+          getValue: (item) => item.score,
+          getScopeHtml: (item) => renderSalesReviewScope(item.scopeCount),
+          getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openSalesReviewRecordingLibrary('${escapeHtml(role)}','${escapeHtml(activeTab)}',${index})"><span>查看</span></button>`
+        })
         animateSalesReviewInsightCards(list)
       }
 
