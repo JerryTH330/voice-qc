@@ -3,6 +3,8 @@
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const FACTORY_HERO_UTILS = window.__factoryHeroUtils || {};
   const ISSUE_RULE_ANALYSIS_UTILS = window.__factoryIssueRuleAnalysisUtils || {};
+  const SOP_STATUS_UTILS = window.__factorySOPStatusUtils || {};
+  const MULTI_SELECT_FILTER_UTILS = window.__factoryMultiSelectFilterUtils || {};
   const {
     SOURCE_KEYS,
     SCENE_KEYS,
@@ -19,19 +21,114 @@
   const {
     sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : [])
   } = ISSUE_RULE_ANALYSIS_UTILS;
+  const {
+    normalizeSOPLeadStatuses: normalizeSharedSOPLeadStatuses,
+    toggleSOPLeadStatusSelection: toggleSharedSOPLeadStatusSelection,
+    getSOPLeadStatusOptionState: getSharedSOPLeadStatusOptionState
+  } = SOP_STATUS_UTILS;
+  const {
+    renderCheckboxFilterOptionsMarkup: renderSharedCheckboxFilterOptionsMarkup,
+    renderInlineCheckboxFilterGroupMarkup: renderSharedInlineCheckboxFilterGroupMarkup,
+    renderStackedCheckboxFilterGroupMarkup: renderSharedStackedCheckboxFilterGroupMarkup
+  } = MULTI_SELECT_FILTER_UTILS;
 
-  const FACTORY_DASHBOARD_HTML = `<div class="main-tabs-bar sales-role-nav">
-    <div class="main-tabs role-page-switch" role="tablist">
-      <button class="main-tab role-switch-link active" role="tab" data-tab="sop-execution" id="tab-sop-execution" aria-selected="true" aria-controls="panel-sop-execution">
-        SOP执行质检
+  const escapeFilterMarkupHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const renderFilterMarkupAttrs = (attrs) => {
+    if (!attrs || typeof attrs !== 'object') return '';
+    return Object.entries(attrs).map(([key, value]) => {
+      if (value === false || value === null || typeof value === 'undefined') return '';
+      if (value === true) return ` ${escapeFilterMarkupHtml(key)}`;
+      return ` ${escapeFilterMarkupHtml(key)}="${escapeFilterMarkupHtml(value)}"`;
+    }).join('');
+  };
+
+  const fallbackRenderCheckboxFilterOptionsMarkup = ({
+    options = [],
+    buttonClassName = '',
+    checkClassName = '',
+    textClassName = '',
+    getOptionMeta
+  }) => (Array.isArray(options) ? options : []).map((option, index) => {
+    const safeOption = option || {};
+    const meta = typeof getOptionMeta === 'function' ? (getOptionMeta(safeOption, index) || {}) : {};
+    const className = [buttonClassName, meta.className].filter(Boolean).join(' ').trim();
+    const label = safeOption.label ?? safeOption.text ?? safeOption.value ?? '';
+    return `
+      <button type="button" class="${escapeFilterMarkupHtml(className)}"${renderFilterMarkupAttrs(meta.attrs)}>
+        <span class="${escapeFilterMarkupHtml(checkClassName)}" aria-hidden="true"></span>
+        <span class="${escapeFilterMarkupHtml(textClassName)}">${escapeFilterMarkupHtml(label)}</span>
       </button>
-      <button class="main-tab role-switch-link" role="tab" data-tab="sop-improvement" id="tab-sop-improvement" aria-selected="false" aria-controls="panel-sop-improvement">
-        SOP策略洞察
-      </button>
+    `;
+  }).join('');
+
+  const fallbackRenderInlineCheckboxFilterGroupMarkup = ({
+    rootClassName = '',
+    label = '',
+    labelClassName = '',
+    tabsId = '',
+    tabsClassName = '',
+    tabsAriaLabel = '',
+    optionsMarkup = ''
+  }) => `
+    <div class="${escapeFilterMarkupHtml(rootClassName)}">
+      <span class="${escapeFilterMarkupHtml(labelClassName)}">${escapeFilterMarkupHtml(label)}</span>
+      <div class="${escapeFilterMarkupHtml(tabsClassName)}" id="${escapeFilterMarkupHtml(tabsId)}" role="group" aria-label="${escapeFilterMarkupHtml(tabsAriaLabel || label)}">
+        ${String(optionsMarkup || '')}
+      </div>
     </div>
-  </div>
+  `;
 
-  <section class="global-filter-bar session-filter-card" aria-label="全局筛选">
+  const fallbackRenderStackedCheckboxFilterGroupMarkup = ({
+    rowClassName = '',
+    headClassName = '',
+    title = '',
+    titleClassName = '',
+    summaryText = '',
+    summaryClassName = '',
+    tabsClassName = '',
+    optionsMarkup = '',
+    hideSummary = false
+  }) => `
+    <div class="${escapeFilterMarkupHtml(rowClassName)}">
+      <div class="${escapeFilterMarkupHtml(headClassName)}">
+        <span class="${escapeFilterMarkupHtml(titleClassName)}">${escapeFilterMarkupHtml(title)}</span>
+        <span class="${escapeFilterMarkupHtml(summaryClassName)}"${hideSummary ? ' hidden' : ''}>${escapeFilterMarkupHtml(summaryText)}</span>
+      </div>
+      <div class="${escapeFilterMarkupHtml(tabsClassName)}">
+        ${String(optionsMarkup || '')}
+      </div>
+    </div>
+  `;
+
+  const renderCheckboxFilterOptionsMarkup = typeof renderSharedCheckboxFilterOptionsMarkup === 'function'
+    ? renderSharedCheckboxFilterOptionsMarkup
+    : fallbackRenderCheckboxFilterOptionsMarkup;
+  const renderInlineCheckboxFilterGroupMarkup = typeof renderSharedInlineCheckboxFilterGroupMarkup === 'function'
+    ? renderSharedInlineCheckboxFilterGroupMarkup
+    : fallbackRenderInlineCheckboxFilterGroupMarkup;
+  const renderStackedCheckboxFilterGroupMarkup = typeof renderSharedStackedCheckboxFilterGroupMarkup === 'function'
+    ? renderSharedStackedCheckboxFilterGroupMarkup
+    : fallbackRenderStackedCheckboxFilterGroupMarkup;
+
+  const FACTORY_DASHBOARD_HTML = `<section class="global-filter-bar session-filter-card factory-filter-panel" aria-label="全局筛选">
+    <div class="main-tabs-bar sales-role-nav factory-toolbar-tabs-row">
+      <div class="main-tabs role-page-switch" role="tablist">
+        <button class="main-tab role-switch-link active" role="tab" data-tab="sop-execution" id="tab-sop-execution" aria-selected="true" aria-controls="panel-sop-execution">
+          SOP执行质检
+        </button>
+        <button class="main-tab role-switch-link" role="tab" data-tab="sop-improvement" id="tab-sop-improvement" aria-selected="false" aria-controls="panel-sop-improvement">
+          SOP策略洞察
+        </button>
+      </div>
+      <div class="factory-analysis-mode-slot" id="factoryAnalysisModeSlot" hidden></div>
+    </div>
+    <div class="factory-filter-panel-divider" aria-hidden="true"></div>
     <div class="store-filter-shell session-filter-toolbar">
       <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-primary">
         <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-brand">
@@ -53,17 +150,7 @@
         </div>
       </div>
       <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-secondary">
-        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-scene">
-          <span class="gf-label">业务场景</span>
-          <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
-            <button class="gf-tab todo-filter-tab active is-hidden" data-scene="all" aria-pressed="true" aria-hidden="true" tabindex="-1">全部</button>
-            <button class="gf-tab todo-filter-tab" data-scene="first_follow" aria-pressed="false">首触跟进</button>
-            <button class="gf-tab todo-filter-tab" data-scene="invite_store" aria-pressed="false">邀约进店</button>
-            <button class="gf-tab todo-filter-tab" data-scene="schedule_confirm" aria-pressed="false">排程确认</button>
-            <button class="gf-tab todo-filter-tab" data-scene="store_reception" aria-pressed="false">进店接待</button>
-            <button class="gf-tab todo-filter-tab" data-scene="test_drive" aria-pressed="false">试乘试驾</button>
-          </div>
-        </div>
+        <div id="factorySceneFilterSlot"></div>
         <div class="gf-group gf-time-group store-filter-box session-toolbar-control session-toolbar-segment-control store-toolbar-control-time">
           <span class="gf-label">时间</span>
           <div class="gf-tabs todo-filter-tabs" id="gf-time" role="group" aria-label="时间">
@@ -74,6 +161,7 @@
             <button class="gf-tab gf-tab-custom todo-filter-tab" data-time="custom" id="gf-custom-btn" aria-pressed="false">自定义</button>
           </div>
         </div>
+        <div class="store-date-popover-anchor" id="store-date-control"></div>
       </div>
       <div class="session-filter-row session-filter-row-main factory-filter-row-main">
         <div class="gf-group store-filter-box session-toolbar-control session-toolbar-menu session-toolbar-control-car store-model-dropdown factory-model-dropdown" id="factory-model-dropdown">
@@ -91,11 +179,6 @@
               <button type="button" class="store-model-option session-menu-option" data-model="E8"><span>传祺E8</span></button>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="session-filter-row session-filter-row-main factory-filter-row-date" id="factory-filter-date-row" hidden>
-        <div class="gf-group store-date-filter-shell session-toolbar-control" id="store-date-filter-shell" hidden>
-          <div class="store-date-control-slot" id="store-date-control"></div>
         </div>
       </div>
     </div>
@@ -574,6 +657,14 @@
     '有效',
     '异地成交'
   ];
+  const FACTORY_SCENE_FILTER_OPTIONS = [
+    { value: SCENE_KEYS.all, label: '全部' },
+    { value: SCENE_KEYS.firstFollow, label: '首触跟进' },
+    { value: SCENE_KEYS.inviteStore, label: '邀约进店' },
+    { value: SCENE_KEYS.scheduleConfirm, label: '排程确认' },
+    { value: SCENE_KEYS.storeReception, label: '进店接待' },
+    { value: SCENE_KEYS.testDrive, label: '试乘试驾' }
+  ];
 
   const SOP_LEAD_STATUS_PROFILE_MAP = {
     '全部': { share: 1, hitDelta: 0, riskDelta: 0, missDelta: 0 },
@@ -652,6 +743,112 @@
     viewYear: new Date().getFullYear(),
     viewMonth: new Date().getMonth() + 1
   };
+  const renderSharedDateRangeControlMarkup = (
+    typeof globalThis !== 'undefined'
+      && globalThis.__dateFilterComponentUtils
+      && typeof globalThis.__dateFilterComponentUtils.renderDateRangeControlMarkup === 'function'
+  )
+    ? globalThis.__dateFilterComponentUtils.renderDateRangeControlMarkup
+    : ({ currentValue, customValue = 'custom', isOpen, startLabel, endLabel, dataNamespace = 'factory-date', rootClassName = 'store-date-root', triggerClassName = 'session-date-trigger store-date-trigger', triggerLabel = '日期范围筛选', menuHtml }) => {
+      if (currentValue !== customValue) {
+        return '';
+      }
+
+      return `
+        <div class="${rootClassName}${isOpen ? ' is-open' : ''}" data-${dataNamespace}-root="true">
+          <button
+            type="button"
+            class="${triggerClassName}${isOpen ? ' active' : ''}"
+            data-${dataNamespace}-trigger="true"
+            aria-label="${triggerLabel}"
+            aria-haspopup="dialog"
+            aria-expanded="${isOpen ? 'true' : 'false'}"
+          >
+            <strong>${escapeHtml(startLabel || '未选择')}</strong>
+            <em>至</em>
+            <strong>${escapeHtml(endLabel || '未选择')}</strong>
+            <span class="session-date-icon" aria-hidden="true"></span>
+          </button>
+          ${isOpen ? String(menuHtml || '') : ''}
+        </div>
+      `;
+    };
+  const renderSharedDateRangePanelMarkup = (
+    typeof globalThis !== 'undefined'
+      && globalThis.__dateFilterComponentUtils
+      && typeof globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup === 'function'
+  )
+    ? globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup
+    : ({ dataNamespace = 'factory-date', rangeText = '', monthLabel = '', activeField = 'startDate', startLabel = '', endLabel = '', disablePrevMonth = false, disableNextMonth = false, cells = [], shortcuts = [], summaryText = '', panelClassName = 'session-menu-panel session-menu-panel-date', panelStyle = '', title = '日期范围', startFieldLabel = '开始日期', endFieldLabel = '结束日期', cancelLabel = '取消', applyLabel = '应用日期' }) => {
+      const safeSummaryText = summaryText || `已选择 ${rangeText}`;
+      const panelStyleAttr = panelStyle ? ` style="${escapeHtml(panelStyle)}"` : '';
+      return `
+        <div class="${panelClassName}"${panelStyleAttr}>
+          <div class="session-date-panel-head">
+            <div class="session-date-panel-copy">
+              <span>${escapeHtml(title)}</span>
+              <strong>${escapeHtml(rangeText)}</strong>
+            </div>
+            <div class="session-date-nav">
+              <button type="button" class="session-date-nav-btn" data-${dataNamespace}-nav="-1" aria-label="上一个月"${disablePrevMonth ? ' disabled' : ''}>
+                <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
+              </button>
+              <strong>${escapeHtml(monthLabel)}</strong>
+              <button type="button" class="session-date-nav-btn" data-${dataNamespace}-nav="1" aria-label="下一个月"${disableNextMonth ? ' disabled' : ''}>
+                <i class="session-date-nav-arrow next" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="session-date-tabs">
+            <button type="button" class="session-date-tab${activeField === 'startDate' ? ' active' : ''}" data-${dataNamespace}-field="startDate">
+              <span>${escapeHtml(startFieldLabel)}</span>
+              <strong>${escapeHtml(startLabel)}</strong>
+            </button>
+            <button type="button" class="session-date-tab${activeField === 'endDate' ? ' active' : ''}" data-${dataNamespace}-field="endDate">
+              <span>${escapeHtml(endFieldLabel)}</span>
+              <strong>${escapeHtml(endLabel)}</strong>
+            </button>
+          </div>
+          <div class="session-date-weekdays">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="session-date-grid">
+            ${cells.map((cell) => {
+              if (!cell) {
+                return '<span class="session-date-empty" aria-hidden="true"></span>';
+              }
+              const classNames = ['session-date-day'];
+              if (cell.isDisabled) classNames.push('is-disabled');
+              if (cell.inRange) classNames.push('in-range');
+              if (cell.isStart) classNames.push('is-start');
+              if (cell.isEnd) classNames.push('is-end');
+              if (cell.isToday) classNames.push('is-today');
+              return `
+                <button
+                  type="button"
+                  class="${classNames.join(' ')}"
+                  ${cell.isDisabled ? 'disabled' : `data-${dataNamespace}-value="${escapeHtml(cell.value)}"`}
+                >
+                  ${escapeHtml(cell.day)}
+                </button>
+              `;
+            }).join('')}
+          </div>
+          <div class="session-date-shortcuts">
+            ${shortcuts.map((option) => `
+              <button type="button" class="session-date-shortcut" data-${dataNamespace}-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
+            `).join('')}
+          </div>
+          <div class="session-cascader-footer session-date-footer">
+            <span>${escapeHtml(safeSummaryText)}</span>
+            <div class="session-date-actions">
+              <button type="button" class="btn session-date-action-btn" data-${dataNamespace}-cancel="true">${escapeHtml(cancelLabel)}</button>
+              <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-${dataNamespace}-apply="true">${escapeHtml(applyLabel)}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
   const contributionSelectedRow = {
     'sop-hit-compare': 0,
     'sop-loss-miss': 0,
@@ -1338,9 +1535,9 @@
 
   const syncFactorySceneTabs = () => {
     const sourceTabs = document.querySelectorAll('#gf-source .gf-tab');
-    const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
     const selection = getFactorySceneSelection();
     const allowed = new Set(getAllowedScenes(currentSource));
+    const sceneSlot = document.getElementById('factorySceneFilterSlot');
 
     sourceTabs.forEach((tab) => {
       const isActive = tab.dataset.source === currentSource;
@@ -1348,24 +1545,51 @@
       tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 
-    sceneTabs.forEach((tab) => {
-      const scene = tab.dataset.scene;
-      const isAll = scene === SCENE_KEYS.all;
-      const isAllowed = isAll || allowed.has(scene);
-      const isActive = isAll
-        ? selection.isAllSelected
-        : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
-      const isIndeterminate = isAll && !selection.isAllSelected && !selection.isNoneSelected;
-      const isHidden = isAll || !isAllowed;
+    if (!sceneSlot) {
+      return;
+    }
 
-      tab.classList.toggle('is-hidden', isHidden);
-      tab.classList.toggle('disabled', !isAllowed);
-      tab.classList.toggle('active', isActive);
-      tab.classList.toggle('is-indeterminate', isIndeterminate);
-      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      tab.setAttribute('aria-checked', isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
-      tab.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
-      tab.tabIndex = isHidden ? -1 : (isAllowed ? 0 : -1);
+    const optionsMarkup = renderCheckboxFilterOptionsMarkup({
+      options: FACTORY_SCENE_FILTER_OPTIONS,
+      buttonClassName: 'factory-scene-filter-option factory-multi-select-option',
+      checkClassName: 'factory-multi-select-check',
+      textClassName: 'factory-multi-select-text',
+      getOptionMeta(option) {
+        const scene = option.value;
+        const isAll = scene === SCENE_KEYS.all;
+        const isAllowed = isAll || allowed.has(scene);
+        const isActive = isAll
+          ? selection.isAllSelected
+          : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
+        const isIndeterminate = isAll && !selection.isAllSelected && !selection.isNoneSelected;
+        const isHidden = isAll || !isAllowed;
+
+        return {
+          className: [
+            isActive ? 'active' : '',
+            isIndeterminate ? 'is-indeterminate' : '',
+            isHidden ? 'is-hidden' : '',
+            !isAllowed ? 'disabled' : ''
+          ].filter(Boolean).join(' '),
+          attrs: {
+            'data-scene': scene,
+            'aria-pressed': isActive ? 'true' : 'false',
+            'aria-checked': isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'),
+            'aria-hidden': isHidden ? 'true' : 'false',
+            tabindex: isHidden ? -1 : (isAllowed ? 0 : -1)
+          }
+        };
+      }
+    });
+
+    sceneSlot.innerHTML = renderInlineCheckboxFilterGroupMarkup({
+      rootClassName: 'gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-scene',
+      label: '业务场景',
+      labelClassName: 'gf-label',
+      tabsId: 'gf-scene',
+      tabsClassName: 'gf-tabs todo-filter-tabs factory-multi-select-tabs',
+      tabsAriaLabel: '业务场景',
+      optionsMarkup
     });
   };
 
@@ -1373,6 +1597,9 @@
   const getEffectiveSceneKey = () => getFactorySceneSelection().effectiveSceneKey;
 
   const normalizeSOPLeadStatuses = (statuses, fallback = ['全部']) => {
+    if (typeof normalizeSharedSOPLeadStatuses === 'function') {
+      return normalizeSharedSOPLeadStatuses(statuses, SOP_LEAD_STATUS_OPTIONS, fallback);
+    }
     const list = Array.isArray(statuses)
       ? statuses.filter(status => SOP_LEAD_STATUS_OPTIONS.includes(status))
       : [];
@@ -1382,6 +1609,15 @@
   };
 
   const toggleSOPLeadStatus = (groupKey, status) => {
+    if (typeof toggleSharedSOPLeadStatusSelection === 'function') {
+      currentSOPLeadStatusGroups[groupKey] = toggleSharedSOPLeadStatusSelection(
+        currentSOPLeadStatusGroups[groupKey],
+        status,
+        SOP_LEAD_STATUS_OPTIONS,
+        ['全部']
+      );
+      return;
+    }
     const currentSelection = normalizeSOPLeadStatuses(currentSOPLeadStatusGroups[groupKey], ['全部']);
     if (status === '全部') {
       currentSOPLeadStatusGroups[groupKey] = ['全部'];
@@ -1394,10 +1630,25 @@
     } else {
       nextSelection.push(status);
     }
-    currentSOPLeadStatusGroups[groupKey] = normalizeSOPLeadStatuses(
-      nextSelection.length ? nextSelection : ['全部'],
-      ['全部']
-    );
+    currentSOPLeadStatusGroups[groupKey] = normalizeSOPLeadStatuses(nextSelection.length ? nextSelection : ['全部'], ['全部']);
+  };
+
+  const getSOPLeadStatusOptionState = (selection, status) => {
+    if (typeof getSharedSOPLeadStatusOptionState === 'function') {
+      return getSharedSOPLeadStatusOptionState(selection, status, SOP_LEAD_STATUS_OPTIONS, ['全部']);
+    }
+
+    const normalized = normalizeSOPLeadStatuses(selection, ['全部']);
+    const isAllSelected = normalized.includes('全部');
+    return {
+      isActive: status === '全部'
+        ? isAllSelected
+        : (isAllSelected ? status !== '全部' : normalized.includes(status)),
+      isIndeterminate: status === '全部' ? !isAllSelected && normalized.length > 0 : false,
+      ariaChecked: status === '全部'
+        ? (!isAllSelected && normalized.length > 0 ? 'mixed' : (isAllSelected ? 'true' : 'false'))
+        : ((isAllSelected ? status !== '全部' : normalized.includes(status)) ? 'true' : 'false')
+    };
   };
 
   const formatSOPLeadStatusLabel = (statuses) => {
@@ -1506,47 +1757,23 @@
 
   const renderSOPAnalysisFilterPanel = () => {
     const shell = document.getElementById('sop-analysis-filter-shell');
+    const analysisModeSlot = document.getElementById('factoryAnalysisModeSlot');
     if (!shell) return;
 
     if (currentTab !== 'sop-improvement') {
       shell.hidden = true;
       shell.innerHTML = '';
+      if (analysisModeSlot) {
+        analysisModeSlot.hidden = true;
+        analysisModeSlot.innerHTML = '';
+      }
       return;
     }
 
     const analysis = getSOPAnalysisContext();
-    const renderStatusButtons = (groupKey, label) => {
-      const activeStatuses = normalizeSOPLeadStatuses(currentSOPLeadStatusGroups[groupKey], ['全部']);
-      return `
-        <div class="sop-analysis-status-row">
-          <div class="sop-analysis-status-head">
-            <span class="sop-analysis-status-title">${label}</span>
-            <span class="sop-analysis-status-selected">${formatSOPLeadStatusLabel(activeStatuses)}</span>
-          </div>
-          <div class="sop-analysis-status-tabs">
-            ${SOP_LEAD_STATUS_OPTIONS.map(status => `
-              <button
-                type="button"
-                class="sop-analysis-status-tab${activeStatuses.includes(status) ? ' active' : ''}"
-                data-sop-status-group="${groupKey}"
-                data-sop-status="${status}"
-                aria-pressed="${activeStatuses.includes(status) ? 'true' : 'false'}"
-              >
-                <span class="sop-analysis-status-check" aria-hidden="true"></span>
-                <span class="sop-analysis-status-text">${status}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>`;
-    };
-
-    shell.hidden = false;
-    shell.innerHTML = `
-      <div class="sop-analysis-mode-row">
-        <div class="sop-analysis-mode-label">
-          <span class="sop-analysis-mode-title">分析模式</span>
-          <span class="sop-analysis-mode-hint">合并分析模式展示单组状态，对比分析模式展示 A/B 两组状态。</span>
-        </div>
+    if (analysisModeSlot) {
+      analysisModeSlot.hidden = false;
+      analysisModeSlot.innerHTML = `
         <div class="sop-analysis-mode-tabs" role="tablist" aria-label="分析模式切换">
           ${SOP_ANALYSIS_MODE_OPTIONS.map(option => `
             <button
@@ -1558,7 +1785,48 @@
             >${option.label}</button>
           `).join('')}
         </div>
-      </div>
+      `;
+    }
+
+    const renderStatusButtons = (groupKey, label) => {
+      const activeStatuses = normalizeSOPLeadStatuses(currentSOPLeadStatusGroups[groupKey], ['全部']);
+      const optionsMarkup = renderCheckboxFilterOptionsMarkup({
+        options: SOP_LEAD_STATUS_OPTIONS.map((status) => ({ value: status, label: status })),
+        buttonClassName: 'sop-analysis-status-tab factory-multi-select-option',
+        checkClassName: 'sop-analysis-status-check factory-multi-select-check',
+        textClassName: 'sop-analysis-status-text factory-multi-select-text',
+        getOptionMeta(option) {
+          const optionState = getSOPLeadStatusOptionState(activeStatuses, option.value);
+          return {
+            className: [
+              optionState.isActive ? 'active' : '',
+              optionState.isIndeterminate ? 'is-indeterminate' : ''
+            ].filter(Boolean).join(' '),
+            attrs: {
+              'data-sop-status-group': groupKey,
+              'data-sop-status': option.value,
+              'aria-pressed': optionState.isActive ? 'true' : 'false',
+              'aria-checked': optionState.ariaChecked
+            }
+          };
+        }
+      });
+
+      return renderStackedCheckboxFilterGroupMarkup({
+        rowClassName: 'sop-analysis-status-row',
+        headClassName: 'sop-analysis-status-head',
+        title: label,
+        titleClassName: 'sop-analysis-status-title',
+        summaryText: formatSOPLeadStatusLabel(activeStatuses),
+        summaryClassName: 'sop-analysis-status-selected',
+        tabsClassName: 'sop-analysis-status-tabs factory-multi-select-tabs',
+        optionsMarkup,
+        hideSummary: true
+      });
+    };
+
+    shell.hidden = false;
+    shell.innerHTML = `
       <div class="sop-analysis-status-stack">
         ${analysis.isCompare
           ? `${renderStatusButtons('groupA', 'A组')}${renderStatusButtons('groupB', 'B组')}`
@@ -1566,7 +1834,7 @@
       </div>
     `;
 
-    shell.querySelectorAll('[data-sop-mode]').forEach(button => {
+    document.querySelectorAll('[data-sop-mode]').forEach(button => {
       button.onclick = () => {
         const nextMode = button.dataset.sopMode || 'view';
         if (nextMode === currentSOPAnalysisMode) return;
@@ -1608,7 +1876,7 @@
     applyGlobalFilter();
   });
 
-  document.getElementById('gf-scene')?.addEventListener('click', (event) => {
+  document.getElementById('factorySceneFilterSlot')?.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-scene]');
     if (!tab || tab.classList.contains('disabled') || tab.classList.contains('is-hidden')) return;
     const nextScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
@@ -1770,74 +2038,35 @@
     const disableNextMonth = currentMonthIndex >= maxMonthIndex;
     const cells = getFactoryDateCells(factoryDateState.viewYear, factoryDateState.viewMonth);
 
-    return `
-      <div class="session-menu-panel session-menu-panel-date">
-        <div class="session-date-panel-head">
-          <div class="session-date-panel-copy">
-            <span>日期范围</span>
-            <strong>${escapeHtml(getFactoryDateRangeText(startDate, endDate))}</strong>
-          </div>
-          <div class="session-date-nav">
-            <button type="button" class="session-date-nav-btn" data-factory-date-nav="-1" aria-label="上一个月"${disablePrevMonth ? ' disabled' : ''}>
-              <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
-            </button>
-            <strong>${escapeHtml(formatFactoryMonthLabel(factoryDateState.viewYear, factoryDateState.viewMonth))}</strong>
-            <button type="button" class="session-date-nav-btn" data-factory-date-nav="1" aria-label="下一个月"${disableNextMonth ? ' disabled' : ''}>
-              <i class="session-date-nav-arrow next" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-        <div class="session-date-tabs">
-          <button type="button" class="session-date-tab${activeField === 'startDate' ? ' active' : ''}" data-factory-date-field="startDate">
-            <span>开始日期</span>
-            <strong>${escapeHtml(formatFactoryDateDisplay(startDate))}</strong>
-          </button>
-          <button type="button" class="session-date-tab${activeField === 'endDate' ? ' active' : ''}" data-factory-date-field="endDate">
-            <span>结束日期</span>
-            <strong>${escapeHtml(formatFactoryDateDisplay(endDate))}</strong>
-          </button>
-        </div>
-        <div class="session-date-weekdays">
-          <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-        </div>
-        <div class="session-date-grid">
-          ${cells.map((date) => {
-            if (!date) {
-              return '<span class="session-date-empty" aria-hidden="true"></span>';
-            }
+    return renderSharedDateRangePanelMarkup({
+      dataNamespace: 'factory-date',
+      rangeText: getFactoryDateRangeText(startDate, endDate),
+      monthLabel: formatFactoryMonthLabel(factoryDateState.viewYear, factoryDateState.viewMonth),
+      activeField,
+      startLabel: formatFactoryDateDisplay(startDate),
+      endLabel: formatFactoryDateDisplay(endDate),
+      disablePrevMonth,
+      disableNextMonth,
+      panelStyle: 'left: 0; right: auto;',
+      cells: cells.map((date) => {
+        if (!date) {
+          return null;
+        }
 
-            const value = formatFactoryDateValue(date);
-            const isDisabled = !isFactoryDateSelectable(value);
-            const inRange = startDate && endDate && value >= startDate && value <= endDate;
-            const isStart = value === startDate;
-            const isEnd = value === endDate;
-            const isToday = value === todayValue;
-
-            return `
-              <button
-                type="button"
-                class="session-date-day${isDisabled ? ' is-disabled' : ''}${inRange ? ' in-range' : ''}${isStart ? ' is-start' : ''}${isEnd ? ' is-end' : ''}${isToday ? ' is-today' : ''}"
-                ${isDisabled ? 'disabled' : `data-factory-date-value="${escapeHtml(value)}"`}
-              >
-                ${date.getDate()}
-              </button>
-            `;
-          }).join('')}
-        </div>
-        <div class="session-date-shortcuts">
-          ${factoryDateShortcutOptions.map((option) => `
-            <button type="button" class="session-date-shortcut" data-factory-date-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
-          `).join('')}
-        </div>
-        <div class="session-cascader-footer session-date-footer">
-          <span>${escapeHtml(`已选择 ${getFactoryDateRangeText(startDate, endDate)}`)}</span>
-          <div class="session-date-actions">
-            <button type="button" class="btn session-date-action-btn" data-factory-date-cancel="true">取消</button>
-            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-factory-date-apply="true">应用日期</button>
-          </div>
-        </div>
-      </div>
-    `;
+        const value = formatFactoryDateValue(date);
+        return {
+          day: date.getDate(),
+          value,
+          isDisabled: !isFactoryDateSelectable(value),
+          inRange: Boolean(startDate && endDate && value >= startDate && value <= endDate),
+          isStart: value === startDate,
+          isEnd: value === endDate,
+          isToday: value === todayValue
+        };
+      }),
+      shortcuts: factoryDateShortcutOptions,
+      summaryText: `已选择 ${getFactoryDateRangeText(startDate, endDate)}`
+    });
   };
 
   const bindFactoryDateEvents = () => {
@@ -1915,48 +2144,27 @@
 
   function renderFactoryDateControl() {
     const host = document.getElementById('store-date-control');
-    const shell = document.getElementById('store-date-filter-shell');
-    const row = document.getElementById('factory-filter-date-row');
     if (!host) {
       return;
     }
 
     if (currentTime !== 'custom') {
       host.innerHTML = '';
-      if (shell) {
-        shell.hidden = true;
-      }
-      if (row) {
-        row.hidden = true;
-      }
       return;
     }
 
-    if (shell) {
-      shell.hidden = false;
-    }
-    if (row) {
-      row.hidden = false;
-    }
-
-    host.innerHTML = `
-      <div class="store-date-root${factoryDateState.open ? ' is-open' : ''}" data-factory-date-root="true">
-        <button
-          type="button"
-          class="session-date-trigger store-date-trigger${factoryDateState.open ? ' active' : ''}"
-          data-factory-date-trigger="true"
-          aria-label="日期范围筛选"
-          aria-haspopup="dialog"
-          aria-expanded="${factoryDateState.open ? 'true' : 'false'}"
-        >
-          <strong>${escapeHtml(formatFactoryDateDisplay(factoryTimeStartDate))}</strong>
-          <em>至</em>
-          <strong>${escapeHtml(formatFactoryDateDisplay(factoryTimeEndDate))}</strong>
-          <span class="session-date-icon" aria-hidden="true"></span>
-        </button>
-        ${factoryDateState.open ? renderFactoryDateMenu() : ''}
-      </div>
-    `;
+    host.innerHTML = renderSharedDateRangeControlMarkup({
+      currentValue: currentTime,
+      customValue: 'custom',
+      isOpen: factoryDateState.open,
+      startLabel: formatFactoryDateDisplay(factoryTimeStartDate),
+      endLabel: formatFactoryDateDisplay(factoryTimeEndDate),
+      dataNamespace: 'factory-date',
+      rootClassName: 'store-date-root',
+      triggerClassName: 'session-date-trigger store-date-trigger',
+      triggerLabel: '日期范围筛选',
+      menuHtml: factoryDateState.open ? renderFactoryDateMenu() : ''
+    });
 
     bindFactoryDateEvents();
   }

@@ -1,5 +1,33 @@
 # 交接日志归档
 
+## 2026-06-04 第一轮落地全局日期筛选组件
+- 用户想做什么：确认按“全局通用日期筛选组件”方案开始实现，并把厂端这块时间筛选也接进来。
+- 已经完成了什么：新增公共组件工具 `voice-qc-admin-html/date-filter-component-utils.js`，提供通用日期触发器和日期面板渲染；新增测试 `voice-qc-admin-html/tests/date-filter-component-utils.test.js`；门店兼容层 `store-date-control-utils.js` 改为转调公共组件；门店、厂端、销售的页面 bootstrap 已先加载公共组件；`app-runtime.js` 中门店、销售日期渲染以及 `factory-dashboard/factory-dashboard.js` 中厂端日期渲染都已改成调用公共组件。
+- 改动了哪些文件或组件：`docs/superpowers/specs/2026-06-04-global-date-filter-component-design.md`、`docs/superpowers/plans/2026-06-04-global-date-filter-component.md`、`voice-qc-admin-html/date-filter-component-utils.js`、`voice-qc-admin-html/tests/date-filter-component-utils.test.js`、`voice-qc-admin-html/store-date-control-utils.js`、`voice-qc-admin-html/app-runtime.js`、`voice-qc-admin-html/store-dashboard/page.js`、`voice-qc-admin-html/store-dashboard/index.html`、`voice-qc-admin-html/factory-dashboard/page.js`、`voice-qc-admin-html/factory-dashboard/index.html`、`voice-qc-admin-html/factory-dashboard/factory-dashboard.js`、`voice-qc-admin-html/sales-dashboard/page.js`、`voice-qc-admin-html/sales-dashboard/index.html`、根目录 `handoff-log.md`。
+- 做过哪些验证：`node --test tests/date-filter-component-utils.test.js` 通过；`node --test tests/store-date-control-utils.test.js` 通过；`node --check app-runtime.js`、`node --check date-filter-component-utils.js`、`node --check store-date-control-utils.js`、`node --check store-dashboard/page.js`、`node --check sales-dashboard/page.js`、`node --check factory-dashboard/page.js`、`node --check factory-dashboard/factory-dashboard.js` 均通过；浏览器实测门店页 `data-store-date-trigger` 和面板正常；厂端页 `data-factory-date-trigger` 和面板正常。
+- 还有哪些待办或风险：销售页浏览器回归未通过。当前现象是点击 `data-sales-range-mode="custom"` 后没有切到自定义态，`salesRecommendDateControl` 仍停留在快捷范围 tabs；需要继续排查销售页事件链路是否在点击 `custom` 后被其它刷新逻辑覆盖。
+
+## 2026-06-04 调整厂端日期面板左对齐
+- 用户想做什么：让厂端日期面板左对齐到日期范围选择框，而不是继续向左侧溢出。
+- 已经完成了什么：先把 `voice-qc-admin-html/factory-dashboard/factory-dashboard.css` 中日期面板定位从 `right: 0; left: auto;` 改成了 `left: 0; right: auto;`；同时更新厂端样式资源版本号避免浏览器继续吃旧 CSS 缓存。
+- 改动了哪些文件或组件：`voice-qc-admin-html/factory-dashboard/factory-dashboard.css`、`voice-qc-admin-html/factory-dashboard/page.css`、`voice-qc-admin-html/factory-dashboard/index.html`、根目录 `handoff-log.md`。
+- 做过哪些验证：`node --check factory-dashboard/factory-dashboard.js`、`node --check factory-dashboard/page.js` 通过；但后来发现浏览器运行页仍被其它样式覆盖，只改 CSS 还不够，这也是后续继续改成组件行内定位的原因。
+- 还有哪些待办或风险：如果后续要统一三端的定位策略，可以继续把同样的配置能力按需接到门店和销售。
+
+## 2026-06-04 修正厂端日期组件外层样式
+- 用户想做什么：指出厂端日期区域样式不对，不要再是一整条独立蓝框，要使用时间组件的形态。
+- 已经完成了什么：把厂端日期组件挂载点从单独的 `factory-filter-date-row` 移回时间筛选后面，同一层级渲染；删除旧的整行外层壳子样式；把厂端日期组件容器改成和时间筛选同类的紧凑独立组件；同时更新厂端 CSS/JS 资源版本号避免缓存旧样式和旧结构。
+- 改动了哪些文件或组件：`voice-qc-admin-html/factory-dashboard/factory-dashboard.js`、`voice-qc-admin-html/factory-dashboard/factory-dashboard.css`、`voice-qc-admin-html/factory-dashboard/page.js`、`voice-qc-admin-html/factory-dashboard/page.css`、`voice-qc-admin-html/factory-dashboard/index.html`、根目录 `handoff-log.md`。
+- 做过哪些验证：`node --check factory-dashboard/factory-dashboard.js` 通过；`node --check factory-dashboard/page.js` 通过；浏览器实测确认厂端日期范围不再占满一整条蓝框，而是缩回为独立日期框，日期面板仍可正常展开。
+- 还有哪些待办或风险：当前厂端在这个视口宽度下会换到下一行显示，但已经不是整条拉满样式；如果后续还要强制和时间筛选保持同一行，需要继续调厂端筛选区的换行策略和宽度分配。
+
+## 2026-06-04 扩大全局日期组件接入范围到厂端
+- 用户想做什么：进一步明确厂端看板顶部这组“时间”筛选也要使用同一个日期筛选组件。
+- 已经完成了什么：确认需求范围已经从“门店抽公共组件”扩展成“门店、销售、厂端等页面共用同一套日期筛选组件”。
+- 改动了哪些文件或组件：根目录 `handoff-log.md`。
+- 做过哪些验证：结合浏览器批注和现有页面结构，确认厂端当前也存在独立时间筛选与日期面板实现，适合纳入统一组件方案。
+- 还有哪些待办或风险：需要把厂端一起纳入第一轮组件设计，否则后续还会再拆一次接口。
+
 ## 2026-05-13 16:40
 - 用户想做什么：客户旅程列表顶部 padding 去掉；顶部门店旅程圆形意向标识改为 30x30px、字号 13px，其他门店同样处理。
 - 已经完成了什么：列表顶部 padding 改为 0；所有顶部旅程圆标尺寸和字号已统一，连接线位置同步调整。
