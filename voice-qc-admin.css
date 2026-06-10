@@ -6946,15 +6946,14 @@ body::before {
 }
 
 #leadsFilterControls.leads-filter-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
   gap: 12px;
-  flex-wrap: nowrap;
   isolation: isolate;
 }
 
 #leadsFilterControls.leads-filter-toolbar > .session-toolbar-control {
-  flex: 1 1 0;
   width: auto;
   min-width: 0;
   height: 44px;
@@ -6962,10 +6961,87 @@ body::before {
 }
 
 #leadsFilterControls.leads-filter-toolbar > .session-reset-btn {
-  flex: 0 0 auto;
   align-self: stretch;
   height: 44px;
   min-height: 44px;
+}
+
+#leadsFilterControls.leads-filter-toolbar > .leads-simple-search {
+  height: auto;
+  min-height: 44px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+#leadsFilterControls .leads-simple-search > span {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  white-space: nowrap;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+#leadsFilterControls .leads-simple-search .session-search-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+#leadsFilterControls .leads-filter-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+  grid-column: span 3;
+}
+
+#leadsFilterControls .leads-filter-extra {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#leadsFilterControls .leads-filter-extra.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#leadsFilterControls .leads-filter-extra.is-visible:nth-child(5) { transition-delay: 0.03s; }
+#leadsFilterControls .leads-filter-extra.is-visible:nth-child(6) { transition-delay: 0.06s; }
+#leadsFilterControls .leads-filter-extra.is-visible:nth-child(7) { transition-delay: 0.09s; }
+#leadsFilterControls .leads-filter-extra.is-visible:nth-child(8) { transition-delay: 0.12s; }
+#leadsFilterControls .leads-filter-extra.is-visible:nth-child(9) { transition-delay: 0.15s; }
+
+#leadsFilterControls.leads-filter-toolbar.is-collapsed .leads-filter-extra {
+  display: none;
+}
+
+#leadsFilterControls.leads-filter-toolbar.is-collapsed {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+}
+
+#leadsFilterControls.leads-filter-toolbar.is-collapsed .leads-filter-inline-actions {
+  grid-column: auto;
+}
+
+#sessionFilterControls .session-filter-extra {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#sessionFilterControls .session-filter-extra.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#sessionFilterControls .session-filter-extra.is-visible:nth-child(2) { transition-delay: 0.03s; }
+#sessionFilterControls .session-filter-extra.is-visible:nth-child(3) { transition-delay: 0.06s; }
+
+#sessionFilterControls .session-filter-row-segment.is-collapsed + .session-filter-extra,
+#sessionFilterControls .session-filter-row-segment.is-collapsed ~ .session-filter-extra {
+  display: none;
 }
 
 #leadsFilterControls.leads-filter-toolbar.is-leads-view > .session-toolbar-control-phone-search,
@@ -6990,22 +7066,108 @@ body::before {
 }
 
 #sessionFilterControls .session-filter-row-segment {
-  grid-template-columns: max-content max-content minmax(360px, 1fr);
-  justify-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: stretch;
   margin-bottom: 0;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(217, 226, 239, 0.72);
   z-index: 2;
 }
 
+#sessionFilterControls .session-filter-row-segment.is-collapsed {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 #sessionFilterControls .session-filter-row-main {
-  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
-  padding-top: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 12px;
   z-index: 1;
 }
 
-#sessionFilterControls .session-filter-row-main .session-reset-btn {
+#sessionFilterControls .session-filter-row-search {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 12px;
+  z-index: 1;
+}
+
+#sessionFilterControls .session-filter-row-search > .session-toolbar-control-search-field,
+#sessionFilterControls .session-filter-row-search > .session-reset-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+#sessionFilterControls .session-filter-row-search > .session-reset-btn {
+  width: fit-content;
+  justify-self: start;
+  justify-content: center;
+}
+
+#sessionFilterControls .session-filter-row-search > .session-toggle-text-btn {
+  width: fit-content;
+  justify-self: start;
+}
+
+#sessionFilterControls .session-filter-inline-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+#sessionFilterControls .session-filter-row-search > .session-filter-inline-actions {
+  width: fit-content;
+  min-width: 0;
+  margin-left: 0;
+  justify-self: start;
+}
+
+#sessionFilterControls .session-filter-row-search > .session-filter-inline-actions-search {
+  grid-column: 4;
   justify-self: end;
+}
+
+.session-toggle-text-btn {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 0 4px;
+  height: 44px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.session-toggle-text-btn-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+
+.session-toggle-text-btn-icon.is-collapsed {
+  transform: rotate(0deg);
+}
+
+.session-toggle-text-btn:hover,
+.session-toggle-text-btn:focus-visible {
+  color: #1d4ed8;
+  opacity: 0.88;
+}
+
+.session-toggle-text-btn:focus-visible {
+  outline: none;
 }
 
 .session-toolbar-control {
@@ -7745,19 +7907,21 @@ body::before {
 }
 
 .session-toolbar-control-stage,
+#sessionFilterControls .session-toolbar-control-source,
 #sessionFilterControls .session-toolbar-control-intent {
   width: auto;
   max-width: 100%;
 }
 
-#sessionFilterControls .session-toolbar-control-phone-search {
+#leadsFilterControls .session-toolbar-control-phone-search {
   width: 100%;
   min-width: 0;
 }
 
-#leadsFilterControls .session-toolbar-control-phone-search {
-  width: 100%;
-  min-width: 0;
+#sessionFilterControls .session-toolbar-control-search-field {
+  flex: 1 1 220px;
+  min-width: 220px;
+  max-width: 280px;
 }
 
 #sessionFilterControls .session-phone-search-main,
@@ -11329,26 +11493,23 @@ body::before {
   }
 
   #leadsFilterControls.leads-filter-toolbar {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   #leadsFilterControls.leads-filter-toolbar > .session-toolbar-control {
-    flex: 1 1 calc((100% - 24px) / 3);
     min-width: 0;
   }
 
-  #leadsFilterControls.leads-filter-toolbar.is-leads-view > .session-toolbar-control-phone-search,
-  #leadsFilterControls.leads-filter-toolbar.is-customer-view > .session-toolbar-control-search {
-    flex: 1 1 calc((200% - 12px) / 3);
+  #sessionFilterControls .session-filter-row-segment {
+    justify-content: flex-start;
   }
 
-  #sessionFilterControls .session-filter-row-segment {
-    grid-template-columns: max-content max-content minmax(260px, 1fr);
-    justify-content: start;
+  #sessionFilterControls .session-filter-row-search {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   #sessionFilterControls .session-filter-row-main {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .session-toolbar-control-org,
@@ -11434,14 +11595,12 @@ body::before {
   }
 
   #leadsFilterControls.leads-filter-toolbar {
-    flex-direction: column;
-    flex-wrap: nowrap;
+    grid-template-columns: 1fr;
   }
 
   #leadsFilterControls.leads-filter-toolbar > .session-toolbar-control,
   #leadsFilterControls.leads-filter-toolbar > .session-reset-btn {
     width: 100%;
-    flex: none;
   }
 
   #leadsFilterControls.leads-filter-toolbar > .session-toolbar-control {
@@ -11457,13 +11616,36 @@ body::before {
   }
 
   #sessionFilterControls .session-filter-row-segment,
+  #sessionFilterControls .session-filter-row-search,
   #sessionFilterControls .session-filter-row-main {
     grid-template-columns: 1fr;
   }
 
+  #sessionFilterControls .session-filter-row-search > .session-reset-btn {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  #sessionFilterControls .session-filter-row-search > .session-toggle-text-btn {
+    width: auto;
+    justify-self: start;
+  }
+
+  #sessionFilterControls .session-filter-inline-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  #sessionFilterControls .session-filter-row-search > .session-filter-inline-actions-search {
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
   #sessionFilterControls .session-toolbar-control-stage,
+  #sessionFilterControls .session-toolbar-control-source,
   #sessionFilterControls .session-toolbar-control-intent,
-  #sessionFilterControls .session-toolbar-control-phone-search {
+  #sessionFilterControls .session-toolbar-control-search-field {
     width: 100%;
     justify-self: stretch;
   }
@@ -11475,6 +11657,11 @@ body::before {
   #sessionFilterControls .session-phone-search-main,
   #leadsFilterControls .session-phone-search-main {
     width: 100%;
+  }
+
+  #sessionFilterControls .session-toolbar-control-search-field {
+    max-width: none;
+    min-width: 0;
   }
 
   #sessionFilterControls .session-toolbar-control {

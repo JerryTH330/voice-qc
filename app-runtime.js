@@ -1617,6 +1617,124 @@ function initStoreDashboardPage() {
     viewYear: new Date().getFullYear(),
     viewMonth: new Date().getMonth() + 1
   };
+  const renderSharedDateRangeControlMarkup = (
+    typeof globalThis !== "undefined"
+      && globalThis.__dateFilterComponentUtils
+      && typeof globalThis.__dateFilterComponentUtils.renderDateRangeControlMarkup === "function"
+  )
+    ? globalThis.__dateFilterComponentUtils.renderDateRangeControlMarkup
+    : ({ currentValue, customValue = "custom", isOpen, startLabel, endLabel, dataNamespace = "store-date", rootClassName = "store-date-root", triggerClassName = "session-date-trigger store-date-trigger", triggerLabel = "日期范围筛选", menuHtml }) => {
+      if (currentValue !== customValue) {
+        return "";
+      }
+
+      return `
+        <div class="${rootClassName}${isOpen ? " is-open" : ""}" data-${dataNamespace}-root="true">
+          <button
+            type="button"
+            class="${triggerClassName}${isOpen ? " active" : ""}"
+            data-${dataNamespace}-trigger="true"
+            aria-label="${triggerLabel}"
+            aria-haspopup="dialog"
+            aria-expanded="${isOpen ? "true" : "false"}"
+          >
+            <strong>${escapeHtml(startLabel || "未选择")}</strong>
+            <em>至</em>
+            <strong>${escapeHtml(endLabel || "未选择")}</strong>
+            <span class="session-date-icon" aria-hidden="true"></span>
+          </button>
+          ${isOpen ? String(menuHtml || "") : ""}
+        </div>
+      `;
+    };
+  const renderSharedDateRangePanelMarkup = (
+    typeof globalThis !== "undefined"
+      && globalThis.__dateFilterComponentUtils
+      && typeof globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup === "function"
+  )
+    ? globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup
+    : ({ dataNamespace = "session-date", rangeText = "", monthLabel = "", activeField = "startDate", startLabel = "", endLabel = "", disablePrevMonth = false, disableNextMonth = false, cells = [], shortcuts = [], summaryText = "", panelClassName = "session-menu-panel session-menu-panel-date", panelStyle = "", title = "日期范围", startFieldLabel = "开始日期", endFieldLabel = "结束日期", cancelLabel = "取消", applyLabel = "应用日期" }) => {
+      const safeSummaryText = summaryText || `已选择 ${rangeText}`;
+      const panelStyleAttr = panelStyle ? ` style="${escapeHtml(panelStyle)}"` : "";
+      return `
+        <div class="${panelClassName}"${panelStyleAttr}>
+          <div class="session-date-panel-head">
+            <div class="session-date-panel-copy">
+              <span>${escapeHtml(title)}</span>
+              <strong>${escapeHtml(rangeText)}</strong>
+            </div>
+            <div class="session-date-nav">
+              <button type="button" class="session-date-nav-btn" data-${dataNamespace}-nav="-1" aria-label="上一个月"${disablePrevMonth ? " disabled" : ""}>
+                <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
+              </button>
+              <strong>${escapeHtml(monthLabel)}</strong>
+              <button type="button" class="session-date-nav-btn" data-${dataNamespace}-nav="1" aria-label="下一个月"${disableNextMonth ? " disabled" : ""}>
+                <i class="session-date-nav-arrow next" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="session-date-tabs">
+            <button type="button" class="session-date-tab${activeField === "startDate" ? " active" : ""}" data-${dataNamespace}-field="startDate">
+              <span>${escapeHtml(startFieldLabel)}</span>
+              <strong>${escapeHtml(startLabel)}</strong>
+            </button>
+            <button type="button" class="session-date-tab${activeField === "endDate" ? " active" : ""}" data-${dataNamespace}-field="endDate">
+              <span>${escapeHtml(endFieldLabel)}</span>
+              <strong>${escapeHtml(endLabel)}</strong>
+            </button>
+          </div>
+          <div class="session-date-weekdays">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="session-date-grid">
+            ${cells.map((cell) => {
+              if (!cell) {
+                return '<span class="session-date-empty" aria-hidden="true"></span>';
+              }
+              const classNames = ["session-date-day"];
+              if (cell.isDisabled) classNames.push("is-disabled");
+              if (cell.inRange) classNames.push("in-range");
+              if (cell.isStart) classNames.push("is-start");
+              if (cell.isEnd) classNames.push("is-end");
+              if (cell.isToday) classNames.push("is-today");
+              return `
+                <button
+                  type="button"
+                  class="${classNames.join(" ")}"
+                  ${cell.isDisabled ? "disabled" : `data-${dataNamespace}-value="${escapeHtml(cell.value)}"`}
+                >
+                  ${escapeHtml(cell.day)}
+                </button>
+              `;
+            }).join("")}
+          </div>
+          <div class="session-date-shortcuts">
+            ${shortcuts.map((option) => `
+              <button type="button" class="session-date-shortcut" data-${dataNamespace}-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
+            `).join("")}
+          </div>
+          <div class="session-cascader-footer session-date-footer">
+            <span>${escapeHtml(safeSummaryText)}</span>
+            <div class="session-date-actions">
+              <button type="button" class="btn session-date-action-btn" data-${dataNamespace}-cancel="true">${escapeHtml(cancelLabel)}</button>
+              <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-${dataNamespace}-apply="true">${escapeHtml(applyLabel)}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+  const renderStoreDateControlMarkup = ({ currentTime: timeValue, isOpen, startLabel, endLabel, menuHtml }) => renderSharedDateRangeControlMarkup({
+    currentValue: timeValue,
+    customValue: "custom",
+    isOpen,
+    startLabel,
+    endLabel,
+    dataNamespace: "store-date",
+    rootClassName: "store-date-root",
+    triggerClassName: "session-date-trigger store-date-trigger",
+    triggerLabel: "日期范围筛选",
+    menuHtml
+  });
 
   // ── 3. 渲染顶部时间 ───────────────────────────
   const updateTime = () => {
@@ -3023,74 +3141,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const disableNextMonth = currentMonthIndex >= maxMonthIndex;
     const cells = getSessionDateCells(storeDateState.viewYear, storeDateState.viewMonth);
 
-    return `
-      <div class="session-menu-panel session-menu-panel-date">
-        <div class="session-date-panel-head">
-          <div class="session-date-panel-copy">
-            <span>日期范围</span>
-            <strong>${escapeHtml(getSessionDateRangeText(startDate, endDate))}</strong>
-          </div>
-          <div class="session-date-nav">
-            <button type="button" class="session-date-nav-btn" data-store-date-nav="-1" aria-label="上一个月"${disablePrevMonth ? " disabled" : ""}>
-              <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
-            </button>
-            <strong>${escapeHtml(formatSessionMonthLabel(storeDateState.viewYear, storeDateState.viewMonth))}</strong>
-            <button type="button" class="session-date-nav-btn" data-store-date-nav="1" aria-label="下一个月"${disableNextMonth ? " disabled" : ""}>
-              <i class="session-date-nav-arrow next" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-        <div class="session-date-tabs">
-          <button type="button" class="session-date-tab${activeField === "startDate" ? " active" : ""}" data-store-date-field="startDate">
-            <span>开始日期</span>
-            <strong>${escapeHtml(formatSessionDateDisplay(startDate))}</strong>
-          </button>
-          <button type="button" class="session-date-tab${activeField === "endDate" ? " active" : ""}" data-store-date-field="endDate">
-            <span>结束日期</span>
-            <strong>${escapeHtml(formatSessionDateDisplay(endDate))}</strong>
-          </button>
-        </div>
-        <div class="session-date-weekdays">
-          <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-        </div>
-        <div class="session-date-grid">
-          ${cells.map((date) => {
-            if (!date) {
-              return '<span class="session-date-empty" aria-hidden="true"></span>';
-            }
+    return renderSharedDateRangePanelMarkup({
+      dataNamespace: "store-date",
+      rangeText: getSessionDateRangeText(startDate, endDate),
+      monthLabel: formatSessionMonthLabel(storeDateState.viewYear, storeDateState.viewMonth),
+      activeField,
+      startLabel: formatSessionDateDisplay(startDate),
+      endLabel: formatSessionDateDisplay(endDate),
+      disablePrevMonth,
+      disableNextMonth,
+      cells: cells.map((date) => {
+        if (!date) {
+          return null;
+        }
 
-            const value = formatSessionDateValue(date);
-            const isDisabled = !isStoreDateSelectable(value);
-            const inRange = startDate && endDate && value >= startDate && value <= endDate;
-            const isStart = value === startDate;
-            const isEnd = value === endDate;
-            const isToday = value === todayValue;
-
-            return `
-              <button
-                type="button"
-                class="session-date-day${isDisabled ? " is-disabled" : ""}${inRange ? " in-range" : ""}${isStart ? " is-start" : ""}${isEnd ? " is-end" : ""}${isToday ? " is-today" : ""}"
-                ${isDisabled ? "disabled" : `data-store-date-value="${escapeHtml(value)}"`}
-              >
-                ${date.getDate()}
-              </button>
-            `;
-          }).join("")}
-        </div>
-        <div class="session-date-shortcuts">
-          ${storeTimeShortcutOptions.map((option) => `
-            <button type="button" class="session-date-shortcut" data-store-date-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
-          `).join("")}
-        </div>
-        <div class="session-cascader-footer session-date-footer">
-          <span>${escapeHtml(`已选择 ${getSessionDateRangeText(startDate, endDate)}`)}</span>
-          <div class="session-date-actions">
-            <button type="button" class="btn session-date-action-btn" data-store-date-cancel="true">取消</button>
-            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-store-date-apply="true">应用日期</button>
-          </div>
-        </div>
-      </div>
-    `;
+        const value = formatSessionDateValue(date);
+        return {
+          day: date.getDate(),
+          value,
+          isDisabled: !isStoreDateSelectable(value),
+          inRange: Boolean(startDate && endDate && value >= startDate && value <= endDate),
+          isStart: value === startDate,
+          isEnd: value === endDate,
+          isToday: value === todayValue
+        };
+      }),
+      shortcuts: storeTimeShortcutOptions,
+      summaryText: `已选择 ${getSessionDateRangeText(startDate, endDate)}`
+    });
   };
 
   const bindStoreDateEvents = () => {
@@ -3177,11 +3255,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       return;
     }
 
-    host.innerHTML = `
-      <div class="store-date-root${storeDateState.open ? " is-open" : ""}" data-store-date-root="true">
-        ${storeDateState.open ? renderStoreDateMenu() : ""}
-      </div>
-    `;
+    host.innerHTML = renderStoreDateControlMarkup({
+      currentTime,
+      isOpen: storeDateState.open,
+      startLabel: formatSessionDateDisplay(storeTimeStartDate),
+      endLabel: formatSessionDateDisplay(storeTimeEndDate),
+      menuHtml: renderStoreDateMenu()
+    });
 
     bindStoreDateEvents();
   }
@@ -3274,7 +3354,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   bindGlobalFilter("gf-time", "time", val => {
     currentTime = val;
     if (val === 'custom') {
-      openStoreDatePicker();
+      if (!storeTimeStartDate || !storeTimeEndDate) {
+        syncStoreTimeRangeFromQuickFilter("7");
+      }
+      closeStoreDatePicker(false);
+      renderStoreDateControl();
     } else {
       syncStoreTimeRangeFromQuickFilter(val);
       closeStoreDatePicker(false);
@@ -5910,6 +5994,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
+      const leadSourceTypeValues = ['实体卡', '虚拟号', '工作号']
+
       function normalizeLeadRecord(record, fallbackIndex = 0) {
         const advisorName = record.advisorName || record.owner || ''
         const organizationMeta = getLeadOrganizationMeta(record.organizationPath, record.store)
@@ -5931,6 +6017,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           aiIntentLevel: aiIntentMeta.label,
           aiIntentLevelClass: record.aiIntentLevelClass || aiIntentMeta.className,
           leadStatus: record.leadStatus || leadStatusValues[fallbackIndex % leadStatusValues.length],
+          sourceType: record.sourceType || leadSourceTypeValues[fallbackIndex % leadSourceTypeValues.length],
           ...leadSourceMeta
         }
       }
@@ -6014,18 +6101,73 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       const sessionOrganizationTree = buildSessionOrganizationTree(sessionRecords)
+      const sessionSearchUtils = (typeof module !== 'undefined' && module.exports)
+        ? require('./session-search-utils.js')
+        : (window.__sessionSearchUtils || {})
+      const sessionSearchFields = Array.isArray(sessionSearchUtils.SESSION_SEARCH_FIELDS) && sessionSearchUtils.SESSION_SEARCH_FIELDS.length
+        ? sessionSearchUtils.SESSION_SEARCH_FIELDS
+        : [
+            { key: 'advisorId', label: '顾问ID' },
+            { key: 'advisorName', label: '顾问姓名' },
+            { key: 'advisorPhone', label: '顾问号码' },
+            { key: 'customerName', label: '客户姓名' },
+            { key: 'customerPhone', label: '客户号码' }
+          ]
+      const createDefaultSessionSearchQueries = sessionSearchUtils.createDefaultSessionSearchQueries || (() => ({
+        advisorId: '',
+        advisorName: '',
+        advisorPhone: '',
+        customerName: '',
+        customerPhone: ''
+      }))
+      const normalizeSessionSearchValue = sessionSearchUtils.normalizeSessionSearchValue || ((value, target) => {
+        const normalizedValue = String(value || '').trim().toLowerCase()
 
-      const sessionBrandOptions = ['全部', '传祺', '埃安', '昊铂']
+        if (target === 'advisorPhone' || target === 'customerPhone') {
+          return normalizedValue.replace(/\D/g, '')
+        }
+
+        if (target === 'advisorId') {
+          return normalizedValue.replace(/[^a-z0-9]/g, '')
+        }
+
+        return normalizedValue.replace(/\s+/g, '')
+      })
+      const getActiveSessionSearchQueries = sessionSearchUtils.getActiveSessionSearchQueries || ((searchQueries) => {
+        const safeQueries = searchQueries || {}
+        return sessionSearchFields.reduce((result, field) => {
+          const normalized = normalizeSessionSearchValue(safeQueries[field.key], field.key)
+          if (normalized) {
+            result[field.key] = normalized
+          }
+          return result
+        }, {})
+      })
+      const doesSessionRecordMatchSearch = sessionSearchUtils.doesSessionRecordMatchSearch || ((record, searchQueries) => {
+        const activeQueries = getActiveSessionSearchQueries(searchQueries)
+        const activeKeys = Object.keys(activeQueries)
+
+        if (!activeKeys.length) {
+          return true
+        }
+
+        const normalizedRecord = {
+          advisorId: normalizeSessionSearchValue(record && record.advisorId, 'advisorId'),
+          advisorName: normalizeSessionSearchValue(record && record.advisorName, 'advisorName'),
+          advisorPhone: normalizeSessionSearchValue(record && record.advisorPhone, 'advisorPhone'),
+          customerName: normalizeSessionSearchValue(record && record.customerName, 'customerName'),
+          customerPhone: normalizeSessionSearchValue(record && record.customerPhone, 'customerPhone')
+        }
+
+        return activeKeys.every((key) => normalizedRecord[key].includes(activeQueries[key]))
+      })
+
       const sessionStageOptions = ['全部', '邀约', '试驾PDC', '到店接待', '试驾']
       const sessionStatusOptions = ['全部', '已完成', '失败']
       const sessionIntentLevelOptions = ['全部', '高', '中', '低', '无']
-      const sessionSearchTargetOptions = [
-        { label: '顾问号码', value: 'advisorPhone' },
-        { label: '客户号码', value: 'customerPhone' },
-        { label: '客户姓名', value: 'customerName' },
-        { label: '录音ID', value: 'sessionId' },
-        { label: '顾问ID', value: 'advisorId' }
-      ]
+      const sessionSourceOptions = Array.isArray(sessionSearchUtils.SESSION_SOURCE_OPTIONS) && sessionSearchUtils.SESSION_SOURCE_OPTIONS.length
+        ? sessionSearchUtils.SESSION_SOURCE_OPTIONS
+        : ['全部', '云外呼', '工牌']
 
       const sessionCarSeriesGroups = {
         埃安车型库: ['埃安 UT', '埃安 RT', '埃安 Y Plus', '埃安 S Plus', '埃安 LX Plus', '埃安 V Plus'],
@@ -6040,19 +6182,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const sessionUnknownCarSeriesPrefix = '__unknown_car_series__:'
 
       const sessionDefaultFilters = {
-        brand: '全部',
         organization: '全国',
         stage: '全部',
+        source: '全部',
         carSeries: '全部',
         intentLevel: '全部',
-        phoneTarget: 'advisorPhone',
-        phoneQuery: '',
+        searchQueries: createDefaultSessionSearchQueries(),
         startDate: '2026-03-11',
         endDate: '2026-03-13',
         status: '已完成'
       }
 
-      const sessionFilterState = { ...sessionDefaultFilters }
+      const sessionFilterState = {
+        ...sessionDefaultFilters,
+        collapsed: true,
+        searchQueries: createDefaultSessionSearchQueries()
+      }
       const sessionPaginationState = {
         page: 1,
         pageSize: 10
@@ -6069,6 +6214,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         dateViewMonth: Number(sessionDefaultFilters.startDate.slice(5, 7))
       }
 
+      const sessionBrandOptions = ['全部', '传祺', '埃安', '昊铂']
       const leadsStageOptions = ['全部', '邀约', '试驾PDC', '到店接待', '试驾']
       const leadStatusOptions = ['全部', ...leadStatusValues]
       const leadIntentGradeOptions = ['全部', ...leadIntentGradeValues]
@@ -6088,14 +6234,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const leadCustomerNameOptions = ['全部', ...new Set(leadRecords.map((item) => item.customerName).filter(Boolean))]
       const leadCustomerPhoneOptions = ['全部', ...new Set(leadRecords.map((item) => item.customerPhone).filter(Boolean))]
       const leadCustomerStatusOptions = ['全部', ...leadStatusValues]
+      const leadSourceTypeOptions = ['全部', '实体卡', '虚拟号', '工作号']
       const leadsDefaultFilters = {
         brand: '全部',
         organization: '全国',
-        leadQueryTarget: 'customerName',
-        leadQuery: '',
-        customerQueryTarget: 'customerName',
         intentGrade: '全部',
         leadStatus: '全部',
+        sourceType: '全部',
+        collapsed: true,
+        advisorNameQuery: '',
+        customerNameQuery: '',
+        customerPhoneQuery: '',
+        customerQueryTarget: 'customerName',
         customerQuery: '',
         customerStatus: '全部',
         customerContactStartDate: '',
@@ -7108,41 +7258,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
-      function renderSessionPhoneSearchControl() {
-        const phoneTarget = sessionSearchTargetOptions.some((option) => option.value === sessionFilterState.phoneTarget)
-          ? sessionFilterState.phoneTarget
-          : 'advisorPhone'
-        const phoneTargetLabel = sessionSearchTargetOptions.find((option) => option.value === phoneTarget)?.label || '顾问号码'
-        const open = sessionMenuState.openMenu === 'phoneTarget'
+      function renderSessionSearchFieldControl(field) {
+        const currentValue = (sessionFilterState.searchQueries && sessionFilterState.searchQueries[field.key]) || ''
         return `
-          <div class="session-toolbar-control session-toolbar-control-search session-toolbar-control-phone-search session-toolbar-menu${open ? ' is-open' : ''}" data-session-menu-root="phoneTarget" aria-label="${escapeHtml(`${phoneTargetLabel}查询`)}">
-            <div class="session-phone-search-main">
-              <div class="session-phone-target-select-wrap">
-                <button
-                  type="button"
-                  class="session-phone-target-trigger${open ? ' active' : ''}"
-                  data-session-menu-trigger="phoneTarget"
-                  aria-label="搜索字段"
-                  aria-haspopup="listbox"
-                  aria-expanded="${open ? 'true' : 'false'}"
-                >
-                  <strong>${escapeHtml(phoneTargetLabel)}</strong>
-                  <span class="session-select-caret" aria-hidden="true"></span>
-                </button>
-              </div>
-              <div class="session-search-field">
-                <input
-                  type="text"
-                  class="session-search-input"
-                  data-session-phone-query
-                  value="${escapeHtml(sessionFilterState.phoneQuery || '')}"
-                  aria-label="${escapeHtml(`${phoneTargetLabel}输入`)}"
-                  placeholder="${escapeHtml(`请输入${phoneTargetLabel}`)}"
-                />
-                <span class="session-search-icon" aria-hidden="true"></span>
-              </div>
+          <div class="session-toolbar-control session-toolbar-control-search session-toolbar-control-search-field" aria-label="${escapeHtml(`${field.label}筛选`)}">
+            <span>${escapeHtml(field.label)}</span>
+            <div class="session-search-field">
+              <input
+                type="text"
+                class="session-search-input"
+                data-session-search-key="${escapeHtml(field.key)}"
+                value="${escapeHtml(currentValue)}"
+                aria-label="${escapeHtml(`${field.label}输入`)}"
+                placeholder="${escapeHtml(`请输入${field.label}`)}"
+              />
+              <span class="session-search-icon" aria-hidden="true"></span>
             </div>
-            ${open ? renderSessionOptionMenu('phoneTarget', sessionSearchTargetOptions, phoneTarget, 'session-phone-target-menu') : ''}
           </div>
         `
       }
@@ -7311,14 +7442,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function getActiveSessionSummary() {
         const items = []
-        if (sessionFilterState.brand !== sessionDefaultFilters.brand) {
-          items.push(`品牌: ${sessionFilterState.brand}`)
-        }
         if (sessionFilterState.organization !== sessionDefaultFilters.organization) {
           items.push(`组织: ${getSessionDisplayText('organization', sessionFilterState.organization)}`)
         }
         if (sessionFilterState.stage !== '全部') {
           items.push(`质检场景: ${sessionFilterState.stage}`)
+        }
+        if (sessionFilterState.source !== '全部') {
+          items.push(`数据来源: ${sessionFilterState.source}`)
         }
         if (sessionFilterState.carSeries !== '全部') {
           items.push(`车系: ${getSessionDisplayText('carSeries', sessionFilterState.carSeries)}`)
@@ -7326,10 +7457,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (sessionFilterState.intentLevel !== '全部') {
           items.push(`AI意向等级: ${sessionFilterState.intentLevel}`)
         }
-        if (sessionFilterState.phoneQuery) {
-          const phoneTargetLabel = sessionSearchTargetOptions.find((option) => option.value === sessionFilterState.phoneTarget)?.label || '顾问号码'
-          items.push(`${phoneTargetLabel}: ${sessionFilterState.phoneQuery}`)
-        }
+        sessionSearchFields.forEach((field) => {
+          const query = String((sessionFilterState.searchQueries && sessionFilterState.searchQueries[field.key]) || '').trim()
+          if (query) {
+            items.push(`${field.label}: ${query}`)
+          }
+        })
         if (sessionFilterState.status !== '全部') {
           items.push(`录音状态: ${sessionFilterState.status}`)
         }
@@ -7340,6 +7473,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getSessionSource(stage) {
+        if (typeof sessionSearchUtils.getSessionSourceFromStage === 'function') {
+          return sessionSearchUtils.getSessionSourceFromStage(stage)
+        }
+
         if (stage === '邀约' || stage === '试驾PDC') {
           return '云外呼'
         }
@@ -7351,63 +7488,68 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return '-'
       }
 
-      function normalizeSessionSearchValue(value, target) {
-        const normalizedValue = String(value || '').trim().toLowerCase()
-
-        if (target === 'advisorPhone' || target === 'customerPhone') {
-          return normalizedValue.replace(/\D/g, '')
-        }
-
-        if (target === 'sessionId' || target === 'advisorId') {
-          return normalizedValue.replace(/[^a-z0-9]/g, '')
-        }
-
-        return normalizedValue.replace(/\s+/g, '')
-      }
-
       function getFilteredSessionRecords() {
-        const phoneTarget = sessionSearchTargetOptions.some((option) => option.value === sessionFilterState.phoneTarget)
-          ? sessionFilterState.phoneTarget
-          : 'advisorPhone'
-        const phoneQuery = normalizeSessionSearchValue(sessionFilterState.phoneQuery, phoneTarget)
         return sessionRecords
           .filter((item) => {
             const recordDate = item.uploadTime.slice(0, 10)
-            const advisorPhone = normalizeSessionSearchValue(item.advisorPhone, 'advisorPhone')
-            const customerPhone = normalizeSessionSearchValue(item.customerPhone, 'customerPhone')
-            const customerName = normalizeSessionSearchValue(item.customerName, 'customerName')
-            const sessionId = normalizeSessionSearchValue(item.id, 'sessionId')
-            const advisorId = normalizeSessionSearchValue(item.advisorId, 'advisorId')
-            const brandMatch = sessionFilterState.brand === '全部' || getSessionBrand(item.carSeries) === sessionFilterState.brand
             const organizationMatch = sessionFilterState.organization === '全部组织' || getSessionOrganizationFilterPath(item).startsWith(sessionFilterState.organization)
             const stageMatch = sessionFilterState.stage === '全部' || item.stage === sessionFilterState.stage
+            const sourceMatch = sessionFilterState.source === '全部' || getSessionSource(item.stage) === sessionFilterState.source
             const carSeriesMatch =
               sessionFilterState.carSeries === '全部' ||
               item.carSeries === sessionFilterState.carSeries ||
               (isSessionUnknownCarSeriesValue(sessionFilterState.carSeries) && (item.carSeries === '未知' || item.carSeries === `${getSessionUnknownCarSeriesBrand(sessionFilterState.carSeries)}未知`))
             const intentLevelMatch = sessionFilterState.intentLevel === '全部' || item.intentLevel === sessionFilterState.intentLevel
-            const phoneQueryMatch = !phoneQuery || (
-              phoneTarget === 'customerPhone'
-                ? customerPhone.includes(phoneQuery)
-                : phoneTarget === 'customerName'
-                  ? customerName.includes(phoneQuery)
-                  : phoneTarget === 'sessionId'
-                    ? sessionId.includes(phoneQuery)
-                    : phoneTarget === 'advisorId'
-                      ? advisorId.includes(phoneQuery)
-                      : advisorPhone.includes(phoneQuery)
-            )
+            const searchMatch = doesSessionRecordMatchSearch(item, sessionFilterState.searchQueries)
             const statusMatch = sessionFilterState.status === '全部' || item.status === sessionFilterState.status
             const startMatch = !sessionFilterState.startDate || recordDate >= sessionFilterState.startDate
             const endMatch = !sessionFilterState.endDate || recordDate <= sessionFilterState.endDate
-            return brandMatch && organizationMatch && stageMatch && carSeriesMatch && intentLevelMatch && phoneQueryMatch && statusMatch && startMatch && endMatch
+            return organizationMatch && stageMatch && sourceMatch && carSeriesMatch && intentLevelMatch && searchMatch && statusMatch && startMatch && endMatch
           })
           .sort((a, b) => parseDateTimeValue(b.uploadTime) - parseDateTimeValue(a.uploadTime))
+      }
+
+      function resetSessionFilters() {
+        Object.assign(sessionFilterState, sessionDefaultFilters, {
+          searchQueries: createDefaultSessionSearchQueries()
+        })
+        sessionPaginationState.page = 1
+        sessionMenuState.openMenu = null
+        sessionMenuState.organizationDraftPath = sessionDefaultFilters.organization
+        sessionMenuState.organizationSearchQuery = ''
+        sessionMenuState.organizationSearchActive = false
+        renderSessionPage()
       }
 
       function rerenderSessionFilters() {
         renderSessionFilters()
         bindSessionFilterEvents()
+      }
+
+      function renderSessionCollapseActionButton() {
+        const collapsed = sessionFilterState.collapsed
+        return `
+          <button
+            type="button"
+            class="session-toggle-text-btn"
+            data-session-action="toggle-collapse"
+            aria-expanded="${collapsed ? 'false' : 'true'}"
+          >
+            <span>${collapsed ? '展开' : '收起'}</span>
+            <svg class="session-toggle-text-btn-icon${collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        `
+      }
+
+      function renderSessionInlineActions(extraClass = '') {
+        return `
+          <div class="session-filter-inline-actions${extraClass ? ` ${extraClass}` : ''}">
+            <button type="button" class="btn session-reset-btn" data-session-action="reset">重置筛选</button>
+            ${renderSessionCollapseActionButton()}
+          </div>
+        `
       }
 
       function renderSessionFilters() {
@@ -7417,18 +7559,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         container.innerHTML = `
-          <div class="session-filter-row session-filter-row-segment">
+          <div class="session-filter-row session-filter-row-segment${sessionFilterState.collapsed ? ' is-collapsed' : ''}">
             ${renderSessionSegmentControl('stage', '质检场景', sessionFilterState.stage, sessionStageOptions, 'session-toolbar-control-stage')}
+            ${renderSessionSegmentControl('source', '数据来源', sessionFilterState.source, sessionSourceOptions, 'session-toolbar-control-source')}
             ${renderSessionSegmentControl('intentLevel', 'AI意向等级', sessionFilterState.intentLevel, sessionIntentLevelOptions, 'session-toolbar-control-intent')}
-            ${renderSessionPhoneSearchControl()}
+            ${sessionFilterState.collapsed ? renderSessionInlineActions() : ''}
           </div>
-          <div class="session-filter-row session-filter-row-main">
-            ${renderSessionMenuControl('brand', '品牌', sessionFilterState.brand, renderSessionOptionMenu('brand', sessionBrandOptions, sessionFilterState.brand))}
-            ${renderSessionOrganizationControl()}
+          <div class="session-filter-row session-filter-row-main session-filter-extra">
             ${renderSessionMenuControl('carSeries', '车系', sessionFilterState.carSeries, renderSessionCarSeriesMenu(sessionFilterState.carSeries), 'session-toolbar-control-car')}
-            ${renderSessionMenuControl('status', '录音状态', sessionFilterState.status, renderSessionOptionMenu('status', sessionStatusOptions, sessionFilterState.status))}
+            ${renderSessionOrganizationControl()}
             ${renderSessionDateControl()}
-            <button type="button" class="btn session-reset-btn" data-session-action="reset">重置筛选</button>
+            ${renderSessionMenuControl('status', '录音状态', sessionFilterState.status, renderSessionOptionMenu('status', sessionStatusOptions, sessionFilterState.status))}
+          </div>
+          <div class="session-filter-row session-filter-row-search session-filter-extra">
+            ${sessionSearchFields.map((field) => renderSessionSearchFieldControl(field)).join('')}
+            ${renderSessionInlineActions('session-filter-inline-actions-search')}
           </div>
         `
       }
@@ -7458,7 +7603,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (!records.length) {
           tbody.innerHTML = `
             <tr class="session-empty-row">
-              <td colspan="20">当前筛选条件下暂无录音，请调整品牌、组织、质检场景、车系、日期或录音状态后重试。</td>
+              <td colspan="20">当前筛选条件下暂无录音，请调整组织、质检场景、数据来源、AI意向等级、车系、日期、录音状态或搜索条件后重试。</td>
             </tr>
           `
           if (pagination) {
@@ -7685,22 +7830,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           })
         })
 
-        pageHost.querySelectorAll('[data-session-phone-query]').forEach((node) => {
+        pageHost.querySelectorAll('[data-session-search-key]').forEach((node) => {
           node.addEventListener('input', (event) => {
             if (event.isComposing) {
               return
             }
 
+            const searchKey = node.dataset.sessionSearchKey
+            if (!searchKey) {
+              return
+            }
             const nextValue = node.value || ''
             const cursorStart = node.selectionStart ?? nextValue.length
             const cursorEnd = node.selectionEnd ?? nextValue.length
 
-            sessionFilterState.phoneQuery = nextValue
+            sessionFilterState.searchQueries[searchKey] = nextValue
             sessionPaginationState.page = 1
             renderSessionPage()
 
             window.requestAnimationFrame(() => {
-              const nextInput = pageHost.querySelector('[data-session-phone-query]')
+              const nextInput = pageHost.querySelector(`[data-session-search-key="${searchKey}"]`)
               if (!nextInput) {
                 return
               }
@@ -7870,14 +8019,33 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
 
         pageHost.querySelectorAll('[data-session-action="reset"]').forEach((node) => {
-          node.addEventListener('click', () => {
-            Object.assign(sessionFilterState, sessionDefaultFilters)
-            sessionPaginationState.page = 1
+          node.addEventListener('click', (event) => {
+            event.preventDefault()
+            resetSessionFilters()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-session-action="toggle-collapse"]').forEach((node) => {
+          node.addEventListener('click', (event) => {
+            event.preventDefault()
             sessionMenuState.openMenu = null
-            sessionMenuState.organizationDraftPath = sessionDefaultFilters.organization
             sessionMenuState.organizationSearchQuery = ''
             sessionMenuState.organizationSearchActive = false
-            renderSessionPage()
+            if (sessionFilterState.collapsed) {
+              sessionFilterState.collapsed = false
+              renderSessionPage()
+              requestAnimationFrame(() => {
+                const extras = pageHost.querySelectorAll('#sessionFilterControls .session-filter-extra')
+                extras.forEach((el) => el.classList.add('is-visible'))
+              })
+            } else {
+              const extras = pageHost.querySelectorAll('#sessionFilterControls .session-filter-extra')
+              extras.forEach((el) => el.classList.remove('is-visible'))
+              setTimeout(() => {
+                sessionFilterState.collapsed = true
+                renderSessionPage()
+              }, 300)
+            }
           })
         })
 
@@ -7947,6 +8115,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         renderSessionFilters()
         renderSessionTable(getFilteredSessionRecords())
         bindSessionFilterEvents()
+        if (!sessionFilterState.collapsed) {
+          requestAnimationFrame(() => {
+            const extras = pageHost.querySelectorAll('#sessionFilterControls .session-filter-extra')
+            extras.forEach((el) => el.classList.add('is-visible'))
+          })
+        }
       }
 
       function getLeadDisplayText(filterKey, value) {
@@ -8098,6 +8272,25 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <span class="session-date-icon" aria-hidden="true"></span>
             </button>
             ${open ? renderLeadsDateMenu() : ''}
+          </div>
+        `
+      }
+
+      function renderLeadsSimpleSearchControl(filterKey, label, value, placeholder) {
+        return `
+          <div class="session-toolbar-control session-toolbar-control-search leads-simple-search" data-leads-search-key="${escapeHtml(filterKey)}">
+            <span>${escapeHtml(label)}</span>
+            <div class="session-search-field">
+              <input
+                type="text"
+                class="session-search-input"
+                data-leads-simple-query="${escapeHtml(filterKey)}"
+                value="${escapeHtml(value || '')}"
+                aria-label="${escapeHtml(placeholder)}"
+                placeholder="${escapeHtml(placeholder)}"
+              />
+              <span class="session-search-icon" aria-hidden="true"></span>
+            </div>
           </div>
         `
       }
@@ -8372,36 +8565,23 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getFilteredLeadRecords() {
-        const searchTarget = leadSearchTargetOptions.some((option) => option.value === leadsFilterState.leadQueryTarget)
-          ? leadsFilterState.leadQueryTarget
-          : 'customerName'
-        const leadQuery = normalizeLeadQueryValue(leadsFilterState.leadQuery)
+        const advisorNameQuery = normalizeLeadQueryValue(leadsFilterState.advisorNameQuery)
+        const customerNameQuery = normalizeLeadQueryValue(leadsFilterState.customerNameQuery)
+        const customerPhoneQuery = normalizeLeadQueryValue(leadsFilterState.customerPhoneQuery)
 
         return leadRecords.filter((item) => {
           const recordDate = item.recordStartTime.slice(0, 10)
-          const customerName = normalizeLeadQueryValue(item.customerName)
-          const advisorName = normalizeLeadQueryValue(item.advisorName)
-          const leadSource = normalizeLeadQueryValue(item.leadSource)
-          const secondSource = normalizeLeadQueryValue(item.secondSource)
-          const thirdSource = normalizeLeadQueryValue(item.thirdSource)
           const brandMatch = leadsFilterState.brand === '全部' || getSessionBrand(item.carSeries) === leadsFilterState.brand
           const organizationMatch = leadsFilterState.organization === '全部组织' || item.organizationPath.startsWith(leadsFilterState.organization)
-          const leadQueryMatch = !leadQuery || (
-            searchTarget === 'advisorName'
-              ? advisorName.includes(leadQuery)
-              : searchTarget === 'leadSource'
-                ? leadSource.includes(leadQuery)
-                : searchTarget === 'secondSource'
-                  ? secondSource.includes(leadQuery)
-                  : searchTarget === 'thirdSource'
-                    ? thirdSource.includes(leadQuery)
-                    : customerName.includes(leadQuery)
-          )
+          const advisorNameMatch = !advisorNameQuery || normalizeLeadQueryValue(item.advisorName).includes(advisorNameQuery)
+          const customerNameMatch = !customerNameQuery || normalizeLeadQueryValue(item.customerName).includes(customerNameQuery)
+          const customerPhoneMatch = !customerPhoneQuery || normalizeLeadQueryValue(item.customerPhone).includes(customerPhoneQuery)
           const intentGradeMatch = leadsFilterState.intentGrade === '全部' || item.intentGrade === leadsFilterState.intentGrade
           const leadStatusMatch = leadsFilterState.leadStatus === '全部' || item.leadStatus === leadsFilterState.leadStatus
+          const sourceTypeMatch = leadsFilterState.sourceType === '全部' || item.sourceType === leadsFilterState.sourceType
           const startMatch = !leadsFilterState.startDate || recordDate >= leadsFilterState.startDate
           const endMatch = !leadsFilterState.endDate || recordDate <= leadsFilterState.endDate
-          return brandMatch && organizationMatch && leadQueryMatch && intentGradeMatch && leadStatusMatch && startMatch && endMatch
+          return brandMatch && organizationMatch && advisorNameMatch && customerNameMatch && customerPhoneMatch && intentGradeMatch && leadStatusMatch && sourceTypeMatch && startMatch && endMatch
         })
       }
 
@@ -8640,11 +8820,28 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return leadsViewState.mode === 'customers' ? getFilteredLeadCustomerRecords() : records
       }
 
+      function renderLeadsCollapseActionButton() {
+        const collapsed = leadsFilterState.collapsed
+        return `
+          <button
+            type="button"
+            class="session-toggle-text-btn"
+            data-leads-action="toggle-collapse"
+            aria-expanded="${collapsed ? 'false' : 'true'}"
+          >
+            <span>${collapsed ? '展开' : '收起'}</span>
+            <svg class="session-toggle-text-btn-icon${collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        `
+      }
+
       function renderLeadsFilters() {
         const container = document.getElementById('leadsFilterControls')
         if (!container) return
 
-        container.className = `session-filter-toolbar leads-filter-toolbar ${leadsViewState.mode === 'customers' ? 'is-customer-view' : 'is-leads-view'}`
+        container.className = `session-filter-toolbar leads-filter-toolbar ${leadsViewState.mode === 'customers' ? 'is-customer-view' : 'is-leads-view'}${leadsFilterState.collapsed ? ' is-collapsed' : ''}`
 
         if (leadsViewState.mode === 'customers') {
           container.innerHTML = `
@@ -8656,14 +8853,56 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        const collapsed = leadsFilterState.collapsed
+
         container.innerHTML = `
-          ${renderLeadsListSearchControl()}
           ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', sessionBrandOptions, leadsFilterState.brand))}
           ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
           ${renderLeadsMenuControl('leadStatus', '线索状态', leadsFilterState.leadStatus, renderLeadsOptionMenu('leadStatus', leadStatusOptions, leadsFilterState.leadStatus))}
           ${renderLeadsMenuControl('intentGrade', '意向级别', leadsFilterState.intentGrade, renderLeadsOptionMenu('intentGrade', leadIntentGradeOptions, leadsFilterState.intentGrade))}
-          ${renderLeadsDateControl()}
-          <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu" data-leads-menu-root="sourceType">
+            <span>录音来源类型</span>
+            <button type="button" class="session-select-trigger" data-leads-menu-trigger="sourceType" aria-label="录音来源类型" aria-haspopup="listbox" aria-expanded="false">
+              <strong>${escapeHtml(leadsFilterState.sourceType)}</strong>
+              <span class="session-select-caret" aria-hidden="true"></span>
+            </button>
+            ${leadsMenuState.openMenu === 'sourceType' ? renderLeadsOptionMenu('sourceType', leadSourceTypeOptions, leadsFilterState.sourceType) : ''}
+          </div>
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu session-toolbar-control-date" data-leads-menu-root="date">
+            <span>日期</span>
+            <button type="button" class="session-date-trigger" data-leads-menu-trigger="date" aria-label="线索日期筛选" aria-haspopup="dialog" aria-expanded="false">
+              <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.startDate))}</strong>
+              <em>至</em>
+              <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.endDate))}</strong>
+              <span class="session-date-icon" aria-hidden="true"></span>
+            </button>
+            ${leadsMenuState.openMenu === 'date' ? renderLeadsDateMenu() : ''}
+          </div>
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-control-search leads-simple-search" data-leads-search-key="advisorNameQuery">
+            <span>顾问姓名</span>
+            <div class="session-search-field">
+              <input type="text" class="session-search-input" data-leads-simple-query="advisorNameQuery" value="${escapeHtml(leadsFilterState.advisorNameQuery || '')}" aria-label="请输入顾问姓名" placeholder="请输入顾问姓名" />
+              <span class="session-search-icon" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-control-search leads-simple-search" data-leads-search-key="customerNameQuery">
+            <span>客户名称</span>
+            <div class="session-search-field">
+              <input type="text" class="session-search-input" data-leads-simple-query="customerNameQuery" value="${escapeHtml(leadsFilterState.customerNameQuery || '')}" aria-label="请输入客户名称" placeholder="请输入客户名称" />
+              <span class="session-search-icon" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-control-search leads-simple-search" data-leads-search-key="customerPhoneQuery">
+            <span>客户手机</span>
+            <div class="session-search-field">
+              <input type="text" class="session-search-input" data-leads-simple-query="customerPhoneQuery" value="${escapeHtml(leadsFilterState.customerPhoneQuery || '')}" aria-label="请输入客户手机" placeholder="请输入客户手机" />
+              <span class="session-search-icon" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="leads-filter-inline-actions">
+            <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
+            ${renderLeadsCollapseActionButton()}
+          </div>
         `
       }
 
@@ -9087,6 +9326,28 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           })
         })
 
+        pageHost.querySelectorAll('[data-leads-action="toggle-collapse"]').forEach((node) => {
+          node.addEventListener('click', (event) => {
+            event.preventDefault()
+            leadsMenuState.openMenu = null
+            if (leadsFilterState.collapsed) {
+              leadsFilterState.collapsed = false
+              renderLeadsPage()
+              requestAnimationFrame(() => {
+                const extras = pageHost.querySelectorAll('.leads-filter-extra')
+                extras.forEach((el) => el.classList.add('is-visible'))
+              })
+            } else {
+              const extras = pageHost.querySelectorAll('.leads-filter-extra')
+              extras.forEach((el) => el.classList.remove('is-visible'))
+              setTimeout(() => {
+                leadsFilterState.collapsed = true
+                renderLeadsPage()
+              }, 300)
+            }
+          })
+        })
+
         pageHost.querySelectorAll('[data-leads-action="reset"]').forEach((node) => {
           node.addEventListener('click', () => {
             Object.assign(leadsFilterState, leadsDefaultFilters)
@@ -9105,6 +9366,29 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               customerDateViewMonth: Number(leadsDefaultFilters.endDate.slice(5, 7))
             })
             renderLeadsPage()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-simple-query]').forEach((node) => {
+          node.addEventListener('input', (event) => {
+            if (event.isComposing) {
+              return
+            }
+            const filterKey = node.dataset.leadsSimpleQuery
+            const nextValue = node.value || ''
+            const cursorStart = node.selectionStart ?? nextValue.length
+            const cursorEnd = node.selectionEnd ?? nextValue.length
+            leadsFilterState[filterKey] = nextValue
+            leadsPaginationState.page = 1
+            renderLeadsPage()
+            window.requestAnimationFrame(() => {
+              const nextInput = pageHost.querySelector(`[data-leads-simple-query="${filterKey}"]`)
+              if (!nextInput) {
+                return
+              }
+              nextInput.focus()
+              nextInput.setSelectionRange(cursorStart, cursorEnd)
+            })
           })
         })
 
@@ -9253,6 +9537,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         renderLeadsFilters()
         renderLeadsTable(getFilteredLeadRecords())
         bindLeadsFilterEvents()
+        if (!leadsFilterState.collapsed) {
+          requestAnimationFrame(() => {
+            const extras = pageHost.querySelectorAll('.leads-filter-extra')
+            extras.forEach((el) => el.classList.add('is-visible'))
+          })
+        }
       }
 
       const sessionWaveHeights = [
@@ -13333,75 +13623,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const disableNextMonth = currentMonthIndex >= maxMonthIndex
         const cells = getSessionDateCells(salesRoleDateState.viewYear, salesRoleDateState.viewMonth)
 
-        return `
-          <div class="session-menu-panel session-menu-panel-date">
-            <div class="session-date-panel-head">
-              <div class="session-date-panel-copy">
-                <span>日期范围</span>
-                <strong>${escapeHtml(getSessionDateRangeText(startDate, endDate))}</strong>
-              </div>
-              <div class="session-date-nav">
-                <button type="button" class="session-date-nav-btn" data-sales-date-nav="-1" aria-label="上一个月"${disablePrevMonth ? ' disabled' : ''}>
-                  <i class="session-date-nav-arrow prev" aria-hidden="true"></i>
-                </button>
-                <strong>${escapeHtml(formatSessionMonthLabel(salesRoleDateState.viewYear, salesRoleDateState.viewMonth))}</strong>
-                <button type="button" class="session-date-nav-btn" data-sales-date-nav="1" aria-label="下一个月"${disableNextMonth ? ' disabled' : ''}>
-                  <i class="session-date-nav-arrow next" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-            <div class="session-date-tabs">
-              <button type="button" class="session-date-tab${activeField === 'startDate' ? ' active' : ''}" data-sales-date-field="startDate">
-                <span>开始日期</span>
-                <strong>${escapeHtml(formatSessionDateDisplay(startDate))}</strong>
-              </button>
-              <button type="button" class="session-date-tab${activeField === 'endDate' ? ' active' : ''}" data-sales-date-field="endDate">
-                <span>结束日期</span>
-                <strong>${escapeHtml(formatSessionDateDisplay(endDate))}</strong>
-              </button>
-            </div>
-            <div class="session-date-weekdays">
-              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-            </div>
-            <div class="session-date-grid">
-              ${cells
-                .map((date) => {
-                  if (!date) {
-                    return '<span class="session-date-empty" aria-hidden="true"></span>'
-                  }
+        return renderSharedDateRangePanelMarkup({
+          dataNamespace: 'sales-date',
+          rangeText: getSessionDateRangeText(startDate, endDate),
+          monthLabel: formatSessionMonthLabel(salesRoleDateState.viewYear, salesRoleDateState.viewMonth),
+          activeField,
+          startLabel: formatSessionDateDisplay(startDate),
+          endLabel: formatSessionDateDisplay(endDate),
+          disablePrevMonth,
+          disableNextMonth,
+          cells: cells.map((date) => {
+            if (!date) {
+              return null
+            }
 
-                  const value = formatSessionDateValue(date)
-                  const isDisabled = !isSalesRoleDateSelectable(value)
-                  const inRange = startDate && endDate && value >= startDate && value <= endDate
-                  const isStart = value === startDate
-                  const isEnd = value === endDate
-                  const isToday = value === todayValue
-                  return `
-                    <button
-                      type="button"
-                      class="session-date-day${isDisabled ? ' is-disabled' : ''}${inRange ? ' in-range' : ''}${isStart ? ' is-start' : ''}${isEnd ? ' is-end' : ''}${isToday ? ' is-today' : ''}"
-                      ${isDisabled ? 'disabled' : `data-sales-date-value="${escapeHtml(value)}"`}
-                    >
-                      ${date.getDate()}
-                    </button>
-                  `
-                })
-                .join('')}
-            </div>
-            <div class="session-date-shortcuts">
-              ${salesRecommendDateShortcutOptions.map((option) => `
-                <button type="button" class="session-date-shortcut" data-sales-date-shortcut="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
-              `).join('')}
-            </div>
-            <div class="session-cascader-footer session-date-footer">
-              <span>${escapeHtml(`已选择 ${getSessionDateRangeText(startDate, endDate)}`)}</span>
-              <div class="session-date-actions">
-                <button type="button" class="btn session-date-action-btn" data-sales-date-cancel="true">取消</button>
-                <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sales-date-apply="true">应用日期</button>
-              </div>
-            </div>
-          </div>
-        `
+            const value = formatSessionDateValue(date)
+            return {
+              day: date.getDate(),
+              value,
+              isDisabled: !isSalesRoleDateSelectable(value),
+              inRange: Boolean(startDate && endDate && value >= startDate && value <= endDate),
+              isStart: value === startDate,
+              isEnd: value === endDate,
+              isToday: value === todayValue
+            }
+          }),
+          shortcuts: salesRecommendDateShortcutOptions,
+          summaryText: `已选择 ${getSessionDateRangeText(startDate, endDate)}`
+        })
       }
 
       function renderSalesRoleDateControl(role) {
@@ -13425,24 +13674,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               </button>
             `).join('')}
           </div>
-          ${isCustom ? `
-            <div class="sales-role-date-root${open ? ' is-open' : ''}" data-sales-date-root="${escapeHtml(role)}">
-              <button
-                type="button"
-                class="session-date-trigger sales-role-date-trigger${open ? ' active' : ''}"
-                data-sales-date-trigger="${escapeHtml(role)}"
-                aria-label="日期范围筛选"
-                aria-haspopup="dialog"
-                aria-expanded="${open ? 'true' : 'false'}"
-              >
-                <strong>${escapeHtml(formatSessionDateDisplay(roleState.recommendDateStart))}</strong>
-                <em>至</em>
-                <strong>${escapeHtml(formatSessionDateDisplay(roleState.recommendDateEnd))}</strong>
-                <span class="session-date-icon" aria-hidden="true"></span>
-              </button>
-              ${open ? renderSalesRoleDateMenu() : ''}
-            </div>
-          ` : ''}
+          ${isCustom ? renderSharedDateRangeControlMarkup({
+            currentValue: roleState.recommendRangeTab,
+            customValue: 'custom',
+            isOpen: open,
+            startLabel: formatSessionDateDisplay(roleState.recommendDateStart),
+            endLabel: formatSessionDateDisplay(roleState.recommendDateEnd),
+            dataNamespace: 'sales-date',
+            rootClassName: 'sales-role-date-root',
+            triggerClassName: 'session-date-trigger sales-role-date-trigger',
+            triggerLabel: '日期范围筛选',
+            menuHtml: open ? renderSalesRoleDateMenu() : ''
+          }) : ''}
         `
 
         bindSalesRoleDateEvents(role)

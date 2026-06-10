@@ -674,32 +674,32 @@
 .store-dashboard-page .gf-tab.disabled{color:var(--color-text-disabled);cursor:not-allowed;opacity:0.45;pointer-events:none}
 .store-dashboard-page .gf-tab.disabled:hover{background:transparent;color:var(--color-text-disabled)}
 .store-dashboard-page .gf-divider{width:1px;height:16px;background:rgba(226,232,240,0.9);flex-shrink:0}
-.store-dashboard-page .gf-time-group{position:relative}
-.store-dashboard-page .store-date-popover-anchor{position:absolute;top:calc(100% + 8px);right:0;z-index:150}
+.store-dashboard-page .gf-time-group{position:relative;gap:12px}
+.store-dashboard-page .store-date-popover-anchor{position:static;display:flex;align-items:center;flex:0 0 auto;min-width:0;z-index:150}
 .store-dashboard-page .store-date-popover-anchor:empty{display:none}
-.store-dashboard-page .store-date-popover-anchor .store-date-root{position:relative;width:0;height:0;overflow:visible}
+.store-dashboard-page .store-date-popover-anchor .store-date-root{position:relative;width:auto;height:auto;overflow:visible}
 .store-dashboard-page .store-date-filter-shell{display:flex;align-items:center;flex:0 0 auto;position:relative;z-index:20}
 .store-dashboard-page .store-date-control-slot{display:flex;align-items:center;flex:1 1 auto;min-width:0}
 .store-dashboard-page .store-date-root{
   position:relative;
   display:flex;
   align-items:center;
-  width:100%;
-  min-width:0;
-  flex:1 1 auto;
-  min-height:auto;
-  padding:0;
-  border:0;
-  border-radius:0;
-  background:transparent;
-  box-shadow:none;
-  transition:none;
+  width:auto;
+  min-width:248px;
+  flex:0 0 auto;
+  min-height:44px;
+  padding:0 14px;
+  border-radius:16px;
+  border:1px solid rgba(201,210,224,0.88);
+  background:rgba(255,255,255,0.98);
+  box-shadow:0 8px 20px rgba(15,23,42,0.04);
+  transition:border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .store-dashboard-page .store-date-root.is-open,
 .store-dashboard-page .store-date-root:focus-within{
   z-index:140;
-  border-color:transparent;
-  box-shadow:none;
+  border-color:rgba(37,99,235,0.34);
+  box-shadow:0 0 0 4px rgba(37,99,235,0.08);
 }
 .store-dashboard-page .store-date-trigger{
   width:100%;
@@ -721,9 +721,9 @@
 }
 .store-dashboard-page .store-date-root .session-menu-panel-date{
   position:absolute;
-  top:0;
-  left:auto;
-  right:0;
+  top:calc(100% + 8px);
+  left:0;
+  right:auto;
   min-width:0;
   width:min(392px,calc(100vw - 80px));
   max-width:min(392px,calc(100vw - 80px));
