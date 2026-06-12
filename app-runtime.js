@@ -4944,6 +4944,25 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   renderInsightSection();
   renderStoreTeamSummary();
   buildChart("1");
+
+  // ── 13. 卡片插画自适应隐藏 ─────────────────────
+  const sopMetricCards = document.querySelectorAll('.sop-metric-card');
+  if (sopMetricCards.length && typeof ResizeObserver !== 'undefined') {
+    const sopCardObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const card = entry.target;
+        const image = card.querySelector('.sop-metric-card-image');
+        if (!image) continue;
+        const cardWidth = card.clientWidth;
+        if (cardWidth < 200) {
+          image.classList.add('is-hidden');
+        } else {
+          image.classList.remove('is-hidden');
+        }
+      }
+    });
+    sopMetricCards.forEach(card => sopCardObserver.observe(card));
+  }
 }
 
     
@@ -6245,8 +6264,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         advisorNameQuery: '',
         customerNameQuery: '',
         customerPhoneQuery: '',
-        customerQueryTarget: 'customerName',
-        customerQuery: '',
+        customerAggregateLeadCountQuery: '',
+        customerAggregateStoreCountQuery: '',
         customerStatus: '全部',
         customerContactStartDate: '',
         customerContactEndDate: '',
@@ -8673,16 +8692,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getFilteredLeadCustomerRecords() {
-        const customerQueryTarget = leadCustomerSearchTargetOptions.some((option) => option.value === leadsFilterState.customerQueryTarget)
-          ? leadsFilterState.customerQueryTarget
-          : 'customerName'
         return buildLeadCustomerAggregateRecords(leadRecords).filter((item) => {
           const lastContactDate = getLeadCustomerLastContactDateValue(item)
-          const customerQueryMatch = getLeadCustomerSearchMatch(item, customerQueryTarget, leadsFilterState.customerQuery)
+          const customerNameMatch = getLeadCustomerSearchMatch(item, 'customerName', leadsFilterState.customerNameQuery)
+          const customerPhoneMatch = getLeadCustomerSearchMatch(item, 'customerPhone', leadsFilterState.customerPhoneQuery)
+          const leadCountMatch = getLeadCustomerSearchMatch(item, 'aggregateLeadCount', leadsFilterState.customerAggregateLeadCountQuery)
+          const storeCountMatch = getLeadCustomerSearchMatch(item, 'aggregateStoreCount', leadsFilterState.customerAggregateStoreCountQuery)
           const customerStatusMatch = leadsFilterState.customerStatus === '全部' || item.leadStatus === leadsFilterState.customerStatus
           const startMatch = !leadsFilterState.customerContactStartDate || lastContactDate >= leadsFilterState.customerContactStartDate
           const endMatch = !leadsFilterState.customerContactEndDate || lastContactDate <= leadsFilterState.customerContactEndDate
-          return customerQueryMatch && customerStatusMatch && startMatch && endMatch
+          return customerNameMatch && customerPhoneMatch && leadCountMatch && storeCountMatch && customerStatusMatch && startMatch && endMatch
         })
       }
 
@@ -8845,7 +8864,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (leadsViewState.mode === 'customers') {
           container.innerHTML = `
-            ${renderLeadsCustomerSearchControl()}
+            ${renderLeadsSimpleSearchControl('customerNameQuery', '客户名称', leadsFilterState.customerNameQuery, '请输入客户名称')}
+            ${renderLeadsSimpleSearchControl('customerPhoneQuery', '客户手机号', leadsFilterState.customerPhoneQuery, '请输入客户手机号')}
+            ${renderLeadsSimpleSearchControl('customerAggregateLeadCountQuery', '线索数', leadsFilterState.customerAggregateLeadCountQuery, '请输入线索数')}
+            ${renderLeadsSimpleSearchControl('customerAggregateStoreCountQuery', '门店数', leadsFilterState.customerAggregateStoreCountQuery, '请输入门店数')}
             ${renderLeadsMenuControl('customerStatus', '线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
             ${renderLeadsCustomerContactDateControl()}
             <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
@@ -9383,51 +9405,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             renderLeadsPage()
             window.requestAnimationFrame(() => {
               const nextInput = pageHost.querySelector(`[data-leads-simple-query="${filterKey}"]`)
-              if (!nextInput) {
-                return
-              }
-              nextInput.focus()
-              nextInput.setSelectionRange(cursorStart, cursorEnd)
-            })
-          })
-        })
-
-        pageHost.querySelectorAll('[data-leads-customer-query]').forEach((node) => {
-          node.addEventListener('input', (event) => {
-            if (event.isComposing) {
-              return
-            }
-            const nextValue = node.value || ''
-            const cursorStart = node.selectionStart ?? nextValue.length
-            const cursorEnd = node.selectionEnd ?? nextValue.length
-            leadsFilterState.customerQuery = nextValue
-            leadsPaginationState.page = 1
-            renderLeadsPage()
-            window.requestAnimationFrame(() => {
-              const nextInput = pageHost.querySelector('[data-leads-customer-query]')
-              if (!nextInput) {
-                return
-              }
-              nextInput.focus()
-              nextInput.setSelectionRange(cursorStart, cursorEnd)
-            })
-          })
-        })
-
-        pageHost.querySelectorAll('[data-leads-list-query]').forEach((node) => {
-          node.addEventListener('input', (event) => {
-            if (event.isComposing) {
-              return
-            }
-
-            const nextValue = node.value || ''
-            const cursorStart = node.selectionStart ?? nextValue.length
-            const cursorEnd = node.selectionEnd ?? nextValue.length
-            leadsFilterState.leadQuery = nextValue
-            leadsPaginationState.page = 1
-            renderLeadsPage()
-            window.requestAnimationFrame(() => {
-              const nextInput = pageHost.querySelector('[data-leads-list-query]')
               if (!nextInput) {
                 return
               }

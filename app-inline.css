@@ -4680,26 +4680,52 @@
 .store-dashboard-page .sop-dial { position: relative; width: 160px; height: 160px; }
 .store-dashboard-page .sop-overview-track .track-header { padding: 18px 20px 0; border-bottom: 0; background: transparent; }
 .store-dashboard-page .sop-overview-track .track-header-main { gap: 0; }
-.store-dashboard-page .sop-overview-track .track-body { padding: 16px; display:flex; flex-direction:column; gap:16px; }
-.store-dashboard-page .sop-overview-grid { display:flex; flex-direction:column; gap:16px; }
+.store-dashboard-page .sop-overview-track .track-body { padding: 16px; display:flex; flex-direction:column; gap:20px; }
+.store-dashboard-page .sop-overview-grid { display:flex; flex-direction:column; gap:20px; }
 .store-dashboard-page .sop-metric-row {
   display:grid;
-  grid-template-columns:minmax(0,396px) 48px minmax(0,396px);
+  grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
   gap:24px;
   align-items:center;
 }
 .store-dashboard-page .sop-metric-card{
-  height:50px;
   display:flex;
-  align-items:baseline;
+  align-items:center;
   justify-content:center;
-  gap:12px;
+  gap:16px;
   padding:10px 14px;
   border-radius:16px;
   border:1px solid transparent;
   box-sizing:border-box;
   min-width:0;
   overflow:hidden;
+  height:auto;
+  min-height:103px;
+}
+.store-dashboard-page .sop-metric-card-image{
+  display:block;
+  width:83px;
+  height:83px;
+  flex:0 0 83px;
+  object-fit:contain;
+  border-radius:12px;
+  transition:opacity 0.2s ease, width 0.2s ease, flex-basis 0.2s ease, margin 0.2s ease;
+}
+.store-dashboard-page .sop-metric-card-image.is-hidden{
+  width:0;
+  flex-basis:0;
+  opacity:0;
+  margin:0;
+  overflow:hidden;
+}
+.store-dashboard-page .sop-metric-card-content{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-width:120px;
+  flex:1;
 }
 .store-dashboard-page .sop-metric-card-store{
   background-image:linear-gradient(90deg,rgba(47,107,255,0.10) 0%,rgba(47,107,255,0.10) 100%),linear-gradient(90deg,#FFFFFF 0%,#FFFFFF 100%);
@@ -4719,6 +4745,7 @@
 .store-dashboard-page .sop-metric-score-wrap{
   display:inline-flex;
   align-items:baseline;
+  justify-content:center;
   gap:12px;
   flex:0 0 auto;
   min-width:0;
@@ -4772,23 +4799,21 @@
   height:48px;
   object-fit:contain;
 }
-.store-dashboard-page .sop-metric-cluster{
-  display:grid;
-  grid-template-columns:minmax(0,273px) auto;
-  gap:24px;
-  align-items:baseline;
-  min-width:0;
-}
 .store-dashboard-page .sop-improve{
-  justify-self:end;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:4px;
   white-space:nowrap;
   color:#22A55C;
+  padding:0;
+  background:none;
+  border:none;
+  box-shadow:none;
 }
-.store-dashboard-page .sop-improve.down{ color:#DC2626; }
+.store-dashboard-page .sop-improve.down{
+  color:#DC2626;
+}
 .store-dashboard-page .sop-improve-copy{
   display:inline-flex;
   align-items:baseline;
@@ -4829,13 +4854,15 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(245, 249, 255, 0.96), rgba(239, 246, 255, 0.92));
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(245, 249, 255, 0.96), rgba(239, 246, 255, 0.92));
   border: 1px dashed rgba(191, 219, 254, 0.96);
   color: #617088;
   font-size: 13px;
   line-height: 1.65;
+  box-sizing: border-box;
 }
 .store-dashboard-page .sop-ai-summary .hint-icon{
   display:block;
@@ -4847,8 +4874,9 @@
 .store-dashboard-page .sop-ai-summary .hint-text{
   flex:1;
   min-width:0;
-  font-size:14px;
-  line-height:22px;
+  font-size:13px;
+  font-weight:600;
+  line-height:21.45px;
 }
 .store-dashboard-page .sop-overview-track .summary-list { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 12px; }
 .store-dashboard-page .sop-overview-track .summary-item {
@@ -4932,35 +4960,20 @@
 
 @media (max-width: 1320px) and (min-width: 1101px){
   .store-dashboard-page .sop-metric-row{
-    grid-template-columns:minmax(0,1fr);
-    gap:12px;
+    grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
+    gap:16px;
   }
   .store-dashboard-page .sop-metric-card{
     padding:0 16px;
-  }
-  .store-dashboard-page .sop-metric-vs{
-    display:none;
-  }
-  .store-dashboard-page .sop-metric-cluster{
-    grid-template-columns:minmax(0,1fr) auto;
-    gap:16px;
   }
 }
 
 @media (max-width: 760px){
   .store-dashboard-page .sop-metric-row{
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
     gap:12px;
   }
-  .store-dashboard-page .sop-metric-vs{
-    display:none;
-  }
-  .store-dashboard-page .sop-metric-cluster{
-    grid-template-columns:minmax(0,1fr);
-    gap:10px;
-  }
   .store-dashboard-page .sop-metric-card{
-    height:auto;
     min-height:50px;
     flex-wrap:wrap;
     align-items:flex-start;
@@ -4975,11 +4988,8 @@
   .store-dashboard-page .sop-metric-score{
     font-size:24px;
   }
-  .store-dashboard-page .sop-improve{
-    justify-self:start;
-  }
   .store-dashboard-page .sop-improve-value{
-    font-size:24px;
+    font-size:20px;
   }
   .store-dashboard-page .sop-metric-label,
   .store-dashboard-page .sop-overview-track .sop-period-change,

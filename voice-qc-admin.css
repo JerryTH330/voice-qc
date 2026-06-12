@@ -7046,7 +7046,12 @@ body::before {
 
 #leadsFilterControls.leads-filter-toolbar.is-leads-view > .session-toolbar-control-phone-search,
 #leadsFilterControls.leads-filter-toolbar.is-customer-view > .session-toolbar-control-search {
-  flex: 1.32 1 0;
+  flex: none;
+}
+
+#leadsFilterControls.leads-filter-toolbar.is-customer-view > .leads-simple-search {
+  height: auto;
+  min-height: 44px;
 }
 
 #sessionFilterControls.session-filter-toolbar {
