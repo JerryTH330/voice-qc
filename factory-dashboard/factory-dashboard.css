@@ -6652,35 +6652,29 @@
 .factory-dashboard-page #panel-sop-execution .sop-overview-grid { display:flex; flex-direction:column; gap:16px; }
 .factory-dashboard-page #panel-sop-execution .sop-metric-row {
   display:grid;
-  grid-template-columns:max-content 48px max-content;
-  gap:16px;
+  grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
+  gap:24px;
   align-items:center;
-  justify-content:start;
 }
 .factory-dashboard-page #panel-sop-execution .sop-metric-card{
-  height:50px;
   display:flex;
-  align-items:baseline;
-  justify-content:flex-start;
-  gap:12px;
-  padding:10px 16px;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  padding:10px 14px;
   border-radius:16px;
   border:1px solid transparent;
   box-sizing:border-box;
   min-width:0;
   overflow:hidden;
+  height:auto;
+  min-height:103px;
 }
 .factory-dashboard-page #panel-sop-execution .sop-metric-card-store{
-  width: fit-content;
-  max-width: 100%;
-  justify-self: start;
   background-image:linear-gradient(90deg,rgba(47,107,255,0.10) 0%,rgba(47,107,255,0.10) 100%),linear-gradient(90deg,#FFFFFF 0%,#FFFFFF 100%);
   border-color:rgba(47,107,255,0.18);
 }
 .factory-dashboard-page #panel-sop-execution .sop-metric-card-zone{
-  width: fit-content;
-  max-width: 100%;
-  justify-self: start;
   background-image:linear-gradient(90deg,rgba(239,68,68,0.10) 0%,rgba(239,68,68,0.10) 100%),linear-gradient(90deg,#FFFFFF 0%,#FFFFFF 100%);
   border-color:rgba(239,68,68,0.18);
 }
@@ -6719,6 +6713,32 @@
   color:inherit;
 }
 .factory-dashboard-page #panel-sop-execution .sop-metric-score-zone{ color:#EF4444; }
+
+.factory-dashboard-page #panel-sop-execution .sop-metric-card-image{
+  display:block;
+  width:83px;
+  height:83px;
+  flex:0 0 83px;
+  object-fit:contain;
+  border-radius:12px;
+  transition:opacity 0.2s ease, width 0.2s ease, flex-basis 0.2s ease, margin 0.2s ease;
+}
+.factory-dashboard-page #panel-sop-execution .sop-metric-card-image.is-hidden{
+  width:0;
+  flex-basis:0;
+  opacity:0;
+  margin:0;
+  overflow:hidden;
+}
+.factory-dashboard-page #panel-sop-execution .sop-metric-card-content{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-width:120px;
+  flex:1;
+}
 
 .factory-dashboard-page #panel-sop-execution .sop-overview-track .sop-period-change {
   display: inline-flex;
@@ -6765,22 +6785,17 @@
   height:48px;
   object-fit:contain;
 }
-.factory-dashboard-page #panel-sop-execution .sop-metric-cluster{
-  display:grid;
-  grid-template-columns:max-content max-content;
-  gap:16px;
-  align-items:baseline;
-  justify-content:start;
-  min-width: 0;
-}
 .factory-dashboard-page #panel-sop-execution .sop-improve{
-  justify-self:start;
   display:inline-flex;
-  align-items: center;
+  align-items:center;
   justify-content:center;
   gap:4px;
   white-space:nowrap;
   color:#22A55C;
+  padding:0;
+  background:none;
+  border:none;
+  box-shadow:none;
 }
 .factory-dashboard-page #panel-sop-execution .sop-improve.down{ color:#DC2626; }
 .factory-dashboard-page #panel-sop-execution .sop-improve-copy{
@@ -6923,35 +6938,20 @@
 
 @media (max-width: 1320px) and (min-width: 1101px){
   .factory-dashboard-page #panel-sop-execution .sop-metric-row{
-    grid-template-columns:minmax(0,1fr);
-    gap:12px;
+    grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
+    gap:16px;
   }
   .factory-dashboard-page #panel-sop-execution .sop-metric-card{
     padding:0 16px;
-  }
-  .factory-dashboard-page #panel-sop-execution .sop-metric-vs{
-    display:none;
-  }
-  .factory-dashboard-page #panel-sop-execution .sop-metric-cluster{
-    grid-template-columns:minmax(0,1fr) auto;
-    gap:16px;
   }
 }
 
 @media (max-width: 760px) {
   .factory-dashboard-page #panel-sop-execution .sop-metric-row{
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) auto;
     gap:12px;
   }
-  .factory-dashboard-page #panel-sop-execution .sop-metric-vs{
-    display:none;
-  }
-  .factory-dashboard-page #panel-sop-execution .sop-metric-cluster{
-    grid-template-columns:minmax(0,1fr);
-    gap:10px;
-  }
   .factory-dashboard-page #panel-sop-execution .sop-metric-card{
-    height:auto;
     min-height:50px;
     flex-wrap:wrap;
     align-items:flex-start;
