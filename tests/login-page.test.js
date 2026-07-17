@@ -97,10 +97,15 @@ test('selling-point copy uses the available row width and wraps only when needed
   assert.doesNotMatch(css, /\.points p\s*{[\s\S]*?white-space:\s*nowrap;/);
 });
 
-test('login page does not use font sizes below 14px', () => {
-  const fontSizes = [...css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)]
+test('login page keeps 14px as the minimum font size outside the vehicle tags', () => {
+  const cssWithoutVehicleTags = css.replace(/\.tags li\s*{[^}]*}/g, '');
+  const fontSizes = [...cssWithoutVehicleTags.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)]
     .map((match) => Number(match[1]));
   const undersizedFonts = fontSizes.filter((size) => size < 14);
 
   assert.deepEqual(undersizedFonts, []);
+});
+
+test('vehicle profile tags use the requested 12px font size', () => {
+  assert.match(css, /\.tags li\s*{[^}]*font-size:\s*12px;/);
 });
