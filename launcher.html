@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI质检平台 · 页面入口</title>
+    <link rel="icon" href="./assets/ds-logo.png" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --line: #d7e2f2;
+        --line-strong: #c8d7ee;
+        --text: #1f2a44;
+        --muted: #6f7f99;
+        --brand: #2f6bff;
+        --brand-soft: rgba(47, 107, 255, 0.1);
+        --shadow: 0 18px 40px rgba(31, 61, 120, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(47, 107, 255, 0.12), transparent 32%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .launcher-shell {
+        width: min(1200px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        padding: 32px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-main {
+        max-width: 720px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .eyebrow img {
+        width: 18px;
+        height: 18px;
+      }
+
+      h1 {
+        margin: 18px 0 14px;
+        font-size: 40px;
+        line-height: 1.12;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .hero-link,
+      .page-card {
+        text-decoration: none;
+      }
+
+      .hero-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 150px;
+        height: 48px;
+        padding: 0 20px;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        font-size: 15px;
+        font-weight: 600;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      }
+
+      .hero-link.primary {
+        background: linear-gradient(135deg, #2f6bff 0%, #45b5ff 100%);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(47, 107, 255, 0.22);
+      }
+
+      .hero-link.secondary {
+        color: var(--brand);
+        background: #fff;
+        border-color: var(--line-strong);
+      }
+
+      .hero-link:hover,
+      .page-card:hover {
+        transform: translateY(-2px);
+      }
+
+      .hero-side {
+        min-width: 240px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+      }
+
+      .hero-side h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      .hero-side ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.8;
+        font-size: 14px;
+      }
+
+      .section {
+        margin-top: 26px;
+        padding: 30px 32px 36px;
+        border-radius: 28px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .section-head h2 {
+        margin: 0 0 6px;
+        font-size: 26px;
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .page-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 178px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        color: inherit;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      }
+
+      .page-card:hover {
+        border-color: #bcd0f3;
+        box-shadow: 0 18px 34px rgba(34, 89, 173, 0.1);
+      }
+
+      .card-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 22px;
+      }
+
+      .page-card h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .page-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .card-meta {
+        margin-top: auto;
+        color: var(--brand);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      @media (max-width: 1100px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .launcher-shell {
+          width: min(100vw - 24px, 1200px);
+          padding: 20px 0 28px;
+        }
+
+        .hero,
+        .section {
+          padding: 22px 18px;
+          border-radius: 22px;
+        }
+
+        .hero {
+          flex-direction: column;
+        }
+
+        h1 {
+          font-size: 30px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="launcher-shell">
+      <section class="hero">
+        <div class="hero-main">
+          <div class="eyebrow">
+            <img src="./assets/ds-logo.png" alt="" aria-hidden="true" />
+            <span>AI质检平台 页面总入口</span>
+          </div>
+          <h1>从这里统一进入各个菜单页面</h1>
+          <p>
+            现在每个菜单都已经拆成独立文件夹了。为了方便你直接在本地查看，我补了这个根目录入口页。
+            以后直接打开
+            <code>/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/index.html</code>
+            就行。
+          </p>
+          <div class="hero-actions">
+            <a class="hero-link primary" href="./store-dashboard/index.html">打开门店看板</a>
+            <a class="hero-link secondary" href="./sales-dashboard/index.html">打开销售看板</a>
+          </div>
+        </div>
+        <aside class="hero-side">
+          <h2>说明</h2>
+          <ul>
+            <li>菜单切换已改回显式跳转到各自的 <code>index.html</code></li>
+            <li>直接双击本地页面也不会再落到目录索引页</li>
+            <li>公共资源仍保留在根目录，页面实现按菜单分文件夹管理</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>看板</h2>
+            <p>当前系统的三个主看板入口。</p>
+          </div>
+        </div>
+        <div class="grid">
+          <a class="page-card" href="./factory-dashboard/index.html">
+            <div class="card-icon">厂</div>
+            <h3>厂端看板</h3>
+            <p>厂端视角的经营与质检数据汇总页面。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./store-dashboard/index.html">
+            <div class="card-icon">店</div>
+            <h3>门店看板</h3>
+            <p>门店管理看板，聚焦线索、转化与顾问效能。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./sales-dashboard/index.html">
+            <div class="card-icon">销</div>
+            <h3>销售看板</h3>
+            <p>销售顾问/邀约专员场景下的复盘、推荐与趋势。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>业务与管理</h2>
+            <p>其余菜单入口也统一放在这里了。</p>
+          </div>
+        </div>
+        <div class="grid">
+          <a class="page-card" href="./script-library/index.html">
+            <div class="card-icon">术</div>
+            <h3>优秀话术库</h3>
+            <p>沉淀可复用的话术片段与优秀案例。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./session/index.html">
+            <div class="card-icon">录</div>
+            <h3>录音列表</h3>
+            <p>查看会话列表、详情与AI分析结果。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./leads/index.html">
+            <div class="card-icon">线</div>
+            <h3>线索列表</h3>
+            <p>按线索与客户双视角查看和处理清单。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./config/index.html">
+            <div class="card-icon">配</div>
+            <h3>质检配置</h3>
+            <p>规则、标签、策略等配置页面入口。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+          <a class="page-card" href="./system/index.html">
+            <div class="card-icon">系</div>
+            <h3>系统管理</h3>
+            <p>系统级信息、成员与维护功能入口。</p>
+            <div class="card-meta">进入页面</div>
+          </a>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css" />
+        <link rel="stylesheet" href="./page.css?v=20260717intent-list" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     </head>
   <body>
     <div class="page-shell">
@@ -184,6 +183,7 @@
                 <button class="btn" data-route="leads" data-leads-view-target="leads">返回线索视图</button>
               </div>
               <div class="leads-detail-actions-side">
+                <div class="mini-pill" id="leadDetailLastTouch">最后触达时间：2026-03-13 16:00:00</div>
                 <div class="mini-pill" id="leadDetailLeadId">Lead ID: LEAD-20260313-118</div>
                 <div class="mini-pill" id="leadDetailStore">门店: 上海浦东门店</div>
                 <div class="mini-pill" id="leadDetailAdvisor">顾问姓名：郭芹</div>
@@ -201,7 +201,7 @@
                         <div class="lead-detail-hero-copy">
                           <div class="lead-detail-hero-name-row">
                             <div class="hero-title" id="leadDetailHeroTitle">王先生</div>
-                            <div class="hero-subtitle" id="leadDetailHeroSubtitle">139****1268 · ES6 · 最后触达时间：2026-03-13 16:00:00</div>
+                            <div class="hero-subtitle" id="leadDetailHeroSubtitle">139****1268 · ES6</div>
                           </div>
                         </div>
                       </div>
@@ -336,7 +336,7 @@
                       <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
                       <div class="journey-body">
                         <div class="journey-section">
-                          <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary-muted.svg" alt="" />会话小结</div>
+                          <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
                           <div class="journey-section-content">电话确认客户周六到店试驾时间，告知试驾安排和需要携带的资料。客户确认下午2点到店，需要试驾传祺M8至尊版。</div>
                         </div>
                         <div class="journey-section">
@@ -411,7 +411,7 @@
                       <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
                       <div class="journey-body">
                         <div class="journey-section">
-                          <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary-muted.svg" alt="" />会话小结</div>
+                          <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
                           <div class="journey-section-content">客户主动比较竞品空间与价格，AI 判定为"高意向但价格敏感"，本次通话时长 8 分钟，客户对试驾接受度较高，但在价格和交付周期方面仍有顾虑。</div>
                         </div>
                         <div class="journey-section">
@@ -454,37 +454,71 @@
                           <img class="intention-item-icon" src="../assets/intention-intent.svg" alt="" />
                           <div class="intention-item-label">意图</div>
                         </div>
-                        <div class="intention-item-content" id="leadDetailIntentText">客户从首次到店接待到线上留资再到电话邀约，意向逐步提升。初期关注空间与静谧性，中期转为价格敏感型对比，后期表现出明确试驾意向但仍需推动决策。综合判定为高意向客户，但存在价格顾虑，需重点跟进。</div>
+                        <div class="intention-item-content" id="leadDetailIntentText">
+                          <ul class="lead-detail-intent-list">
+                            <li>客户从首次到店接待到线上留资再到电话邀约，意向逐步提升。</li>
+                            <li>初期关注空间与静谧性，中期转为价格敏感型对比，后期表现出明确试驾意向但仍需推动决策。</li>
+                            <li>综合判定为高意向客户，但存在价格顾虑，需重点跟进。</li>
+                          </ul>
+                        </div>
                       </div>
                       <div class="intention-item">
                         <div class="intention-item-head">
                           <img class="intention-item-icon" src="../assets/intention-evidence.svg" alt="" />
                           <div class="intention-item-label">证据</div>
                         </div>
-                        <div class="intention-item-content" id="leadDetailEvidenceText">①到店时对车内静谧性表示认可；②官网留资时明确车型偏好ES6/传祺M8，预算25-35万；③电话邀约中主动比较竞品价格，同意加微信并提及周末可能到店，但表示需要"再考虑一下"。</div>
+                        <div class="intention-item-content" id="leadDetailEvidenceText">①到店时对车内静谧性表示认可；②官网留资时明确车型偏好ES6/传祺M8，预算25-35万；③电话邀约中主动比较竞品价格，同意加微信并提及周末可能到店，但表示需要“<strong class="lead-detail-evidence-alert">再考虑一下</strong>”。</div>
                       </div>
                     </div>
                   </div>
                 </section>
     
                 <section class="card lead-detail-tag-panel">
-                  <div class="panel-header">
+                  <div class="panel-header lead-detail-tag-panel-header">
                     <div class="panel-title">
                       <h3>客户标签</h3>
-                      <p>保留当前已沉淀的经营标签，方便和客户标签空态互补查看。</p>
                     </div>
                   </div>
-                  <div class="lead-tag-cloud" aria-label="客户标签词云" id="leadDetailTagCloud">
-                    <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">高意向</span></span>
-                    <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">价格博弈中</span></span>
-                    <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">家庭出行</span></span>
-                    <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">金融方案诉求</span></span>
-                    <span class="lead-cloud-term amber md"><span class="lead-cloud-term-copy">预算上限 32 万</span></span>
-                    <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">关注静谧性</span></span>
-                    <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">周末试驾</span></span>
-                    <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">竞品对比</span></span>
-                    <span class="lead-cloud-term violet sm"><span class="lead-cloud-term-copy">置换补贴</span></span>
-                    <span class="lead-cloud-term red sm"><span class="lead-cloud-term-copy">交付周期</span></span>
+                  <div class="lead-detail-tag-split">
+                    <article class="lead-detail-tag-section">
+                      <div class="lead-detail-tag-section-header">
+                        <div class="lead-detail-tag-section-title intention-item-head">
+                          <img src="../assets/lead-tag-dialogue.svg" class="intention-item-icon" alt="" aria-hidden="true" />
+                          <h3>对话</h3>
+                        </div>
+                        <p>解析客户真实对话，动态识别需求、偏好、意向与决策阶段，深化客户个体洞察。</p>
+                      </div>
+                      <div class="lead-tag-cloud" aria-label="客户对话标签词云" id="leadDetailConversationTagCloud" data-lead-detail-tag-cloud>
+                        <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">高意向</span></span>
+                        <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">价格敏感</span></span>
+                        <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">家庭出行</span></span>
+                        <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">金融方案诉求</span></span>
+                        <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">关注静谧性</span></span>
+                        <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">周末试驾</span></span>
+                        <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">竞品对比</span></span>
+                        <span class="lead-cloud-term red sm"><span class="lead-cloud-term-copy">决策待推动</span></span>
+                      </div>
+                    </article>
+                    <article class="lead-detail-tag-section">
+                      <div class="lead-detail-tag-section-header">
+                        <div class="lead-detail-tag-section-title intention-item-head">
+                          <img src="../assets/lead-tag-public.svg" class="intention-item-icon" alt="" aria-hidden="true" />
+                          <h3>公域</h3>
+                        </div>
+                        <p>融合公域用户属性、兴趣与行为数据，补充客户基础画像，构建完整客户视图。</p>
+                      </div>
+                      <div class="lead-tag-cloud" aria-label="客户公域标签词云" id="leadDetailPublicTagCloud" data-lead-detail-tag-cloud>
+                        <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">30-39岁</span></span>
+                        <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">已婚有孩</span></span>
+                        <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">上海常驻</span></span>
+                        <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">中高消费能力</span></span>
+                        <span class="lead-cloud-term amber md"><span class="lead-cloud-term-copy">汽车兴趣人群</span></span>
+                        <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">新能源车关注</span></span>
+                        <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">家庭出行偏好</span></span>
+                        <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">近期浏览汽车内容</span></span>
+                        <span class="lead-cloud-term violet sm"><span class="lead-cloud-term-copy">科技数码兴趣</span></span>
+                      </div>
+                    </article>
                   </div>
                 </section>
               </div>
@@ -503,169 +537,56 @@
             <div class="lead-detail-layout">
               <div class="stack-16 lead-detail-main-column">
                 <section class="hero-card customer-detail-hero">
-                  <div class="hero-top">
-                    <div>
-                      <div class="customer-detail-hero-row">
-                        <div class="hero-title" id="customerDetailHeroTitle">王*</div>
-                        <span class="pill-inline green customer-detail-status-pill" id="customerDetailHeroStatus">已下定</span>
-                      </div>
-                      <div class="hero-subtitle" id="customerDetailHeroSubtitle">139****1268 · 关联 3 条线索 · 涉及 3 家门店</div>
+                  <div class="customer-hero-summary-row">
+                    <div class="customer-detail-hero-row">
+                      <div class="hero-title" id="customerDetailHeroTitle">王*娴</div>
+                    </div>
+                    <div class="customer-hero-summary-chips" aria-label="客户摘要">
+                      <span class="customer-hero-summary-chip">关联线索：3条线索</span>
+                      <span class="customer-hero-summary-chip">涉及门店：3个门店</span>
+                      <span class="customer-hero-summary-chip">首次建联：2026-03-10</span>
+                      <span class="customer-hero-summary-chip">最后一次跟进时间：2026-03-15报价沟通</span>
                     </div>
                   </div>
 
-                  <div class="customer-hero-journeys" aria-label="客户关联门店旅程示意">
-                    <div class="customer-hero-journey-row customer-hero-journey-row-other">
-                      <div class="customer-hero-store-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path d="M6 10.2 7.4 6.6c.3-.8 1-1.3 1.9-1.3h5.4c.8 0 1.6.5 1.9 1.3l1.4 3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          <path d="M5.8 10h12.4c.8 0 1.5.7 1.5 1.5v4.2c0 .7-.5 1.3-1.2 1.4l-1 .1-.6 1.1c-.2.4-.6.7-1.1.7h-.4c-.5 0-.9-.3-1.1-.7l-.5-1H10l-.5 1c-.2.4-.6.7-1.1.7H8c-.5 0-.9-.3-1.1-.7l-.6-1.1-1-.1c-.7-.1-1.2-.7-1.2-1.4v-4.2c0-.8.7-1.5 1.7-1.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                          <path d="M7.2 13.6h2M14.8 13.6h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                      <div class="customer-hero-store-main">
-                        <div class="customer-hero-store-heading">
-                          <div class="customer-hero-store-title">杭州西湖门店</div>
-                          <span class="customer-hero-store-status customer-hero-store-status-other">跟进中</span>
-                        </div>
-                        <div class="customer-hero-store-facts">
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            <span>顾问：李娜</span>
-                          </span>
-                          <span class="customer-hero-store-separator"></span>
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="2"/>
-                              <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            <span>首次线索：2026-03-10</span>
-                          </span>
-                        </div>
-                      </div>
-                      <span class="customer-hero-store-divider" aria-hidden="true"></span>
-                      <div class="customer-hero-store-side">
-                        <div class="customer-hero-journey-steps customer-hero-journey-steps-single">
-                          <div class="customer-hero-journey-step is-none">
-                            <div class="customer-hero-journey-marker">无</div>
-                            <div class="customer-hero-journey-stage">首触跟进</div>
-                            <div class="customer-hero-journey-date">2026-03-10</div>
-                          </div>
-                        </div>
-                      </div>
+                  <div class="customer-hero-flat-timeline" aria-label="客户跨门店旅程概览">
+                    <div class="customer-hero-flat-step is-none" data-hero-timeline-step="杭州西湖门店-首触跟进">
+                      <div class="customer-hero-flat-marker">无</div>
+                      <div class="customer-hero-flat-stage">首触跟进</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-other">杭州西湖门店</div>
+                      <div class="customer-hero-flat-date">2026-03-10</div>
                     </div>
-
-                    <div class="customer-hero-journey-row customer-hero-journey-row-current">
-                      <div class="customer-hero-store-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path d="M6 10.2 7.4 6.6c.3-.8 1-1.3 1.9-1.3h5.4c.8 0 1.6.5 1.9 1.3l1.4 3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          <path d="M5.8 10h12.4c.8 0 1.5.7 1.5 1.5v4.2c0 .7-.5 1.3-1.2 1.4l-1 .1-.6 1.1c-.2.4-.6.7-1.1.7h-.4c-.5 0-.9-.3-1.1-.7l-.5-1H10l-.5 1c-.2.4-.6.7-1.1.7H8c-.5 0-.9-.3-1.1-.7l-.6-1.1-1-.1c-.7-.1-1.2-.7-1.2-1.4v-4.2c0-.8.7-1.5 1.7-1.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                          <path d="M7.2 13.6h2M14.8 13.6h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                      <div class="customer-hero-store-main">
-                        <div class="customer-hero-store-heading">
-                          <div class="customer-hero-store-title">上海浦东门店</div>
-                          <span class="customer-hero-store-status customer-hero-store-status-current">跟进中</span>
-                        </div>
-                        <div class="customer-hero-store-facts">
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            <span>顾问：刘青</span>
-                          </span>
-                          <span class="customer-hero-store-separator"></span>
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="2"/>
-                              <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            <span>首次线索：2026-03-10</span>
-                          </span>
-                        </div>
-                      </div>
-                      <span class="customer-hero-store-divider" aria-hidden="true"></span>
-                      <div class="customer-hero-store-side">
-                        <div class="customer-hero-journey-steps">
-                          <div class="customer-hero-journey-step is-high">
-                            <div class="customer-hero-journey-marker">高</div>
-                            <div class="customer-hero-journey-stage">首触跟进</div>
-                            <div class="customer-hero-journey-date">2026-03-10</div>
-                          </div>
-                          <div class="customer-hero-journey-step is-medium">
-                            <div class="customer-hero-journey-marker">中</div>
-                            <div class="customer-hero-journey-stage">到店接待</div>
-                            <div class="customer-hero-journey-date">2026-03-13</div>
-                          </div>
-                          <div class="customer-hero-journey-step is-high">
-                            <div class="customer-hero-journey-marker">高</div>
-                            <div class="customer-hero-journey-stage">试乘试驾</div>
-                            <div class="customer-hero-journey-date">2026-03-13</div>
-                          </div>
-                        </div>
-                      </div>
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-首触跟进">
+                      <div class="customer-hero-flat-marker">高</div>
+                      <div class="customer-hero-flat-stage">首触跟进</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
+                      <div class="customer-hero-flat-date">2026-03-10</div>
                     </div>
-
-                    <div class="customer-hero-journey-row customer-hero-journey-row-extra">
-                      <div class="customer-hero-store-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path d="M6 10.2 7.4 6.6c.3-.8 1-1.3 1.9-1.3h5.4c.8 0 1.6.5 1.9 1.3l1.4 3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          <path d="M5.8 10h12.4c.8 0 1.5.7 1.5 1.5v4.2c0 .7-.5 1.3-1.2 1.4l-1 .1-.6 1.1c-.2.4-.6.7-1.1.7h-.4c-.5 0-.9-.3-1.1-.7l-.5-1H10l-.5 1c-.2.4-.6.7-1.1.7H8c-.5 0-.9-.3-1.1-.7l-.6-1.1-1-.1c-.7-.1-1.2-.7-1.2-1.4v-4.2c0-.8.7-1.5 1.7-1.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                          <path d="M7.2 13.6h2M14.8 13.6h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                      <div class="customer-hero-store-main">
-                        <div class="customer-hero-store-heading">
-                          <div class="customer-hero-store-title">杭州滨江门店</div>
-                          <span class="customer-hero-store-status customer-hero-store-status-extra">培育中</span>
-                        </div>
-                        <div class="customer-hero-store-facts">
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            <span>顾问：周明</span>
-                          </span>
-                          <span class="customer-hero-store-separator"></span>
-                          <span class="customer-hero-store-fact">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                              <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="2"/>
-                              <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            <span>首次线索：2026-03-14</span>
-                          </span>
-                        </div>
-                      </div>
-                      <span class="customer-hero-store-divider" aria-hidden="true"></span>
-                      <div class="customer-hero-store-side">
-                        <div class="customer-hero-journey-steps customer-hero-journey-steps-two">
-                          <div class="customer-hero-journey-step is-medium">
-                            <div class="customer-hero-journey-marker">中</div>
-                            <div class="customer-hero-journey-stage">电话跟进</div>
-                            <div class="customer-hero-journey-date">2026-03-14</div>
-                          </div>
-                          <div class="customer-hero-journey-step is-high">
-                            <div class="customer-hero-journey-marker">高</div>
-                            <div class="customer-hero-journey-stage">报价沟通</div>
-                            <div class="customer-hero-journey-date">2026-03-15</div>
-                          </div>
-                        </div>
-                      </div>
+                    <div class="customer-hero-flat-step is-medium" data-hero-timeline-step="上海浦东门店-到店接待">
+                      <div class="customer-hero-flat-marker">中</div>
+                      <div class="customer-hero-flat-stage">到店接待</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
+                      <div class="customer-hero-flat-date">2026-03-13</div>
                     </div>
-
-                    <div class="customer-hero-more" hidden>
-                      <button class="customer-hero-more-btn" type="button" aria-expanded="false">
-                        <span class="customer-hero-more-copy">展开查看更多</span>
-                        <span class="customer-hero-more-count"></span>
-                      </button>
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-试乘试驾">
+                      <div class="customer-hero-flat-marker">高</div>
+                      <div class="customer-hero-flat-stage">试乘试驾</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
+                      <div class="customer-hero-flat-date">2026-03-13</div>
+                    </div>
+                    <div class="customer-hero-flat-step is-medium" data-hero-timeline-step="杭州滨江门店-电话跟进">
+                      <div class="customer-hero-flat-marker">中</div>
+                      <div class="customer-hero-flat-stage">电话跟进</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-extra">杭州滨江门店</div>
+                      <div class="customer-hero-flat-date">2026-03-14</div>
+                    </div>
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="杭州滨江门店-报价沟通">
+                      <div class="customer-hero-flat-marker">高</div>
+                      <div class="customer-hero-flat-stage">报价沟通</div>
+                      <div class="customer-hero-flat-store customer-hero-flat-store-extra">杭州滨江门店</div>
+                      <div class="customer-hero-flat-date">2026-03-15</div>
                     </div>
                   </div>
-    
                 </section>
     
                 <section class="card lead-journey-panel customer-journey-panel">
@@ -684,20 +605,7 @@
                       </div>
                       <div class="customer-journey-control-group">
                         <span class="customer-journey-control-label">查看门店</span>
-                        <div class="customer-journey-filter" role="group" aria-label="客户旅程查看门店">
-                          <button class="customer-journey-filter-btn customer-journey-filter-btn-current" type="button" data-customer-journey-filter="current" aria-pressed="false">
-                            <span class="customer-journey-filter-check"></span>
-                            <span>上海浦东门店</span>
-                          </button>
-                          <button class="customer-journey-filter-btn customer-journey-filter-btn-other" type="button" data-customer-journey-filter="other" aria-pressed="false">
-                            <span class="customer-journey-filter-check"></span>
-                            <span>杭州西湖门店</span>
-                          </button>
-                          <button class="customer-journey-filter-btn customer-journey-filter-btn-extra" type="button" data-customer-journey-filter="extra" aria-pressed="false">
-                            <span class="customer-journey-filter-check"></span>
-                            <span>杭州滨江门店</span>
-                          </button>
-                        </div>
+                        <div class="customer-journey-filter factory-multi-select-tabs" role="group" aria-label="客户旅程查看门店" data-customer-journey-filter-slot></div>
                       </div>
                     </div>
                   </div>
@@ -808,7 +716,7 @@
                         <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
                         <div class="journey-body">
                           <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary-muted.svg" alt="" />会话小结</div>
+                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
                             <div class="journey-section-content">客户在杭州西湖门店完成早期首触跟进，主要比较竞品空间与价格，对试驾接受度较高。</div>
                           </div>
                           <div class="journey-section">
@@ -900,41 +808,13 @@
                     </div>
     
                     <div class="intention-body customer-intention-body">
-                      <div class="customer-intention-profile-box">
-                        <div class="intention-item">
-                          <div class="intention-item-label" data-customer-store-label="杭州西湖门店">
-                            <span class="customer-store-label-text">杭州西湖门店</span>
-                            <span class="customer-intention-scope">(单店视角)</span>
-                          </div>
-                          <div class="intention-item-content customer-intention-muted">
-                            客户看重空间和静谧性，考虑传祺M8，有两个孩子。
-                          </div>
+                      <div class="customer-ai-generate-panel" aria-label="AI画像生成入口">
+                        <div class="customer-ai-generate-preview" aria-hidden="true">
+                          <span>系统将基于当前日期范围内的录音表现、客户画像碎片与多门店触点进行智能合并。</span>
+                          <span>重点识别预算、车型偏好、家庭场景、价格敏感点和下一步跟进建议。</span>
+                          <span>生成后可直接查看统一客户画像与关键策略。</span>
                         </div>
-    
-                        <div class="intention-item customer-intention-compare">
-                          <div class="intention-item-label" id="customerDetailSingleStoreLabel" data-customer-store-label="上海浦东门店">
-                            <span class="customer-store-label-text">上海浦东门店</span>
-                            <span class="customer-intention-scope">(单店视角)</span>
-                          </div>
-                          <div class="intention-item-content customer-intention-muted">
-                            客户预算在 25-30 万，对第三排空间有顾虑，高度关注金融免息。
-                          </div>
-                        </div>
-
-                        <div class="intention-item customer-intention-compare">
-                          <div class="intention-item-label" data-customer-store-label="杭州滨江门店">
-                            <span class="customer-store-label-text">杭州滨江门店</span>
-                            <span class="customer-intention-scope">(单店视角)</span>
-                          </div>
-                          <div class="intention-item-content customer-intention-muted">
-                            客户再次咨询传祺M8，重点确认第三排空间和家庭出行舒适度。已完成试驾信息可复用，仍需围绕家庭乘坐体验继续培育。
-                          </div>
-                        </div>
-
-                        <div id="customerDetailMergedProfile" class="customer-intention-merged">
-                          <div class="customer-intention-merged-title">智能画像合并</div>
-                          <div class="intention-item-content" id="customerDetailMergedProfileContent">有两个孩子、重视第三排空间、乘坐舒适性与价格方案的高意向客户。后续应围绕试驾体验、家庭出行场景、金融免息和置换补贴做一致性跟进。</div>
-                        </div>
+                        <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
                       </div>
                     </div>
                   </div>
@@ -969,6 +849,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js"></script>
+    <script src="./page.js?v=20260717tag-panel-title"></script>
   </body>
 </html>

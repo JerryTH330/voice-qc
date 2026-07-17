@@ -1,369 +1,88 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI质检平台 · 页面入口</title>
-    <link rel="icon" href="./assets/ds-logo.png" />
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f4f7fb;
-        --panel: #ffffff;
-        --line: #d7e2f2;
-        --line-strong: #c8d7ee;
-        --text: #1f2a44;
-        --muted: #6f7f99;
-        --brand: #2f6bff;
-        --brand-soft: rgba(47, 107, 255, 0.1);
-        --shadow: 0 18px 40px rgba(31, 61, 120, 0.08);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI质检平台 · 登录</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <div class="stage">
+    <canvas id="wave" aria-hidden="true"></canvas>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
 
-      * {
-        box-sizing: border-box;
-      }
+    <div class="wrap">
+      <header class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#2563EB"/><stop offset="1" stop-color="#38BDF8"/></linearGradient></defs><g stroke="url(#lg)" stroke-width="2.1" stroke-linecap="round"><line x1="4" y1="12" x2="4" y2="12.2"/><line x1="8" y1="9" x2="8" y2="15"/><line x1="12" y1="4.5" x2="12" y2="19.5"/><line x1="16" y1="7.5" x2="16" y2="16.5"/><line x1="20" y1="10.5" x2="20" y2="13.5"/></g></svg>
+        </span>
+        <span class="name">AI质检平台</span>
+      </header>
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(47, 107, 255, 0.12), transparent 32%),
-          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
-        color: var(--text);
-      }
-
-      .launcher-shell {
-        width: min(1200px, calc(100vw - 48px));
-        margin: 0 auto;
-        padding: 40px 0 56px;
-      }
-
-      .hero {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 24px;
-        padding: 32px;
-        border: 1px solid var(--line);
-        border-radius: 28px;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(14px);
-        box-shadow: var(--shadow);
-      }
-
-      .hero-main {
-        max-width: 720px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: var(--brand-soft);
-        color: var(--brand);
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      .eyebrow img {
-        width: 18px;
-        height: 18px;
-      }
-
-      h1 {
-        margin: 18px 0 14px;
-        font-size: 40px;
-        line-height: 1.12;
-      }
-
-      .hero p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 17px;
-        line-height: 1.7;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 22px;
-      }
-
-      .hero-link,
-      .page-card {
-        text-decoration: none;
-      }
-
-      .hero-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 150px;
-        height: 48px;
-        padding: 0 20px;
-        border-radius: 16px;
-        border: 1px solid transparent;
-        font-size: 15px;
-        font-weight: 600;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      }
-
-      .hero-link.primary {
-        background: linear-gradient(135deg, #2f6bff 0%, #45b5ff 100%);
-        color: #fff;
-        box-shadow: 0 14px 28px rgba(47, 107, 255, 0.22);
-      }
-
-      .hero-link.secondary {
-        color: var(--brand);
-        background: #fff;
-        border-color: var(--line-strong);
-      }
-
-      .hero-link:hover,
-      .page-card:hover {
-        transform: translateY(-2px);
-      }
-
-      .hero-side {
-        min-width: 240px;
-        padding: 20px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
-      }
-
-      .hero-side h2 {
-        margin: 0 0 12px;
-        font-size: 18px;
-      }
-
-      .hero-side ul {
-        margin: 0;
-        padding-left: 18px;
-        color: var(--muted);
-        line-height: 1.8;
-        font-size: 14px;
-      }
-
-      .section {
-        margin-top: 26px;
-        padding: 30px 32px 36px;
-        border-radius: 28px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        box-shadow: var(--shadow);
-      }
-
-      .section-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-        gap: 16px;
-        margin-bottom: 22px;
-      }
-
-      .section-head h2 {
-        margin: 0 0 6px;
-        font-size: 26px;
-      }
-
-      .section-head p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 15px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-      }
-
-      .page-card {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        min-height: 178px;
-        padding: 20px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-        color: inherit;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      }
-
-      .page-card:hover {
-        border-color: #bcd0f3;
-        box-shadow: 0 18px 34px rgba(34, 89, 173, 0.1);
-      }
-
-      .card-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--brand-soft);
-        color: var(--brand);
-        font-size: 22px;
-      }
-
-      .page-card h3 {
-        margin: 0;
-        font-size: 20px;
-      }
-
-      .page-card p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.7;
-      }
-
-      .card-meta {
-        margin-top: auto;
-        color: var(--brand);
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      @media (max-width: 1100px) {
-        .grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 760px) {
-        .launcher-shell {
-          width: min(100vw - 24px, 1200px);
-          padding: 20px 0 28px;
-        }
-
-        .hero,
-        .section {
-          padding: 22px 18px;
-          border-radius: 22px;
-        }
-
-        .hero {
-          flex-direction: column;
-        }
-
-        h1 {
-          font-size: 30px;
-        }
-
-        .grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="launcher-shell">
-      <section class="hero">
-        <div class="hero-main">
-          <div class="eyebrow">
-            <img src="./assets/ds-logo.png" alt="" aria-hidden="true" />
-            <span>AI质检平台 页面总入口</span>
-          </div>
-          <h1>从这里统一进入各个菜单页面</h1>
-          <p>
-            现在每个菜单都已经拆成独立文件夹了。为了方便你直接在本地查看，我补了这个根目录入口页。
-            以后直接打开
-            <code>/Users/linxianxin/codex/AI质检平台/voice-qc-admin-html/index.html</code>
-            就行。
-          </p>
-          <div class="hero-actions">
-            <a class="hero-link primary" href="./store-dashboard/index.html">打开门店看板</a>
-            <a class="hero-link secondary" href="./sales-dashboard/index.html">打开销售看板</a>
-          </div>
-        </div>
-        <aside class="hero-side">
-          <h2>说明</h2>
-          <ul>
-            <li>菜单切换已改回显式跳转到各自的 <code>index.html</code></li>
-            <li>直接双击本地页面也不会再落到目录索引页</li>
-            <li>公共资源仍保留在根目录，页面实现按菜单分文件夹管理</li>
+      <div class="main">
+        <div class="pitch-copy">
+          <div class="eyebrow">面向汽车经销商 · AI 通话质检</div>
+          <h1>让每一通销售通话，<br>都被听见、被<span class="hl">质检</span>、被改进</h1>
+          <p class="lede">AI 逐通转写、逐句分析，把销售通话变成可复用的质检结论、客户洞察与跟进动作。</p>
+          <ul class="points">
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="m8.5 13 2 2 4-4.5"/></svg></span><div><h3>智能 SOP 质检</h3><p>通话自动转写，按可配置规则逐条打分，从人工抽检走向逐通质检。</p></div></li>
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="9" r="4"/><path d="M4 20c0-3.4 3.1-5.5 7-5.5"/><path d="m17.5 15.5 1 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2L14.5 17l2-.3Z"/></svg></span><div><h3>AI 客户洞察</h3><p>识别客户意向等级与多维画像，直接给出下一步跟进建议。</p></div></li>
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span><div><h3>多级数据看板</h3><p>厂端 · 大区 · 门店 · 顾问逐级下钻，排名、复盘、督办一屏掌握。</p></div></li>
           </ul>
-        </aside>
-      </section>
+        </div>
 
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2>看板</h2>
-            <p>当前系统的三个主看板入口。</p>
-          </div>
+        <div class="cards">
+          <div class="cards-label">同一通电话 · AI 产出</div>
+          <aside class="pcard" aria-label="质检结果示例">
+            <div class="sc-head"><span class="sc-scene">试驾邀约</span><span class="sc-id">#AQ-2026-0716</span></div>
+            <div class="sc-cust">客户 · 王先生　·　顾问 · 李明</div>
+            <div class="sc-metrics"><div><span class="sc-num">88<i>%</i></span><label>质检合格率</label></div><div><span class="sc-num">76<i>%</i></span><label>话术命中率</label></div></div>
+            <ul class="sc-sop"><li class="ok">开场问候与自我介绍到位</li><li class="ok">主动确认客户购车需求</li><li class="no">未主动邀约到店试驾</li></ul>
+            <div class="sc-foot"><span class="intent">客户意向 高</span>　·　建议 24 小时内二次跟进</div>
+          </aside>
+          <aside class="pcard" aria-label="客户画像示例">
+            <div class="sc-head"><span class="sc-scene intent">意向 高</span><span class="sc-id">客户画像</span></div>
+            <div class="sc-cust">客户 · 王先生　·　抖音进线</div>
+            <div class="sc-metrics"><div><span class="pv">传祺 GS8</span><label>意向车型</label></div><div><span class="pv">25–30 万</span><label>购车预算</label></div></div>
+            <ul class="tags"><li>价格敏感</li><li>关注空间</li><li>计划置换</li><li>本月购车</li></ul>
+            <div class="sc-foot"><span class="resist">抗性点</span>　关注落地价与金融分期方案</div>
+          </aside>
         </div>
-        <div class="grid">
-          <a class="page-card" href="./factory-dashboard/index.html">
-            <div class="card-icon">厂</div>
-            <h3>厂端看板</h3>
-            <p>厂端视角的经营与质检数据汇总页面。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./store-dashboard/index.html">
-            <div class="card-icon">店</div>
-            <h3>门店看板</h3>
-            <p>门店管理看板，聚焦线索、转化与顾问效能。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./sales-dashboard/index.html">
-            <div class="card-icon">销</div>
-            <h3>销售看板</h3>
-            <p>销售顾问/邀约专员场景下的复盘、推荐与趋势。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-        </div>
-      </section>
 
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2>业务与管理</h2>
-            <p>其余菜单入口也统一放在这里了。</p>
+        <div class="vline" aria-hidden="true"></div>
+
+        <section class="auth">
+          <div class="card">
+            <div class="eyebrow">企业登录</div>
+            <h2>欢迎登录</h2>
+            <p class="card-sub">请使用企业账号登录 AI质检平台</p>
+            <form id="login-form" autocomplete="off" novalidate>
+              <div class="field" id="field-tenant">
+                <label for="tenant">租户</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg><input id="tenant" type="text" value="AI质检管理" autocomplete="organization" aria-describedby="tenant-error" aria-invalid="false" /></div>
+                <span class="field-error" id="tenant-error" aria-live="polite"></span>
+              </div>
+              <div class="field" id="field-account">
+                <label for="account">账号</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg><input id="account" type="text" placeholder="请输入账号" autocomplete="username" aria-describedby="account-error" aria-invalid="false" /></div>
+                <span class="field-error" id="account-error" aria-live="polite"></span>
+              </div>
+              <div class="field" id="field-password">
+                <label for="password">密码</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.4" r="1.3"/></svg><input id="password" type="password" placeholder="请输入密码" autocomplete="current-password" aria-describedby="password-error" aria-invalid="false" /></div>
+                <span class="field-error" id="password-error" aria-live="polite"></span>
+              </div>
+              <button class="submit" id="login-btn" type="submit" aria-label="登录"><span class="submit-label">登 录</span><span class="submit-spinner" aria-hidden="true"></span></button>
+            </form>
+            <div class="card-foot">登录即代表同意平台使用规范 · 忘记密码请联系管理员</div>
           </div>
-        </div>
-        <div class="grid">
-          <a class="page-card" href="./script-library/index.html">
-            <div class="card-icon">术</div>
-            <h3>优秀话术库</h3>
-            <p>沉淀可复用的话术片段与优秀案例。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./session/index.html">
-            <div class="card-icon">录</div>
-            <h3>录音列表</h3>
-            <p>查看会话列表、详情与AI分析结果。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./leads/index.html">
-            <div class="card-icon">线</div>
-            <h3>线索列表</h3>
-            <p>按线索与客户双视角查看和处理清单。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./config/index.html">
-            <div class="card-icon">配</div>
-            <h3>质检配置</h3>
-            <p>规则、标签、策略等配置页面入口。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-          <a class="page-card" href="./system/index.html">
-            <div class="card-icon">系</div>
-            <h3>系统管理</h3>
-            <p>系统级信息、成员与维护功能入口。</p>
-            <div class="card-meta">进入页面</div>
-          </a>
-        </div>
-      </section>
+        </section>
+      </div>
+
+      <footer class="compliance"><span>5 类质检场景</span><span class="sep"></span><span>云外呼 / 数字工牌 / CRM 三路接入</span><span class="sep"></span><span>原句可追溯</span><span class="sep"></span><span>PII 脱敏传输</span></footer>
     </div>
-  </body>
+  </div>
+  <script src="login.js"></script>
+</body>
 </html>

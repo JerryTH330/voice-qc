@@ -7256,10 +7256,56 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
-      function renderSessionSegmentControl(filterKey, label, selectedValue, options, extraClass = '') {
+      function renderSessionIntentLevelHelp() {
+        return `
+          <span class="session-intent-help">
+            <button
+              type="button"
+              class="session-intent-help-btn"
+              aria-label="查看AI意向等级评定规则"
+              aria-describedby="sessionIntentRuleTooltip"
+            >?</button>
+            <span class="session-intent-rule-tooltip" id="sessionIntentRuleTooltip" role="tooltip">
+              <strong class="session-intent-rule-title">AI意向等级评定规则</strong>
+              <table class="session-intent-rule-table">
+                <thead>
+                  <tr>
+                    <th scope="col">等级</th>
+                    <th scope="col">判定标准</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">高</th>
+                    <td>近期购买、问具体配置价格、主动约试驾、询问提车时间</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">中</th>
+                    <td>有需求但时间未定、对比阶段、需再考虑、已约定跟进</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">低</th>
+                    <td>仅初步了解、无明确计划、被推销后简单应付</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">无</th>
+                    <td>明确拒绝、无意向</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">无法判断</th>
+                    <td>ASR内容过短或杂乱，无法提取信息，无法判断</td>
+                  </tr>
+                </tbody>
+              </table>
+            </span>
+          </span>
+        `
+      }
+
+      function renderSessionSegmentControl(filterKey, label, selectedValue, options, extraClass = '', labelAccessory = '') {
         return `
           <div class="session-toolbar-control session-toolbar-segment-control ${extraClass}">
-            <span>${escapeHtml(label)}</span>
+            <span>${escapeHtml(label)}${labelAccessory}</span>
             <div class="todo-filter-tabs" role="group" aria-label="${escapeHtml(label)}">
               ${options.map((option) => `
                 <button
@@ -7581,7 +7627,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="session-filter-row session-filter-row-segment${sessionFilterState.collapsed ? ' is-collapsed' : ''}">
             ${renderSessionSegmentControl('stage', '质检场景', sessionFilterState.stage, sessionStageOptions, 'session-toolbar-control-stage')}
             ${renderSessionSegmentControl('source', '数据来源', sessionFilterState.source, sessionSourceOptions, 'session-toolbar-control-source')}
-            ${renderSessionSegmentControl('intentLevel', 'AI意向等级', sessionFilterState.intentLevel, sessionIntentLevelOptions, 'session-toolbar-control-intent')}
+            ${renderSessionSegmentControl('intentLevel', 'AI意向等级', sessionFilterState.intentLevel, sessionIntentLevelOptions, 'session-toolbar-control-intent', renderSessionIntentLevelHelp())}
             ${sessionFilterState.collapsed ? renderSessionInlineActions() : ''}
           </div>
           <div class="session-filter-row session-filter-row-main session-filter-extra">
@@ -11413,6 +11459,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         aggregateStoreCount: 3
       }
       let customerDetailSelection = { ...customerDetailDefaultSelection }
+      const customerAiPortraitState = {
+        generated: false,
+        generating: false,
+        generateTimer: null,
+        typingTimer: null,
+        typingDone: false,
+        lastText: ''
+      }
       const salesLeadPhones = {
         dcc: ['138****3021', '137****6208', '136****4821', '135****1906', '139****7742', '188****6435', '150****8294'],
         advisor: ['139****1268', '137****4158', '186****0922', '150****3821', '188****6739', '136****2047']
@@ -11606,7 +11660,239 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
+      function getCustomerAiPortraitPreviewHtml() {
+        return `
+          <div class="customer-ai-generate-preview" aria-hidden="true">
+            <span>系统将基于当前日期范围内的录音表现、客户画像碎片与多门店触点进行智能合并。</span>
+            <span>重点识别预算、车型偏好、家庭场景、价格敏感点和下一步跟进建议。</span>
+            <span>生成后可直接查看统一客户画像与关键策略。</span>
+          </div>
+        `
+      }
+
+      function getCustomerAiPortraitGeneratedText(payload = buildCustomerDetailPayload()) {
+        const leadCount = Number(customerDetailSelection.aggregateLeadCount) || 3
+        const storeCount = Number(customerDetailSelection.aggregateStoreCount) || 3
+        const primaryStore = customerDetailSelection.store || payload.singleStoreName || '上海浦东门店'
+        const customerLabel = maskDisplayName(payload.customer || customerDetailSelection.customerName || '王先生')
+
+        return `已合并 ${customerLabel} 在 ${storeCount} 家门店的 ${leadCount} 条线索触点：客户对传祺M8保持高意向，核心关注第三排空间、家庭乘坐舒适性与价格方案。客户有两个孩子，预算集中在 25-30 万，对金融免息、置换补贴和竞品优惠较敏感。建议由${primaryStore}统一承接，围绕试驾体验、家庭出行场景和金融方案给出一致报价，并在下次跟进中明确到店或下定节点。`
+      }
+
+      function clearCustomerAiPortraitTypingTimer() {
+        if (!customerAiPortraitState.typingTimer) {
+          return
+        }
+
+        window.clearInterval(customerAiPortraitState.typingTimer)
+        customerAiPortraitState.typingTimer = null
+      }
+
+      function renderCustomerAiPortraitStatic(panel, text) {
+        if (!panel) {
+          return
+        }
+
+        panel.classList.add('is-generated')
+        panel.innerHTML = `<div class="customer-ai-generated-copy">${escapeHtml(text)}</div>`
+      }
+
+      function startCustomerAiPortraitTyping(panel, text) {
+        if (!panel) {
+          return
+        }
+
+        clearCustomerAiPortraitTypingTimer()
+
+        const fullText = String(text || '')
+        let visibleLength = 0
+        customerAiPortraitState.typingDone = false
+        customerAiPortraitState.lastText = fullText
+
+        if (!fullText) {
+          renderCustomerAiPortraitStatic(panel, '')
+          customerAiPortraitState.typingDone = true
+          return
+        }
+
+        const step = () => {
+          if (!document.body.contains(panel)) {
+            clearCustomerAiPortraitTypingTimer()
+            customerAiPortraitState.typingDone = false
+            return
+          }
+
+          panel.classList.add('is-generated')
+          visibleLength = Math.min(fullText.length, visibleLength + 1)
+          panel.innerHTML = `
+            <div class="customer-ai-generated-copy-typing">
+              ${escapeHtml(fullText.slice(0, visibleLength))}<span class="customer-ai-typing-caret" aria-hidden="true"></span>
+            </div>
+          `
+
+          if (visibleLength >= fullText.length) {
+            clearCustomerAiPortraitTypingTimer()
+            customerAiPortraitState.typingDone = true
+            renderCustomerAiPortraitStatic(panel, fullText)
+          }
+        }
+
+        step()
+        if (visibleLength < fullText.length) {
+          customerAiPortraitState.typingTimer = window.setInterval(step, 26)
+        }
+      }
+
+      function renderCustomerAiPortraitGeneration() {
+        const panel = pageHost.querySelector('.customer-ai-generate-panel')
+        if (!panel) {
+          return
+        }
+
+        const portraitText = getCustomerAiPortraitGeneratedText()
+
+        if (customerAiPortraitState.generated) {
+          if (customerAiPortraitState.typingDone && customerAiPortraitState.lastText === portraitText) {
+            renderCustomerAiPortraitStatic(panel, portraitText)
+          } else {
+            startCustomerAiPortraitTyping(panel, portraitText)
+          }
+          return
+        }
+
+        panel.classList.remove('is-generated')
+
+        if (customerAiPortraitState.generating) {
+          panel.innerHTML = `
+            ${getCustomerAiPortraitPreviewHtml()}
+            <div class="customer-ai-generate-loading" aria-live="polite" role="status">
+              <span class="customer-ai-loading-spinner" aria-hidden="true"></span>
+              <span>生成中...</span>
+            </div>
+          `
+          return
+        }
+
+        panel.innerHTML = `
+          ${getCustomerAiPortraitPreviewHtml()}
+          <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
+        `
+      }
+
+      function resetCustomerAiPortraitGeneration() {
+        if (customerAiPortraitState.generateTimer) {
+          window.clearTimeout(customerAiPortraitState.generateTimer)
+        }
+        clearCustomerAiPortraitTypingTimer()
+        customerAiPortraitState.generated = false
+        customerAiPortraitState.generating = false
+        customerAiPortraitState.generateTimer = null
+        customerAiPortraitState.typingDone = false
+        customerAiPortraitState.lastText = ''
+      }
+
+      function startCustomerAiPortraitGenerationFlow() {
+        if (customerAiPortraitState.generated || customerAiPortraitState.generating) {
+          return
+        }
+
+        clearCustomerAiPortraitTypingTimer()
+        customerAiPortraitState.generated = false
+        customerAiPortraitState.generating = true
+        customerAiPortraitState.typingDone = false
+        customerAiPortraitState.lastText = ''
+        renderCustomerAiPortraitGeneration()
+
+        if (customerAiPortraitState.generateTimer) {
+          window.clearTimeout(customerAiPortraitState.generateTimer)
+        }
+
+        customerAiPortraitState.generateTimer = window.setTimeout(() => {
+          customerAiPortraitState.generating = false
+          customerAiPortraitState.generated = true
+          customerAiPortraitState.generateTimer = null
+          if (getCurrentRoute() === 'customer-detail') {
+            renderCustomerAiPortraitGeneration()
+          }
+        }, 3000)
+      }
+
+      function bindCustomerAiPortraitGeneration() {
+        const panel = pageHost.querySelector('.customer-ai-generate-panel')
+        if (!panel) {
+          return
+        }
+
+        panel.querySelector('[data-customer-ai-generate]')?.addEventListener('click', () => {
+          startCustomerAiPortraitGenerationFlow()
+        })
+
+        panel.addEventListener('click', (event) => {
+          const generateButton = event.target.closest('[data-customer-ai-generate]')
+          if (!generateButton) {
+            return
+          }
+
+          startCustomerAiPortraitGenerationFlow()
+        })
+      }
+
+      const CUSTOMER_JOURNEY_STORE_FILTER_OPTIONS = [
+        { value: 'current', label: '上海浦东门店', tone: 'current' },
+        { value: 'other', label: '杭州西湖门店', tone: 'other' },
+        { value: 'extra', label: '杭州滨江门店', tone: 'extra' }
+      ]
+
+      function renderCustomerJourneyStoreFilterFallback(options) {
+        return options.map((option) => `
+          <button
+            class="customer-journey-filter-btn customer-journey-filter-btn-${escapeHtml(option.tone)} factory-multi-select-option"
+            type="button"
+            data-customer-journey-filter="${escapeHtml(option.value)}"
+            aria-pressed="false"
+            aria-checked="false"
+          >
+            <span class="customer-journey-filter-check factory-multi-select-check" aria-hidden="true"></span>
+            <span class="customer-journey-filter-text factory-multi-select-text">${escapeHtml(option.label)}</span>
+          </button>
+        `).join('')
+      }
+
+      function renderCustomerJourneyStoreFilter() {
+        const slot = pageHost.querySelector('[data-customer-journey-filter-slot]')
+        if (!slot) {
+          return
+        }
+
+        const filterUtils = window.__factoryMultiSelectFilterUtils || globalThis.__factoryMultiSelectFilterUtils
+        const { renderCheckboxFilterOptionsMarkup } = filterUtils || {}
+
+        if (typeof renderCheckboxFilterOptionsMarkup === 'function') {
+          slot.innerHTML = renderCheckboxFilterOptionsMarkup({
+            options: CUSTOMER_JOURNEY_STORE_FILTER_OPTIONS,
+            buttonClassName: 'customer-journey-filter-btn factory-multi-select-option',
+            checkClassName: 'customer-journey-filter-check factory-multi-select-check',
+            textClassName: 'customer-journey-filter-text factory-multi-select-text',
+            getOptionMeta(option) {
+              return {
+                className: `customer-journey-filter-btn-${option.tone}`,
+                attrs: {
+                  'data-customer-journey-filter': option.value,
+                  'aria-pressed': 'false',
+                  'aria-checked': 'false'
+                }
+              }
+            }
+          })
+          return
+        }
+
+        slot.innerHTML = renderCustomerJourneyStoreFilterFallback(CUSTOMER_JOURNEY_STORE_FILTER_OPTIONS)
+      }
+
       function initCustomerJourneyFilter() {
+        renderCustomerJourneyStoreFilter()
+
         const board = pageHost.querySelector('.customer-journey-board')
         const timeline = board?.querySelector('.customer-journey-timeline')
         const buttons = Array.from(pageHost.querySelectorAll('[data-customer-journey-filter]'))
@@ -11656,7 +11942,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const filterKey = button.dataset.customerJourneyFilter || ''
             const isActive = selectedFilters.has(filterKey)
             button.classList.toggle('is-active', isActive)
+            button.classList.toggle('active', isActive)
             button.setAttribute('aria-pressed', String(isActive))
+            button.setAttribute('aria-checked', String(isActive))
           })
 
           items.forEach((item) => {
@@ -11751,6 +12039,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         initCustomerJourneyFilter()
         syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
+        renderCustomerAiPortraitGeneration()
+        bindCustomerAiPortraitGeneration()
+      }
+
+      function destroyCustomerDetailPage() {
+        resetCustomerAiPortraitGeneration()
       }
 
       function getSalesLeadCollection(role) {
@@ -11883,17 +12177,19 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorName,
           leadStatus: lead.leadStatus || getLeadStatusFromStage(lead.stage),
           customer: lead.customer,
-          subtitle: `${phone} · ${lead.model} · 最后触达时间：${lastTouchTime}`,
+          lastTouchTime,
+          subtitle: `${phone} · ${lead.model}`,
           heroTags: [],
           intentLevel,
           models: [lead.model],
           intentText: lead.summary,
-          evidenceText: `来源 ${lead.source}；当前阶段为“${lead.stage}”；质检场景为“${sceneLabel}”；客户标签包括 ${tags.slice(0, 3).join('、')}。`,
+          evidenceText: `来源 ${lead.source}；当前阶段为“${lead.stage}”；质检场景为“${sceneLabel}”；客户标签包括 ${tags.slice(0, 3).join('、')}；客户表示“再考虑一下”。`,
           evolutionSteps: buildLeadDetailEvolutionSteps(lead, role),
           actionText: lead.action,
           reminderBadge: lead.followUpTime ? '需要二次跟进' : '持续跟进',
           reminderTime: lead.followUpTime || '待确认',
-          cloudTags: tags
+          conversationTags: ['高意向', '价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动'],
+          publicTags: ['30-39岁', '已婚有孩', '上海常驻', '中高消费能力', '汽车兴趣人群', '新能源车关注', '家庭出行偏好', '近期浏览汽车内容', '科技数码兴趣']
         }
       }
 
@@ -11940,12 +12236,35 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }).join('')
       }
 
-      function applyLeadDetailTagCloudFit(scale = 1) {
-        const cloud = pageHost.querySelector('#leadDetailTagCloud')
-        if (!cloud) {
-          return
+      function renderLeadDetailIntentList(value) {
+        const sentences = String(value || '')
+          .split('。')
+          .map((sentence) => sentence.trim())
+          .filter(Boolean)
+
+        return `<ul class="lead-detail-intent-list">${sentences
+          .map((sentence) => `<li>${escapeHtml(sentence)}。</li>`)
+          .join('')}</ul>`
+      }
+
+      function renderLeadDetailEvidenceText(value) {
+        const text = String(value || '')
+        const pattern = /([“"])再考虑一下([”"])/g
+        let html = ''
+        let lastIndex = 0
+        let match = pattern.exec(text)
+
+        while (match) {
+          html += escapeHtml(text.slice(lastIndex, match.index))
+          html += `${escapeHtml(match[1])}<strong class="lead-detail-evidence-alert">再考虑一下</strong>${escapeHtml(match[2])}`
+          lastIndex = pattern.lastIndex
+          match = pattern.exec(text)
         }
 
+        return html + escapeHtml(text.slice(lastIndex))
+      }
+
+      function applyLeadDetailTagCloudFit(cloud, scale = 1) {
         const safeScale = Math.max(0.62, Math.min(scale, 1))
         cloud.style.setProperty('--lead-cloud-size-xl', `${(26 * safeScale).toFixed(2)}px`)
         cloud.style.setProperty('--lead-cloud-size-lg', `${(21 * safeScale).toFixed(2)}px`)
@@ -11960,18 +12279,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         cloud.style.setProperty('--lead-cloud-offset-down', `${Math.max(2, Math.round(4 * safeScale))}px`)
       }
 
-      function syncLeadDetailTagCloudLayout() {
-        const cloud = pageHost.querySelector('#leadDetailTagCloud')
-        if (!cloud) {
-          return
-        }
-
+      function syncLeadDetailSingleTagCloudLayout(cloud) {
         const terms = [...cloud.querySelectorAll('.lead-cloud-term')]
         if (!terms.length) {
           return
         }
 
-        applyLeadDetailTagCloudFit(1)
+        applyLeadDetailTagCloudFit(cloud, 1)
 
         const maxHeight = cloud.clientHeight
         const maxWidth = cloud.clientWidth
@@ -11990,7 +12304,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         for (let index = 0; index < 10; index += 1) {
           const mid = Number(((low + high) / 2).toFixed(3))
-          applyLeadDetailTagCloudFit(mid)
+          applyLeadDetailTagCloudFit(cloud, mid)
 
           if (fits()) {
             best = mid
@@ -12000,7 +12314,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
         }
 
-        applyLeadDetailTagCloudFit(best)
+        applyLeadDetailTagCloudFit(cloud, best)
+      }
+
+      function syncLeadDetailTagCloudLayout() {
+        pageHost.querySelectorAll('[data-lead-detail-tag-cloud]').forEach((cloud) => {
+          syncLeadDetailSingleTagCloudLayout(cloud)
+        })
       }
 
       function renderLeadDetailEvolutionSteps(steps) {
@@ -12067,6 +12387,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
         }
 
+        setText('#leadDetailLastTouch', `最后触达时间：${payload.lastTouchTime}`)
         setText('#leadDetailLeadId', `Lead ID: ${payload.leadId}`)
         setText('#leadDetailStore', `门店: ${payload.store}`)
         setText('#leadDetailAdvisor', `顾问姓名：${payload.advisorName}`)
@@ -12082,12 +12403,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevelNode.className = `intention-level ${getLeadDetailIntentLevelClass(payload.intentLevel)}`
         }
         syncLeadDetailModelRow(payload.models)
-        setText('#leadDetailIntentText', payload.intentText)
-        setText('#leadDetailEvidenceText', payload.evidenceText)
+        setHtml('#leadDetailIntentText', renderLeadDetailIntentList(payload.intentText))
+        setHtml('#leadDetailEvidenceText', renderLeadDetailEvidenceText(payload.evidenceText))
         setText('#leadDetailActionText', payload.actionText)
         setText('#leadDetailReminderBadge', payload.reminderBadge)
         setText('#leadDetailReminderTime', payload.reminderTime)
-        setHtml('#leadDetailTagCloud', renderLeadDetailCloudTags(payload.cloudTags))
+        setHtml('#leadDetailConversationTagCloud', renderLeadDetailCloudTags(payload.conversationTags))
+        setHtml('#leadDetailPublicTagCloud', renderLeadDetailCloudTags(payload.publicTags))
         window.requestAnimationFrame(syncLeadDetailTagCloudLayout)
       }
 
@@ -16763,6 +17085,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         stopSalesTrendChartAnimation()
         window.destroyFactoryDashboardPage?.()
         destroyLeadDetailPage()
+        destroyCustomerDetailPage()
         destroySessionDetailPage()
         sessionMenuState.openMenu = null
         sessionMenuState.organizationSearchQuery = ''
