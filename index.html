@@ -1,339 +1,88 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>登录 · 大圣科技 AI 语音质检系统</title>
-  <meta name="description" content="大圣科技 AI 语音质检系统 — 企业级智能质检平台登录" />
-  <link rel="icon" href="./assets/ds-logo.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap"
-    rel="stylesheet" />
+  <title>AI质检平台 · 登录</title>
   <link rel="stylesheet" href="login.css" />
 </head>
-
 <body>
+  <div class="stage">
+    <canvas id="wave" aria-hidden="true"></canvas>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
 
-  <!-- 动态环境背景 -->
-  <div class="ambient-canvas">
-    <div class="ambient-orb orb-1"></div>
-    <div class="ambient-orb orb-2"></div>
-    <div class="ambient-orb orb-3"></div>
+    <div class="wrap">
+      <header class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="lg" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#2563EB"/><stop offset="1" stop-color="#38BDF8"/></linearGradient></defs><g stroke="url(#lg)" stroke-width="2.1" stroke-linecap="round"><line x1="4" y1="12" x2="4" y2="12.2"/><line x1="8" y1="9" x2="8" y2="15"/><line x1="12" y1="4.5" x2="12" y2="19.5"/><line x1="16" y1="7.5" x2="16" y2="16.5"/><line x1="20" y1="10.5" x2="20" y2="13.5"/></g></svg>
+        </span>
+        <span class="name">AI质检平台</span>
+      </header>
+
+      <div class="main">
+        <div class="pitch-copy">
+          <div class="eyebrow">面向汽车经销商 · AI 通话质检</div>
+          <h1>让每一通销售通话，<br>都被听见、被<span class="hl">质检</span>、被改进</h1>
+          <p class="lede">AI 逐通转写、逐句分析，把销售通话变成可复用的质检结论、客户洞察与跟进动作。</p>
+          <ul class="points">
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="m8.5 13 2 2 4-4.5"/></svg></span><div><h3>智能 SOP 质检</h3><p>通话自动转写，按可配置规则逐条打分，从人工抽检走向逐通质检。</p></div></li>
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="9" r="4"/><path d="M4 20c0-3.4 3.1-5.5 7-5.5"/><path d="m17.5 15.5 1 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2L14.5 17l2-.3Z"/></svg></span><div><h3>AI 客户洞察</h3><p>识别客户意向等级与多维画像，直接给出下一步跟进建议。</p></div></li>
+            <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span><div><h3>多级数据看板</h3><p>厂端 · 大区 · 门店 · 顾问逐级下钻，排名、复盘、督办一屏掌握。</p></div></li>
+          </ul>
+        </div>
+
+        <div class="cards">
+          <div class="cards-label">同一通电话 · AI 产出</div>
+          <aside class="pcard" aria-label="质检结果示例">
+            <div class="sc-head"><span class="sc-scene">试驾邀约</span><span class="sc-id">#AQ-2026-0716</span></div>
+            <div class="sc-cust">客户 · 王先生　·　顾问 · 李明</div>
+            <div class="sc-metrics"><div><span class="sc-num">88<i>%</i></span><label>质检合格率</label></div><div><span class="sc-num">76<i>%</i></span><label>话术命中率</label></div></div>
+            <ul class="sc-sop"><li class="ok">开场问候与自我介绍到位</li><li class="ok">主动确认客户购车需求</li><li class="no">未主动邀约到店试驾</li></ul>
+            <div class="sc-foot"><span class="intent">客户意向 高</span>　·　建议 24 小时内二次跟进</div>
+          </aside>
+          <aside class="pcard" aria-label="客户画像示例">
+            <div class="sc-head"><span class="sc-scene intent">意向 高</span><span class="sc-id">客户画像</span></div>
+            <div class="sc-cust">客户 · 王先生　·　抖音进线</div>
+            <div class="sc-metrics"><div><span class="pv">传祺 GS8</span><label>意向车型</label></div><div><span class="pv">25–30 万</span><label>购车预算</label></div></div>
+            <ul class="tags"><li>价格敏感</li><li>关注空间</li><li>计划置换</li><li>本月购车</li></ul>
+            <div class="sc-foot"><span class="resist">抗性点</span>　关注落地价与金融分期方案</div>
+          </aside>
+        </div>
+
+        <div class="vline" aria-hidden="true"></div>
+
+        <section class="auth">
+          <div class="card">
+            <div class="eyebrow">企业登录</div>
+            <h2>欢迎登录</h2>
+            <p class="card-sub">请使用企业账号登录 AI质检平台</p>
+            <form id="login-form" autocomplete="off" novalidate>
+              <div class="field" id="field-tenant">
+                <label for="tenant">租户</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg><input id="tenant" type="text" value="AI质检管理" autocomplete="organization" aria-describedby="tenant-error" aria-invalid="false" /></div>
+                <span class="field-error" id="tenant-error" aria-live="polite">请输入租户</span>
+              </div>
+              <div class="field" id="field-account">
+                <label for="account">账号</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg><input id="account" type="text" placeholder="请输入账号" autocomplete="username" aria-describedby="account-error" aria-invalid="false" /></div>
+                <span class="field-error" id="account-error" aria-live="polite">账号错误</span>
+              </div>
+              <div class="field" id="field-password">
+                <label for="password">密码</label>
+                <div class="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.4" r="1.3"/></svg><input id="password" type="password" placeholder="请输入密码" autocomplete="current-password" aria-describedby="password-error" aria-invalid="false" /></div>
+                <span class="field-error" id="password-error" aria-live="polite">密码错误</span>
+              </div>
+              <button class="submit" id="login-btn" type="submit"><span class="submit-label">登 录</span><span class="submit-spinner" aria-hidden="true"></span></button>
+            </form>
+            <div class="card-foot">登录即代表同意平台使用规范 · 忘记密码请联系管理员</div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="compliance"><span>5 类质检场景</span><span class="sep"></span><span>云外呼 / 数字工牌 / CRM 三路接入</span><span class="sep"></span><span>原句可追溯</span><span class="sep"></span><span>PII 脱敏传输</span></footer>
+    </div>
   </div>
-
-  <div class="login-layout">
-
-    <!-- ════════════════════════════════════
-         左侧：沉浸式产品架构 / 视觉大片（横向数据流）
-         ════════════════════════════════════ -->
-    <aside class="brand-panel">
-      <!-- 极简 Logo -->
-      <div class="brand-logo fade-in-up">
-        <svg viewBox="0 0 40 40" fill="none" class="logo-svg">
-          <rect width="40" height="40" rx="10" fill="url(#logoGrad)" />
-          <defs>
-            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
-              <stop offset="0%" stop-color="#3B82F6" />
-              <stop offset="100%" stop-color="#1D4ED8" />
-            </linearGradient>
-          </defs>
-          <path d="M12 14h16v2H12zM12 19h12v2H12zM12 24h8v2H12z" fill="#FFF" />
-          <circle cx="28" cy="25" r="5" fill="rgba(255,255,255,0.2)" stroke="#FFF" stroke-width="1.5" />
-          <path d="M31 28l2.5 2.5" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
-        <div class="logo-text">
-          <span class="logo-cn">大圣科技 · AI 质检平台</span>
-          <span class="logo-en">Dasheng AI Voice QC Platform</span>
-        </div>
-      </div>
-
-      <!-- 居中横向架构图 -->
-      <div class="arch-layer-container" id="arch-container">
-
-        <div class="hero-titles fade-in-up" style="animation-delay: 0.1s;">
-          <h1 class="hero-headline">由 AI 大模型驱动的&nbsp;<span class="neon-text">全链路业务赋能中枢</span></h1>
-          <p class="hero-sub">全景感知 · 深度洞察 · 组织提效</p>
-        </div>
-
-        <!-- ═══ 横向三列数据流 ═══ -->
-        <div class="arch-horizontal">
-
-          <!-- 左列：全域录音数据接入 -->
-          <div class="h-col h-col-left fade-in-up" style="animation-delay: 0.2s;">
-            <div class="bento-cell data-source" data-tilt>
-              <div class="cell-head">
-                <div class="bento-icon gray">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                </div>
-                <h3>全域录音数据接入</h3>
-              </div>
-              <div class="compact-tags vertical">
-                <span>首触跟进</span>
-                <span>邀约到店</span>
-                <span>排程确认</span>
-                <span>进店接待</span>
-                <span>试乘试驾</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 左→中 横向连线 -->
-          <div class="flow-h-connector fade-in-up" style="animation-delay: 0.25s;">
-            <svg class="h-flow-svg" viewBox="0 0 60 120" preserveAspectRatio="xMidYMid meet">
-              <!-- 上分支：到客户旅程 -->
-              <path d="M0 60 C 30 60, 30 30, 60 30" fill="none" stroke="rgba(96,165,250,0.25)" stroke-width="1.5" />
-              <!-- 下分支：到大模型 -->
-              <path d="M0 60 C 30 60, 30 90, 60 90" fill="none" stroke="rgba(96,165,250,0.25)" stroke-width="1.5" />
-              <!-- 上分支光点 -->
-              <circle r="2.5" fill="#60A5FA" style="filter:drop-shadow(0 0 4px #60A5FA)">
-                <animateMotion dur="2s" repeatCount="indefinite" path="M0 60 C 30 60, 30 30, 60 30" />
-              </circle>
-              <!-- 下分支光点 -->
-              <circle r="2.5" fill="#60A5FA" style="filter:drop-shadow(0 0 4px #60A5FA)">
-                <animateMotion dur="2s" begin="1s" repeatCount="indefinite" path="M0 60 C 30 60, 30 90, 60 90" />
-              </circle>
-            </svg>
-          </div>
-
-          <!-- 中列：上下堆叠的双引擎 -->
-          <div class="h-col h-col-center fade-in-up" style="animation-delay: 0.3s;">
-            <!-- 客户全旅程打通 -->
-            <div class="bento-cell cell-cyan" data-tilt>
-              <div class="bento-icon cyan">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </div>
-              <h3 class="cyan-title">客户全旅程打通</h3>
-              <div class="v-merge-visual">
-                <div class="v-id-tags">
-                  <div class="id-tag">
-                    <div class="dot pulse"></div>手机号
-                  </div>
-                  <div class="id-tag">
-                    <div class="dot pulse delay-1"></div>录音 ID
-                  </div>
-                  <div class="id-tag">
-                    <div class="dot pulse delay-2"></div>线索 ID
-                  </div>
-                </div>
-                <div class="integration-svg">
-                  <svg width="210" height="30" viewBox="0 0 210 30" class="merge-animation">
-                    <path d="M45 0 C 45 15, 105 15, 105 30" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="1.5" />
-                    <path d="M105 0 L 105 30" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="1.5" />
-                    <path d="M165 0 C 165 15, 105 15, 105 30" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="1.5" />
-                    <circle r="2" fill="#22D3EE" class="motion-dot">
-                      <animateMotion dur="1.8s" repeatCount="indefinite" path="M45 0 C 45 15, 105 15, 105 30" />
-                    </circle>
-                    <circle r="2" fill="#22D3EE" class="motion-dot">
-                      <animateMotion dur="1.8s" begin="0.6s" repeatCount="indefinite" path="M105 0 L 105 30" />
-                    </circle>
-                    <circle r="2" fill="#22D3EE" class="motion-dot">
-                      <animateMotion dur="1.8s" begin="1.2s" repeatCount="indefinite" path="M165 0 C 165 15, 105 15, 105 30" />
-                    </circle>
-                  </svg>
-                </div>
-                <div class="v-result glow">用户全景画像</div>
-              </div>
-            </div>
-
-            <!-- AI 模型计算 -->
-            <div class="bento-cell cell-primary" data-tilt>
-              <div class="bento-icon blue">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <h2 class="neon-title">大语言模型推断</h2>
-              <div class="ai-tags">
-                <span class="atag">深层意图理解</span>
-                <span class="atag">业务规则引擎</span>
-                <span class="atag">标杆动作沉淀</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 中→右 横向连线（汇聚） -->
-          <div class="flow-h-connector fade-in-up" style="animation-delay: 0.4s;">
-            <svg class="h-flow-svg" viewBox="0 0 60 120" preserveAspectRatio="xMidYMid meet">
-              <!-- 上汇聚：从客户旅程 -->
-              <path d="M0 30 C 30 30, 30 60, 60 60" fill="none" stroke="rgba(34,211,238,0.25)" stroke-width="1.5" />
-              <!-- 下汇聚：从大模型 -->
-              <path d="M0 90 C 30 90, 30 60, 60 60" fill="none" stroke="rgba(96,165,250,0.25)" stroke-width="1.5" />
-              <!-- 上路光点 (青) -->
-              <circle r="2.5" fill="#22D3EE" style="filter:drop-shadow(0 0 4px #22D3EE)">
-                <animateMotion dur="2s" repeatCount="indefinite" path="M0 30 C 30 30, 30 60, 60 60" />
-              </circle>
-              <!-- 下路光点 (蓝) -->
-              <circle r="2.5" fill="#60A5FA" style="filter:drop-shadow(0 0 4px #60A5FA)">
-                <animateMotion dur="2s" begin="1s" repeatCount="indefinite" path="M0 90 C 30 90, 30 60, 60 60" />
-              </circle>
-              <!-- 汇聚点脉冲 -->
-              <circle cx="60" cy="60" r="3" fill="none" stroke="rgba(167,139,250,0.6)" stroke-width="1">
-                <animate attributeName="r" values="2;6;2" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite" />
-              </circle>
-            </svg>
-          </div>
-
-          <!-- 右列：分层洞察，精准赋能 -->
-          <div class="h-col h-col-right fade-in-up" style="animation-delay: 0.5s;">
-            <div class="bento-cell cell-emp-focus" data-tilt>
-              <div class="emp-head">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-                <h3>分层赋能</h3>
-              </div>
-              <div class="tier-grid vertical">
-                <div class="tier-card tier-blue">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" />
-                  </svg>
-                  <span class="tier-name">厂端战略</span>
-                </div>
-                <div class="tier-card tier-amber">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="3" y1="9" x2="21" y2="9" />
-                    <line x1="9" y1="21" x2="9" y2="9" />
-                  </svg>
-                  <span class="tier-name">门店管理</span>
-                </div>
-                <div class="tier-card tier-green">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <span class="tier-name">顾问成长</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        <!-- end arch-horizontal -->
-
-      </div>
-
-      <div class="colophon fade-in-up" style="animation-delay: 0.8s;">
-        © 2026 大圣科技 · 产品发展部 · ALL RIGHTS RESERVED
-      </div>
-    </aside>
-
-    <!-- ════════════════════════════════════
-         右侧：极简登录表单 / 极致交互
-         ════════════════════════════════════ -->
-    <main class="login-panel">
-      <div class="login-wrapper fade-in-scale">
-
-        <!-- 移动端 Logo -->
-        <div class="mobile-logo">
-          <svg viewBox="0 0 40 40" fill="none" class="m-logo">
-            <rect width="40" height="40" rx="10" fill="#2563EB" />
-            <path d="M12 14h16v2H12zM12 19h12v2H12zM12 24h8v2H12z" fill="#FFF" />
-            <circle cx="28" cy="25" r="5" fill="rgba(255,255,255,0.2)" stroke="#FFF" stroke-width="1.5" />
-            <path d="M31 28l2.5 2.5" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-          <span class="mobile-logo-text">大圣科技质检系统</span>
-        </div>
-
-        <div class="login-header">
-          <h2 class="login-title">欢迎登录</h2>
-          <p class="login-subtitle">AI质检平台</p>
-        </div>
-
-        <form class="login-form" id="login-form" autocomplete="off" novalidate>
-
-          <!-- 企业租户 -->
-          <div class="input-box" id="box-tenant">
-            <input type="text" id="tenant" required />
-            <label for="tenant">租户</label>
-            <div class="focus-line"></div>
-            <span class="error-msg">请填写有效的租户编码</span>
-          </div>
-
-          <!-- 登录账号 -->
-          <div class="input-box" id="box-account">
-            <input type="text" id="account" required spellcheck="false" />
-            <label for="account">账号</label>
-            <div class="focus-line"></div>
-            <span class="error-msg">账号不能为空</span>
-          </div>
-
-          <!-- 密码 -->
-          <div class="input-box" id="box-password">
-            <input type="password" id="password" required />
-            <label for="password">安全密码</label>
-            <div class="focus-line"></div>
-            <button type="button" class="pwd-toggle" id="pwd-toggle" tabindex="-1">
-              <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                <path
-                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                </path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
-            </button>
-            <span class="error-msg">密码格式不正确</span>
-          </div>
-
-          <!-- 功能选项 -->
-          <div class="form-actions">
-            <label class="custom-checkbox">
-              <input type="checkbox" id="remember">
-              <span class="chk-box"></span>
-              <span class="chk-label">保持登录状态</span>
-            </label>
-          </div>
-
-          <!-- 提交 -->
-          <button type="submit" class="btn-submit" id="login-btn">
-            <span class="btn-text">登 录</span>
-            <div class="btn-spinner">
-              <svg viewBox="0 0 24 24" width="24" height="24">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3"
-                  stroke-dasharray="31.42" stroke-linecap="round">
-                  <animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="0.8s"
-                    repeatCount="indefinite" />
-                </circle>
-              </svg>
-            </div>
-            <div class="btn-ripple"></div>
-          </button>
-        </form>
-
-        <div class="login-footer">
-          <div class="env-chip">
-            <span class="env-pulse"></span>
-            生产环境 (V1.2.0)
-          </div>
-          <span class="support-mail">支持：AIQC@ds.cn</span>
-        </div>
-
-      </div>
-    </main>
-
-  </div>
-
   <script src="login.js"></script>
 </body>
-
 </html>
