@@ -82,3 +82,17 @@ test('wave redraws after resize in reduced-motion mode and handles preference ch
   assert.match(script, /mediaQuery\.addEventListener\('change', handleMotionChange\)/);
   assert.match(script, /window\.cancelAnimationFrame\(animationFrameId\)/);
 });
+
+test('brand uses the project logo instead of the waveform svg', () => {
+  assert.match(html, /class="brand-logo"[^>]*src="\.\/assets\/ds-logo\.png"[^>]*alt=""/);
+  const brandMatch = html.match(/<header class="brand">([\s\S]*?)<\/header>/);
+  assert.ok(brandMatch);
+  assert.doesNotMatch(brandMatch[1], /<svg/);
+  assert.match(css, /\.brand-logo\s*{[\s\S]*?width:\s*36px;[\s\S]*?height:\s*36px;[\s\S]*?object-fit:\s*contain;/);
+});
+
+test('selling-point copy uses the available row width and wraps only when needed', () => {
+  assert.match(css, /\.points li > div\s*{[\s\S]*?flex:\s*1;[\s\S]*?min-width:\s*0;/);
+  assert.match(css, /\.points p\s*{[\s\S]*?max-width:\s*none;/);
+  assert.doesNotMatch(css, /\.points p\s*{[\s\S]*?white-space:\s*nowrap;/);
+});
