@@ -12,22 +12,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function clearFieldError(input) {
     const field = input.closest('.field');
+    const error = field.querySelector('.field-error');
     field.classList.remove('has-error');
     input.setAttribute('aria-invalid', 'false');
+    error.textContent = '';
   }
 
   function setSubmitting(button, isSubmitting) {
     button.disabled = isSubmitting;
     button.classList.toggle('loading', isSubmitting);
     button.setAttribute('aria-busy', String(isSubmitting));
+    button.setAttribute('aria-label', isSubmitting ? '登录中' : '登录');
   }
 
   function initWaveCanvas(canvas) {
     const ctx = canvas.getContext('2d');
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let reduce = mediaQuery.matches;
     let width = 0;
     let height = 0;
     let dpr = 1;
+    let animationFrameId = null;
     const barCount = 88;
     const seed = Array.from({ length: barCount }, (_, index) => {
       const shape = 0.55 + 0.28 * Math.sin(index * 0.20) + 0.17 * Math.sin(index * 0.071 + 1.3);
@@ -41,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       height = canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
+      if (reduce) draw(0);
     }
 
     const from = [0x25, 0x63, 0xEB];
@@ -86,12 +92,38 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(scanX - 46 * dpr, centerY - height * 0.28, 92 * dpr, height * 0.56);
       }
 
-      if (!reduce) window.requestAnimationFrame(draw);
+    }
+
+    function startAnimation() {
+      if (!reduce && animationFrameId === null) {
+        animationFrameId = window.requestAnimationFrame(animate);
+      }
+    }
+
+    function stopAnimation() {
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    function animate(time) {
+      animationFrameId = null;
+      draw(time);
+      startAnimation();
+    }
+
+    function handleMotionChange(event) {
+      reduce = event.matches;
+      stopAnimation();
+      draw(0);
+      startAnimation();
     }
 
     resize();
     window.addEventListener('resize', resize);
-    window.requestAnimationFrame(draw);
+    mediaQuery.addEventListener('change', handleMotionChange);
+    startAnimation();
   }
 
   const canvas = document.getElementById('wave');

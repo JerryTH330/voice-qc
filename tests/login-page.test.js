@@ -54,7 +54,7 @@ test('login script preserves credentials, field validation and destination', () 
 test('login script owns the canvas animation and removes legacy-only interactions', () => {
   assert.match(script, /function initWaveCanvas\(canvas\)/);
   assert.match(script, /prefers-reduced-motion/);
-  assert.match(script, /requestAnimationFrame\(draw\)/);
+  assert.match(script, /requestAnimationFrame\(animate\)/);
   assert.doesNotMatch(script, /brandPanel/);
   assert.doesNotMatch(script, /pwdToggle/);
 });
@@ -62,4 +62,23 @@ test('login script owns the canvas animation and removes legacy-only interaction
 test('login script prevents duplicate submissions while loading', () => {
   assert.match(script, /button\.disabled = isSubmitting/);
   assert.match(script, /button\.classList\.toggle\('loading', isSubmitting\)/);
+});
+
+test('login page keeps error announcements empty until validation fails', () => {
+  assert.match(html, /id="tenant-error" aria-live="polite"><\/span>/);
+  assert.match(html, /id="account-error" aria-live="polite"><\/span>/);
+  assert.match(html, /id="password-error" aria-live="polite"><\/span>/);
+  assert.match(script, /function clearFieldError\(input\)[\s\S]*?error\.textContent = '';/);
+});
+
+test('login button has an accessible loading name', () => {
+  assert.match(html, /id="login-btn"[^>]*aria-label="登录"/);
+  assert.match(script, /button\.setAttribute\('aria-label', isSubmitting \? '登录中' : '登录'\)/);
+});
+
+test('wave redraws after resize in reduced-motion mode and handles preference changes', () => {
+  assert.match(script, /const mediaQuery = window\.matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+  assert.match(script, /function resize\(\) \{[\s\S]*?if \(reduce\) draw\(0\);/);
+  assert.match(script, /mediaQuery\.addEventListener\('change', handleMotionChange\)/);
+  assert.match(script, /window\.cancelAnimationFrame\(animationFrameId\)/);
 });
