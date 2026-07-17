@@ -38,3 +38,28 @@ test('light stylesheet keeps reference breakpoints and adds login states', () =>
   assert.match(css, /\.submit\.loading/);
   assert.match(css, /\.submit:disabled/);
 });
+
+test('login script preserves credentials, field validation and destination', () => {
+  assert.match(script, /const DEFAULT_ACCOUNT = 'admin'/);
+  assert.match(script, /const DEFAULT_PASSWORD = 'admin'/);
+  assert.match(script, /getElementById\('tenant'\)/);
+  assert.match(script, /getElementById\('account'\)/);
+  assert.match(script, /getElementById\('password'\)/);
+  assert.match(script, /setFieldError\(tenantEl, '\u8bf7\u8f93\u5165\u79df\u6237'\)/);
+  assert.match(script, /setFieldError\(accountEl, '\u8d26\u53f7\u9519\u8bef'\)/);
+  assert.match(script, /setFieldError\(passwordEl, '\u5bc6\u7801\u9519\u8bef'\)/);
+  assert.match(script, /window\.location\.href = '\.\/factory-dashboard\/index\.html'/);
+});
+
+test('login script owns the canvas animation and removes legacy-only interactions', () => {
+  assert.match(script, /function initWaveCanvas\(canvas\)/);
+  assert.match(script, /prefers-reduced-motion/);
+  assert.match(script, /requestAnimationFrame\(draw\)/);
+  assert.doesNotMatch(script, /brandPanel/);
+  assert.doesNotMatch(script, /pwdToggle/);
+});
+
+test('login script prevents duplicate submissions while loading', () => {
+  assert.match(script, /button\.disabled = isSubmitting/);
+  assert.match(script, /button\.classList\.toggle\('loading', isSubmitting\)/);
+});
