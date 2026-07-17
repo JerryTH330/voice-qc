@@ -96,3 +96,11 @@ test('selling-point copy uses the available row width and wraps only when needed
   assert.match(css, /\.points p\s*{[\s\S]*?max-width:\s*none;/);
   assert.doesNotMatch(css, /\.points p\s*{[\s\S]*?white-space:\s*nowrap;/);
 });
+
+test('login page does not use font sizes below 14px', () => {
+  const fontSizes = [...css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)]
+    .map((match) => Number(match[1]));
+  const undersizedFonts = fontSizes.filter((size) => size < 14);
+
+  assert.deepEqual(undersizedFonts, []);
+});
