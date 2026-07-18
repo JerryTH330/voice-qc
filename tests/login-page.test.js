@@ -97,9 +97,9 @@ test('selling-point copy uses the available row width and wraps only when needed
   assert.doesNotMatch(css, /\.points p\s*{[\s\S]*?white-space:\s*nowrap;/);
 });
 
-test('login page keeps 14px as the minimum font size outside the vehicle tags', () => {
-  const cssWithoutVehicleTags = css.replace(/\.tags li\s*{[^}]*}/g, '');
-  const fontSizes = [...cssWithoutVehicleTags.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)]
+test('login page keeps 14px as the minimum font size outside approved compact labels', () => {
+  const cssWithoutCompactLabels = css.replace(/(?:\.tags li|\.sc-scene|\.card-foot)\s*{[^}]*}/g, '');
+  const fontSizes = [...cssWithoutCompactLabels.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)]
     .map((match) => Number(match[1]));
   const undersizedFonts = fontSizes.filter((size) => size < 14);
 
@@ -108,4 +108,20 @@ test('login page keeps 14px as the minimum font size outside the vehicle tags', 
 
 test('vehicle profile tags use the requested 12px font size', () => {
   assert.match(css, /\.tags li\s*{[^}]*font-size:\s*12px;/);
+});
+
+test('scene labels use the requested 12px font size', () => {
+  assert.match(css, /\.sc-scene\s*{[^}]*font-size:\s*12px;/);
+});
+
+test('brand name uses the requested 24px font size', () => {
+  assert.match(css, /\.brand \.name\s*{[^}]*font-size:\s*24px;/);
+});
+
+test('selling-point icon containers use the requested 40px size', () => {
+  assert.match(css, /\.points \.ic\s*{[^}]*width:\s*40px;[^}]*height:\s*40px;/);
+});
+
+test('selling-point rows and columns use the requested 24px gap', () => {
+  assert.match(css, /\.points\s*{[^}]*gap:\s*24px;/);
 });

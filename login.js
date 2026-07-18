@@ -129,6 +129,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('wave');
   if (canvas) initWaveCanvas(canvas);
 
+  function initCardHeightSync() {
+    const cards = document.querySelector('.cards');
+    const auth = document.querySelector('.auth');
+    const loginCard = auth?.querySelector('.card');
+    const exampleCards = cards ? Array.from(cards.querySelectorAll(':scope > .pcard')) : [];
+    if (!cards || !auth || !loginCard || exampleCards.length < 2) return;
+
+    const desktopQuery = window.matchMedia('(min-width: 1241px)');
+    let frameId = null;
+
+    function sync() {
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        loginCard.style.height = '';
+        auth.style.transform = '';
+        if (!desktopQuery.matches) return;
+
+        const firstCardRect = exampleCards[0].getBoundingClientRect();
+        const lastCardRect = exampleCards[exampleCards.length - 1].getBoundingClientRect();
+        const targetHeight = lastCardRect.bottom - firstCardRect.top;
+        loginCard.style.height = `${targetHeight}px`;
+
+        const loginCardRect = loginCard.getBoundingClientRect();
+        auth.style.transform = `translateY(${lastCardRect.bottom - loginCardRect.bottom}px)`;
+      });
+    }
+
+    const resizeObserver = new ResizeObserver(sync);
+    exampleCards.forEach((card) => resizeObserver.observe(card));
+    window.addEventListener('resize', sync);
+    desktopQuery.addEventListener('change', sync);
+    sync();
+  }
+
+  initCardHeightSync();
+
   const form = document.getElementById('login-form');
   const button = document.getElementById('login-btn');
   const tenantEl = document.getElementById('tenant');
