@@ -101,20 +101,10 @@
       .journey-level.level-medium { background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(251, 191, 36, 0.1)); border-left: 1px solid rgba(245, 158, 11, 0.14); border-bottom: 1px solid rgba(245, 158, 11, 0.14); color: #b77905; }
       .journey-level.level-low { background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(74, 222, 128, 0.1)); border-left: 1px solid rgba(34, 197, 94, 0.14); border-bottom: 1px solid rgba(34, 197, 94, 0.14); color: #15824a; }
       .journey-level.level-invalid { background: linear-gradient(135deg, rgba(148, 163, 184, 0.22), rgba(203, 213, 225, 0.16)); border-left: 1px solid rgba(148, 163, 184, 0.2); border-bottom: 1px solid rgba(148, 163, 184, 0.2); color: #64748b; }
-      .leads-detail-page .journey-item.journey-item-invalid .journey-axis-dot { border-color: #cbd5e1; box-shadow: none; }
-      .leads-detail-page .journey-item.journey-item-invalid { background: transparent; border: 0; }
-      .leads-detail-page .journey-item.journey-item-invalid .journey-time,
-      .leads-detail-page .journey-item.journey-item-invalid .journey-section-content { color: #64748b; }
-      .leads-detail-page .journey-item.journey-item-invalid .journey-section-label { color: #94a3b8; }
-      .leads-detail-page .journey-item.journey-item-invalid .lead-journey-session-link { color: var(--blue); }
-      .leads-detail-page .journey-item.journey-item-invalid .lead-journey-session-link:hover { color: #1d4ed8; }
-      .leads-detail-page .journey-item.journey-item-invalid .journey-tags .tag { background: rgba(226, 232, 240, 0.88); color: #64748b; }
       .journey-body { display: flex; flex-direction: column; gap: 12px; padding: 15px 17px; background: rgba(243, 247, 253, 0.84); border: 1px solid rgba(37, 99, 235, 0.16); border-radius: 16px; transform: translateY(0); transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease, box-shadow 0.24s ease; will-change: transform, box-shadow; }
       .leads-detail-page .journey-item:hover .journey-header,
       .leads-detail-page .journey-item:hover .journey-axis { transform: translateY(-4px); }
       .leads-detail-page .journey-item:hover .journey-body { transform: translateY(-4px); border-color: rgba(37, 99, 235, 0.22); box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08); }
-      .leads-detail-page .journey-item.journey-item-invalid .journey-body { background: #ffffff; border-color: rgba(37, 99, 235, 0.16); }
-      .leads-detail-page .journey-item.journey-item-invalid:hover .journey-body { transform: translateY(-4px); border-color: rgba(37, 99, 235, 0.22); box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08); }
       .journey-section { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 16px; align-items: start; }
       .journey-section-label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: #617088; line-height: 20px; white-space: nowrap; }
       .journey-section-icon { width: 16px; height: 16px; flex: 0 0 auto; object-fit: contain; }
@@ -1022,6 +1012,16 @@
 .store-dashboard-page #main-panel-advisors .issue-insight-tab:hover,
 .store-dashboard-page #main-panel-advisors .issue-insight-tab:focus-visible{outline:none;border-color:rgba(37,99,235,0.3)}
 .store-dashboard-page #main-panel-advisors .issue-insight-tab.active{border-color:rgba(37,99,235,0.36);background:linear-gradient(157deg,rgba(37,99,235,0.1) 0%,rgba(56,189,248,0.08) 100%);box-shadow:0 2px 8px rgba(37,99,235,0.12);color:#2563EB}
+.store-dashboard-page #main-panel-advisors .issue-insight-tabs{flex-wrap:nowrap;gap:6px}
+.store-dashboard-page #main-panel-advisors .issue-insight-tab{min-width:0;flex:1;padding:0 4px;font-size:12px;white-space:nowrap}
+.store-dashboard-page #main-panel-advisors .store-sop-rule-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 178px;gap:12px;margin-bottom:16px}
+.store-dashboard-page #main-panel-advisors :where(.store-sop-rule-search,.store-sop-rule-sort){display:flex;align-items:center;gap:12px;min-height:44px;padding:0 16px;border:1px solid rgba(217,226,239,.92);border-radius:16px;background:#fff;color:#8CA0BD;font-size:14px;font-weight:600}
+.store-dashboard-page #main-panel-advisors .store-sop-rule-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#162033;font:inherit;font-weight:600}
+.store-dashboard-page #main-panel-advisors .store-sop-rule-search input::placeholder{color:#9AAAC0}
+.store-dashboard-page #main-panel-advisors .store-sop-rule-sort select{border:0;outline:0;background:transparent;color:#162033;font:inherit;font-weight:700;cursor:pointer}
+.store-dashboard-page #main-panel-advisors .store-sop-rule-empty{display:flex;align-items:center;justify-content:center;min-height:180px;border:1px dashed rgba(217,226,239,.92);border-radius:16px;color:#8CA0BD;font-size:14px}
+.store-dashboard-page #main-panel-advisors .issue-detail-sop .issue-detail-pad{padding:0}
+@media (max-width:900px){.store-dashboard-page #main-panel-advisors .store-sop-rule-toolbar{grid-template-columns:1fr}.store-dashboard-page #main-panel-advisors .store-sop-rule-sort{justify-content:space-between}.store-dashboard-page #main-panel-advisors .store-sop-rule-sort select{flex:1}}
 .store-dashboard-page #main-panel-advisors .tab-left-stack,
 .store-dashboard-page #main-panel-advisors .tab-right-stack{
   height:100%;
