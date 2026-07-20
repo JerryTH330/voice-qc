@@ -3,79 +3,240 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>客户洞察</title>
-    <link rel="icon" href="../AI质检平台4.29/assets/ds-logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <meta name="description" content="比较不同客群对目标车型的关注、评价与产品反馈差异" />
+    <title>客户洞察 · AI质检平台</title>
+    <link rel="icon" href="../assets/ds-logo.png" />
+    <link rel="stylesheet" href="../voice-qc-admin.css" />
     <link rel="stylesheet" href="./客户洞察.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <main class="workspace">
-        <header class="page-header">
+    <div class="page-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <a class="brand insight-brand" href="../factory-dashboard/index.html" aria-label="返回 AI质检平台">
+          <span class="brand-mark"><img src="../assets/ds-logo.png" alt="" /></span>
+          <span class="brand-copy"><strong>AI质检平台</strong></span>
+        </a>
+
+        <nav class="nav-scroll">
+          <div class="nav-group">
+            <div class="nav-label">看板</div>
+            <div class="nav-menu">
+              <a class="nav-item insight-nav-link" href="../factory-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5v2h2v1H7v-1h2v-2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v12h16V5H4Zm2 8h2v2H6v-2Zm4-4h2v6h-2V9Zm4-2h2v8h-2V7Z"/></svg>
+                <span class="nav-text">厂端看板</span>
+              </a>
+              <a class="nav-item insight-nav-link active" href="./客户洞察.html" aria-current="page">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2a9 9 0 1 1-6.36 15.36A9 9 0 0 1 11 2Zm0 2a7 7 0 1 0 4.9 12l3.55 3.55 1.41-1.41-3.5-3.5A7 7 0 0 0 11 4Zm-3 7h2v4H8v-4Zm4-4h2v8h-2V7Zm-8 6h2v2H4v-2Z"/></svg>
+                <span class="nav-text">客户洞察</span>
+              </a>
+              <a class="nav-item insight-nav-link" href="../store-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 2h11a2 2 0 0 1 2 2v5h3a2 2 0 0 1 2 2v11H2V4a2 2 0 0 1 2-2Zm0 2v16h11V4H4Zm13 7v9h3v-9h-3ZM6 7h2v2H6V7Zm5 0h2v2h-2V7Zm-5 5h2v2H6v-2Zm5 0h2v2h-2v-2Z"/></svg>
+                <span class="nav-text">门店看板</span>
+              </a>
+              <a class="nav-item insight-nav-link" href="../sales-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0-2a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0 3c-5 0-9 2.5-9 6v3h18v-3c0-3.5-4-6-9-6Zm-7 7v-1c0-2 2.8-4 7-4s7 2 7 4v1H5Z"/></svg>
+                <span class="nav-text">销售看板</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">业务</div>
+            <div class="nav-menu">
+              <a class="nav-item insight-nav-link" href="../script-library/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-6 3V5a2 2 0 0 1 2-2Zm0 2v13.76L7.53 17H20V5H4Zm3 3h10v2H7V8Zm0 4h7v2H7v-2Z"/></svg>
+                <span class="nav-text">优秀话术库</span>
+              </a>
+              <a class="nav-item insight-nav-link" href="../session/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7v1a4 4 0 0 1 3 3.87V17a4 4 0 0 1-4 4h-2v-9h1V9a5 5 0 0 0-10 0v3h1v9H6a4 4 0 0 1-4-4v-3.13A4 4 0 0 1 5 10V9a7 7 0 0 1 7-7ZM6 12a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2v-7Zm12 0v7a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2Z"/></svg>
+                <span class="nav-text">录音列表</span>
+              </a>
+              <a class="nav-item insight-nav-link" href="../leads/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 3h8v2h3a2 2 0 0 1 2 2v14H3V7a2 2 0 0 1 2-2h3V3Zm2 2h4V4h-4v1ZM5 7v12h14V7H5Zm3 3h8v2H8v-2Zm0 4h6v2H8v-2Z"/></svg>
+                <span class="nav-text">线索列表</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">管理</div>
+            <div class="nav-menu">
+              <a class="nav-item insight-nav-link" href="../config/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.9 2.1 15 4.3c.5.2 1 .5 1.4.8l2.4-.2 1.9 3.3-1.4 2c0 .5 0 1-.1 1.5l1.5 1.9-1.9 3.3-2.4-.2c-.4.3-.9.6-1.4.8L13.9 20h-3.8L9 17.7c-.5-.2-1-.5-1.4-.8l-2.4.2-1.9-3.3 1.4-2c-.1-.5-.1-1 0-1.5l-1.4-2 1.9-3.3 2.4.2c.4-.3.9-.6 1.4-.8l1.1-2.3h3.8ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg>
+                <span class="nav-text">质检配置</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="main insight-main">
+        <header class="topbar insight-topbar">
           <div>
-            <h1>客户洞察</h1>
-            <p>基于录音结构化标签实时聚合，筛选后自动生成AI画像。</p>
+            <p class="insight-eyebrow">产品反馈 · 客群对比</p>
+            <h1 class="page-title">客户洞察</h1>
+            <p class="page-desc">比较不同业务结果客户对目标车型的关注与评价，定位影响到店和转化的产品因素。</p>
+          </div>
+          <div class="header-actions">
+            <span class="data-freshness"><i aria-hidden="true"></i>数据更新至 07-16 23:59</span>
+            <button class="secondary-button" type="button" id="exportButton">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              导出当前视图
+            </button>
           </div>
         </header>
 
-        <section class="filter-panel global-filter-bar" aria-label="全局筛选">
-          <div class="filter-grid" id="filterGrid"></div>
-        </section>
-
-        <section class="metric-grid metric-grid-8" id="metricGrid" aria-label="客户洞察指标"></section>
-
-        <section class="insight-layout">
-          <article class="portrait-panel">
-            <div class="panel-heading">
+        <div class="page-host insight-page">
+          <section class="filter-panel" aria-labelledby="filterTitle">
+            <div class="filter-heading">
               <div>
-                <h2>AI画像</h2>
-                <p id="portraitSubtext">识别真正影响成交的关键因素</p>
+                <h2 id="filterTitle">分析范围</h2>
+                <p>筛选条件变化后，页面内所有数据同步更新</p>
               </div>
+              <button class="text-button" type="button" id="resetFilters">恢复默认</button>
             </div>
 
-            <div class="portrait-map" id="portraitMap">
-              <svg class="portrait-links" id="portraitLinks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
-              <div class="center-model">
-                <div class="car-plate">
-                  <img src="../AI质检平台4.29/assets/portrait-model.png" alt="" />
-                  <strong id="centerCarName">AION Y Plus</strong>
-                  <span>当前分析车型</span>
+            <div class="filter-grid">
+              <label class="filter-field">
+                <span>组织</span>
+                <select id="orgFilter"><option>全国</option><option>华南大区</option><option>华东大区</option><option>华北大区</option></select>
+              </label>
+              <label class="filter-field">
+                <span>品牌</span>
+                <select id="brandFilter"><option>埃安</option><option>传祺</option></select>
+              </label>
+              <label class="filter-field">
+                <span>目标车型</span>
+                <select id="modelFilter"><option>AION V</option><option>AION Y Plus</option><option>AION S Plus</option></select>
+              </label>
+              <label class="filter-field filter-field-wide">
+                <span>反馈时间</span>
+                <span class="date-range-control">
+                  <button type="button" class="date-shortcut is-active" data-date="30">近30天</button>
+                  <button type="button" class="date-shortcut" data-date="90">近90天</button>
+                  <span class="date-value">2026-06-17 — 2026-07-16</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="comparison-builder">
+              <div class="comparison-mode" role="group" aria-label="对比方式">
+                <span>对比方式</span>
+                <button type="button" class="is-active" data-mode="all" aria-pressed="true">全部展示</button>
+                <button type="button" data-mode="visit" aria-pressed="false">邀约到店对比</button>
+                <button type="button" data-mode="lead" aria-pressed="false">线索状态对比</button>
+              </div>
+
+              <div class="all-setup" id="allSetup">
+                <span class="all-setup-icon" aria-hidden="true">全</span>
+                <span><strong>全部客户汇总</strong><small>展示当前筛选范围内的全部有效反馈，不区分业务结果</small></span>
+              </div>
+
+              <div class="visit-setup" id="visitSetup" hidden>
+                <div class="cohort-chip cohort-a"><i>A</i><strong>邀约到店</strong><span>邀约后观察期内匹配到客流</span></div>
+                <span class="versus-mark">VS</span>
+                <div class="cohort-chip cohort-b"><i>B</i><strong>邀约未到店</strong><span>邀约后观察期内未匹配到客流</span></div>
+                <label class="observation-field">到店观察期 <select id="observationFilter"><option>7 天</option><option>14 天</option><option>30 天</option></select></label>
+              </div>
+
+              <div class="lead-setup" id="leadSetup" hidden>
+                <div class="lead-group cohort-a">
+                  <span><i>A</i>高转化客户</span>
+                  <div class="status-options" data-group="a">
+                    <button type="button" class="is-selected">已下订</button><button type="button">异地成交</button><button type="button">跟进中</button>
+                  </div>
+                </div>
+                <span class="versus-mark">VS</span>
+                <div class="lead-group cohort-b">
+                  <span><i>B</i>待突破客户</span>
+                  <div class="status-options" data-group="b">
+                    <button type="button" class="is-selected">战败</button><button type="button" class="is-selected">战败申请中</button><button type="button">无效</button>
+                  </div>
                 </div>
               </div>
-              <div class="portrait-node-set" id="portraitNodeSet"></div>
             </div>
-          </article>
+          </section>
 
-          <article class="data-panel">
-            <div class="panel-heading">
-              <div>
-                <h2>意向特征热力图</h2>
-                <p>各意向等级客户在关键标签上的命中分布情况</p>
-              </div>
+          <section class="sample-overview" aria-labelledby="sampleTitle">
+            <div class="section-heading inline-heading">
+              <div><h2 id="sampleTitle">样本概览</h2><p>客户按手机号跨门店去重，反馈客户指至少有一条有效产品表达</p></div>
+              <span class="sample-rule"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm-1 5h2v5H9V9Zm0-3h2v2H9V6Z"/></svg>当前样本满足分析条件</span>
             </div>
-            <div class="heatmap-container" id="heatmapContainer"></div>
-          </article>
+            <div class="sample-grid" id="sampleGrid"></div>
+          </section>
 
-          <article class="rank-panel" style="grid-column: 1 / -1;">
-            <div class="panel-heading compact">
+          <section class="insight-callout" id="insightCallout" aria-live="polite"></section>
+
+          <section class="panel topic-panel" aria-labelledby="topicTitle">
+            <div class="section-heading panel-heading">
               <div>
-                <h2>画像明细</h2>
-                <p>按TOP排行展示画像标签、命中率与趋势。</p>
+                <div class="heading-line"><h2 id="topicTitle">TOP特征排行</h2><span class="scope-badge">一级特征</span></div>
+                <p>汇总当前筛选下的全部一级特征；点击特征后，下方模块同步下钻</p>
               </div>
-              <div class="view-toggle" id="rankViewToggle">
-                <button class="active" data-view="cloud">词云视图</button>
-                <button data-view="list">列表视图</button>
+              <div class="segmented-control" role="group" aria-label="主题排序">
+                <button type="button" class="is-active" data-sort="delta">差异最大</button>
+                <button type="button" data-sort="rate">关注最多</button>
               </div>
             </div>
-            <div class="rank-grid" id="rankGrid"></div>
-            <div class="rank-cloud" id="rankCloud" style="display: none;"></div>
-          </article>
-        </section>
+            <div class="topic-legend" id="topicLegend" aria-hidden="true">
+              <span class="legend-a"><i></i><b id="legendA">邀约到店</b></span>
+              <span class="legend-center">反馈客户占比</span>
+              <span class="legend-b"><i></i><b id="legendB">邀约未到店</b></span>
+              <span class="legend-sentiment">情感分布 <em class="positive"></em>正面 <em class="neutral"></em>中性 <em class="negative"></em>负面</span>
+            </div>
+            <div class="topic-matrix" id="topicMatrix"></div>
+          </section>
+
+          <div class="detail-grid">
+            <section class="panel subtopic-panel" aria-labelledby="subtopicTitle">
+              <div class="section-heading panel-heading compact-heading">
+                <div><div class="heading-line"><h2 id="subtopicTitle">二级特征明细</h2><button type="button" class="selected-topic-label" data-topic-reset disabled>全部汇总</button></div><p>默认汇总全部一级特征下的高频二级特征</p></div>
+              </div>
+              <div class="subtopic-table" id="subtopicTable"></div>
+            </section>
+
+            <section class="panel voice-panel" aria-labelledby="voiceTitle">
+              <div class="section-heading panel-heading compact-heading">
+                <div><div class="heading-line"><h2 id="voiceTitle">典型客户原声</h2><button type="button" class="selected-topic-label" data-topic-reset disabled>全部汇总</button></div><p>从当前筛选结果中抽取典型表达，仅展示脱敏后的真实对话转写</p></div>
+                <div class="sentiment-filter" role="group" aria-label="按情感筛选客户原声">
+                  <button type="button" class="is-active" data-sentiment="all">全部</button>
+                  <button type="button" data-sentiment="positive">正面</button>
+                  <button type="button" data-sentiment="neutral">中性</button>
+                  <button type="button" data-sentiment="negative">负面</button>
+                </div>
+              </div>
+              <div class="voice-list" id="voiceList"></div>
+              <button class="view-all-button" type="button" id="viewAllVoices">查看该主题全部原声 <span>→</span></button>
+            </section>
+
+            <section class="panel trend-panel" aria-labelledby="trendTitle">
+              <div class="section-heading panel-heading">
+                <div><div class="heading-line"><h2 id="trendTitle">情感趋势</h2><button type="button" class="selected-topic-label" data-topic-reset disabled>全部汇总</button></div><p>默认按全部特征加权汇总；同一周期、同一客户仅计算最后一次明确态度</p></div>
+                <div class="segmented-control" role="group" aria-label="趋势时间粒度">
+                  <button type="button" data-grain="day">日</button><button type="button" class="is-active" data-grain="week">周</button><button type="button" data-grain="month">月</button>
+                </div>
+              </div>
+              <div class="trend-small-multiples" id="trendCharts"></div>
+            </section>
+
+            <section class="panel organization-panel" aria-labelledby="orgTitle">
+              <div class="section-heading panel-heading">
+                <div><div class="heading-line"><h2 id="orgTitle">组织差异</h2><button type="button" class="selected-topic-label" data-topic-reset disabled>全部汇总</button></div><p>默认汇总全部特征反馈，当前范围为全国并自动下钻至大区</p></div>
+                <label class="compact-select">组织层级 <select><option>大区</option><option>经销商</option><option>门店</option></select></label>
+              </div>
+              <div class="organization-table-wrap">
+                <table class="organization-table">
+                  <thead id="organizationHead"><tr><th>组织</th><th>样本客户数</th><th><span class="cohort-dot a"></span><span id="orgHeaderA">A组</span>反馈占比</th><th><span class="cohort-dot b"></span><span id="orgHeaderB">B组</span>反馈占比</th><th>负面客户占比</th><th>较厂端均值</th></tr></thead>
+                  <tbody id="organizationBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
       </main>
     </div>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./客户洞察.js"></script>
   </body>
 </html>
