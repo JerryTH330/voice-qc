@@ -1,1689 +1,843 @@
-const FILTERS = [
-  { key: "brand", label: "品牌", options: [{ label: "传祺", value: "传祺" }, { label: "埃安", value: "埃安" }] },
-  { key: "time", label: "时间", options: [{ label: "昨日", value: "1" }, { label: "近7天", value: "7" }, { label: "近半月", value: "15" }, { label: "近1月", value: "30" }, { label: "自定义", value: "custom" }] }
-];
-
-const SOURCE_FILTER = {
-  key: "source",
-  label: "数据来源",
-  options: [
-    { label: "全部", value: "all" },
-    { label: "云外呼", value: "云外呼" },
-    { label: "数字工牌", value: "数字工牌" }
-  ]
-};
-
-const SCENE_FILTER = { key: "scene", label: "质检场景", options: [
-  { label: "全部", value: "all" },
-  { label: "首触跟进", value: "首触跟进" },
-  { label: "邀约进店", value: "邀约进店" },
-  { label: "排程确认", value: "排程确认" },
-  { label: "门店接待", value: "门店接待" },
-  { label: "试乘试驾", value: "试乘试驾" }
-]};
-
-const SOURCE_SCENE_MAP = {
-  all: ["all"],
-  "云外呼": ["首触跟进", "邀约进店", "排程确认"],
-  "数字工牌": ["门店接待", "试乘试驾"]
-};
-
-const BRAND_MODEL_OPTIONS = {
-  "all": [
-    { label: "全部", value: "all" },
-    { label: "M8", value: "M8" }, { label: "E8", value: "E8" }, { label: "GS8", value: "GS8" },
-    { label: "AION Y Plus", value: "AION Y Plus" }, { label: "AION V", value: "AION V" }, { label: "AION S Plus", value: "AION S Plus" }
-  ],
-  "传祺": [{ label: "全部", value: "all" }, { label: "M8", value: "M8" }, { label: "E8", value: "E8" }, { label: "GS8", value: "GS8" }],
-  "埃安": [{ label: "全部", value: "all" }, { label: "AION Y Plus", value: "AION Y Plus" }, { label: "AION V", value: "AION V" }, { label: "AION S Plus", value: "AION S Plus" }]
-};
-
-const DATA_MODEL_MAP = {
-  "AION Y Plus": "M8",
-  "AION V": "S7",
-  E9: "E8",
-  "昊铂 HT": "GS8"
-};
-
-const ORG_TREE = {
-  "华南大区": {
-    "广州战区": ["广州白云店", "广州天河店", "广州番禺店", "广州增城店"],
-    "深圳战区": ["深圳南山店", "深圳龙华店", "深圳宝安店"],
-    "佛山战区": ["佛山禅城店", "佛山南海店"],
-    "东莞战区": ["东莞莞城店", "东莞虎门店", "东莞长安店"]
-  },
-  "华东大区": {
-    "上海战区": ["上海浦东店", "上海闵行店", "上海嘉定店", "上海松江店"],
-    "杭州战区": ["杭州西湖店", "杭州余杭店", "杭州萧山店"],
-    "南京战区": ["南京江宁店", "南京建邺店"],
-    "苏州战区": ["苏州工业园店", "苏州吴中店", "苏州昆山店"]
-  },
-  "华北大区": {
-    "北京战区": ["北京朝阳店", "北京海淀店", "北京丰台店", "北京通州店"],
-    "天津战区": ["天津滨海店", "天津南开店"],
-    "石家庄战区": ["石家庄裕华店", "石家庄长安店"],
-    "郑州战区": ["郑州金水店", "郑州中原店", "郑州二七店"]
-  },
-  "华中大区": {
-    "武汉战区": ["武汉武昌店", "武汉洪山店", "武汉汉口店"],
-    "长沙战区": ["长沙岳麓店", "长沙雨花店", "长沙开福店"],
-    "南昌战区": ["南昌红谷店", "南昌青山湖店"]
-  },
-  "西南大区": {
-    "成都战区": ["成都武侯店", "成都锦江店", "成都高新店", "成都龙泉驿店"],
-    "重庆战区": ["重庆渝北店", "重庆九龙坡店", "重庆南岸店"],
-    "昆明战区": ["昆明官渡店", "昆明盘龙店"]
-  },
-  "西北大区": {
-    "西安战区": ["西安雁塔店", "西安未央店", "西安长安店"],
-    "兰州战区": ["兰州城关店", "兰州安宁店"],
-    "乌鲁木齐战区": ["乌鲁木齐天山店"]
-  },
-  "东北大区": {
-    "沈阳战区": ["沈阳铁西店", "沈阳皇姑店", "沈阳浑南店"],
-    "哈尔滨战区": ["哈尔滨南岗店", "哈尔滨道里店"],
-    "长春战区": ["长春朝阳店", "长春南关店"]
-  }
-};
-
-const MODEL_LABEL_MAP = DATA_MODEL_MAP;
-
-const CATEGORY_META = {
-  "抗性点": { color: "red", title: "抗性点 TOP5" },
-  "需求特征": { color: "green", title: "需求特征 TOP5" },
-  "购车场景": { color: "blue", title: "购车场景 TOP5" },
-  "付款方式": { color: "violet", title: "付款方式 TOP5" },
-  "置换情况": { color: "green", title: "置换情况 TOP5" },
-  "试驾状态": { color: "amber", title: "试驾状态 TOP5" },
-  "决策阶段": { color: "amber", title: "决策阶段 TOP5" },
-  "预算区间": { color: "blue", title: "预算区间 TOP5" },
-  "对比竞品": { color: "amber", title: "对比竞品 TOP5" },
-  "购车时间": { color: "violet", title: "购车时间 TOP5" },
-  "意向车型": { color: "blue", title: "意向车型 TOP5" },
-  "客户职业": { color: "amber", title: "客户职业 TOP5" },
-  "用车人": { color: "violet", title: "用车人 TOP5" }
-};
-
-const EMPTY_ITEM = {
-  name: "暂无明显命中",
-  reason: "当前筛选条件下暂未识别到高频标签。",
-  count: 0,
-  rate: 0
-};
-
-const EMPTY_PROFILE_ITEM = {
-  name: "暂无命中",
-  reason: "客户暂未表达相关信息",
-  count: 0,
-  rate: 0
-};
-
-const CUSTOMER_PROFILE = {
-  "抗性点": [{ "价格敏感": "客户觉得价格偏高，需要再考虑" }],
-  "需求特征": [{ "空间大": "客户看重车内空间，用于接送孩子" }, { "续航真实": "担心实际续航不够" }],
-  "购车场景": [{ "家庭出行": "客户明确表示用于家用接送孩子" }],
-  "付款方式": [],
-  "置换情况": [],
-  "试驾状态": [],
-  "决策阶段": [{ "时间未定": "客户表示需要再考虑，未确定具体时间" }],
-  "预算区间": [{ "15-20万": "客户询问的车型价格在此区间" }],
-  "对比竞品": [],
-  "意向车型": [{ "AION Y Plus": "客户询问AION Y Plus" }],
-  "购车时间": [{ "下周": "客户约定下周再联系" }],
-  "客户职业": [],
-  "用车人": [{ "自己": "客户自己开，接送孩子用" }]
-};
-
-const PROFILE_CATEGORIES = [
-  "抗性点",
-  "需求特征",
-  "购车场景",
-  "付款方式",
-  "置换情况",
-  "试驾状态",
-  "决策阶段",
-  "预算区间",
-  "对比竞品",
-  "意向车型",
-  "购车时间",
-  "客户职业",
-  "用车人"
-];
-
-const CLOUD_NODES = [
-  { category: "需求特征", preferred: "空间大", tone: "green", icon: "portrait-needs.png", link: "M48 32 Q44 20 43 16" },
-  { category: "购车场景", preferred: "家庭出行", tone: "green", icon: "portrait-scenario.png", link: "M32 38 Q22 30 15 25" },
-  { category: "预算区间", preferred: "15-20万", tone: "green", icon: "portrait-budget.png", link: "M28 48 Q15 48 12 45" },
-  { category: "购车场景", preferred: "接送孩子", tone: "green", icon: "portrait-user.png", link: "M34 62 Q25 70 18 71" },
-  { category: "需求特征", preferred: "用车成本低", tone: "green", icon: "portrait-payment.png", link: "M47 68 Q45 80 43 89" },
-  { category: "抗性点", preferred: "价格敏感", tone: "red", icon: "portrait-resistance.png", link: "M62 36 Q74 25 82 14" },
-  { category: "抗性点", preferred: "续航焦虑", tone: "red", icon: "portrait-time.png", link: "M68 45 Q80 40 90 36" },
-  { category: "对比竞品", tone: "red", icon: "portrait-tradein.png", link: "M68 55 Q82 58 92 58" },
-  { category: "决策阶段", preferred: "时间未定", tone: "red", icon: "portrait-stage.png", link: "M62 66 Q72 78 78 86" }
-];
-
-const RECORDS = [
-  {
-    id: "REC-0508-001",
-    clueCount: 980,
-    daysAgo: 1,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 286,
-    suggestion: "用家庭接送场景承接空间优势，再解释续航真实数据。",
-    tags: {
-      "抗性点": [
-        { name: "价格敏感", reason: "客户觉得价格偏高，需要再考虑。", count: 72 },
-        { name: "续航焦虑", reason: "担心实际续航不够。", count: 46 },
-        { name: "品牌认知不足", reason: "对品牌不太了解", count: 28 },
-        { name: "等优惠政策", reason: "想等下个月促销", count: 19 },
-        { name: "隔音效果差", reason: "试驾时觉得风噪较大", count: 300 }
-      ],
-      "需求特征": [
-        { name: "空间大", reason: "客户看重车内空间，用于接送孩子。", count: 108 },
-        { name: "续航真实", reason: "担心实际续航不够，希望看到真实案例。", count: 64 },
-        { name: "智能化", reason: "对辅助驾驶和车机有较高要求", count: 52 },
-        { name: "用车成本低", reason: "关心充电和保养费用", count: 37 },
-        { name: "外观运动", reason: "喜欢运动感强的设计", count: 21 }
-      ],
-      "购车场景": [
-        { name: "家庭出行", reason: "客户明确表示用于家用接送孩子。", count: 119 },
-        { name: "接送孩子", reason: "客户反复提到孩子上下学接送。", count: 82 },
-        { name: "上下班通勤", reason: "日常上下班代步", count: 65 },
-        { name: "周末自驾", reason: "喜欢周末周边游", count: 41 },
-        { name: "商务接待", reason: "偶尔用于接送客户", count: 18 }
-      ],
-      "预算区间": [{ name: "15-20万", reason: "客户询问的车型价格在此区间。", count: 88 }],
-      "决策阶段": [{ name: "时间未定", reason: "客户表示需要再考虑，未确定具体时间。", count: 53 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户询问 AION Y Plus。", count: 132 }],
-      "购车时间": [{ name: "下周", reason: "客户约定下周再联系。", count: 51 }],
-      "用车人": [{ name: "自己", reason: "客户自己开，接送孩子用。", count: 70 }],
-      "对比竞品": []
-    }
-  },
-  {
-    id: "REC-0508-002",
-    clueCount: 820,
-    daysAgo: 3,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 238,
-    suggestion: "重点补充权益包和金融方案，降低价格敏感。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户多次追问优惠和落地价。", count: 65 }, { name: "等优惠政策", reason: "客户希望等下一轮促销。", count: 39 }],
-      "需求特征": [{ name: "空间大", reason: "客户关注后排和后备箱空间。", count: 91 }, { name: "用车成本低", reason: "客户比较油车和电车使用成本。", count: 47 }],
-      "购车场景": [{ name: "家庭出行", reason: "家庭用车是核心场景。", count: 95 }],
-      "预算区间": [{ name: "15-20万", reason: "预算集中在 15-20 万。", count: 76 }],
-      "决策阶段": [{ name: "对比中", reason: "客户正在对比同价位车型。", count: 49 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户明确咨询该车型。", count: 101 }],
-      "购车时间": [{ name: "下周", reason: "销售约定下周回访。", count: 43 }],
-      "用车人": [{ name: "自己", reason: "客户本人为主要驾驶人。", count: 56 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户提及同价位竞品。", count: 32 }]
-    }
-  },
-  {
-    id: "REC-0507-003",
-    clueCount: 650,
-    daysAgo: 4,
-    brand: "埃安",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "AION V",
-    level: "A级",
-    validCount: 196,
-    suggestion: "安排试驾路线覆盖高速和城市路况，验证真实续航。",
-    tags: {
-      "抗性点": [{ name: "续航焦虑", reason: "客户担心高速续航衰减。", count: 58 }, { name: "品牌认知不足", reason: "客户询问售后网点覆盖。", count: 28 }],
-      "需求特征": [{ name: "续航真实", reason: "客户优先关注真实续航。", count: 85 }, { name: "智能化", reason: "客户关注辅助驾驶。", count: 44 }],
-      "购车场景": [{ name: "上下班通勤", reason: "日常通勤距离固定。", count: 69 }, { name: "城市代步", reason: "工作日城区使用。", count: 35 }],
-      "预算区间": [{ name: "20-25万", reason: "客户询问中高配车型价格。", count: 58 }],
-      "决策阶段": [{ name: "准备试驾", reason: "客户已进入试驾阶段。", count: 74 }],
-      "意向车型": [{ name: "AION V", reason: "客户询问 AION V 续航和智驾。", count: 88 }],
-      "购车时间": [{ name: "本周", reason: "客户计划本周到店。", count: 52 }],
-      "用车人": [{ name: "自己", reason: "客户本人通勤驾驶。", count: 47 }],
-      "对比竞品": [{ name: "深蓝 S07", reason: "客户提及续航配置对比。", count: 24 }]
-    }
-  },
-  {
-    id: "REC-0506-004",
-    clueCount: 590,
-    daysAgo: 5,
-    brand: "埃安",
-    org: "华东大区",
-    store: "宁波南区店",
-    model: "AION Y Plus",
-    level: "C级",
-    validCount: 172,
-    suggestion: "先建立品牌与保值信任，再邀约到店体验空间。",
-    tags: {
-      "抗性点": [{ name: "品牌认知不足", reason: "客户对品牌保值与售后网络仍有顾虑。", count: 48 }, { name: "价格敏感", reason: "客户处于早期比价。", count: 41 }],
-      "需求特征": [{ name: "空间大", reason: "客户关注家庭乘坐舒适性。", count: 57 }, { name: "后排舒适", reason: "客户关注老人乘坐。", count: 39 }],
-      "购车场景": [{ name: "家庭出行", reason: "客户主要家用。", count: 61 }],
-      "预算区间": [{ name: "15-20万", reason: "客户询问入门和中配落地价。", count: 50 }],
-      "决策阶段": [{ name: "初步了解", reason: "客户仅了解车型和价格。", count: 63 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户询问 AION Y Plus。", count: 59 }],
-      "购车时间": [{ name: "时间未定", reason: "客户未明确再次联系时间。", count: 45 }],
-      "用车人": [{ name: "家人", reason: "车辆将给家人共同使用。", count: 34 }],
-      "对比竞品": []
-    }
-  },
-  {
-    id: "REC-0503-005",
-    clueCount: 410,
-    daysAgo: 8,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION S Plus",
-    level: "战败",
-    validCount: 112,
-    suggestion: "结合家庭出行和低用车成本，推动本周二次邀约。",
-    tags: {
-      "抗性点": [
-        { name: "价格敏感", reason: "客户要求更多金融政策。", count: 77 },
-        { name: "担心保值率", reason: "客户关注三年后残值。", count: 34 },
-        { name: "续航焦虑", reason: "高速行驶担心耗电快", count: 60 },
-        { name: "品牌认知不足", reason: "对售后没信心", count: 40 },
-        { name: "内饰不喜欢", reason: "想要浅色内饰", count: 5 }
-      ],
-      "需求特征": [
-        { name: "空间大", reason: "客户对后排空间评价积极。", count: 112 },
-        { name: "用车成本低", reason: "客户关注电耗和保养费用。", count: 69 },
-        { name: "续航真实", reason: "多次询问真实续航达成率", count: 80 },
-        { name: "智能化", reason: "体验了自动泊车", count: 45 },
-        { name: "外观运动", reason: "觉得轮毂好看", count: 30 }
-      ],
-      "购车场景": [
-        { name: "家庭出行", reason: "周末家庭出行需求明确。", count: 121 },
-        { name: "接送孩子", reason: "顺带接送孩子", count: 90 },
-        { name: "上下班通勤", reason: "工作日通勤", count: 50 },
-        { name: "周末自驾", reason: "问了外放电功能", count: 30 },
-        { name: "网约车", reason: "问了营运政策", count: 10 }
-      ],
-      "预算区间": [{ name: "15-20万", reason: "客户预算贴近 AION Y Plus 主销价格。", count: 94 }],
-      "决策阶段": [{ name: "对比中", reason: "客户仍在横向比较。", count: 57 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "主询车型为 AION Y Plus。", count: 136 }],
-      "购车时间": [{ name: "下周", reason: "客户接受下周回访。", count: 49 }],
-      "用车人": [{ name: "自己", reason: "客户本人驾驶为主。", count: 76 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户比较价格和空间。", count: 38 }]
-    }
-  },
-  {
-    id: "REC-0502-006",
-    clueCount: 720,
-    daysAgo: 10,
-    brand: "传祺",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "E9",
-    level: "A级",
-    validCount: 205,
-    suggestion: "强化商务接待和家庭兼用配置，安排高配试驾。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户关注高配落地价。", count: 52 }, { name: "等优惠政策", reason: "客户想等置换补贴。", count: 36 }],
-      "需求特征": [{ name: "智能化", reason: "客户关注座舱语音和辅助驾驶体验。", count: 73 }, { name: "后排舒适", reason: "客户关注二排乘坐体验。", count: 61 }],
-      "购车场景": [{ name: "商务接待", reason: "客户用于公司接待和家庭兼用。", count: 79 }],
-      "预算区间": [{ name: "30万以上", reason: "客户接受更高预算但关注权益。", count: 67 }],
-      "决策阶段": [{ name: "准备试驾", reason: "客户计划体验二排和智能化。", count: 68 }],
-      "意向车型": [{ name: "E9", reason: "客户询问 E9 家用与商务兼顾。", count: 91 }],
-      "购车时间": [{ name: "本周", reason: "客户计划本周到店。", count: 46 }],
-      "用车人": [{ name: "自己", reason: "客户本人和公司共同使用。", count: 45 }],
-      "对比竞品": [{ name: "腾势 D9", reason: "客户提到商务 MPV 竞品。", count: 31 }]
-    }
-  },
-  {
-    id: "REC-0501-007",
-    clueCount: 680,
-    daysAgo: 13,
-    brand: "传祺",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "E8",
-    level: "战败",
-    validCount: 198,
-    suggestion: "突出权益和置换政策，把预算疑虑转化为方案对比。",
-    tags: {
-      "抗性点": [{ name: "等优惠政策", reason: "客户等待置换补贴和大客户权益。", count: 50 }, { name: "价格敏感", reason: "客户要求落地价可控。", count: 45 }],
-      "需求特征": [{ name: "后排舒适", reason: "客户重点体验二排座椅。", count: 68 }, { name: "智能化", reason: "客户关注车机和辅助驾驶。", count: 51 }],
-      "购车场景": [{ name: "商务接待", reason: "公司接待场景明确。", count: 62 }, { name: "家庭出行", reason: "周末家庭共用。", count: 35 }],
-      "预算区间": [{ name: "30万以上", reason: "客户预算与 E9 主销版本匹配。", count: 59 }],
-      "决策阶段": [{ name: "价格谈判", reason: "客户进入权益和报价沟通。", count: 58 }],
-      "意向车型": [{ name: "E9", reason: "客户反复询问 E9。", count: 80 }],
-      "购车时间": [{ name: "本月", reason: "客户希望本月确认。", count: 44 }],
-      "用车人": [{ name: "家人", reason: "家庭与商务共同使用。", count: 33 }],
-      "对比竞品": [{ name: "腾势 D9", reason: "客户关注同级 MPV。", count: 29 }]
-    }
-  },
-  {
-    id: "REC-0430-008",
-    clueCount: 560,
-    daysAgo: 18,
-    brand: "昊铂",
-    org: "华东大区",
-    store: "宁波南区店",
-    model: "昊铂 HT",
-    level: "B级",
-    validCount: 168,
-    suggestion: "建立品牌科技感和售后信任，补充智驾体验证据。",
-    tags: {
-      "抗性点": [{ name: "品牌认知不足", reason: "客户对品牌保值与售后网络仍有顾虑。", count: 57 }, { name: "价格敏感", reason: "客户认为权益需要更清楚。", count: 34 }],
-      "需求特征": [{ name: "配置丰富", reason: "客户关注舒适配置和科技感。", count: 75 }, { name: "智能化", reason: "客户关注高阶辅助驾驶。", count: 52 }],
-      "购车场景": [{ name: "城市代步", reason: "客户以城区出行为主。", count: 54 }],
-      "预算区间": [{ name: "20-25万", reason: "客户询问中高配价格。", count: 49 }],
-      "决策阶段": [{ name: "对比中", reason: "客户同时比较其他新能源 SUV。", count: 45 }],
-      "意向车型": [{ name: "昊铂 HT", reason: "客户询问昊铂 HT。", count: 72 }],
-      "购车时间": [{ name: "时间未定", reason: "客户需要再考虑。", count: 39 }],
-      "用车人": [{ name: "自己", reason: "客户本人驾驶。", count: 38 }],
-      "对比竞品": [{ name: "特斯拉 Model Y", reason: "客户提及品牌与智驾对比。", count: 22 }]
-    }
-  },
-  {
-    id: "REC-0429-009",
-    clueCount: 490,
-    daysAgo: 21,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION V",
-    level: "B级",
-    validCount: 146,
-    suggestion: "用真实续航案例和补能便利性承接需求。",
-    tags: {
-      "抗性点": [{ name: "续航焦虑", reason: "客户关心冬夏续航差异。", count: 43 }],
-      "需求特征": [{ name: "续航真实", reason: "客户关注真实续航和补能。", count: 62 }, { name: "空间大", reason: "客户也关注后排空间。", count: 34 }],
-      "购车场景": [{ name: "上下班通勤", reason: "客户日常通勤距离固定。", count: 50 }],
-      "预算区间": [{ name: "20-25万", reason: "客户咨询中配落地价。", count: 42 }],
-      "决策阶段": [{ name: "对比中", reason: "客户仍在看同级 SUV。", count: 40 }],
-      "意向车型": [{ name: "AION V", reason: "客户询问 AION V。", count: 66 }],
-      "购车时间": [{ name: "下周", reason: "销售约定下周跟进。", count: 31 }],
-      "用车人": [{ name: "自己", reason: "本人通勤使用。", count: 36 }],
-      "对比竞品": [{ name: "深蓝 S07", reason: "客户比较 SUV。", count: 21 }]
-    }
-  },
-  {
-    id: "REC-0426-010",
-    clueCount: 730,
-    daysAgo: 24,
-    brand: "埃安",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 214,
-    suggestion: "突出空间与低成本优势，补齐价格权益说明。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户希望争取更大优惠。", count: 60 }, { name: "担心保值率", reason: "客户关注二手残值。", count: 31 }],
-      "需求特征": [{ name: "空间大", reason: "客户对车内空间兴趣最高。", count: 83 }, { name: "用车成本低", reason: "客户关注后续养车成本。", count: 52 }],
-      "购车场景": [{ name: "家庭出行", reason: "家用接送和周末出游。", count: 88 }],
-      "预算区间": [{ name: "15-20万", reason: "客户预算位于主销区间。", count: 71 }],
-      "决策阶段": [{ name: "时间未定", reason: "客户未确定购买时间。", count: 46 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户主询车型。", count: 97 }],
-      "购车时间": [{ name: "时间未定", reason: "客户需要和家人商量。", count: 38 }],
-      "用车人": [{ name: "家人", reason: "主要给家人接送使用。", count: 42 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户比价。", count: 26 }]
-    }
-  }
-];
-
-const state = {
-  brand: "传祺",
-  region: "all",
-  zone: "all",
-  store: "all",
-  source: "all",
-  scene: ["all"],
-  time: "7",
-  model: "M8",
-  selectedCategory: "需求特征",
-  selectedName: "空间大",
-  rankView: "cloud",
-  heatmapPage: 1
-};
-
-const normalizeRecordsForFactoryFilters = () => {
-  const orgEntries = Object.entries(ORG_TREE).flatMap(([region, zones]) => (
-    Object.entries(zones).flatMap(([zone, stores]) => stores.map(store => ({ region, zone, store })))
-  ));
-
-  RECORDS.forEach((record, index) => {
-    const factoryModel = MODEL_LABEL_MAP[record.model] || record.model;
-    record.model = factoryModel;
-    if (record.brand === "昊铂") record.brand = "埃安";
-    if (index === 0) record.brand = "传祺";
-
-    const org = orgEntries[index % orgEntries.length];
-    record.org = org.region;
-    record.zone = org.zone;
-    record.store = org.store;
-
-    const sourceScenePairs = [
-      { source: "云外呼", scene: "首触跟进" },
-      { source: "云外呼", scene: "邀约进店" },
-      { source: "云外呼", scene: "排程确认" },
-      { source: "数字工牌", scene: "门店接待" },
-      { source: "数字工牌", scene: "试乘试驾" }
-    ];
-    const sourceScene = sourceScenePairs[index % sourceScenePairs.length];
-    record.source = sourceScene.source;
-    record.scene = sourceScene.scene;
-
-    // 模拟全部线索ID
-    const clueIds = [];
-    const clueBase = index * 600;
-    for (let ci = 0; ci < record.clueCount; ci++) {
-      // 前30%的线索ID使用公共池，模拟不同记录下的部分线索重合
-      if (ci < record.clueCount * 0.3) {
-        clueIds.push(`CLUE-${ci % 200}`);
-      } else {
-        clueIds.push(`CLUE-${clueBase + ci}`);
-      }
-    }
-    record.clueIds = clueIds;
-
-    // 模拟“至少命中1条录音”的线索ID：
-    // 这里让部分有效录音落在同一条线索上，避免把“有效录音数”误当成“覆盖线索数”
-    const coveredClueIds = [];
-    const coveredClueTarget = Math.min(
-      clueIds.length,
-      Math.max(1, Math.round(record.validCount * 0.82))
-    );
-    for (let ri = 0; ri < record.validCount; ri++) {
-      coveredClueIds.push(clueIds[ri % coveredClueTarget]);
-    }
-    record.coveredClueIds = coveredClueIds;
-
-    if (record.tags["意向车型"]) {
-      record.tags["意向车型"].forEach(tag => {
-        const tagModel = MODEL_LABEL_MAP[tag.name] || tag.name;
-        tag.name = tagModel;
-        tag.reason = tag.reason.replace(/AION Y Plus|AION V|昊铂 HT|E9/g, match => MODEL_LABEL_MAP[match] || match);
-      });
-    }
-  });
-};
-
-normalizeRecordsForFactoryFilters();
-
-const formatNumber = value => new Intl.NumberFormat("zh-CN").format(value);
-
-const escapeHtml = value => String(value)
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;");
-
-const timeLimit = time => {
-  if (time === "1") return 1;
-  if (time === "7") return 7;
-  if (time === "15") return 15;
-  if (time === "30") return 30;
-  return 30;
-};
-
-const timeText = time => ({
-  1: "昨日",
-  7: "近7天",
-  15: "近半月",
-  30: "近1月",
-  custom: "自定义"
-})[time] || "昨日";
-
-const periodText = time => ({
-  1: "2026.05.07",
-  7: "2026.05.02 - 2026.05.08",
-  15: "2026.04.24 - 2026.05.08",
-  30: "2026.04.09 - 2026.05.08",
-  custom: "自定义时间"
-})[time] || "2026.05.07";
-
-const modelFilterValue = () => DATA_MODEL_MAP[state.model] || state.model;
-
-const currentModelOptions = () => BRAND_MODEL_OPTIONS[state.brand] || [{ label: "全部", value: "all" }];
-
-const currentModelFilter = () => ({
-  key: "model",
-  label: "车型",
-  options: currentModelOptions()
-});
-
-const currentSceneOptions = () => {
-  return SCENE_FILTER.options;
-};
-
-const currentSceneFilter = () => ({
-  key: "scene",
-  label: "质检场景",
-  options: currentSceneOptions(),
-  multiple: true
-});
-
-const applySourceSceneDefaults = () => {
-  state.scene = [...SOURCE_SCENE_MAP[state.source]];
-};
-
-const ensureValidSceneForSource = () => {
-  const availableScenes = state.source === "all"
-    ? currentSceneOptions().map(option => option.value)
-    : SOURCE_SCENE_MAP[state.source];
-  const validScenes = state.scene.filter(scene => availableScenes.includes(scene));
-  if (validScenes.length === 0 || (state.source === "all" && !validScenes.includes("all"))) {
-    applySourceSceneDefaults();
-    return;
-  }
-  state.scene = validScenes;
-};
-
-const ensureValidModelForBrand = () => {
-  if (!currentModelOptions().some(option => option.value === state.model)) {
-    state.model = "all";
-  }
-};
-
-const matchesState = record => {
-  const passTime = record.daysAgo <= timeLimit(state.time);
-  const passBrand = state.brand === "all" || record.brand === state.brand;
-  const passRegion = state.region === "all" || record.org === state.region;
-  const passZone = state.zone === "all" || record.zone === state.zone;
-  const passStore = state.store === "all" || record.store === state.store;
-  const passSource = state.source === "all" || record.source === state.source;
-  const passModel = state.model === "all" || record.model === modelFilterValue();
-  const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
-  return passTime && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
-};
-
-const getFilteredRecords = () => RECORDS.filter(matchesState);
-
-const aggregateCategory = (records, category) => {
-  const map = new Map();
-  records.forEach(record => {
-    (record.tags[category] || []).forEach(tag => {
-      const item = map.get(tag.name) || { name: tag.name, reason: tag.reason, count: 0, sources: 0 };
-      item.count += tag.count;
-      item.sources += 1;
-      if (tag.reason.length > item.reason.length) item.reason = tag.reason;
-      map.set(tag.name, item);
-    });
-  });
-  const total = records.reduce((sum, record) => {
-    return sum + (record.tags[category] || []).reduce((tagSum, tag) => tagSum + tag.count, 0);
-  }, 0);
-  return [...map.values()]
-    .map(item => ({ ...item, rate: total ? Math.round((item.count / total) * 100) : 0 }))
-    .sort((a, b) => b.count - a.count);
-};
-
-const topOf = (records, category) => aggregateCategory(records, category)[0] || EMPTY_ITEM;
-
-const getTopRecord = records => {
-  return records
-    .map(record => {
-      const candidates = Object.entries(record.tags).flatMap(([category, tags]) => tags.map(tag => ({ ...tag, category })));
-      const topTag = candidates.sort((a, b) => b.count - a.count)[0] || { name: "暂无", category: "暂无", count: 0 };
-      return { record, topTag };
-    })
-    .sort((a, b) => b.topTag.count - a.topTag.count)[0];
-};
-
-const getTrend = (current, previous) => {
-  if (!previous) return { text: "无对比", tone: "flat" };
-  const diff = Math.round(((current - previous) / previous) * 100);
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const getRateTrend = (item, category, previousRecords) => {
-  if (!item.count) return { text: "无对比", tone: "flat" };
-  const previousItem = aggregateCategory(previousRecords, category).find(tag => tag.name === item.name);
-  if (!previousItem) return { text: "无对比", tone: "flat" };
-  const diff = item.rate - previousItem.rate;
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const getProfileTrend = (item, category, previousRecords) => {
-  if (!item.count) return { text: "未命中", tone: "flat", direction: "flat" };
-  const previousItem = aggregateCategory(previousRecords, category).find(tag => tag.name === item.name);
-  if (!previousItem) return { text: "无对比", tone: "flat", direction: "flat" };
-  const diff = item.rate - previousItem.rate;
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green", direction: "up" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red", direction: "down" };
-  return { text: "持平", tone: "flat", direction: "flat" };
-};
-
-const getProfileSnapshot = (records, category, previousRecords = getPreviousRecords()) => {
-  const item = topOf(records, category);
-  const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-  return {
-    ...normalizedItem,
-    trend: getProfileTrend(normalizedItem, category, previousRecords)
-  };
-};
-
-const getCloudSnapshot = (records, config, previousRecords = getPreviousRecords()) => {
-  const items = aggregateCategory(records, config.category);
-  const preferredItem = config.preferred ? items.find(item => item.name === config.preferred) : null;
-  const item = preferredItem || items[0] || EMPTY_PROFILE_ITEM;
-  const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-  return {
-    category: config.category,
-    tone: config.tone,
-    icon: `../AI质检平台4.29/assets/${config.icon}`,
-    link: config.link,
-    item: {
-      ...normalizedItem,
-      trend: getProfileTrend(normalizedItem, config.category, previousRecords)
-    }
-  };
-};
-
-const getPreviousRecords = () => {
-  const currentLimit = timeLimit(state.time);
-  return RECORDS.filter(record => {
-    const passPreviousWindow = record.daysAgo > currentLimit && record.daysAgo <= currentLimit + 7;
-    const passBrand = state.brand === "all" || record.brand === state.brand;
-    const passRegion = state.region === "all" || record.org === state.region;
-    const passZone = state.zone === "all" || record.zone === state.zone;
-    const passStore = state.store === "all" || record.store === state.store;
-    const passSource = state.source === "all" || record.source === state.source;
-    const passModel = state.model === "all" || record.model === modelFilterValue();
-    const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
-    return passPreviousWindow && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
-  });
-};
-
-const buildMetrics = records => {
-  const previous = getPreviousRecords();
-  const validCount = records.reduce((sum, record) => sum + record.validCount, 0);
-  const previousCount = previous.reduce((sum, record) => sum + record.validCount, 0);
-  const validTrend = getTrend(validCount, previousCount);
-
-  const totalRecords = records.length;
-  const highIntentRecords = records.filter(record => record.level === "A级" || record.level === "B级");
-  const highIntentRate = totalRecords ? ((highIntentRecords.length / totalRecords) * 100).toFixed(1) : 0;
-  const prevTotal = previous.length;
-  const prevHighIntent = previous.filter(record => record.level === "A级" || record.level === "B级");
-  const prevHighRate = prevTotal ? ((prevHighIntent.length / prevTotal) * 100).toFixed(1) : 0;
-  const highIntentTrend = getTrendPercent(parseFloat(highIntentRate), parseFloat(prevHighRate));
-
-  const resistance = topOf(records, "抗性点");
-  const resistanceTrend = getRateTrend(resistance, "抗性点", previous);
-
-  const need = topOf(records, "需求特征");
-  const needTrend = getRateTrend(need, "需求特征", previous);
-
-  const highIntentCount = highIntentRecords.reduce((sum, record) => sum + record.validCount, 0);
-  const prevHighIntentCount = prevHighIntent.reduce((sum, record) => sum + record.validCount, 0);
-  const highIntentCountTrend = getTrend(highIntentCount, prevHighIntentCount);
-
-  const scene = topOf(records, "购车场景");
-  const sceneTrend = getRateTrend(scene, "购车场景", previous);
-
-  const competitor = topOf(records, "对比竞品");
-  const competitorTrend = getRateTrend(competitor, "对比竞品", previous);
-
-  // 线索数：去重统计，1条线索命中多条录音记作1条
-  const clueSet = new Set();
-  records.forEach(r => (r.clueIds || []).forEach(id => clueSet.add(id)));
-  const clueCount = clueSet.size;
-
-  const prevClueSet = new Set();
-  previous.forEach(r => (r.clueIds || []).forEach(id => prevClueSet.add(id)));
-  const prevClueCount = prevClueSet.size;
-
-  const clueTrend = getTrend(clueCount, prevClueCount);
-
-  // 录音覆盖率 = 至少命中1条录音的线索数 / 全部线索数
-  const coveredClueSet = new Set();
-  records.forEach(r => (r.coveredClueIds || []).forEach(id => coveredClueSet.add(id)));
-  const coveredClueCount = coveredClueSet.size;
-
-  const prevCoveredClueSet = new Set();
-  previous.forEach(r => (r.coveredClueIds || []).forEach(id => prevCoveredClueSet.add(id)));
-  const prevCoveredClueCount = prevCoveredClueSet.size;
-
-  const coverageRate = clueCount ? ((coveredClueCount / clueCount) * 100).toFixed(1) : 0;
-  const prevCoverageRate = prevClueCount ? ((prevCoveredClueCount / prevClueCount) * 100).toFixed(1) : 0;
-  const coverageTrend = getTrendPercent(parseFloat(coverageRate), parseFloat(prevCoverageRate));
-
-  return [
+(function () {
+  const TOPICS = [
     {
-      title: "有效录音数",
-      value: formatNumber(validCount),
-      copy: "有效录音的数量",
-      trendValue: validTrend.text,
-      trendTone: validTrend.tone === "green" ? "blue" : validTrend.tone,
-      sparkColor: "#2563eb",
-      valueColor: "blue",
-      metricType: "count",
-      rawValue: validCount
+      name: "续航",
+      description: "真实续航、冬季与高速场景",
+      visit: { aRate: 42.8, bRate: 56.6, aSentiment: [34, 38, 28], bSentiment: [18, 37, 45] },
+      lead: { aRate: 38.6, bRate: 57.9, aSentiment: [42, 36, 22], bSentiment: [15, 34, 51] },
+      children: ["真实续航", "高速续航", "冬季续航", "续航达成率"],
+      voiceText: [
+        ["negative", "销售说能跑六百公里，但我更想知道<strong>高速实际能跑多少</strong>，经常跑长途，差太多就不考虑了。"],
+        ["neutral", "冬天开暖风以后大概还能有多少续航？我家这边<strong>冬季温度比较低</strong>。"],
+        ["positive", "试驾回来电耗比我预想的低，如果日常能稳定在这个水平，<strong>通勤完全够用</strong>。"],
+        ["negative", "之前开过朋友的电车，表显掉得太快，我对<strong>续航达成率</strong>还是有点没信心。"]
+      ]
     },
     {
-      title: "AI高意向数",
-      value: formatNumber(highIntentCount),
-      copy: "AI意向等级评定为高的录音数量",
-      trendValue: highIntentCountTrend.text,
-      trendTone: highIntentCountTrend.tone,
-      sparkColor: "#16a765",
-      valueColor: "green",
-      metricType: "count",
-      rawValue: highIntentCount
+      name: "空间",
+      description: "二排、后备箱与储物空间",
+      visit: { aRate: 51.6, bRate: 40.2, aSentiment: [55, 31, 14], bSentiment: [42, 35, 23] },
+      lead: { aRate: 56.1, bRate: 39.4, aSentiment: [61, 28, 11], bSentiment: [38, 37, 25] },
+      children: ["二排空间", "后备箱", "储物空间", "头部空间"],
+      voiceText: [
+        ["positive", "后排地台是平的，孩子坐中间不会难受，<strong>二排空间比我现在的车宽敞</strong>。"],
+        ["neutral", "婴儿车不折叠能不能直接放进去？我主要想确认一下<strong>后备箱的纵深</strong>。"],
+        ["positive", "前排这些小储物格挺实用，手机和水杯都有地方放，<strong>家用考虑得比较细</strong>。"],
+        ["negative", "我坐后排头发会碰到顶，可能是全景天幕占了点空间，<strong>头部余量一般</strong>。"]
+      ]
     },
     {
-      title: "线索数",
-      value: formatNumber(clueCount),
-      copy: "线索ID去重的数量",
-      trendValue: clueTrend.text,
-      trendTone: clueTrend.tone,
-      sparkColor: "#6366f1",
-      metricType: "count",
-      rawValue: clueCount
+      name: "充电补能",
+      description: "快充速度、充电便利性",
+      visit: { aRate: 19.4, bRate: 28.1, aSentiment: [29, 43, 28], bSentiment: [17, 41, 42] },
+      lead: { aRate: 17.8, bRate: 31.7, aSentiment: [34, 41, 25], bSentiment: [13, 38, 49] },
+      children: ["快充速度", "公共充电", "家充安装", "低温充电"],
+      voiceText: [
+        ["negative", "小区暂时装不了家充，如果外面每次都要等很久，<strong>用起来会比较麻烦</strong>。"],
+        ["neutral", "从百分之二十充到八十要多久？服务区的快充桩能不能都兼容？"],
+        ["positive", "半小时左右补到八成我能接受，吃个饭的时间基本就够了。"],
+        ["negative", "附近公共桩晚上经常排队，这个不是车的问题，但确实会影响我选电车。"]
+      ]
     },
     {
-      title: "录音覆盖率",
-      value: `${coverageRate}%`,
-      copy: "至少命中1条录音的线索数/线索数",
-      trendValue: coverageTrend.text,
-      trendTone: coverageTrend.tone,
-      sparkColor: "#f59e0b",
-      metricType: "rate",
-      rawValue: parseFloat(coverageRate)
+      name: "智能驾驶",
+      description: "功能丰富度、安全感、易用性",
+      visit: { aRate: 37.1, bRate: 43.5, aSentiment: [46, 39, 15], bSentiment: [31, 43, 26] },
+      lead: { aRate: 42.3, bRate: 48.8, aSentiment: [52, 36, 12], bSentiment: [29, 40, 31] },
+      children: ["高速领航", "自动泊车", "主动安全", "人机交互"],
+      voiceText: [
+        ["positive", "刚才自动泊车识别得很快，车位两边都很窄，<strong>对新手挺友好</strong>。"],
+        ["neutral", "高速领航是全国都能用，还是只有开通的城市和道路可以用？"],
+        ["negative", "变道的时候动作有点突然，我还是会紧张，<strong>安全感不如自己开</strong>。"],
+        ["positive", "语音连续说几个指令都能听懂，不用每次重新唤醒，这点很方便。"]
+      ]
     },
     {
-      title: "TOP1需求特征",
-      value: need.name,
-      copy: `${formatNumber(need.count)}/${need.rate}% ${needTrend.text}`,
-      sparkColor: "#16a765",
-      valueColor: "green",
-      metricType: "rate",
-      rawValue: need.rate
+      name: "内饰",
+      description: "用料、座椅、车机与质感",
+      visit: { aRate: 29.8, bRate: 34.1, aSentiment: [41, 39, 20], bSentiment: [32, 40, 28] },
+      lead: { aRate: 33.2, bRate: 36.7, aSentiment: [47, 37, 16], bSentiment: [30, 39, 31] },
+      children: ["座椅舒适", "内饰用料", "车机屏幕", "异味控制"],
+      voiceText: [
+        ["positive", "座椅两侧支撑挺到位，腰部也不会空，长时间开应该不会太累。"],
+        ["negative", "门板下面这块塑料感有点明显，和这个价位比，<strong>质感还差一点</strong>。"],
+        ["neutral", "这块屏幕以后系统会持续更新吗？我比较在意车机用两年会不会卡。"],
+        ["positive", "新车里面味道不算大，家里有小孩，这一点对我比较重要。"]
+      ]
     },
     {
-      title: "TOP1抗性点",
-      value: resistance.name,
-      copy: `${formatNumber(resistance.count)}/${resistance.rate}% ${resistanceTrend.text}`,
-      sparkColor: "#ef4444",
-      valueColor: "red",
-      metricType: "rate",
-      rawValue: resistance.rate
+      name: "外观",
+      description: "造型、颜色、灯组与比例",
+      visit: { aRate: 33.4, bRate: 30.6, aSentiment: [63, 29, 8], bSentiment: [55, 33, 12] },
+      lead: { aRate: 35.8, bRate: 28.4, aSentiment: [68, 25, 7], bSentiment: [51, 35, 14] },
+      children: ["前脸造型", "车身颜色", "灯组设计", "整车比例"],
+      voiceText: [
+        ["positive", "这个前脸比图片上看着更有层次，实车不显得夸张，我挺喜欢。"],
+        ["neutral", "灰色要等多久？白色现车多，但我还是想看看不同颜色的实车。"],
+        ["positive", "侧面比例很顺，车看着不小，但开起来视野没有压迫感。"],
+        ["negative", "尾灯晚上很有辨识度，不过白天看装饰件稍微有点复杂。"]
+      ]
     },
     {
-      title: "TOP1购车场景",
-      value: scene.name,
-      copy: `${formatNumber(scene.count)}/${scene.rate}% ${sceneTrend.text}`,
-      sparkColor: "#2563eb",
-      valueColor: "blue",
-      metricType: "rate",
-      rawValue: scene.rate
-    },
-    {
-      title: "TOP1对比竞品",
-      value: competitor.name,
-      copy: `${formatNumber(competitor.count)}/${competitor.rate}% ${competitorTrend.text}`,
-      sparkColor: "#ef4444",
-      valueColor: "red",
-      metricType: "rate",
-      rawValue: competitor.rate
+      name: "操控",
+      description: "底盘、转向、制动与舒适性",
+      visit: { aRate: 21.9, bRate: 18.7, aSentiment: [49, 36, 15], bSentiment: [39, 40, 21] },
+      lead: { aRate: 25.6, bRate: 19.2, aSentiment: [55, 33, 12], bSentiment: [36, 40, 24] },
+      children: ["底盘滤振", "转向手感", "制动感受", "高速稳定"],
+      voiceText: [
+        ["positive", "过减速带没有多余弹跳，后排坐着也不颠，<strong>底盘比预想的整</strong>。"],
+        ["neutral", "方向盘力度能不能调？现在这个模式对我来说稍微有点轻。"],
+        ["negative", "松电门的时候减速感太明显，我容易晕车，可能要再适应一下。"],
+        ["positive", "快速路上变道车身没有晃，速度起来以后还是挺稳的。"]
+      ]
     }
   ];
-};
 
-const getTrendPercent = (current, previous) => {
-  if (!previous) return { text: "无对比", tone: "flat" };
-  const diff = current - previous;
-  if (diff > 0) return { text: `↑${diff.toFixed(1)}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff).toFixed(1)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const renderFilters = () => {
-  ensureValidModelForBrand();
-  ensureValidSceneForSource();
-  const filterGrid = document.querySelector("#filterGrid");
-  filterGrid.innerHTML = `
-    ${tabFilterMarkup(FILTERS[0], "gf-brand-group")}
-    ${orgFilterMarkup()}
-    ${tabFilterMarkup(SOURCE_FILTER)}
-    ${tabFilterMarkup(currentSceneFilter())}
-    ${tabFilterMarkup(FILTERS[1])}
-    ${tabFilterMarkup(currentModelFilter())}
-  `;
-};
-
-const tabFilterMarkup = (group, extraClass = "") => `
-  <div class="gf-group ${extraClass}">
-    <span class="gf-label">${group.label}</span>
-    <div class="gf-tabs">
-      ${group.options.map(option => `
-        <button class="gf-tab ${isFilterOptionActive(group, option) ? "active" : ""} ${isFilterOptionDisabled(group, option) ? "disabled" : ""}" data-filter="${group.key}" data-value="${escapeHtml(option.value)}" type="button" ${isFilterOptionDisabled(group, option) ? "disabled aria-disabled=\"true\"" : ""}>
-          ${option.value === "custom" ? calendarIconMarkup() : ""}${escapeHtml(option.label)}
-        </button>
-      `).join("")}
-    </div>
-  </div>
-`;
-
-const isFilterOptionActive = (group, option) => {
-  if (group.multiple) {
-    return state[group.key].includes(option.value);
-  }
-  return state[group.key] === option.value;
-};
-
-const isFilterOptionDisabled = (group, option) => {
-  if (group.key !== "scene" || state.source === "all") {
-    return false;
-  }
-  return !SOURCE_SCENE_MAP[state.source].includes(option.value);
-};
-
-const orgFilterMarkup = () => `
-  <div class="gf-group gf-org-group">
-    <span class="gf-label">组织</span>
-    <select class="gf-select" data-org-filter="region" aria-label="大区筛选">
-      <option value="all">全国</option>
-      ${Object.keys(ORG_TREE).map(region => `<option value="${escapeHtml(region)}" ${state.region === region ? "selected" : ""}>${escapeHtml(region)}</option>`).join("")}
-    </select>
-    <select class="gf-select" data-org-filter="zone" aria-label="战区筛选">
-      <option value="all">全部战区</option>
-      ${orgZoneOptions()}
-    </select>
-    <select class="gf-select" data-org-filter="store" aria-label="门店筛选">
-      <option value="all">全部门店</option>
-      ${orgStoreOptions()}
-    </select>
-  </div>
-`;
-
-const orgZoneOptions = () => {
-  if (state.region === "all") return "";
-  return Object.keys(ORG_TREE[state.region] || {})
-    .map(zone => `<option value="${escapeHtml(zone)}" ${state.zone === zone ? "selected" : ""}>${escapeHtml(zone)}</option>`)
-    .join("");
-};
-
-const orgStoreOptions = () => {
-  if (state.region === "all" || state.zone === "all") return "";
-  return (ORG_TREE[state.region]?.[state.zone] || [])
-    .map(store => `<option value="${escapeHtml(store)}" ${state.store === store ? "selected" : ""}>${escapeHtml(store)}</option>`)
-    .join("");
-};
-
-const calendarIconMarkup = () => `
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-    <line x1="16" y1="2" x2="16" y2="6"></line>
-    <line x1="8" y1="2" x2="8" y2="6"></line>
-    <line x1="3" y1="10" x2="21" y2="10"></line>
-  </svg>
-`;
-
-const metricMarkup = (metric, index) => {
-  const valueClass = metric.valueColor || "";
-  const hasTrend = metric.trendValue && metric.trendTone;
-  const trendTone = metric.trendTone || "flat";
-  const arrowDir = trendTone === "green" ? "up" : trendTone === "red" ? "down" : trendTone;
-  const trendRow = hasTrend ? `
-      <div class="metric-trend-row">
-        <span class="metric-trend-arrow ${arrowDir}">${escapeHtml(metric.trendValue)}</span>
-        <span class="metric-trend-label">较上期</span>
-      </div>` : "";
-  return `
-    <article class="metric-card">
-      <div class="metric-head">${escapeHtml(metric.title)}<span class="ai-mini">AI分析</span></div>
-      <div class="metric-value ${valueClass}">${escapeHtml(metric.value)}</div>
-      <div class="metric-copy">${escapeHtml(metric.copy)}</div>${trendRow}
-      <svg class="spark spark-clickable" viewBox="0 0 86 34" aria-hidden="true" data-metric-index="${index}" title="点击查看趋势详情">
-        <path d="${metric.sparkPath || 'M2 27 C10 14, 18 20, 25 17 S38 26, 45 13 S57 17, 64 7 S75 20, 84 10'}" fill="none" stroke="${metric.sparkColor}" stroke-width="2.2" stroke-linecap="round"></path>
-      </svg>
-    </article>
-  `;
-};
-
-const rankBlock = (category, items, previousRecords) => {
-  const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-  let rows = items.slice(0, 5);
-  // Remove padding to not show empty items
-  if (rows.length === 0) {
-    rows = [EMPTY_PROFILE_ITEM];
-  }
-  return `
-    <section class="rank-block profile-rank-block" aria-label="${escapeHtml(meta.title)}">
-      <h3>${escapeHtml(meta.title)}<span class="question">?</span></h3>
-      <div class="rank-list">
-        ${rows.map((item, index) => {
-    const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-    const trend = getProfileTrend(normalizedItem, category, previousRecords);
-    const isSelected = state.selectedCategory === category && state.selectedName === normalizedItem.name;
-    return `
-            <button class="rank-item profile-rank-row ${isSelected ? "active" : ""}" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(normalizedItem.name)}" title="${escapeHtml(normalizedItem.reason)}">
-              <span class="rank-num rank-${index + 1}">${index + 1}</span>
-              <span class="rank-name ${normalizedItem.count ? meta.color : "flat"}">${escapeHtml(normalizedItem.name)}</span>
-              <span class="rank-rate">${normalizedItem.rate}%</span>
-              <span class="rank-trend ${trend.tone}">${escapeHtml(trend.text)}</span>
-            </button>
-          `;
-  }).join("")}
-      </div>
-    </section>
-  `;
-};
-
-const profileBlock = (category, records, previousRecords) => {
-  const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-  const item = getProfileSnapshot(records, category, previousRecords);
-  return `
-    <button class="profile-block" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-      <h3>${escapeHtml(category)}</h3>
-      <div class="profile-list">
-        <div class="profile-item ${item.count ? "" : "empty"}">
-          <div class="profile-item-head">
-            <span class="profile-tag ${item.count ? meta.color : "flat"}">${escapeHtml(item.name)}</span>
-            <span class="profile-hit-rate">命中率 ${item.rate}%</span>
-          </div>
-          <p>${escapeHtml(item.reason)}</p>
-          <span class="profile-trend ${item.trend.tone}">${escapeHtml(item.trend.text)}</span>
-        </div>
-      </div>
-    </button>
-  `;
-};
-
-const trendGlyph = trend => {
-  if (trend.direction === "down") return "↓";
-  if (trend.direction === "flat") return "→";
-  return "↑";
-};
-
-const portraitLinksMarkup = snapshots => `
-  <defs>
-    <marker id="portraitArrowGreen" markerWidth="4" markerHeight="4" refX="3.5" refY="2" orient="auto">
-      <path d="M0,0 L4,2 L0,4" fill="none" stroke="#32d778" stroke-width="0.8"></path>
-    </marker>
-    <marker id="portraitArrowRed" markerWidth="4" markerHeight="4" refX="3.5" refY="2" orient="auto">
-      <path d="M0,0 L4,2 L0,4" fill="none" stroke="#ff6b6b" stroke-width="0.8"></path>
-    </marker>
-  </defs>
-  ${snapshots.map(snapshot => `
-    <path d="${snapshot.link}" stroke="${snapshot.tone === "red" ? "#ff6b6b" : "#32d778"}" marker-end="url(#portraitArrow${snapshot.tone === "red" ? "Red" : "Green"})"></path>
-  `).join("")}
-`;
-
-const portraitNodeMarkup = (snapshot, index) => {
-  const { category, item, tone, icon } = snapshot;
-  const isActive = state.selectedCategory === category && state.selectedName === item.name;
-  const colorClass = item.count ? tone : "flat";
-  return `
-    <button class="portrait-node ${colorClass} node-pos-${index} ${isActive ? "active" : ""}" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-      <span class="portrait-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
-      <span class="portrait-category">${escapeHtml(category)}</span>
-      <strong>${escapeHtml(item.name)}</strong>
-      <span class="portrait-rate">出现率 ${item.rate}% <span class="portrait-trend ${item.trend.tone}" title="${escapeHtml(item.trend.text)}">${trendGlyph(item.trend)}</span></span>
-    </button>
-  `;
-};
-
-const renderPortrait = records => {
-  const previousRecords = getPreviousRecords();
-
-  const allTags = [];
-  PROFILE_CATEGORIES.forEach(category => {
-    const items = aggregateCategory(records, category);
-    items.forEach(item => {
-      if (item.count > 0 && item.rate > 20) {
-        allTags.push({ ...item, category, meta: CATEGORY_META[category] || CATEGORY_META["需求特征"] });
-      }
-    });
-  });
-
-  allTags.sort((a, b) => b.count - a.count); // Sort by highest count
-
-  // Limit to maximum 14 tags to prevent severe overlap
-  if (allTags.length > 14) {
-    allTags.splice(14);
-  }
-
-  // If no items have > 20% rate, just use top 5 of anything to avoid empty state
-  if (allTags.length === 0) {
-    PROFILE_CATEGORIES.forEach(category => {
-      const items = aggregateCategory(records, category);
-      if (items[0] && items[0].count > 0) {
-        allTags.push({ ...items[0], category, meta: CATEGORY_META[category] || CATEGORY_META["需求特征"] });
-      }
-    });
-    allTags.sort((a, b) => b.rate - a.rate);
-    allTags.splice(6); // Keep at most 6
-  }
-
-  const ICONS = {
-    "需求特征": "portrait-needs.png",
-    "购车场景": "portrait-scenario.png",
-    "预算区间": "portrait-budget.png",
-    "用车人": "portrait-user.png",
-    "抗性点": "portrait-resistance.png",
-    "决策阶段": "portrait-stage.png",
-    "对比竞品": "portrait-tradein.png",
-    "付款方式": "portrait-payment.png"
+  const SENTIMENT_LABELS = {
+    positive: "正面",
+    neutral: "中性",
+    negative: "负面"
   };
 
-  const snapshots = allTags.map(tag => {
+  const state = {
+    mode: "all",
+    topic: "all",
+    sort: "rate",
+    sentiment: "all",
+    grain: "week",
+    showAllVoices: false
+  };
+
+  const modeMeta = {
+    all: {
+      label: "全部客户",
+      sample: [799, 649]
+    },
+    visit: {
+      aLabel: "邀约到店",
+      bLabel: "邀约未到店",
+      aSampleLabel: "邀约到店客户",
+      bSampleLabel: "邀约未到店客户",
+      sample: [426, 373, 351, 298]
+    },
+    lead: {
+      aLabel: "高转化客户",
+      bLabel: "待突破客户",
+      sample: [326, 441, 271, 355, 23]
+    }
+  };
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  function escapeHTML(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function getAllTopicStats(topic) {
+    const aFeedback = modeMeta.visit.sample[2];
+    const bFeedback = modeMeta.visit.sample[3];
+    const aCount = aFeedback * topic.visit.aRate / 100;
+    const bCount = bFeedback * topic.visit.bRate / 100;
+    const totalCount = aCount + bCount;
+    const sentiment = [0, 1, 2].map((index) => Math.round(
+      (aCount * topic.visit.aSentiment[index] + bCount * topic.visit.bSentiment[index]) / totalCount
+    ));
+    sentiment[1] = 100 - sentiment[0] - sentiment[2];
     return {
-      category: tag.category,
-      tone: tag.meta.color,
-      icon: `../AI质检平台4.29/assets/${ICONS[tag.category] || "portrait-needs.png"}`,
-      item: {
-        ...tag,
-        trend: getProfileTrend(tag, tag.category, previousRecords)
-      }
+      rate: Number((totalCount / (aFeedback + bFeedback) * 100).toFixed(1)),
+      sentiment
     };
-  });
-
-  const selectedStillVisible = snapshots.some(snapshot => (
-    snapshot.category === state.selectedCategory && snapshot.item.name === state.selectedName
-  ));
-
-  if (!records.length) {
-    state.selectedCategory = "需求特征";
-    state.selectedName = EMPTY_PROFILE_ITEM.name;
-  } else if (!selectedStillVisible && snapshots.length > 0) {
-    state.selectedCategory = snapshots[0].category;
-    state.selectedName = snapshots[0].item.name;
   }
 
-  const orgText = [state.region === "all" ? "全国" : state.region, state.zone === "all" ? "" : state.zone, state.store === "all" ? "" : state.store]
-    .filter(Boolean)
-    .join(" / ");
-  const modelText = state.model === "all" ? "全部车型" : state.model;
-  document.querySelector("#portraitSubtext").textContent = `${state.brand} / ${orgText} / ${timeText(state.time)} / ${modelText}`;
-
-  const centerCarName = document.querySelector("#centerCarName");
-  if (centerCarName) {
-    centerCarName.textContent = state.model === "all" ? (state.brand === "all" ? "全部车型" : state.brand) : state.model;
+  function getAggregateStats(mode) {
+    const sample = modeMeta[mode].sample;
+    if (mode === "all") {
+      const topicStats = TOPICS.map(getAllTopicStats);
+      const totalWeight = topicStats.reduce((sum, stats) => sum + stats.rate, 0);
+      const sentiment = [0, 1, 2].map((index) => Math.round(
+        topicStats.reduce((sum, stats) => sum + stats.rate * stats.sentiment[index], 0) / totalWeight
+      ));
+      sentiment[1] = 100 - sentiment[0] - sentiment[2];
+      return {
+        rate: Number((sample[1] / sample[0] * 100).toFixed(1)),
+        sentiment
+      };
+    }
+    const weightedSentiment = (group) => {
+      const rateKey = `${group}Rate`;
+      const sentimentKey = `${group}Sentiment`;
+      const totalWeight = TOPICS.reduce((sum, topic) => sum + topic[mode][rateKey], 0);
+      return [0, 1, 2].map((sentimentIndex) => Math.round(
+        TOPICS.reduce((sum, topic) => sum + topic[mode][rateKey] * topic[mode][sentimentKey][sentimentIndex], 0) / totalWeight
+      ));
+    };
+    const aSentiment = weightedSentiment("a");
+    const bSentiment = weightedSentiment("b");
+    aSentiment[1] = 100 - aSentiment[0] - aSentiment[2];
+    bSentiment[1] = 100 - bSentiment[0] - bSentiment[2];
+    return {
+      aRate: Number((sample[2] / sample[0] * 100).toFixed(1)),
+      bRate: Number((sample[3] / sample[1] * 100).toFixed(1)),
+      aSentiment,
+      bSentiment
+    };
   }
 
-  // Clear the links (remove dashed arrows)
-  document.querySelector("#portraitLinks").innerHTML = "";
+  function getAggregateTopic() {
+    return {
+      name: "全部汇总",
+      description: "当前筛选条件下的全部产品特征",
+      all: getAggregateStats("all"),
+      visit: getAggregateStats("visit"),
+      lead: getAggregateStats("lead"),
+      children: [],
+      voiceText: []
+    };
+  }
 
-  // Render nodes in a circle with alternating radii for density
-  const total = snapshots.length;
-  const baseRx = 39; // Max x radius in percentage
-  const baseRy = 37; // Max y radius in percentage
+  function getTopic(name = state.topic) {
+    if (name === "all") return getAggregateTopic();
+    return TOPICS.find((topic) => topic.name === name) || getAggregateTopic();
+  }
 
-  document.querySelector("#portraitNodeSet").innerHTML = snapshots.map((snapshot, index) => {
-    const angle = (index / total) * Math.PI * 2 - Math.PI / 2; // start from top
+  function getTopicStats(topic) {
+    if (state.mode === "all") {
+      return topic.name === "全部汇总" ? topic.all : getAllTopicStats(topic);
+    }
+    return topic[state.mode];
+  }
 
-    // Stagger layout: odd nodes move slightly inward if there are many nodes
-    const isInner = total > 8 && index % 2 !== 0;
-    const rx = isInner ? baseRx - 10 : baseRx;
-    const ry = isInner ? baseRy - 9 : baseRy;
+  function getDelta(topic) {
+    const stats = getTopicStats(topic);
+    return Number((stats.aRate - stats.bRate).toFixed(1));
+  }
 
-    const left = 50 + Math.cos(angle) * rx;
-    const top = 50 + Math.sin(angle) * ry;
+  function getCounts(topic) {
+    const stats = getTopicStats(topic);
+    const sample = modeMeta[state.mode].sample;
+    if (state.mode === "all") {
+      return { total: Math.max(1, Math.round(sample[1] * stats.rate / 100)) };
+    }
+    const aDenominator = sample[2];
+    const bDenominator = sample[3];
+    return {
+      a: Math.max(1, Math.round(aDenominator * stats.aRate / 100)),
+      b: Math.max(1, Math.round(bDenominator * stats.bRate / 100))
+    };
+  }
 
-    const { category, item, tone, icon } = snapshot;
-    const isActive = state.selectedCategory === category && state.selectedName === item.name;
-    const colorClass = item.count ? tone : "flat";
+  function renderSampleOverview() {
+    const meta = modeMeta[state.mode];
+    if (state.mode === "all") {
+      const [customers, feedbackCustomers] = meta.sample;
+      const grid = $("#sampleGrid");
+      grid.className = "sample-grid is-all";
+      grid.innerHTML = `
+        <article class="sample-card"><span>全部客户数</span><strong>${customers.toLocaleString("zh-CN")}</strong><small>当前筛选范围内去重自然客户</small></article>
+        <article class="sample-card a"><span>反馈客户数</span><strong>${feedbackCustomers.toLocaleString("zh-CN")}</strong><small>${(feedbackCustomers / customers * 100).toFixed(1)}% 有有效产品表达</small></article>
+      `;
+      return;
+    }
+    const [aCustomers, bCustomers, aFeedback, bFeedback, overlap] = meta.sample;
+    const aSampleLabel = meta.aSampleLabel || meta.aLabel;
+    const bSampleLabel = meta.bSampleLabel || meta.bLabel;
+    const cards = [
+      { tone: "a", label: `${aSampleLabel}数`, value: aCustomers, note: "去重自然客户" },
+      { tone: "b", label: `${bSampleLabel}数`, value: bCustomers, note: "去重自然客户" },
+      { tone: "a", label: `${aSampleLabel}反馈客户数`, value: aFeedback, note: `${(aFeedback / aCustomers * 100).toFixed(1)}% 有有效产品表达` },
+      { tone: "b", label: `${bSampleLabel}反馈客户数`, value: bFeedback, note: `${(bFeedback / bCustomers * 100).toFixed(1)}% 有有效产品表达` }
+    ];
 
-    return `
-      <button class="portrait-node ${colorClass} ${isActive ? "active" : ""}" style="left: calc(${left}% - 76px); top: calc(${top}% - 35px);" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-        <span class="portrait-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
-        <span class="portrait-category">${escapeHtml(category)}</span>
-        <strong>${escapeHtml(item.name)}</strong>
-        <span class="portrait-rate">${item.count}/${item.rate}%</span>
-        <span class="portrait-trend ${item.trend.tone}">${escapeHtml(item.trend.text)}</span>
-      </button>
-    `;
-  }).join("");
-};
+    if (state.mode === "lead") {
+      cards.push({ tone: "overlap", label: "重叠客户数", value: overlap, note: "不进入差异计算" });
+    }
 
+    const grid = $("#sampleGrid");
+    grid.className = "sample-grid";
+    grid.classList.toggle("has-overlap", state.mode === "lead");
+    grid.innerHTML = cards.map((card) => `
+      <article class="sample-card ${card.tone}">
+        <span>${escapeHTML(card.label)}</span>
+        <strong>${card.value.toLocaleString("zh-CN")}</strong>
+        <small>${escapeHTML(card.note)}</small>
+      </article>
+    `).join("");
+  }
 
-const renderRanks = records => {
-  const previousRecords = getPreviousRecords();
-  const rankGrid = document.querySelector("#rankGrid");
-  const rankCloud = document.querySelector("#rankCloud");
-  if (!rankGrid || !rankCloud) return;
+  function renderTopicMatrix() {
+    const sortedTopics = [...TOPICS].sort((left, right) => {
+      if (state.mode === "all") {
+        return getTopicStats(right).rate - getTopicStats(left).rate;
+      }
+      if (state.sort === "rate") {
+        return Math.max(getTopicStats(right).aRate, getTopicStats(right).bRate) - Math.max(getTopicStats(left).aRate, getTopicStats(left).bRate);
+      }
+      return Math.abs(getDelta(right)) - Math.abs(getDelta(left));
+    });
 
-  if (state.rankView === "cloud") {
-    rankGrid.style.display = "none";
-    rankCloud.style.display = "grid";
-
-    rankCloud.innerHTML = PROFILE_CATEGORIES.map(category => {
-      const items = aggregateCategory(records, category).filter(item => item.count > 0);
-      if (items.length === 0) return "";
-
-      const maxCount = Math.max(...items.map(i => i.count));
-      const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-      const cloudTags = items.map(tag => {
-        const size = maxCount > 0 ? 13 + (15 * (tag.count / maxCount)) : 13;
-        const colorClass = (meta.color === "red" || meta.color === "green") ? meta.color : "black";
-        const trend = getProfileTrend(tag, category, previousRecords);
-        const trendText = trend.direction !== "flat" ? ` <span style="font-weight:bold;margin-left:2px">${trend.text.replace(' ', '')}</span>` : "";
-        return `<span class="cloud-tag ${colorClass}" style="font-size: ${size}px;" title="${escapeHtml(tag.reason)}">${escapeHtml(tag.name)}<small style="font-size:0.7em;opacity:0.9;margin-left:6px;font-weight:normal;">${tag.count}/${tag.rate}%${trendText}</small></span>`;
+    if (state.mode === "all") {
+      $("#topicLegend").innerHTML = `
+        <span><b>一级特征</b></span><span class="legend-center">全部客户反馈占比</span><span>反馈客户数</span><span class="legend-sentiment">情感分布 <em class="positive"></em>正面 <em class="neutral"></em>中性 <em class="negative"></em>负面</span>
+      `;
+      $("#topicMatrix").innerHTML = sortedTopics.map((topic) => {
+        const stats = getTopicStats(topic);
+        const counts = getCounts(topic);
+        return `
+          <button type="button" class="topic-row is-all-mode${topic.name === state.topic ? " is-selected" : ""}" data-topic="${escapeHTML(topic.name)}" aria-pressed="${topic.name === state.topic}">
+            <span class="topic-name-block"><span><strong>${escapeHTML(topic.name)}</strong><small>${escapeHTML(topic.description)}</small></span></span>
+            <span class="overall-chart" aria-label="${escapeHTML(topic.name)}反馈客户占比 ${stats.rate}%"><span class="overall-track"><i style="width:${Math.min(100, stats.rate / 65 * 100)}%"></i></span><b>${stats.rate.toFixed(1)}%</b></span>
+            <span class="overall-count"><b>${counts.total}</b>位反馈客户</span>
+            <span class="sentiment-cell">${renderSentimentStack("全", stats.sentiment, true)}</span>
+          </button>
+        `;
       }).join("");
+    } else {
+      $("#topicLegend").innerHTML = `
+        <span class="legend-a"><i></i><b id="legendA">${escapeHTML(modeMeta[state.mode].aLabel)}</b></span>
+        <span class="legend-center">反馈客户占比</span>
+        <span class="legend-b"><i></i><b id="legendB">${escapeHTML(modeMeta[state.mode].bLabel)}</b></span>
+        <span class="legend-sentiment">情感分布 <em class="positive"></em>正面 <em class="neutral"></em>中性 <em class="negative"></em>负面</span>
+      `;
 
+      $("#topicMatrix").innerHTML = sortedTopics.map((topic) => {
+        const stats = getTopicStats(topic);
+        const delta = getDelta(topic);
+        const counts = getCounts(topic);
+        const deltaClass = delta > 0 ? "delta-a" : delta < 0 ? "delta-b" : "";
+        const deltaText = delta > 0 ? `A +${delta.toFixed(1)}` : delta < 0 ? `B +${Math.abs(delta).toFixed(1)}` : "持平";
+        const maxScale = 65;
+        return `
+          <button type="button" class="topic-row${topic.name === state.topic ? " is-selected" : ""}" data-topic="${escapeHTML(topic.name)}" aria-pressed="${topic.name === state.topic}">
+            <span class="topic-name-block"><span><strong>${escapeHTML(topic.name)}</strong><small>${escapeHTML(topic.description)}</small></span><span class="${deltaClass}">${deltaText}pp</span></span>
+            <span class="mirror-chart" aria-label="${escapeHTML(topic.name)}：A组 ${stats.aRate}%，B组 ${stats.bRate}%">
+              <span class="mirror-half a"><span class="mirror-value">${stats.aRate.toFixed(1)}%</span><i class="mirror-bar" style="width:${Math.min(100, stats.aRate / maxScale * 100)}%"></i></span>
+              <span class="mirror-center">0</span>
+              <span class="mirror-half b"><i class="mirror-bar" style="width:${Math.min(100, stats.bRate / maxScale * 100)}%"></i><span class="mirror-value">${stats.bRate.toFixed(1)}%</span></span>
+            </span>
+            <span class="topic-counts"><span><b>${counts.a}</b>A组客户</span><span><b>${counts.b}</b>B组客户</span></span>
+            <span class="sentiment-cell">${renderSentimentStack("A", stats.aSentiment)}${renderSentimentStack("B", stats.bSentiment)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    $$("[data-topic]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.topic = button.dataset.topic;
+        state.showAllVoices = false;
+        renderAll();
+      });
+    });
+  }
+
+  function renderSentimentStack(label, values, showValues = false) {
+    if (showValues) {
       return `
-        <div class="cloud-block">
-          <h3>${escapeHtml(category)}</h3>
-          <div class="cloud-tags">
-            ${cloudTags}
+        <span class="sentiment-summary-chart" aria-label="正面 ${values[0]}%，中性 ${values[1]}%，负面 ${values[2]}%">
+          <span class="sentiment-stack sentiment-stack-large">
+            <i class="positive" style="width:${values[0]}%"></i><i class="neutral" style="width:${values[1]}%"></i><i class="negative" style="width:${values[2]}%"></i>
+          </span>
+          <span class="sentiment-values"><b class="positive">正 ${values[0]}%</b><b class="neutral">中 ${values[1]}%</b><b class="negative">负 ${values[2]}%</b></span>
+        </span>
+      `;
+    }
+    return `
+      <span class="sentiment-row">
+        <span>${label}</span>
+        <span class="sentiment-stack" aria-label="正面 ${values[0]}%，中性 ${values[1]}%，负面 ${values[2]}%">
+          <i class="positive" style="width:${values[0]}%"></i><i class="neutral" style="width:${values[1]}%"></i><i class="negative" style="width:${values[2]}%"></i>
+        </span>
+      </span>
+    `;
+  }
+
+  function renderCallout() {
+    const topic = getTopic();
+    const stats = getTopicStats(topic);
+    const meta = modeMeta[state.mode];
+    if (state.mode === "all") {
+      if (state.topic === "all") {
+        const topTopic = [...TOPICS].sort((left, right) => getTopicStats(right).rate - getTopicStats(left).rate)[0];
+        const topStats = getTopicStats(topTopic);
+        $("#insightCallout").innerHTML = `
+          <span class="callout-kicker" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17h4l3-7 3 4 2-5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m16 4 4 0 0 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span class="callout-copy"><span>当前筛选汇总 · 全部客户</span><strong>共 ${meta.sample[1]} 名反馈客户，反馈覆盖率 ${stats.rate.toFixed(1)}%；客户最关注“${escapeHTML(topTopic.name)}” ${topStats.rate.toFixed(1)}%，其中负面反馈占 ${topStats.sentiment[2]}%。</strong></span>
+          <span class="callout-delta"><b>${stats.rate.toFixed(1)}%</b><span>反馈客户覆盖率</span></span>
+        `;
+      } else {
+        const counts = getCounts(topic);
+        $("#insightCallout").innerHTML = `
+          <span class="callout-kicker" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17h4l3-7 3 4 2-5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m16 4 4 0 0 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span class="callout-copy"><span>当前特征解读 · ${escapeHTML(topic.name)}</span><strong>${counts.total} 名客户反馈“${escapeHTML(topic.name)}”，占全部反馈客户 ${stats.rate.toFixed(1)}%；正面 ${stats.sentiment[0]}%，中性 ${stats.sentiment[1]}%，负面 ${stats.sentiment[2]}%。</strong></span>
+          <span class="callout-delta"><b>${stats.rate.toFixed(1)}%</b><span>整体反馈占比</span></span>
+        `;
+      }
+      return;
+    }
+    const delta = getDelta(topic);
+    if (state.topic === "all") {
+      const aTop = [...TOPICS].sort((left, right) => getTopicStats(right).aRate - getTopicStats(left).aRate)[0];
+      const bTop = [...TOPICS].sort((left, right) => getTopicStats(right).bRate - getTopicStats(left).bRate)[0];
+      const maxDifference = [...TOPICS].sort((left, right) => Math.abs(getDelta(right)) - Math.abs(getDelta(left)))[0];
+      const maxDelta = Math.abs(getDelta(maxDifference));
+      const feedbackTotal = meta.sample[2] + meta.sample[3];
+      $("#insightCallout").innerHTML = `
+        <span class="callout-kicker" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 17h4l3-7 3 4 2-5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m16 4 4 0 0 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span class="callout-copy"><span>当前筛选汇总 · 全部特征</span><strong>共 ${feedbackTotal} 名反馈客户；${escapeHTML(meta.aLabel)}最关注“${escapeHTML(aTop.name)}” ${getTopicStats(aTop).aRate.toFixed(1)}%，${escapeHTML(meta.bLabel)}最关注“${escapeHTML(bTop.name)}” ${getTopicStats(bTop).bRate.toFixed(1)}%；最大差异来自“${escapeHTML(maxDifference.name)}”。</strong></span>
+        <span class="callout-delta"><b>${maxDelta.toFixed(1)}pp</b><span>最大特征差值</span></span>
+      `;
+      return;
+    }
+    const strongerGroup = delta >= 0 ? meta.aLabel : meta.bLabel;
+    const higherNegative = stats.aSentiment[2] > stats.bSentiment[2] ? meta.aLabel : meta.bLabel;
+    const negativeGap = Math.abs(stats.aSentiment[2] - stats.bSentiment[2]);
+    $("#insightCallout").innerHTML = `
+      <span class="callout-kicker" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 17h4l3-7 3 4 2-5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m16 4 4 0 0 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="callout-copy"><span>当前差异解读 · ${escapeHTML(topic.name)}</span><strong>${escapeHTML(strongerGroup)}对“${escapeHTML(topic.name)}”的关注更集中；${escapeHTML(higherNegative)}负面反馈高 ${negativeGap.toFixed(0)} 个百分点，建议优先查看原声定位具体顾虑。</strong></span>
+      <span class="callout-delta"><b>${Math.abs(delta).toFixed(1)}pp</b><span>两组关注差值</span></span>
+    `;
+  }
+
+  function renderSubtopics() {
+    const factors = [0.62, 0.48, 0.34, 0.23];
+    const sourceRows = state.topic === "all"
+      ? TOPICS.flatMap((topic) => topic.children.slice(0, 2).map((name, index) => ({ topic, name, index, factor: factors[index] })))
+          .sort((left, right) => {
+            const leftStats = getTopicStats(left.topic);
+            const rightStats = getTopicStats(right.topic);
+            const leftRate = state.mode === "all" ? leftStats.rate : Math.max(leftStats.aRate, leftStats.bRate);
+            const rightRate = state.mode === "all" ? rightStats.rate : Math.max(rightStats.aRate, rightStats.bRate);
+            return rightRate * right.factor - leftRate * left.factor;
+          })
+          .slice(0, 8)
+      : getTopic().children.map((name, index) => ({ topic: getTopic(), name, index, factor: factors[index] || 0.2 }));
+
+    const rows = sourceRows.map(({ topic, name, index, factor }) => {
+      const stats = getTopicStats(topic);
+      if (state.mode === "all") {
+        const rate = Math.max(3.4, stats.rate * factor + (index % 2 ? -0.5 : 0.6));
+        const sentiment = stats.sentiment.map((value, valueIndex) => Math.max(7, Math.min(78, value + (index - 1) * (valueIndex === 2 ? 3 : -2))));
+        const total = sentiment.reduce((sum, value) => sum + value, 0);
+        const normalized = sentiment.map((value) => Math.round(value / total * 100));
+        normalized[1] = 100 - normalized[0] - normalized[2];
+        const count = Math.round(getCounts(topic).total * factor);
+        return `
+          <div class="subtopic-row subtopic-row-all">
+            <span><strong>${escapeHTML(name)}</strong><small>${state.topic === "all" ? `${escapeHTML(topic.name)} · ` : ""}${count} 位反馈客户</small></span>
+            <span class="subtopic-rate-chart"><span class="overall-track"><i style="width:${Math.min(100, rate / 40 * 100)}%"></i></span><b>${rate.toFixed(1)}%</b></span>
+            <span class="subtopic-sentiment-chart">${renderSentimentStack("", normalized, true)}</span>
+            <span class="overall-count"><b>${count}</b>位反馈客户</span>
           </div>
+        `;
+      }
+      const aRate = Math.max(3.4, stats.aRate * factor + (index % 2 ? -0.7 : 0.8));
+      const bRate = Math.max(3.1, stats.bRate * factor + (index % 2 ? 0.9 : -0.4));
+      const delta = aRate - bRate;
+      const sentiment = stats.aSentiment.map((value, valueIndex) => Math.max(7, Math.min(78, value + (index - 1) * (valueIndex === 2 ? 3 : -2))));
+      const total = sentiment.reduce((sum, value) => sum + value, 0);
+      const normalized = sentiment.map((value) => Math.round(value / total * 100));
+      normalized[1] = 100 - normalized[0] - normalized[2];
+      return `
+        <div class="subtopic-row">
+          <span><strong>${escapeHTML(name)}</strong><small>${state.topic === "all" ? `${escapeHTML(topic.name)} · ` : ""}${Math.round((getCounts(topic).a + getCounts(topic).b) * factor)} 位反馈客户</small></span>
+          <span class="subtopic-rate a">${aRate.toFixed(1)}%</span>
+          <span class="subtopic-rate b">${bRate.toFixed(1)}%</span>
+          <span class="sentiment-stack" title="正面 ${normalized[0]}%，中性 ${normalized[1]}%，负面 ${normalized[2]}%"><i class="positive" style="width:${normalized[0]}%"></i><i class="neutral" style="width:${normalized[1]}%"></i><i class="negative" style="width:${normalized[2]}%"></i></span>
+          <span><i class="subtopic-delta ${delta > 0 ? "a" : "b"}">${delta > 0 ? "+" : ""}${delta.toFixed(1)}pp</i></span>
         </div>
       `;
     }).join("");
-  } else {
-    rankGrid.style.display = "grid";
-    rankCloud.style.display = "none";
-    rankGrid.innerHTML = PROFILE_CATEGORIES
-      .map(category => rankBlock(category, aggregateCategory(records, category), previousRecords))
-      .join("");
-  }
-};
 
-const renderSummary = records => {
-  const topNeed = topOf(records, "需求特征");
-  const topScene = topOf(records, "购车场景");
-  const filterSummary = document.querySelector("#filterSummary");
-  if (filterSummary) {
-    filterSummary.textContent = `当前筛选命中 ${records.length} 条样本，TOP 需求为「${topNeed.name}」，TOP 场景为「${topScene.name}」。`;
+    $("#subtopicTable").innerHTML = state.mode === "all"
+      ? `<div class="subtopic-head subtopic-head-all"><span>二级特征</span><span>反馈占比</span><span>情感分布</span><span>反馈客户数</span></div>${rows}`
+      : `<div class="subtopic-head"><span>二级特征</span><span>A组占比</span><span>B组占比</span><span>情感分布</span><span>差值</span></div>${rows}`;
   }
 
-};
+  function getVoiceItems() {
+    const orgs = ["华南大区 · 广州战区", "华东大区 · 上海战区", "华北大区 · 北京战区", "西南大区 · 成都战区", "华中大区 · 武汉战区", "西北大区 · 西安战区", "东北大区 · 沈阳战区"];
+    const stages = ["试乘试驾", "邀约", "到店接待", "首触跟进"];
+    const times = ["07-16 16:42", "07-15 11:08", "07-13 14:26", "07-11 09:37", "07-09 15:20", "07-08 10:16", "07-06 13:45"];
 
-const INTENT_LEVELS = [
-  { key: "A级", label: "高意向", baseColor: "22, 167, 101" },
-  { key: "B级", label: "中意向", baseColor: "100, 116, 139" },
-  { key: "C级", label: "低意向", baseColor: "239, 68, 68", isSoft: true },
-  { key: "战败", label: "无意向", baseColor: "239, 68, 68" }
-];
-
-const renderHeatmap = records => {
-  const container = document.querySelector("#heatmapContainer");
-  if (!container) return;
-
-  const previousRecords = getPreviousRecords();
-  const totalValidAll = records.reduce((sum, r) => sum + r.validCount, 0);
-  const prevTotalValidAll = previousRecords.reduce((sum, r) => sum + r.validCount, 0);
-
-  const tagMap = new Map();
-  records.forEach(r => {
-    Object.values(r.tags).forEach(tags => {
-      tags.forEach(tag => {
-        const item = tagMap.get(tag.name) || { name: tag.name, count: 0 };
-        item.count += tag.count;
-        tagMap.set(tag.name, item);
+    if (state.topic === "all") {
+      const aggregateVoices = TOPICS.map((topic, index) => {
+        const voice = topic.voiceText[index % topic.voiceText.length];
+        return {
+          sentiment: voice[0],
+          text: voice[1],
+          feature: topic.name,
+          group: state.mode === "all" ? "all" : (index % 2 === 0 ? "a" : "b"),
+          org: orgs[index],
+          stage: stages[index % stages.length],
+          time: times[index]
+        };
       });
-    });
-  });
-
-  const prevTagMap = new Map();
-  previousRecords.forEach(r => {
-    Object.values(r.tags).forEach(tags => {
-      tags.forEach(tag => {
-        const item = prevTagMap.get(tag.name) || { name: tag.name, count: 0 };
-        item.count += tag.count;
-        prevTagMap.set(tag.name, item);
-      });
-    });
-  });
-
-  const allTags = [...tagMap.values()].map(tag => {
-    const rate = totalValidAll ? (tag.count / totalValidAll) * 100 : 0;
-    const prevCount = prevTagMap.get(tag.name)?.count || 0;
-    const prevRate = prevTotalValidAll ? (prevCount / prevTotalValidAll) * 100 : 0;
-    let trendText = "无对比";
-    let trendTone = "flat";
-    if (prevTotalValidAll > 0) {
-      const diff = Math.round(rate) - Math.round(prevRate);
-      if (diff > 0) { trendText = `↑${diff}%`; trendTone = "green"; }
-      else if (diff < 0) { trendText = `↓${Math.abs(diff)}%`; trendTone = "red"; }
-      else { trendText = "持平"; }
+      return state.showAllVoices ? aggregateVoices : aggregateVoices.slice(0, 4);
     }
-    return { ...tag, rate: Math.round(rate), trendText, trendTone };
-  });
 
-  allTags.sort((a, b) => b.rate - a.rate || b.count - a.count);
+    const topic = getTopic();
+    const base = topic.voiceText.map((voice, index) => ({
+      sentiment: voice[0],
+      text: voice[1],
+      feature: topic.name,
+      group: state.mode === "all" ? "all" : (index % 2 === 0 ? "a" : "b"),
+      org: orgs[index],
+      stage: stages[index],
+      time: times[index]
+    }));
 
-  if (allTags.length === 0) {
-    container.innerHTML = "<div style='padding: 20px; text-align: center; color: var(--muted);'>暂无热力图数据</div>";
-    return;
+    if (!state.showAllVoices) return base;
+    return base.concat([
+      { sentiment: "neutral", text: `我还想再比较一下同价位的车型，主要关注<strong>${escapeHTML(topic.children[0])}</strong>实际体验差多少。`, feature: topic.name, group: state.mode === "all" ? "all" : "a", org: orgs[4], stage: "到店接待", time: times[4] },
+      { sentiment: "negative", text: "这个点销售讲得比较笼统，如果能给我看真实车主的数据，我会更容易判断。", feature: topic.name, group: state.mode === "all" ? "all" : "b", org: orgs[5], stage: "邀约", time: times[5] }
+    ]);
   }
 
-  const PAGE_SIZE = 10;
-  const totalPages = Math.ceil(allTags.length / PAGE_SIZE);
-  if (state.heatmapPage > totalPages) state.heatmapPage = 1;
-  if (state.heatmapPage < 1) state.heatmapPage = 1;
+  function renderVoices() {
+    const meta = modeMeta[state.mode];
+    const getVoiceGroupLabel = (voice) => voice.group === "all"
+      ? meta.label
+      : `${voice.group === "a" ? "A" : "B"} · ${voice.group === "a" ? meta.aLabel : meta.bLabel}`;
+    const voiceItems = getVoiceItems().filter((voice) => state.sentiment === "all" || voice.sentiment === state.sentiment);
+    const voiceList = $("#voiceList");
+    if (!voiceItems.length) {
+      voiceList.innerHTML = `<div class="empty-voice">当前主题暂无${escapeHTML(SENTIMENT_LABELS[state.sentiment] || "")}原声<br />可切换其他情感查看</div>`;
+    } else {
+      voiceList.innerHTML = voiceItems.map((voice) => `
+        <article class="voice-item ${voice.sentiment}">
+          <p class="voice-quote">“${voice.text}”</p>
+          <div class="voice-meta">
+            <span class="voice-group ${voice.group}">${escapeHTML(getVoiceGroupLabel(voice))}</span>
+            <span class="sentiment-tag ${voice.sentiment}">${escapeHTML(SENTIMENT_LABELS[voice.sentiment])}</span>
+            <span>${escapeHTML(voice.feature)}特征</span><span>·</span>
+            <span>${escapeHTML(voice.org)}</span><span>·</span><span>${escapeHTML(voice.stage)}</span><span>·</span><time>${escapeHTML(voice.time)}</time>
+          </div>
+        </article>
+      `).join("");
+    }
+    $("#viewAllVoices").innerHTML = state.showAllVoices
+      ? "收起典型客户原声 <span>↑</span>"
+      : `${state.topic === "all" ? "查看全部典型原声" : "查看该特征全部原声"} <span>→</span>`;
+  }
 
-  const startIndex = (state.heatmapPage - 1) * PAGE_SIZE;
-  const topTags = allTags.slice(startIndex, startIndex + PAGE_SIZE);
+  function buildTrendSeries(base, topicIndex, sentimentIndex, groupOffset) {
+    const patterns = [
+      [-3, -1, 1, 0, 2, 4],
+      [2, 0, -1, 1, 0, -2],
+      [1, 3, 2, 4, 2, 1]
+    ];
+    return patterns[sentimentIndex].map((change, index) => Math.max(5, Math.min(78, base + change + ((topicIndex + index + groupOffset) % 3 - 1))));
+  }
 
-  const heatmapData = topTags.map((tag, i) => {
-    const row = {
-      name: tag.name,
-      index: startIndex + i + 1,
-      overall: tag,
-      intents: {}
-    };
-    INTENT_LEVELS.forEach(level => {
-      const levelRecords = records.filter(r => r.level === level.key);
-      const totalValid = levelRecords.reduce((sum, r) => sum + r.validCount, 0);
+  function renderTrend() {
+    const topic = getTopic();
+    const topicIndex = state.topic === "all" ? 0 : TOPICS.indexOf(topic);
+    const stats = getTopicStats(topic);
+    const periodLabels = {
+      day: ["07-11", "07-12", "07-13", "07-14", "07-15", "07-16"],
+      week: ["第23周", "第24周", "第25周", "第26周", "第27周", "第28周"],
+      month: ["2月", "3月", "4月", "5月", "6月", "7月"]
+    }[state.grain];
+    const sentimentNames = ["正面客户占比", "中性客户占比", "负面客户占比"];
+    const sentimentClasses = ["positive", "neutral", "negative"];
 
-      let hitCount = 0;
-      levelRecords.forEach(r => {
-        Object.values(r.tags).forEach(tags => {
-          const found = tags.find(t => t.name === tag.name);
-          if (found) hitCount += found.count;
-        });
-      });
-
-      let rate = totalValid ? (hitCount / totalValid) * 100 : 0;
-      rate = Math.min(100, Math.round(rate));
-
-      const prevLevelRecords = previousRecords.filter(r => r.level === level.key);
-      const prevTotalValid = prevLevelRecords.reduce((sum, r) => sum + r.validCount, 0);
-      let prevHitCount = 0;
-      prevLevelRecords.forEach(r => {
-        Object.values(r.tags).forEach(tags => {
-          const found = tags.find(t => t.name === tag.name);
-          if (found) prevHitCount += found.count;
-        });
-      });
-      let prevRate = prevTotalValid ? (prevHitCount / prevTotalValid) * 100 : 0;
-      prevRate = Math.min(100, Math.round(prevRate));
-
-      let trendText = "无对比";
-      let trendTone = "flat";
-      if (prevTotalValid > 0) {
-        const diff = rate - prevRate;
-        if (diff > 0) { trendText = `↑${diff}%`; trendTone = "green"; }
-        else if (diff < 0) { trendText = `↓${Math.abs(diff)}%`; trendTone = "red"; }
-        else { trendText = "持平"; }
+    $("#trendCharts").innerHTML = sentimentNames.map((name, sentimentIndex) => {
+      if (state.mode === "all") {
+        const series = buildTrendSeries(stats.sentiment[sentimentIndex], topicIndex, sentimentIndex, 0);
+        return `
+          <article class="trend-card ${sentimentClasses[sentimentIndex]}">
+            <div class="trend-card-head"><strong>${name}</strong><span>整体 ${series.at(-1)}%</span></div>
+            ${renderLineChart(series, null, periodLabels)}
+            <div class="trend-legend"><span><i class="all"></i>全部客户</span></div>
+          </article>
+        `;
       }
-
-      row.intents[level.key] = { rate, hitCount, trendText, trendTone };
-    });
-    return row;
-  });
-
-  let tableHtml = `<div class="heatmap-table-wrapper"><table class="heatmap-table">
-    <thead>
-      <tr>
-        <th style="text-align: left; padding-left: 20px;">客户标签</th>
-        ${INTENT_LEVELS.map(l => `<th>${l.label}</th>`).join("")}
-      </tr>
-    </thead>
-    <tbody>
-  `;
-
-  heatmapData.forEach(row => {
-    tableHtml += `<tr>`;
-    tableHtml += `<td class="tag-name-col" style="padding-left: 20px;">
-      <span class="tag-index">${row.index}</span>${escapeHtml(row.name)}
-    </td>`;
-
-    INTENT_LEVELS.forEach(level => {
-      const stats = row.intents[level.key];
-      const alpha = Math.max(0.1, stats.rate / 100);
-      let bgColor = `rgba(${level.baseColor}, ${level.isSoft ? alpha * 0.5 : alpha})`;
-      if (stats.rate === 0) bgColor = "transparent";
-
-      const textColorClass = (stats.rate < 40 || stats.rate === 0) ? "dark-text" : "";
-      const textVal = stats.rate > 0 ? `${stats.rate}%` : "-";
-
-      const tooltipData = escapeHtml(JSON.stringify({
-        title: `${row.name} × ${level.label}`,
-        hitCount: stats.hitCount,
-        rate: stats.rate,
-        trendText: stats.trendText,
-        trendTone: stats.trendTone
-      }));
-
-      tableHtml += `<td class="heatmap-cell ${textColorClass}" style="background: ${bgColor};" data-info="${tooltipData}">
-        ${textVal}
-      </td>`;
-    });
-    tableHtml += `</tr>`;
-  });
-
-  tableHtml += `</tbody></table></div>`;
-
-  let paginationHtml = "";
-  if (totalPages > 1) {
-    paginationHtml = `
-      <div class="heatmap-pagination">
-        <button class="ghost-button" id="heatmapPrev" ${state.heatmapPage === 1 ? 'disabled' : ''}>上一页</button>
-        <span class="page-info">${state.heatmapPage} / ${totalPages}</span>
-        <button class="ghost-button" id="heatmapNext" ${state.heatmapPage === totalPages ? 'disabled' : ''}>下一页</button>
-      </div>
-    `;
-  }
-
-  container.innerHTML = tableHtml + paginationHtml + `<div class="heatmap-popover" id="heatmapPopover"></div>`;
-
-  const cells = container.querySelectorAll(".heatmap-cell");
-  const popover = container.querySelector("#heatmapPopover");
-
-  cells.forEach(cell => {
-    cell.addEventListener("click", e => {
-      e.stopPropagation();
-      document.querySelectorAll(".heatmap-cell").forEach(c => c.style.outline = "none");
-      cell.style.outline = "2px solid var(--line-strong)";
-      cell.style.outlineOffset = "-2px";
-
-      const info = JSON.parse(cell.dataset.info || "{}");
-      if (!info.title) return;
-
-      popover.innerHTML = `
-        <h4>${info.title}</h4>
-        <div class="pop-row">
-          <span>命中数</span>
-          <span class="pop-val">${info.hitCount}</span>
-        </div>
-        <div class="pop-row">
-          <span>命中率</span>
-          <span class="pop-val">${info.rate}%</span>
-        </div>
-        <div class="pop-row">
-          <span>较上期增长</span>
-          <span class="pop-val ${info.trendTone}">${info.trendText}</span>
-        </div>
+      const aSeries = buildTrendSeries(stats.aSentiment[sentimentIndex], topicIndex, sentimentIndex, 0);
+      const bSeries = buildTrendSeries(stats.bSentiment[sentimentIndex], topicIndex, sentimentIndex, 1);
+      return `
+        <article class="trend-card ${sentimentClasses[sentimentIndex]}">
+          <div class="trend-card-head"><strong>${name}</strong><span>A ${aSeries.at(-1)}% / B ${bSeries.at(-1)}%</span></div>
+          ${renderLineChart(aSeries, bSeries, periodLabels)}
+          <div class="trend-legend"><span><i class="a"></i>A组</span><span><i class="b"></i>B组</span></div>
+        </article>
       `;
-
-      const rect = cell.getBoundingClientRect();
-      let top = rect.top + rect.height;
-      let left = rect.left + rect.width / 2 - 120;
-
-      if (left < 10) left = 10;
-      if (left + 240 > window.innerWidth) left = window.innerWidth - 250;
-
-      popover.style.top = `${top + 8}px`;
-      popover.style.left = `${left}px`;
-      popover.classList.add("show");
-    });
-  });
-
-  document.addEventListener("click", () => {
-    if (popover && popover.classList.contains("show")) {
-      popover.classList.remove("show");
-      document.querySelectorAll(".heatmap-cell").forEach(c => c.style.outline = "none");
-    }
-  });
-};
-
-const render = () => {
-  ensureValidModelForBrand();
-  ensureValidSceneForSource();
-  const records = getFilteredRecords();
-  renderFilters();
-  renderSummary(records);
-  const metrics = buildMetrics(records);
-  document.querySelector("#metricGrid").innerHTML = metrics.map((m, i) => metricMarkup(m, i)).join("");
-  window._currentMetrics = metrics;
-  renderPortrait(records);
-  renderHeatmap(records);
-  renderRanks(records);
-};
-
-document.addEventListener("click", event => {
-  const filterButton = event.target.closest("[data-filter]");
-  if (filterButton) {
-    const filterKey = filterButton.dataset.filter;
-    const filterValue = filterButton.dataset.value;
-
-    if (filterKey === "scene") {
-      toggleSceneFilter(filterValue);
-    } else {
-      state[filterKey] = filterValue;
-    }
-
-    if (filterKey === "brand") {
-      state.model = "all";
-    }
-    if (filterKey === "source") {
-      applySourceSceneDefaults();
-    }
-    state.heatmapPage = 1;
-    render();
-    return;
+    }).join("");
   }
 
-  const heatmapPrev = event.target.closest("#heatmapPrev");
-  if (heatmapPrev) {
-    if (state.heatmapPage > 1) {
-      state.heatmapPage--;
-      renderHeatmap(getFilteredRecords());
-    }
-    return;
-  }
-
-  const heatmapNext = event.target.closest("#heatmapNext");
-  if (heatmapNext) {
-    state.heatmapPage++;
-    renderHeatmap(getFilteredRecords());
-    return;
-  }
-
-  const portraitNode = event.target.closest(".portrait-node");
-  if (portraitNode) {
-    state.selectedCategory = portraitNode.dataset.category;
-    state.selectedName = portraitNode.dataset.name;
-    render();
-    return;
-  }
-
-  const viewToggleBtn = event.target.closest("#rankViewToggle button");
-  if (viewToggleBtn) {
-    const view = viewToggleBtn.dataset.view;
-    if (state.rankView !== view) {
-      state.rankView = view;
-      document.querySelectorAll("#rankViewToggle button").forEach(btn => btn.classList.remove("active"));
-      viewToggleBtn.classList.add("active");
-      renderRanks(getFilteredRecords());
-    }
-    return;
-  }
-
-  const profileBlockNode = event.target.closest(".profile-block, .profile-rank-row");
-  if (profileBlockNode) {
-    state.selectedCategory = profileBlockNode.dataset.category;
-    state.selectedName = profileBlockNode.dataset.name;
-    render();
-  }
-});
-
-document.addEventListener("change", event => {
-  const orgSelect = event.target.closest("[data-org-filter]");
-  if (!orgSelect) return;
-
-  const key = orgSelect.dataset.orgFilter;
-  state[key] = orgSelect.value;
-  if (key === "region") {
-    state.zone = "all";
-    state.store = "all";
-  }
-  if (key === "zone") {
-    state.store = "all";
-  }
-  state.heatmapPage = 1;
-  render();
-});
-
-const toggleSceneFilter = sceneValue => {
-  if (state.source === "all") {
-    state.scene = ["all"];
-    return;
-  }
-
-  if (sceneValue === "all") {
-    state.scene = ["all"];
-    return;
-  }
-
-  if (!SCENE_FILTER.options.some(option => option.value === sceneValue)) return;
-
-  if (state.scene.includes("all")) {
-    state.scene = [sceneValue];
-    return;
-  }
-
-  if (state.scene.includes(sceneValue)) {
-    if (state.scene.length === 1) return;
-    state.scene = state.scene.filter(scene => scene !== sceneValue);
-    return;
-  }
-
-  state.scene = [...state.scene, sceneValue];
-};
-
-const resetButton = document.querySelector("#resetButton");
-if (resetButton) {
-  resetButton.addEventListener("click", () => {
-    Object.assign(state, {
-      brand: "传祺",
-      region: "all",
-      zone: "all",
-      store: "all",
-      source: "all",
-      scene: ["all"],
-      time: "7",
-      model: "M8",
-      selectedCategory: "需求特征",
-      selectedName: "空间大",
-      heatmapPage: 1
-    });
-    render();
-  });
-}
-
-
-// ===== Trend Modal =====
-const generateTrendData = (metric) => {
-  const days = timeLimit(state.time);
-  const labels = [];
-  const data = [];
-  const now = new Date();
-  const isRate = metric.metricType === 'rate';
-  const base = metric.rawValue || parseFloat(String(metric.value).replace(/[^0-9.]/g, '')) || 50;
-
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    labels.push(`${d.getMonth()+1}/${d.getDate()}`);
-    if (isRate) {
-      const v = Math.max(0, Math.min(100, base * (0.8 + Math.random() * 0.4)));
-      data.push(parseFloat(v.toFixed(1)));
-    } else {
-      data.push(Math.max(0, Math.round(base * (0.7 + Math.random() * 0.6))));
-    }
-  }
-  return { labels, data };
-};
-
-const formatTrendVal = (val, metric) => {
-  if (metric.metricType === 'rate') return `${val}%`;
-  return String(Math.round(val));
-};
-
-const showTrendModal = (metricIndex) => {
-  const metric = window._currentMetrics?.[metricIndex];
-  if (!metric) return;
-  let overlay = document.getElementById('trendModalOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'trendModalOverlay';
-    overlay.className = 'trend-modal-overlay';
-    document.body.appendChild(overlay);
-  }
-  const periodLabel = timeText(state.time);
-  const isEmpty = metric.value === '暂无命中' || metric.rawValue === 0;
-
-  if (isEmpty) {
-    overlay.innerHTML = `
-      <div class="trend-modal">
-        <div class="trend-modal-header">
-          <div>
-            <h3>${escapeHtml(metric.title)} 趋势变化</h3>
-            <p>${escapeHtml(periodLabel)}数据走势</p>
-          </div>
-          <button class="trend-modal-close" id="trendModalClose" title="关闭">✕</button>
-        </div>
-        <div class="trend-modal-body">
-          <div class="trend-modal-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p>暂无数据</p>
-            <span>当前筛选条件下暂未产生趋势数据</span>
-          </div>
-        </div>
-      </div>
+  function renderLineChart(aSeries, bSeries, labels) {
+    const isComparison = Array.isArray(bSeries);
+    const width = 300;
+    const height = 105;
+    const padX = 14;
+    const top = 8;
+    const bottom = 20;
+    const values = isComparison ? aSeries.concat(bSeries) : aSeries;
+    const min = Math.max(0, Math.floor((Math.min(...values) - 6) / 10) * 10);
+    const max = Math.min(100, Math.ceil((Math.max(...values) + 6) / 10) * 10);
+    const range = Math.max(10, max - min);
+    const toPoint = (value, index) => {
+      const x = padX + index * ((width - padX * 2) / (aSeries.length - 1));
+      const y = top + (max - value) / range * (height - top - bottom);
+      return [x, y];
+    };
+    const aPoints = aSeries.map(toPoint);
+    const bPoints = isComparison ? bSeries.map(toPoint) : [];
+    const grid = [0, 0.5, 1].map((ratio) => {
+      const y = top + ratio * (height - top - bottom);
+      return `<line class="trend-grid-line" x1="${padX}" x2="${width - padX}" y1="${y}" y2="${y}" />`;
+    }).join("");
+    const labelMarkup = labels.map((label, index) => `<text class="trend-axis-label" x="${toPoint(min, index)[0]}" y="${height - 3}" text-anchor="middle">${escapeHTML(label)}</text>`).join("");
+    const dots = (points, className) => points.map(([x, y]) => `<circle class="${className}" cx="${x}" cy="${y}" r="2.5" />`).join("");
+    const valueLabels = (points, series, className, offset) => points.map(([x, y], index) => {
+      const labelY = Math.max(8, Math.min(height - bottom - 2, y + offset));
+      return `<text class="trend-value-label ${className}" x="${x}" y="${labelY}" text-anchor="middle">${series[index]}%</text>`;
+    }).join("");
+    return `
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${isComparison ? "A组和B组" : "全部客户"}趋势折线图">
+        ${grid}
+        <polyline class="${isComparison ? "trend-line-a" : "trend-line-all"}" points="${aPoints.map((point) => point.join(",")).join(" ")}" />
+        ${isComparison ? `<polyline class="trend-line-b" points="${bPoints.map((point) => point.join(",")).join(" ")}" />` : ""}
+        ${dots(aPoints, isComparison ? "trend-dot-a" : "trend-dot-all")}${isComparison ? dots(bPoints, "trend-dot-b") : ""}
+        ${valueLabels(aPoints, aSeries, isComparison ? "a" : "all", -7)}${isComparison ? valueLabels(bPoints, bSeries, "b", 10) : ""}${labelMarkup}
+      </svg>
     `;
-    overlay.classList.add('show');
-    overlay.querySelector('#trendModalClose').addEventListener('click', () => overlay.classList.remove('show'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-    return;
   }
 
-  const td = generateTrendData(metric);
-  const isRate = metric.metricType === 'rate';
-  const maxVal = isRate ? Math.max(...td.data, 1) * 1.15 : Math.max(...td.data, 1);
-  const svgW = 560, svgH = 260, padL = 55, padR = 20, padT = 30, padB = 40;
-  const chartW = svgW - padL - padR, chartH = svgH - padT - padB;
-  const stepX = chartW / (td.labels.length - 1 || 1);
-  const points = td.data.map((v, i) => [padL + i * stepX, padT + chartH - (v / maxVal) * chartH]);
-  const polyline = points.map(p => p.join(',')).join(' ');
-  const areaPath = `M${points[0][0]},${padT+chartH} ${points.map(p=>`L${p[0]},${p[1]}`).join(' ')} L${points[points.length-1][0]},${padT+chartH} Z`;
-  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(r => {
-    const y = padT + chartH - r * chartH;
-    const rawVal = r * maxVal;
-    const label = isRate ? `${rawVal.toFixed(0)}%` : Math.round(rawVal);
-    return `<line x1="${padL}" y1="${y}" x2="${svgW-padR}" y2="${y}" stroke="#e2e8f0" stroke-width="0.8"/><text x="${padL-8}" y="${y+4}" fill="#94a3b8" font-size="11" text-anchor="end">${label}</text>`;
-  }).join('');
-  const labelStep = td.labels.length > 15 ? Math.ceil(td.labels.length / 10) : 1;
-  const xLabels = td.labels.map((l, i) => {
-    if (i % labelStep !== 0 && i !== td.labels.length - 1) return '';
-    return `<text x="${padL+i*stepX}" y="${svgH-8}" fill="#94a3b8" font-size="11" text-anchor="middle">${l}</text>`;
-  }).join('');
-  const dots = points.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${metric.sparkColor}" stroke="#fff" stroke-width="1.5"/><text x="${p[0]}" y="${p[1]-10}" fill="${metric.sparkColor}" font-size="10" font-weight="700" text-anchor="middle">${formatTrendVal(td.data[i], metric)}</text>`).join('');
-  overlay.innerHTML = `
-    <div class="trend-modal">
-      <div class="trend-modal-header">
-        <div>
-          <h3>${escapeHtml(metric.title)} 趋势变化</h3>
-          <p>${escapeHtml(periodLabel)}数据走势</p>
-        </div>
-        <button class="trend-modal-close" id="trendModalClose" title="关闭">✕</button>
-      </div>
-      <div class="trend-modal-body">
-        <div class="trend-modal-summary">
-          <div class="trend-summary-item"><span class="trend-summary-label">当前值</span><span class="trend-summary-value" style="color:${metric.sparkColor}">${escapeHtml(metric.value)}</span></div>
-        </div>
-        <svg viewBox="0 0 ${svgW} ${svgH}" class="trend-chart-svg">
-          ${gridLines}
-          ${xLabels}
-          <defs><linearGradient id="trendFill${metricIndex}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${metric.sparkColor}" stop-opacity="0.18"/><stop offset="100%" stop-color="${metric.sparkColor}" stop-opacity="0.01"/></linearGradient></defs>
-          <path d="${areaPath}" fill="url(#trendFill${metricIndex})"/>
-          <polyline points="${polyline}" fill="none" stroke="${metric.sparkColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          ${dots}
-        </svg>
-      </div>
-    </div>
-  `;
-  overlay.classList.add('show');
-  overlay.querySelector('#trendModalClose').addEventListener('click', () => overlay.classList.remove('show'));
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-};
+  function renderOrganizations() {
+    const topic = getTopic();
+    const stats = getTopicStats(topic);
+    const meta = modeMeta[state.mode];
+    const organizations = [
+      ["华南大区", 184, 1.14, 1.09, 6],
+      ["华东大区", 171, 0.97, 1.08, 3],
+      ["华北大区", 146, 1.03, 0.91, -2],
+      ["华中大区", 118, 0.88, 0.96, -4],
+      ["西南大区", 104, 1.07, 1.16, 5]
+    ];
 
-document.addEventListener('click', e => {
-  const spark = e.target.closest('.spark-clickable');
-  if (spark) {
-    const idx = parseInt(spark.dataset.metricIndex, 10);
-    showTrendModal(idx);
+    if (state.mode === "all") {
+      $("#organizationHead").innerHTML = "<tr><th>组织</th><th>样本客户数</th><th>反馈客户占比</th><th>负面客户占比</th><th>较厂端均值</th></tr>";
+      $("#organizationBody").innerHTML = organizations.map(([name, sample, aFactor, bFactor, variance], index) => {
+        const factor = (aFactor + bFactor) / 2;
+        const rate = Math.min(96, stats.rate * factor);
+        const negative = Math.min(66, stats.sentiment[2] + index * 1.6 - 3);
+        return `
+          <tr>
+            <td>${escapeHTML(name)}</td><td>${sample}</td>
+            <td><span class="rate-cell a"><b>${rate.toFixed(1)}%</b><span class="rate-track"><i style="width:${rate}%"></i></span></span></td>
+            <td>${negative.toFixed(1)}%</td>
+            <td><span class="variance ${variance >= 0 ? "up" : "down"}">${variance >= 0 ? "+" : ""}${variance.toFixed(1)}pp</span></td>
+          </tr>
+        `;
+      }).join("");
+      return;
+    }
+
+    $("#organizationHead").innerHTML = '<tr><th>组织</th><th>样本客户数</th><th><span class="cohort-dot a"></span><span id="orgHeaderA">A组</span>反馈占比</th><th><span class="cohort-dot b"></span><span id="orgHeaderB">B组</span>反馈占比</th><th>负面客户占比</th><th>较厂端均值</th></tr>';
+    $("#orgHeaderA").textContent = `${meta.aLabel} `;
+    $("#orgHeaderB").textContent = `${meta.bLabel} `;
+    $("#organizationBody").innerHTML = organizations.map(([name, sample, aFactor, bFactor, variance], index) => {
+      const aRate = Math.min(96, stats.aRate * aFactor);
+      const bRate = Math.min(96, stats.bRate * bFactor);
+      const negative = Math.min(66, (stats.aSentiment[2] + stats.bSentiment[2]) / 2 + index * 1.8 - 2);
+      return `
+        <tr>
+          <td>${escapeHTML(name)}</td>
+          <td>${sample}</td>
+          <td><span class="rate-cell a"><b>${aRate.toFixed(1)}%</b><span class="rate-track"><i style="width:${aRate}%"></i></span></span></td>
+          <td><span class="rate-cell b"><b>${bRate.toFixed(1)}%</b><span class="rate-track"><i style="width:${bRate}%"></i></span></span></td>
+          <td>${negative.toFixed(1)}%</td>
+          <td><span class="variance ${variance >= 0 ? "up" : "down"}">${variance >= 0 ? "+" : ""}${variance.toFixed(1)}pp</span></td>
+        </tr>
+      `;
+    }).join("");
   }
-});
 
-render();
+  function renderModeLabels() {
+    const isAggregate = state.topic === "all";
+    $$(".selected-topic-label").forEach((label) => {
+      label.textContent = isAggregate ? "全部汇总" : `${state.topic} · 返回全部`;
+      label.disabled = isAggregate;
+      label.setAttribute("aria-label", isAggregate ? "当前为全部汇总" : `当前查看${state.topic}，点击返回全部汇总`);
+    });
+    const deltaSortButton = $('[data-sort="delta"]');
+    const rateSortButton = $('[data-sort="rate"]');
+    deltaSortButton.hidden = state.mode === "all";
+    deltaSortButton.classList.toggle("is-active", state.mode !== "all" && state.sort === "delta");
+    rateSortButton.classList.toggle("is-active", state.mode === "all" || state.sort === "rate");
+    $("#allSetup").hidden = state.mode !== "all";
+    $("#visitSetup").hidden = state.mode !== "visit";
+    $("#leadSetup").hidden = state.mode !== "lead";
+  }
+
+  function resetToAggregate() {
+    state.topic = "all";
+    state.showAllVoices = false;
+  }
+
+  function renderAll() {
+    renderModeLabels();
+    renderSampleOverview();
+    renderCallout();
+    renderTopicMatrix();
+    renderSubtopics();
+    renderVoices();
+    renderTrend();
+    renderOrganizations();
+  }
+
+  function showToast(message) {
+    const toast = $("#toast");
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2600);
+  }
+
+  function exportCurrentView() {
+    const meta = modeMeta[state.mode];
+    const rows = state.mode === "all"
+      ? [["特征", "反馈客户占比", "反馈客户数", "正面占比", "中性占比", "负面占比"]]
+      : [["特征", `${meta.aLabel}反馈占比`, `${meta.bLabel}反馈占比`, "差值（百分点）"]];
+    TOPICS.forEach((topic) => {
+      const stats = getTopicStats(topic);
+      if (state.mode === "all") {
+        rows.push([topic.name, `${stats.rate}%`, getCounts(topic).total, `${stats.sentiment[0]}%`, `${stats.sentiment[1]}%`, `${stats.sentiment[2]}%`]);
+      } else {
+        rows.push([topic.name, `${stats.aRate}%`, `${stats.bRate}%`, getDelta(topic)]);
+      }
+    });
+    const csv = `\ufeff${rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n")}`;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    link.download = `AION-V-客户洞察-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast(state.mode === "all" ? "已导出全部客户汇总数据" : "已导出当前特征对比数据");
+  }
+
+  function bindEvents() {
+    $$("[data-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.mode = button.dataset.mode;
+        state.sort = state.mode === "all" ? "rate" : "delta";
+        resetToAggregate();
+        $$("[data-mode]").forEach((item) => {
+          const active = item === button;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-pressed", String(active));
+        });
+        renderAll();
+      });
+    });
+
+    $$("[data-sort]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.sort = button.dataset.sort;
+        $$("[data-sort]").forEach((item) => item.classList.toggle("is-active", item === button));
+        renderTopicMatrix();
+      });
+    });
+
+    $$("[data-sentiment]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.sentiment = button.dataset.sentiment;
+        $$("[data-sentiment]").forEach((item) => item.classList.toggle("is-active", item === button));
+        renderVoices();
+      });
+    });
+
+    $$("[data-grain]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.grain = button.dataset.grain;
+        $$("[data-grain]").forEach((item) => item.classList.toggle("is-active", item === button));
+        renderTrend();
+      });
+    });
+
+    $$("[data-date]").forEach((button) => {
+      button.addEventListener("click", () => {
+        $$("[data-date]").forEach((item) => item.classList.toggle("is-active", item === button));
+        $(".date-value").textContent = button.dataset.date === "90" ? "2026-04-18 — 2026-07-16" : "2026-06-17 — 2026-07-16";
+        resetToAggregate();
+        renderAll();
+        showToast(`已切换为近${button.dataset.date}天数据`);
+      });
+    });
+
+    $$(".status-options button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const group = button.closest(".status-options");
+        const selected = $$("button.is-selected", group);
+        if (button.classList.contains("is-selected") && selected.length === 1) {
+          showToast("每个对比组至少保留一个线索状态");
+          return;
+        }
+        button.classList.toggle("is-selected");
+        resetToAggregate();
+        renderAll();
+        showToast("线索状态已更新，重叠客户将自动排除");
+      });
+    });
+
+    $$("[data-topic-reset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (state.topic === "all") return;
+        resetToAggregate();
+        renderAll();
+      });
+    });
+
+    $("#viewAllVoices").addEventListener("click", () => {
+      state.showAllVoices = !state.showAllVoices;
+      renderVoices();
+    });
+
+    $("#exportButton").addEventListener("click", exportCurrentView);
+
+    $("#resetFilters").addEventListener("click", () => {
+      state.mode = "all";
+      state.topic = "all";
+      state.sort = "rate";
+      state.sentiment = "all";
+      state.grain = "week";
+      state.showAllVoices = false;
+      $("#orgFilter").selectedIndex = 0;
+      $("#brandFilter").selectedIndex = 0;
+      $("#modelFilter").selectedIndex = 0;
+      $("#observationFilter").selectedIndex = 0;
+      $$("[data-mode]").forEach((item) => {
+        const active = item.dataset.mode === "all";
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-pressed", String(active));
+      });
+      $$("[data-sort]").forEach((item) => item.classList.toggle("is-active", item.dataset.sort === "rate"));
+      $$("[data-sentiment]").forEach((item) => item.classList.toggle("is-active", item.dataset.sentiment === "all"));
+      $$("[data-grain]").forEach((item) => item.classList.toggle("is-active", item.dataset.grain === "week"));
+      $$("[data-date]").forEach((item) => item.classList.toggle("is-active", item.dataset.date === "30"));
+      $(".date-value").textContent = "2026-06-17 — 2026-07-16";
+      renderAll();
+      showToast("已恢复默认分析范围");
+    });
+
+    $$(".filter-field select, .observation-field select, .compact-select select").forEach((select) => {
+      select.addEventListener("change", () => {
+        resetToAggregate();
+        renderAll();
+        showToast(`${select.closest("label")?.querySelector("span")?.textContent || "筛选条件"}已更新，已刷新全部汇总`);
+      });
+    });
+  }
+
+  bindEvents();
+  renderAll();
+})();
