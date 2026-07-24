@@ -12189,7 +12189,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reminderBadge: lead.followUpTime ? '需要二次跟进' : '持续跟进',
           reminderTime: lead.followUpTime || '待确认',
           conversationTags: ['高意向', '价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动'],
-          publicTags: ['30-39岁', '已婚有孩', '上海常驻', '中高消费能力', '汽车兴趣人群', '新能源车关注', '家庭出行偏好', '近期浏览汽车内容', '科技数码兴趣']
+          publicProfile: {
+            highlights: [
+              { label: '高意向', tone: 'blue', icon: '../assets/lead-tag-public-intent.svg' },
+              { label: '2档消费', tone: 'red', icon: '../assets/lead-tag-public-consumption.svg' },
+              { label: '广东省广州市番禺区', tone: 'green', icon: '../assets/lead-tag-public-location.svg' }
+            ],
+            attributes: [
+              { label: '男', tone: 'blue', icon: '../assets/lead-tag-public-gender.svg' },
+              { label: '年龄', tone: 'red', icon: '../assets/lead-tag-public-age.svg' },
+              { label: '本科', tone: 'green', icon: '../assets/lead-tag-public-education.svg' },
+              { label: '资深白领', tone: 'violet', icon: '../assets/lead-tag-public-career.svg' },
+              { label: '有车', tone: 'amber', icon: '../assets/lead-tag-public-car.svg' },
+              { label: '新能源', tone: 'blue', icon: '../assets/lead-tag-public-new-energy.svg' },
+              { label: '科技爱好者', tone: 'red', icon: '../assets/lead-tag-public-tech.svg' }
+            ]
+          }
         }
       }
 
@@ -12234,6 +12249,31 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const offset = leadDetailCloudOffsets[index % leadDetailCloudOffsets.length]
           return `<span class="lead-cloud-term ${tone} ${size}${offset}"><span class="lead-cloud-term-copy">${escapeHtml(tag)}</span></span>`
         }).join('')
+      }
+
+      function renderLeadDetailConversationMap(tags) {
+        const positions = [1, 2, 3, 7, 8, 4, 6, 5]
+        const tones = ['blue', 'red', 'green', 'violet', 'blue', 'green', 'amber', 'red']
+        const paths = Array.from({ length: 9 }, (_, index) => {
+          const number = String(index + 1).padStart(2, '0')
+          return `<div class="lead-tag-relationship-path path-${index + 1}" aria-hidden="true"><img src="../assets/lead-tag-path-${number}.svg" alt="" /></div>`
+        }).join('')
+        const tagMarkup = tags.map((tag, index) => {
+          return `<span class="lead-relationship-chip tone-${tones[index]} position-${positions[index]}">${escapeHtml(tag)}</span>`
+        }).join('')
+
+        return `${paths}${tagMarkup}`
+      }
+
+      function renderLeadDetailPublicProfile(profile) {
+        const highlights = (profile?.highlights || []).map((item) => {
+          return `<div class="lead-public-highlight tone-${escapeHtml(item.tone)}"><img class="lead-public-highlight-icon" src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" /><strong>${escapeHtml(item.label)}</strong></div>`
+        }).join('')
+        const attributes = (profile?.attributes || []).map((item) => {
+          return `<span class="lead-public-attribute tone-${escapeHtml(item.tone)}"><img src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" />${escapeHtml(item.label)}</span>`
+        }).join('')
+
+        return `<div class="lead-public-profile-highlights">${highlights}</div><div class="lead-public-profile-divider" aria-hidden="true"><img src="../assets/lead-tag-public-divider.svg" alt="" /></div><div class="lead-public-profile-attributes">${attributes}</div>`
       }
 
       function renderLeadDetailIntentList(value) {
@@ -12408,9 +12448,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         setText('#leadDetailActionText', payload.actionText)
         setText('#leadDetailReminderBadge', payload.reminderBadge)
         setText('#leadDetailReminderTime', payload.reminderTime)
-        setHtml('#leadDetailConversationTagCloud', renderLeadDetailCloudTags(payload.conversationTags))
-        setHtml('#leadDetailPublicTagCloud', renderLeadDetailCloudTags(payload.publicTags))
-        window.requestAnimationFrame(syncLeadDetailTagCloudLayout)
+        setHtml('#leadDetailConversationMap', renderLeadDetailConversationMap(payload.conversationTags))
+        setHtml('#leadDetailPublicProfile', renderLeadDetailPublicProfile(payload.publicProfile))
       }
 
       function bindLeadDetailSessionLinks(payload) {
