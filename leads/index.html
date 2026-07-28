@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260717intent-list" />
+        <link rel="stylesheet" href="./page.css?v=20260727customer-ai-tags-layout" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -557,14 +557,85 @@
                       <div class="hero-title" id="customerDetailHeroTitle">王*娴</div>
                     </div>
                     <div class="customer-hero-summary-chips" aria-label="客户摘要">
-                      <span class="customer-hero-summary-chip">关联线索：3条线索</span>
-                      <span class="customer-hero-summary-chip">涉及门店：3个门店</span>
+                      <span class="customer-hero-summary-chip" id="customerDetailLeadCount">关联线索：3条线索</span>
+                      <span class="customer-hero-summary-chip" id="customerDetailStoreCount">涉及门店：3个门店</span>
                       <span class="customer-hero-summary-chip">首次建联：2026-03-10</span>
                       <span class="customer-hero-summary-chip">最后一次跟进时间：2026-03-15报价沟通</span>
                     </div>
                   </div>
 
-                  <div class="customer-hero-flat-timeline" aria-label="客户跨门店旅程概览">
+                  <section class="customer-insight-panel" aria-labelledby="customerInsightTitle">
+                    <div class="customer-insight-header">
+                      <div class="customer-insight-heading">
+                        <div class="customer-insight-title-row">
+                          <h3 id="customerInsightTitle">客户洞察</h3>
+                          <span class="ai-badge">AI</span>
+                        </div>
+                        <p data-customer-insight-scope>基于3条线索 · 3个门店的会话、意向和标签综合分析</p>
+                      </div>
+                    </div>
+
+                    <div class="customer-insight-main">
+                      <div class="customer-insight-summary">
+                        <div class="customer-insight-section-title">综合判断</div>
+                        <div class="customer-insight-status-row">
+                          <span class="customer-insight-status customer-insight-status-high">高意向</span>
+                          <span class="customer-insight-status customer-insight-status-model">传祺M8</span>
+                        </div>
+                        <p>客户已完成到店和试驾，目前进入报价比较阶段。主要关注空间、静谧性、金融方案和置换补贴，价格敏感。</p>
+                      </div>
+
+                      <div class="customer-insight-ai">
+                        <div class="customer-insight-ai-title">
+                          <span>AI客户洞察</span>
+                          <span class="customer-insight-ai-description">客户在多家门店/单门店多旅程的共性与差异分析</span>
+                        </div>
+                        <div class="customer-ai-generate-panel" aria-label="AI洞察生成区域">
+                          <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="customer-insight-tags">
+                      <div class="customer-insight-tag-group">
+                        <div class="customer-insight-tag-title">
+                          <span>对话标签聚合</span>
+                          <small>来自全部关联会话</small>
+                        </div>
+                        <div class="customer-insight-tag-list" aria-label="对话标签聚合">
+                          <span class="tag violet">传祺M8</span>
+                          <span class="tag green">试驾满意</span>
+                          <span class="tag amber">价格敏感</span>
+                          <span class="tag blue">金融方案诉求</span>
+                          <span class="tag blue">关注静谧性</span>
+                          <span class="tag violet">置换补贴</span>
+                          <span class="tag green">家庭出行</span>
+                          <span class="tag blue">第三排空间</span>
+                          <span class="tag amber">关注总价</span>
+                          <span class="tag green">试驾意向</span>
+                          <span class="tag red">交付周期</span>
+                          <span class="tag amber">竞品对比</span>
+                        </div>
+                      </div>
+
+                      <div class="customer-insight-tag-group customer-insight-tag-group-public">
+                        <div class="customer-insight-tag-title">
+                          <span>公域标签</span>
+                          <small>来自用户属性与兴趣行为</small>
+                        </div>
+                        <div class="customer-insight-tag-list" aria-label="公域标签">
+                          <span class="tag blue">30–39岁</span>
+                          <span class="tag red">已婚有孩</span>
+                          <span class="tag green">上海常驻</span>
+                          <span class="tag violet">中高消费能力</span>
+                          <span class="tag amber">家庭出行偏好</span>
+                          <span class="tag blue">汽车兴趣人群</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div class="customer-hero-flat-timeline" aria-label="客户旅程概览">
                     <div class="customer-hero-flat-step is-none" data-hero-timeline-step="杭州西湖门店-首触跟进">
                       <div class="customer-hero-flat-marker">无</div>
                       <div class="customer-hero-flat-stage">首触跟进</div>
@@ -608,7 +679,7 @@
                   <div class="panel-header">
                     <div class="panel-title">
                       <h3>客户旅程</h3>
-                      <p>按时间轴展示客户跨店全生命周期旅程</p>
+                      <p>按时间轴展示客户全部关联线索的生命周期旅程</p>
                     </div>
                     <div class="customer-journey-toolbar">
                       <div class="customer-journey-control-group">
@@ -810,60 +881,11 @@
                   </div>
                 </section>
               </div>
-    
-              <div class="stack-16 lead-detail-side-column customer-detail-side-column">
-                <section class="card intention-panel customer-intention-panel">
-                  <div class="intention-card customer-intention-card">
-                    <div class="intention-top">
-                      <h3 class="intention-title">AI画像</h3>
-                    </div>
-                    <div class="intention-ai-row">
-                      <span class="ai-badge">AI</span>
-                      <span class="intention-ai-copy">智能合并多店信息碎片，补全客户画像</span>
-                    </div>
-    
-                    <div class="intention-body customer-intention-body">
-                      <div class="customer-ai-generate-panel" aria-label="AI画像生成入口">
-                        <div class="customer-ai-generate-preview" aria-hidden="true">
-                          <span>系统将基于当前日期范围内的录音表现、客户画像碎片与多门店触点进行智能合并。</span>
-                          <span>重点识别预算、车型偏好、家庭场景、价格敏感点和下一步跟进建议。</span>
-                          <span>生成后可直接查看统一客户画像与关键策略。</span>
-                        </div>
-                        <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="card lead-detail-tag-panel customer-detail-tag-panel">
-                  <div class="panel-header">
-                    <div class="panel-title">
-                      <h3>客户标签</h3>
-                      <p>基于真实对话提炼客户标签</p>
-                    </div>
-                  </div>
-                  <div class="lead-tag-cloud customer-detail-tag-cloud" aria-label="客户标签词云" id="customerDetailTagCloud">
-                    <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">高意向</span></span>
-                    <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">价格博弈中</span></span>
-                    <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">家庭出行</span></span>
-                    <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">金融方案诉求</span></span>
-                    <span class="lead-cloud-term amber md"><span class="lead-cloud-term-copy">预算上限 32 万</span></span>
-                    <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">关注静谧性</span></span>
-                    <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">周末试驾</span></span>
-                    <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">竞品对比</span></span>
-                    <span class="lead-cloud-term violet sm"><span class="lead-cloud-term-copy">置换补贴</span></span>
-                    <span class="lead-cloud-term red sm"><span class="lead-cloud-term-copy">交付周期</span></span>
-                    <span class="lead-cloud-term blue md"><span class="lead-cloud-term-copy">第三排空间</span></span>
-                    <span class="lead-cloud-term green md offset-up"><span class="lead-cloud-term-copy">家庭乘坐舒适</span></span>
-                    <span class="lead-cloud-term violet sm offset-down"><span class="lead-cloud-term-copy">已试驾培育</span></span>
-                  </div>
-                </section>
-              </div>
             </div>
           </div>
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260717tag-panel-title"></script>
+    <script src="./page.js?v=20260727customer-ai-tags-layout"></script>
   </body>
 </html>

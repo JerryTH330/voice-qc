@@ -2288,6 +2288,23 @@
 
 /* ISSUE CARDS (话术薄弱项 & 风险命中项) */
 .store-dashboard-page .issue-list{display:flex;flex-direction:column;gap:16px;padding:0 4px}
+.store-dashboard-page .store-sop-rule-empty{display:flex;align-items:center;justify-content:center;min-height:160px;border:1px dashed #CBD5E1;border-radius:12px;background:#F8FAFC;color:#64748B;font-size:14px}
+.store-dashboard-page .store-sop-rule-toolbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.store-dashboard-page .store-sop-rule-field{display:flex;flex-direction:column;gap:6px;min-width:180px}
+.store-dashboard-page .store-sop-rule-field--search{min-width:min(320px,100%);flex:1 1 260px}
+.store-dashboard-page .store-sop-rule-field>span{color:#64748B;font-size:12px;font-weight:700;line-height:1.2}
+.store-dashboard-page :where(.store-sop-rule-select,.store-sop-rule-input){box-sizing:border-box;min-height:38px;padding:0 12px;border:1px solid #CBD5E1;border-radius:10px;background:#FFFFFF;color:#0F172A;font-family:inherit;font-size:14px;font-weight:600;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
+.store-dashboard-page :where(.store-sop-rule-select,.store-sop-rule-input):focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+.store-dashboard-page .store-sop-rule-input::placeholder{color:#94A3B8;font-weight:500}
+.store-dashboard-page .store-sop-rule-meta{margin-left:auto;padding-bottom:8px;color:#64748B;font-size:12px;font-weight:700;white-space:nowrap}
+.store-dashboard-page .issue-rule-pagination{padding:16px 4px 0;border-top:0}
+.store-dashboard-page .issue-rule-pagination .issue-pagination-page-size{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border:1px solid rgba(207,217,232,0.96);border-radius:12px;background:rgba(255,255,255,0.96);box-shadow:0 6px 14px rgba(15,23,42,0.04);color:var(--color-text-muted);font-size:14px;font-weight:600;white-space:nowrap}
+.store-dashboard-page .issue-rule-pagination :where(.session-pagination-total,.session-page-jump-label,.session-page-jump-suffix,.page-arrow,.page-num,.page-select input){font-size:14px}
+@media (max-width:900px){
+  .store-dashboard-page .store-sop-rule-toolbar{align-items:stretch}
+  .store-dashboard-page .store-sop-rule-field,.store-dashboard-page .store-sop-rule-field--search{flex:1 1 100%;min-width:100%}
+  .store-dashboard-page .store-sop-rule-meta{margin-left:0;padding-bottom:0}
+}
 .store-dashboard-page .issue-word-cloud{padding:0;margin-bottom:0;position:relative;height:100%;display:flex;flex-direction:column}
 .store-dashboard-page .issue-word-cloud-header{position:relative;z-index:1}
 .store-dashboard-page .issue-word-cloud.track{background:var(--color-surface)}
@@ -2382,6 +2399,12 @@
 .sales-role-dashboard-page .review-insight-tab.active{border-color:rgba(37,99,235,0.32);background:linear-gradient(157deg,rgba(37,99,235,0.1) 0%,rgba(56,189,248,0.08) 100%);box-shadow:0 2px 8px rgba(37,99,235,0.12);color:#2563EB}
 .sales-role-dashboard-page .review-insight-list{display:flex;flex-direction:column;gap:16px}
 .sales-role-dashboard-page .review-insight-list.store-dashboard-page{padding:0 4px}
+.sales-role-dashboard-page .review-insight-toolbar{min-width:0}
+.sales-role-dashboard-page .sales-review-pagination{padding:12px 4px 0;border-top:0}
+.sales-role-dashboard-page .sales-review-pagination .dashboard-pagination{align-items:flex-start;gap:10px;flex-wrap:wrap}
+.sales-role-dashboard-page .sales-review-pagination .dashboard-pagination-controls{justify-content:flex-start;gap:8px;flex-wrap:wrap}
+.sales-role-dashboard-page .sales-review-pagination .issue-pagination-page-size{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid rgba(207,217,232,.96);border-radius:12px;background:rgba(255,255,255,.96);box-shadow:0 6px 14px rgba(15,23,42,.04);color:#64748B;font-size:13px;font-weight:600;white-space:nowrap}
+.sales-role-dashboard-page .sales-review-pagination .page-group{gap:6px}
 .sales-role-dashboard-page .sales-review-issue-card{box-sizing:border-box;border:1px solid rgba(217,226,239,0.72);border-radius:12px;background:transparent;cursor:pointer;transition:transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease;overflow:hidden}
 .sales-role-dashboard-page .sales-review-issue-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(15,23,42,0.08)}
 .sales-role-dashboard-page .sales-review-issue-header{display:flex;align-items:center;gap:12px;padding:12px 16px;box-sizing:border-box}
@@ -5535,6 +5558,45 @@
     width:auto;
     height:1px;
     margin:0 16px;
+  }
+}
+
+/* 门店看板：质检概览整行展示，下方排行与录音复盘对齐等高 */
+.store-dashboard-page #main-panel-advisors > .tab-dual-grid{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:stretch;
+}
+.store-dashboard-page #main-panel-advisors .tab-left-stack{
+  display:contents;
+}
+.store-dashboard-page #main-panel-advisors .sop-overview-track{
+  grid-column:1 / -1;
+  grid-row:1;
+}
+.store-dashboard-page #main-panel-advisors .advisor-rank-card{
+  grid-column:1;
+  grid-row:2;
+  height:100%;
+  min-width:0;
+  align-self:stretch;
+}
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper{
+  grid-column:2;
+  grid-row:2;
+  height:100%;
+  min-width:0;
+  align-self:stretch;
+}
+@media(max-width:1100px){
+  .store-dashboard-page #main-panel-advisors > .tab-dual-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .store-dashboard-page #main-panel-advisors .sop-overview-track,
+  .store-dashboard-page #main-panel-advisors .advisor-rank-card,
+  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper{
+    grid-column:1;
+    grid-row:auto;
+    height:auto;
   }
 }
 

@@ -39,6 +39,7 @@ function renderSharedInsightTop5Cards(items, options = {}) {
     valueAttrName = 'data-issue-target',
     getTitle = (item) => item?.title || '',
     getValue = (item) => item?.score || 0,
+    getRankIndex = (_item, index) => index,
     getScopeHtml = () => '',
     getActionHtml = () => ''
   } = options;
@@ -55,7 +56,7 @@ function renderSharedInsightTop5Cards(items, options = {}) {
 
     return `<${cardTag} class="${className}"${tagAttrs}>
       <div class="${headerClass}">
-        ${renderSharedInsightTop5Rank(index, { baseClass: rankClass, iconClass: rankIconClass })}
+        ${renderSharedInsightTop5Rank(getRankIndex(item, index), { baseClass: rankClass, iconClass: rankIconClass })}
         <div class="${infoClass}">
           <div class="${titleRowClass}"><span class="${titleClass}">${title}</span></div>
           <div class="${barRowClass}">
@@ -1327,6 +1328,54 @@ function initStoreDashboardPage() {
   // 门店销售顾问总人数（含未在示例数据中列出的顾问）
   const TOTAL_ADVISOR_COUNT = 8;
 
+  const storeSopRecordingAdvisors = ['李昱', '王萌', '韩宇', '许明', '张华', '林涛', '赵强', '陈亮'];
+  const makeStoreSopRule = (title, category, hitRate, advisorCount, ruleIndex) => ({
+    title,
+    category,
+    hit_ratio: `${hitRate}%`,
+    advisor_count: advisorCount,
+    recordings: storeSopRecordingAdvisors.slice(0, advisorCount).map((advisor, recordingIndex) => ({
+      advisor,
+      time: `3-${25 - ((ruleIndex + recordingIndex) % 4)} ${String(9 + ((ruleIndex + recordingIndex) % 8)).padStart(2, '0')}:${String((ruleIndex * 7 + recordingIndex * 13) % 60).padStart(2, '0')}`,
+      id: `SOP-${String(ruleIndex + 1).padStart(3, '0')}-${recordingIndex + 1}`
+    }))
+  });
+
+  // 规则名称与厂端看板“质检规则”保持一致，命中率与范围标签按门店口径展示。
+  const storeSopRuleData = [
+    makeStoreSopRule('对比车型', '需求确认', 78, 4, 0),
+    makeStoreSopRule('意向车型', '需求确认', 74, 4, 1),
+    makeStoreSopRule('增换购情况', '需求确认', 67, 3, 2),
+    makeStoreSopRule('购车关注点', '需求确认', 63, 3, 3),
+    makeStoreSopRule('添加微信要求', '留资承接', 61, 2, 4),
+    makeStoreSopRule('计划购车时间', '需求确认', 58, 3, 5),
+    makeStoreSopRule('试乘试驾时间', '到店邀约', 55, 2, 6),
+    makeStoreSopRule('预算范围确认', '需求确认', 72, 4, 7),
+    makeStoreSopRule('用车场景确认', '需求确认', 69, 4, 8),
+    makeStoreSopRule('家庭成员需求', '需求确认', 64, 3, 9),
+    makeStoreSopRule('配置版本推荐', '产品讲解', 62, 3, 10),
+    makeStoreSopRule('权益政策说明', '产品讲解', 60, 2, 11),
+    makeStoreSopRule('价格锚点铺垫', '价格沟通', 57, 2, 12),
+    makeStoreSopRule('金融方案介绍', '促单转化', 53, 2, 13),
+    makeStoreSopRule('置换政策说明', '促单转化', 51, 2, 14),
+    makeStoreSopRule('下一步跟进约定', '跟进承接', 49, 2, 15),
+    makeStoreSopRule('到店路线引导', '到店邀约', 47, 1, 16),
+    makeStoreSopRule('价格异议承接', '异议处理', 46, 2, 17),
+    makeStoreSopRule('等待周期解释', '异议处理', 44, 1, 18),
+    makeStoreSopRule('接待结束总结', '跟进承接', 42, 1, 19),
+    makeStoreSopRule('客户标签补充', '跟进承接', 39, 1, 20)
+  ];
+  const storeSopRuleState = {
+    query: '',
+    sort: 'rate-desc'
+  };
+  const STORE_ISSUE_PAGE_SIZE = 5;
+  const storeIssuePaginationState = {
+    sop: 1,
+    strength: 1,
+    weakness: 1
+  };
+
   const weaknessData = [
     { title: "深度需求挖掘", unhit_ratio: "85%", unhit_count: 42, advisor_count: 4,
       strategy: "围绕家庭结构、使用场景、购车预算与换购原因建立固定追问顺序，让后续邀约与看车推荐有明确抓手。",
@@ -1361,6 +1410,36 @@ function initStoreDashboardPage() {
       strategy: "根据预算、人数和关注配置快速锁定版本区间，帮助客户带着明确目标到店看车。",
       recordings: [
         { advisor: "林涛", time: "3-25 09:20", id: "R-0305" }
+      ]},
+    { title: "门店/公司优势未建立", unhit_ratio: "48%", unhit_count: 21, advisor_count: 3,
+      strategy: "在接待开场补充门店服务能力、品牌保障和售后优势，帮助客户先建立信任。",
+      recordings: [
+        { advisor: "张华", time: "3-24 11:40", id: "R-0298" },
+        { advisor: "赵强", time: "3-23 15:10", id: "R-0284" },
+        { advisor: "林涛", time: "3-23 09:35", id: "R-0279" }
+      ]},
+    { title: "微信留资承接缺失", unhit_ratio: "45%", unhit_count: 19, advisor_count: 2,
+      strategy: "在客户表达兴趣后及时提出添加微信，并明确后续发送的车型、报价或活动资料。",
+      recordings: [
+        { advisor: "林涛", time: "3-24 15:25", id: "R-0294" },
+        { advisor: "王萌", time: "3-23 10:50", id: "R-0285" }
+      ]},
+    { title: "线索承接节奏断档", unhit_ratio: "42%", unhit_count: 17, advisor_count: 2,
+      strategy: "在结束沟通前约定下一次联系时间和动作，避免线索跟进中断。",
+      recordings: [
+        { advisor: "张华", time: "3-24 14:35", id: "R-0297" },
+        { advisor: "赵强", time: "3-23 16:20", id: "R-0286" }
+      ]},
+    { title: "到店邀约推进不足", unhit_ratio: "39%", unhit_count: 15, advisor_count: 2,
+      strategy: "结合客户关注点给出明确到店理由，并提供可选择的到店时间。",
+      recordings: [
+        { advisor: "林涛", time: "3-24 10:30", id: "R-0299" },
+        { advisor: "张华", time: "3-23 13:45", id: "R-0283" }
+      ]},
+    { title: "承诺边界表达不清", unhit_ratio: "35%", unhit_count: 12, advisor_count: 1,
+      strategy: "涉及价格、权益和交付周期时明确说明适用条件，避免模糊或超权限承诺。",
+      recordings: [
+        { advisor: "林涛", time: "3-23 15:30", id: "R-0283" }
       ]}
   ];
 
@@ -1398,6 +1477,36 @@ function initStoreDashboardPage() {
       strategy: "保留按预算逐级推荐版本的样本，补充到车型配置讲解 SOP 中，提升版本推荐一致性。",
       recordings: [
         { advisor: "李昱", time: "3-25 09:20", id: "R-0305" }
+      ]},
+    { title: "门店/公司优势塑造", hit_ratio: "59%", hit_count: 29, advisor_count: 3,
+      strategy: "沉淀门店服务、品牌保障与售后能力的标准表达，强化客户信任。",
+      recordings: [
+        { advisor: "王萌", time: "3-25 13:10", id: "R-0415" },
+        { advisor: "李昱", time: "3-24 11:30", id: "R-0391" },
+        { advisor: "韩宇", time: "3-23 16:40", id: "R-0378" }
+      ]},
+    { title: "微信留资承接", hit_ratio: "56%", hit_count: 26, advisor_count: 2,
+      strategy: "复用自然提出添加微信并说明资料用途的优秀表达，提高后续触达效率。",
+      recordings: [
+        { advisor: "李昱", time: "3-25 15:20", id: "R-0416" },
+        { advisor: "王萌", time: "3-24 12:10", id: "R-0399" }
+      ]},
+    { title: "留人稳线索", hit_ratio: "52%", hit_count: 23, advisor_count: 2,
+      strategy: "保留通过确认客户顾虑、约定跟进动作稳定线索的高质量样本。",
+      recordings: [
+        { advisor: "韩宇", time: "3-25 12:40", id: "R-0417" },
+        { advisor: "许明", time: "3-24 10:50", id: "R-0400" }
+      ]},
+    { title: "到店邀约推进", hit_ratio: "49%", hit_count: 21, advisor_count: 2,
+      strategy: "提炼以客户关注点为到店理由、同时给出可选时段的邀约方式。",
+      recordings: [
+        { advisor: "李昱", time: "3-25 11:50", id: "R-0418" },
+        { advisor: "张华", time: "3-24 15:40", id: "R-0402" }
+      ]},
+    { title: "承诺与风险边界", hit_ratio: "45%", hit_count: 19, advisor_count: 1,
+      strategy: "推广对价格、权益和交付条件说明清晰的合规表达，避免过度承诺。",
+      recordings: [
+        { advisor: "许明", time: "3-25 10:10", id: "R-0419" }
       ]}
   ];
 
@@ -3677,7 +3786,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
   const animateStoreIssueCards = () => {
     clearStoreIssueAnimations();
-    const issueCards = [...document.querySelectorAll('#weakness-chart .issue-card, #strength-chart .issue-card, #risk-chart .issue-card')];
+    const issueCards = [...document.querySelectorAll('#sop-rule-chart .issue-card, #weakness-chart .issue-card, #strength-chart .issue-card, #risk-chart .issue-card')];
     const easeOutCubic = (progress) => 1 - ((1 - progress) ** 3);
 
     issueCards.forEach((card, index) => {
@@ -3777,34 +3886,154 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     </div>`;
   };
 
+  const getStoreIssuePageSlice = (type, items) => {
+    const totalPages = Math.max(1, Math.ceil(items.length / STORE_ISSUE_PAGE_SIZE));
+    const page = Math.max(1, Math.min(totalPages, storeIssuePaginationState[type] || 1));
+    storeIssuePaginationState[type] = page;
+    const offset = (page - 1) * STORE_ISSUE_PAGE_SIZE;
+    return { items: items.slice(offset, offset + STORE_ISSUE_PAGE_SIZE), offset };
+  };
+
+  const renderStoreIssuePagination = (type, totalItems) => {
+    const host = document.getElementById(`${type === 'sop' ? 'sop-rule' : type}-pagination`);
+    if (!host) return;
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / STORE_ISSUE_PAGE_SIZE));
+    const currentPage = Math.max(1, Math.min(totalPages, storeIssuePaginationState[type] || 1));
+    storeIssuePaginationState[type] = currentPage;
+    const pageItems = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    host.innerHTML = `
+      <div class="dashboard-pagination">
+        <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+        <div class="dashboard-pagination-controls">
+          <span class="issue-pagination-page-size">${STORE_ISSUE_PAGE_SIZE} 条/页</span>
+          <div class="page-group">
+            <button type="button" class="page-arrow" data-store-issue-page-arrow="prev" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+            ${pageItems.map(page => `<button type="button" class="page-num${page === currentPage ? ' active' : ''}" data-store-issue-page="${page}">${page}</button>`).join('')}
+            <button type="button" class="page-arrow" data-store-issue-page-arrow="next" ${currentPage === totalPages ? 'disabled' : ''}>›</button>
+          </div>
+          <div class="page-group page-jump-group">
+            <span class="session-page-jump-label">前往</span>
+            <label class="page-select page-jump-select">
+              <input type="number" min="1" max="${totalPages}" value="${currentPage}" data-store-issue-page-jump>
+            </label>
+            <span class="session-page-jump-suffix">页</span>
+          </div>
+        </div>
+      </div>`;
+
+    const changePage = (nextPage) => {
+      storeIssuePaginationState[type] = Math.max(1, Math.min(totalPages, Number(nextPage) || 1));
+      renderStoreIssueSections();
+    };
+
+    host.querySelectorAll('[data-store-issue-page]').forEach(node => {
+      node.addEventListener('click', () => changePage(node.dataset.storeIssuePage));
+    });
+    host.querySelectorAll('[data-store-issue-page-arrow]').forEach(node => {
+      node.addEventListener('click', () => {
+        const delta = node.dataset.storeIssuePageArrow === 'prev' ? -1 : 1;
+        changePage(currentPage + delta);
+      });
+    });
+    host.querySelectorAll('[data-store-issue-page-jump]').forEach(node => {
+      const jump = () => changePage(node.value);
+      node.addEventListener('change', jump);
+      node.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') jump();
+      });
+    });
+  };
+
   const renderWeaknessSection = () => {
     const weaknessEl = document.getElementById("weakness-chart");
-    const weaknessItems = getFilteredWeaknessData();
+    const allWeaknessItems = getFilteredWeaknessData();
+    const { items: weaknessItems, offset } = getStoreIssuePageSlice('weakness', allWeaknessItems);
 
     if (weaknessEl) {
       weaknessEl.style.height = 'auto';
       weaknessEl.innerHTML = renderSharedInsightTop5Cards(weaknessItems, {
-        getCardClassSuffix: (_item, index) => `rank-${index + 1}`,
+        getRankIndex: (_item, index) => offset + index,
+        getCardClassSuffix: (_item, index) => `rank-${offset + index + 1}`,
         getValue: (item) => item.animated_ratio,
         getScopeHtml: (item) => scopeText(item.advisor_count),
-        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('weakness', ${index})"><span>查看</span></button>`
+        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('weakness', ${offset + index})"><span>查看</span></button>`
       });
     }
+    renderStoreIssuePagination('weakness', allWeaknessItems.length);
+  };
+
+  const getVisibleStoreSopRules = () => {
+    const query = storeSopRuleState.query.trim().toLocaleLowerCase('zh-CN');
+    const visibleRules = storeSopRuleData.filter(item => {
+      if (!query) return true;
+      return `${item.title} ${item.category}`.toLocaleLowerCase('zh-CN').includes(query);
+    });
+
+    return visibleRules.sort((a, b) => {
+      const rateA = parseStoreIssuePercent(a.hit_ratio);
+      const rateB = parseStoreIssuePercent(b.hit_ratio);
+      if (storeSopRuleState.sort === 'rate-asc') return rateA - rateB;
+      if (storeSopRuleState.sort === 'name-asc') return a.title.localeCompare(b.title, 'zh-Hans-CN');
+      return rateB - rateA;
+    });
+  };
+
+  const renderStoreSopRuleSection = () => {
+    const sopRuleEl = document.getElementById('sop-rule-chart');
+    if (!sopRuleEl) return;
+
+    const visibleRules = getVisibleStoreSopRules();
+    const metaEl = document.getElementById('store-sop-rule-meta');
+    if (metaEl) metaEl.textContent = `共 ${visibleRules.length} 条规则`;
+    const { items: pagedRules, offset } = getStoreIssuePageSlice('sop', visibleRules);
+    sopRuleEl.style.height = 'auto';
+    sopRuleEl.innerHTML = visibleRules.length
+      ? renderSharedInsightTop5Cards(pagedRules, {
+          getRankIndex: (_item, index) => offset + index,
+          getCardClassSuffix: (_item, index) => `sop-rule rank-${offset + index + 1}`,
+          getValue: (item) => parseStoreIssuePercent(item.hit_ratio),
+          getScopeHtml: (item) => scopeText(item.advisor_count),
+          getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('sop', ${offset + index})"><span>查看</span></button>`
+        })
+      : '<div class="store-sop-rule-empty">暂无匹配的质检规则</div>';
+    renderStoreIssuePagination('sop', visibleRules.length);
+  };
+
+  const setupStoreSopRuleControls = () => {
+    const searchInput = document.getElementById('store-sop-rule-search');
+    const sortSelect = document.getElementById('store-sop-rule-sort');
+
+    searchInput?.addEventListener('input', (event) => {
+      storeSopRuleState.query = event.target.value || '';
+      storeIssuePaginationState.sop = 1;
+      renderStoreIssueSections();
+    });
+
+    sortSelect?.addEventListener('change', (event) => {
+      storeSopRuleState.sort = event.target.value || 'rate-desc';
+      storeIssuePaginationState.sop = 1;
+      renderStoreIssueSections();
+    });
   };
 
   const renderStrengthSection = () => {
     const strengthEl = document.getElementById("strength-chart");
-    const strengthItems = getFilteredStrengthData();
+    const allStrengthItems = getFilteredStrengthData();
+    const { items: strengthItems, offset } = getStoreIssuePageSlice('strength', allStrengthItems);
 
     if (strengthEl) {
       strengthEl.style.height = 'auto';
       strengthEl.innerHTML = renderSharedInsightTop5Cards(strengthItems, {
-        getCardClassSuffix: (_item, index) => `strength rank-${index + 1}`,
+        getRankIndex: (_item, index) => offset + index,
+        getCardClassSuffix: (_item, index) => `strength rank-${offset + index + 1}`,
         getValue: (item) => item.animated_ratio,
         getScopeHtml: (item) => scopeText(item.advisor_count),
-        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('strength', ${index})"><span>查看</span></button>`
+        getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('strength', ${offset + index})"><span>查看</span></button>`
       });
     }
+    renderStoreIssuePagination('strength', allStrengthItems.length);
   };
 
   const renderRiskSection = () => {
@@ -3824,6 +4053,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   function renderStoreIssueSections() {
     clearStoreIssueAnimations();
+    renderStoreSopRuleSection();
     renderWeaknessSection();
     renderStrengthSection();
     renderRiskSection();
@@ -3832,6 +4062,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   }
 
   renderStoreIssueSections();
+  setupStoreSopRuleControls();
 
   // 录音库弹窗
   let storeRecordingLibraryState = null;
@@ -4193,7 +4424,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   window.openStoreIssueRecordingLibrary = function(type, index) {
-    const items = type === 'weakness' ? getFilteredWeaknessData()
+    const items = type === 'sop' ? getVisibleStoreSopRules()
+      : type === 'weakness' ? getFilteredWeaknessData()
       : type === 'strength' ? getFilteredStrengthData()
       : getFilteredRiskData();
     const issue = items[index];
@@ -4247,8 +4479,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       <section class="issue-recording-library-page" role="dialog" aria-modal="true" aria-labelledby="issue-recording-library-title">
         <div class="recording-library-head">
           <div>
-            <h2 id="issue-recording-library-title">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}·${issue.title}</h2>
-            <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。</p>
+            <h2 id="issue-recording-library-title">${type === 'sop' ? 'SOP 质检录音' : type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}·${issue.title}</h2>
+            <p>${type === 'sop' ? '按规则命中样本查看原声证据' : type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。</p>
           </div>
           <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
         </div>
@@ -4907,13 +5139,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   // ── 11. 质检复盘标签页切换 ───────────────────────────────
   const issueInsightTabs = document.querySelectorAll('[data-issue-insight-tab]');
+  const detailSop = document.getElementById('detail-sop');
   const detailWeakness = document.getElementById('detail-weakness');
   const detailStrength = document.getElementById('detail-strength');
   const detailRisk = document.getElementById('detail-risk');
 
-  if (issueInsightTabs.length && detailWeakness && detailStrength && detailRisk) {
-    const panels = { weakness: detailWeakness, strength: detailStrength, risk: detailRisk };
-    const switchIssueInsightTab = (target = 'weakness') => {
+  if (issueInsightTabs.length && detailSop && detailWeakness && detailStrength && detailRisk) {
+    const panels = { sop: detailSop, weakness: detailWeakness, strength: detailStrength, risk: detailRisk };
+    const switchIssueInsightTab = (target = 'sop') => {
       issueInsightTabs.forEach(tab => {
         const active = tab.dataset.issueInsightTab === target;
         tab.classList.toggle('active', active);
@@ -11516,8 +11749,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const aggregateRecord = getCustomerDetailAggregateRecord(selection)
         const safeSelection = {
           ...customerDetailDefaultSelection,
-          ...selection,
-          ...(aggregateRecord || {})
+          ...(aggregateRecord || {}),
+          ...selection
         }
         const storeCountText = Number(safeSelection.aggregateStoreCount) > 1
           ? `${safeSelection.store} 等 ${safeSelection.aggregateStoreCount} 家门店`
@@ -11528,6 +11761,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           store: storeCountText,
           customer: safeSelection.customerName,
           customerStatus: safeSelection.customerStatus,
+          aggregateLeadCount: Number(safeSelection.aggregateLeadCount) || 1,
+          aggregateStoreCount: Number(safeSelection.aggregateStoreCount) || 1,
           subtitle: `${safeSelection.customerPhone} · 关联 ${safeSelection.aggregateLeadCount} 条线索 · 涉及 ${safeSelection.aggregateStoreCount} 家门店`,
           currentStoreTitle: `本门店评估 (${safeSelection.store})`,
           currentStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
@@ -11639,6 +11874,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         setText('#customerDetailHeroTitle', maskDisplayName(payload.customer))
+        setText('#customerDetailLeadCount', `关联线索：${payload.aggregateLeadCount}条线索`)
+        setText('#customerDetailStoreCount', `涉及门店：${payload.aggregateStoreCount}个门店`)
         setText('#customerDetailHeroSubtitle', payload.subtitle)
         setText('#customerDetailCurrentStoreTitle', payload.currentStoreTitle)
         setText('#customerDetailCurrentStoreStatus', payload.currentStoreStatus)
@@ -11658,25 +11895,38 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           statusNode.textContent = payload.customerStatus
           statusNode.className = 'pill-inline customer-detail-status-pill'
         }
+
+        const insightScope = pageHost.querySelector('[data-customer-insight-scope]')
+        if (insightScope) {
+          insightScope.textContent = `基于${payload.aggregateLeadCount}条线索 · ${payload.aggregateStoreCount}个门店的会话、意向和标签综合分析`
+        }
+
+      }
+
+      function getCustomerAiInsightModeMeta(payload = buildCustomerDetailPayload()) {
+        const storeCount = Number(payload.aggregateStoreCount) || 1
+
+        if (storeCount > 1) {
+          return {
+            title: '跨店共性与差异',
+            result: '共性关注：客户在多家门店均围绕传祺M8展开沟通，持续关注家庭出行所需的空间、舒适性，以及价格和金融方案。\n门店差异：上海浦东门店的沟通更深入，客户已完成试驾并重点验证空间与静谧性；杭州滨江门店主要比较总价、金融免息和置换补贴；杭州西湖门店仍处于早期车型、竞品和价格了解阶段。\n多店对比原因：客户对车型方向和产品体验已基本认可，目前接触多家门店主要是为了比较报价、金融、置换补贴等成交条件，而不是重新选择车型。'
+          }
+        }
+
+        return {
+          title: '阶段共性与差异',
+          result: '共性关注：客户在首次跟进、到店和试驾阶段始终围绕家庭出行需求，持续关注车型空间、乘坐舒适性和整体购车成本。\n阶段差异：首次跟进阶段主要了解优惠、现车和到店安排；到店阶段开始具体比较空间、静谧性、交付周期和金融方案；试驾后对产品体验基本认可，关注点进一步集中到价格、金融和置换补贴。\n阶段特征：不同阶段的差异主要体现在决策逐步深入——从了解车型与优惠，到验证产品体验，再到比较成交条件。'
+        }
       }
 
       function getCustomerAiPortraitPreviewHtml() {
         return `
-          <div class="customer-ai-generate-preview" aria-hidden="true">
-            <span>系统将基于当前日期范围内的录音表现、客户画像碎片与多门店触点进行智能合并。</span>
-            <span>重点识别预算、车型偏好、家庭场景、价格敏感点和下一步跟进建议。</span>
-            <span>生成后可直接查看统一客户画像与关键策略。</span>
-          </div>
+          <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
         `
       }
 
       function getCustomerAiPortraitGeneratedText(payload = buildCustomerDetailPayload()) {
-        const leadCount = Number(customerDetailSelection.aggregateLeadCount) || 3
-        const storeCount = Number(customerDetailSelection.aggregateStoreCount) || 3
-        const primaryStore = customerDetailSelection.store || payload.singleStoreName || '上海浦东门店'
-        const customerLabel = maskDisplayName(payload.customer || customerDetailSelection.customerName || '王先生')
-
-        return `已合并 ${customerLabel} 在 ${storeCount} 家门店的 ${leadCount} 条线索触点：客户对传祺M8保持高意向，核心关注第三排空间、家庭乘坐舒适性与价格方案。客户有两个孩子，预算集中在 25-30 万，对金融免息、置换补贴和竞品优惠较敏感。建议由${primaryStore}统一承接，围绕试驾体验、家庭出行场景和金融方案给出一致报价，并在下次跟进中明确到店或下定节点。`
+        return getCustomerAiInsightModeMeta(payload).result
       }
 
       function clearCustomerAiPortraitTypingTimer() {
@@ -11693,8 +11943,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        const insightMeta = getCustomerAiInsightModeMeta()
         panel.classList.add('is-generated')
-        panel.innerHTML = `<div class="customer-ai-generated-copy">${escapeHtml(text)}</div>`
+        panel.innerHTML = `
+          <div class="customer-ai-result">
+            <span class="customer-ai-result-title">${escapeHtml(insightMeta.title)}</span>
+            <div class="customer-ai-generated-copy">${escapeHtml(text)}</div>
+            <button class="customer-ai-regenerate" type="button" data-customer-ai-generate>重新生成</button>
+          </div>
+        `
       }
 
       function startCustomerAiPortraitTyping(panel, text) {
@@ -11725,8 +11982,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           panel.classList.add('is-generated')
           visibleLength = Math.min(fullText.length, visibleLength + 1)
           panel.innerHTML = `
-            <div class="customer-ai-generated-copy-typing">
-              ${escapeHtml(fullText.slice(0, visibleLength))}<span class="customer-ai-typing-caret" aria-hidden="true"></span>
+            <div class="customer-ai-result">
+              <span class="customer-ai-result-title">${escapeHtml(getCustomerAiInsightModeMeta().title)}</span>
+              <div class="customer-ai-generated-copy-typing">
+                ${escapeHtml(fullText.slice(0, visibleLength))}<span class="customer-ai-typing-caret" aria-hidden="true"></span>
+              </div>
             </div>
           `
 
@@ -11764,19 +12024,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (customerAiPortraitState.generating) {
           panel.innerHTML = `
-            ${getCustomerAiPortraitPreviewHtml()}
             <div class="customer-ai-generate-loading" aria-live="polite" role="status">
               <span class="customer-ai-loading-spinner" aria-hidden="true"></span>
-              <span>生成中...</span>
+              <span>正在读取关联线索并分析差异...</span>
             </div>
           `
           return
         }
 
-        panel.innerHTML = `
-          ${getCustomerAiPortraitPreviewHtml()}
-          <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
-        `
+        panel.innerHTML = getCustomerAiPortraitPreviewHtml()
       }
 
       function resetCustomerAiPortraitGeneration() {
@@ -11823,16 +12079,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        panel.querySelector('[data-customer-ai-generate]')?.addEventListener('click', () => {
-          startCustomerAiPortraitGenerationFlow()
-        })
-
         panel.addEventListener('click', (event) => {
           const generateButton = event.target.closest('[data-customer-ai-generate]')
           if (!generateButton) {
             return
           }
-
+          if (customerAiPortraitState.generated) {
+            resetCustomerAiPortraitGeneration()
+          }
           startCustomerAiPortraitGenerationFlow()
         })
       }
@@ -13261,7 +13515,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewSummaryTypingTimer: null,
           reviewSummaryTypingDone: false,
           reviewSummaryLastText: '',
-          reviewInsightTab: 'weakness',
+          reviewInsightTab: 'sop',
+          reviewInsightPage: 1,
+          reviewSopQuery: '',
+          reviewSopSort: 'rate-desc',
           recommendRangeTab: 'last7',
           recommendRangeMode: 'last7',
           recommendMode: 'followup',
@@ -14475,6 +14732,43 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         '承诺与风险边界'
       ]
 
+      const SALES_REVIEW_DEFECT_TYPES = [
+        '深度需求挖掘不足',
+        '本品价值塑造偏弱',
+        '竞品对比缺少差异点',
+        '价格异议承接不到位',
+        '版本配置引导不清晰',
+        '门店/公司优势未建立',
+        '微信留资承接缺失',
+        '线索承接节奏断档',
+        '到店邀约推进不足',
+        '承诺边界表达不清'
+      ]
+
+      const SALES_REVIEW_SOP_TYPES = [
+        '对比车型',
+        '意向车型',
+        '增换购情况',
+        '购车关注点',
+        '添加微信要求',
+        '计划购车时间',
+        '试乘试驾时间',
+        '预算范围确认',
+        '用车场景确认',
+        '家庭成员需求',
+        '配置版本推荐',
+        '权益政策说明',
+        '价格锚点铺垫',
+        '金融方案介绍',
+        '置换政策说明',
+        '下一步跟进约定',
+        '到店路线引导',
+        '价格异议承接',
+        '等待周期解释',
+        '接待结束总结',
+        '客户标签补充'
+      ]
+
       const SALES_REVIEW_RISK_TYPES = [
         '辱骂/嘲讽客户',
         '明显不耐烦、催促打断客户',
@@ -14485,8 +14779,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀请到店', '排程确认', '销售接待', '试乘试驾']
       const SALES_REVIEW_TOTAL_PEOPLE = 8
+      const SALES_REVIEW_PAGE_SIZE = 5
 
       const SALES_REVIEW_INSIGHT_CONFIG = {
+        sop: {
+          scores: [78, 74, 67, 63, 61, 58, 55, 72, 69, 64, 62, 60, 57, 53, 51, 49, 47, 46, 44, 42, 39],
+          counts: [4, 4, 3, 3, 2, 3, 2, 4, 4, 3, 3, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1]
+        },
         weakness: {
           scores: [87, 70, 72, 55, 44, 41, 38, 34, 29, 22],
           counts: [4, 4, 3, 2, 1, 3, 2, 1, 2, 1]
@@ -14546,10 +14845,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getSalesReviewInsightItems(role, tab) {
-        const safeTab = tab === 'strength' || tab === 'risk' ? tab : 'weakness'
+        const safeTab = ['sop', 'strength', 'weakness', 'risk'].includes(tab) ? tab : 'sop'
         const config = SALES_REVIEW_INSIGHT_CONFIG[safeTab]
         const roleScoreOffset = role === 'advisor' ? -2 : 0
-        const titles = safeTab === 'risk' ? SALES_REVIEW_RISK_TYPES : SALES_REVIEW_INSIGHT_TYPES
+        const titles = safeTab === 'sop'
+          ? SALES_REVIEW_SOP_TYPES
+          : safeTab === 'risk'
+            ? SALES_REVIEW_RISK_TYPES
+            : safeTab === 'weakness'
+              ? SALES_REVIEW_DEFECT_TYPES
+              : SALES_REVIEW_INSIGHT_TYPES
         return titles.map((title, index) => {
           const scopeCount = config.counts[index]
           const recordCount = Math.min(4, Math.max(1, scopeCount))
@@ -14559,7 +14864,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             scopeCount,
             recordings: Array.from({ length: recordCount }, (_, recordIndex) => buildSalesReviewRecording(index, recordIndex, role, safeTab))
           }
-        }).slice(0, 5)
+        })
+      }
+
+      function getSalesReviewVisibleItems(role, tab) {
+        const items = getSalesReviewInsightItems(role, tab)
+        if (tab !== 'sop') {
+          return items
+        }
+
+        const state = getSalesRoleState(role)
+        const query = String(state.reviewSopQuery || '').trim().toLocaleLowerCase('zh-CN')
+        const filtered = query
+          ? items.filter((item) => item.title.toLocaleLowerCase('zh-CN').includes(query))
+          : items
+
+        return filtered.sort((left, right) => {
+          if (state.reviewSopSort === 'rate-asc') return left.score - right.score
+          if (state.reviewSopSort === 'name-asc') return left.title.localeCompare(right.title, 'zh-Hans-CN')
+          return right.score - left.score
+        })
       }
 
       function renderSalesReviewRank(index) {
@@ -14591,13 +14915,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       let salesReviewRecordingLibraryState = null
 
       window.openSalesReviewRecordingLibrary = function(role, tab, index) {
-        const items = getSalesReviewInsightItems(role, tab)
+        const items = getSalesReviewVisibleItems(role, tab)
         const issue = items[index]
         if (!issue) {
           return
         }
 
-        const type = tab === 'strength' || tab === 'risk' ? tab : 'weakness'
+        const type = ['sop', 'strength', 'risk'].includes(tab) ? tab : 'weakness'
         const existing = document.getElementById('issue-recording-library-overlay')
         if (existing) existing.remove()
 
@@ -14631,9 +14955,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <section class="issue-recording-library-page" role="dialog" aria-modal="true" aria-labelledby="issue-recording-library-title">
             <div class="recording-library-head">
               <div>
-                <div class="recording-library-eyebrow">${type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}</div>
+                <div class="recording-library-eyebrow">${type === 'sop' ? 'SOP 质检录音' : type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势识别录音' : '短板识别录音'}</div>
                 <h2 id="issue-recording-library-title">${issue.title}</h2>
-                <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按客户姓名、日期、录音ID筛选。</p>
+                <p>${type === 'sop' ? '按规则命中样本查看原声证据' : type === 'risk' ? '按风险命中样本查看原声证据' : '按对应样本查看原声证据'}，支持按客户姓名、日期、录音ID筛选。</p>
               </div>
               <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeSalesReviewRecordingLibrary()">×</button>
             </div>
@@ -14793,13 +15117,133 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
-      function renderSalesReviewInsights(role) {
-        const state = getSalesRoleState(role)
-        const activeTab = state.reviewInsightTab === 'strength' || state.reviewInsightTab === 'risk' ? state.reviewInsightTab : 'weakness'
-        const list = document.getElementById('review-insight-list')
-        if (!list) {
+      function renderSalesReviewToolbar(role, activeTab) {
+        const toolbar = document.getElementById('review-insight-toolbar')
+        if (!toolbar) return
+
+        if (activeTab !== 'sop') {
+          toolbar.hidden = true
+          toolbar.innerHTML = ''
           return
         }
+
+        const state = getSalesRoleState(role)
+        const totalItems = getSalesReviewVisibleItems(role, activeTab).length
+        toolbar.hidden = false
+        toolbar.innerHTML = `
+          <div class="store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
+            <label class="store-sop-rule-field store-sop-rule-field--search">
+              <span>搜索内容</span>
+              <input class="store-sop-rule-input" type="search" value="${escapeHtml(state.reviewSopQuery || '')}" placeholder="输入规则名称" autocomplete="off" data-sales-review-sop-search>
+            </label>
+            <label class="store-sop-rule-field">
+              <span>排序方式</span>
+              <select class="store-sop-rule-select" aria-label="SOP 规则排序" data-sales-review-sop-sort>
+                <option value="rate-desc"${state.reviewSopSort === 'rate-desc' ? ' selected' : ''}>命中率从高到低</option>
+                <option value="rate-asc"${state.reviewSopSort === 'rate-asc' ? ' selected' : ''}>命中率从低到高</option>
+                <option value="name-asc"${state.reviewSopSort === 'name-asc' ? ' selected' : ''}>规则名称</option>
+              </select>
+            </label>
+            <div class="store-sop-rule-meta" id="sales-review-rule-meta">共 ${totalItems} 条规则</div>
+          </div>`
+
+        toolbar.querySelector('[data-sales-review-sop-search]')?.addEventListener('input', (event) => {
+          state.reviewSopQuery = event.target.value || ''
+          state.reviewInsightPage = 1
+          renderSalesReviewInsightContent(role, activeTab)
+        })
+        toolbar.querySelector('[data-sales-review-sop-sort]')?.addEventListener('change', (event) => {
+          state.reviewSopSort = event.target.value || 'rate-desc'
+          state.reviewInsightPage = 1
+          renderSalesReviewInsightContent(role, activeTab)
+        })
+      }
+
+      function renderSalesReviewPagination(role, activeTab, totalItems) {
+        const host = document.getElementById('review-insight-pagination')
+        if (!host) return
+
+        const state = getSalesRoleState(role)
+        const totalPages = Math.max(1, Math.ceil(totalItems / SALES_REVIEW_PAGE_SIZE))
+        state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage || 1))
+        const currentPage = state.reviewInsightPage
+        const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
+
+        host.innerHTML = `
+          <div class="dashboard-pagination">
+            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <div class="dashboard-pagination-controls">
+              <span class="issue-pagination-page-size">${SALES_REVIEW_PAGE_SIZE} 条/页</span>
+              <div class="page-group">
+                <button type="button" class="page-arrow" data-sales-review-page-arrow="prev" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+                ${pages.map(page => `<button type="button" class="page-num${page === currentPage ? ' active' : ''}" data-sales-review-page="${page}">${page}</button>`).join('')}
+                <button type="button" class="page-arrow" data-sales-review-page-arrow="next" ${currentPage === totalPages ? 'disabled' : ''}>›</button>
+              </div>
+            </div>
+          </div>`
+
+        const changePage = (nextPage) => {
+          state.reviewInsightPage = Math.max(1, Math.min(totalPages, Number(nextPage) || 1))
+          renderSalesReviewInsightContent(role, activeTab)
+        }
+
+        host.querySelectorAll('[data-sales-review-page]').forEach((node) => {
+          node.addEventListener('click', () => changePage(node.dataset.salesReviewPage))
+        })
+        host.querySelectorAll('[data-sales-review-page-arrow]').forEach((node) => {
+          node.addEventListener('click', () => {
+            const delta = node.dataset.salesReviewPageArrow === 'prev' ? -1 : 1
+            changePage(currentPage + delta)
+          })
+        })
+      }
+
+      function renderSalesReviewInsightContent(role, activeTab) {
+        const list = document.getElementById('review-insight-list')
+        if (!list) return
+
+        const state = getSalesRoleState(role)
+        const visibleItems = getSalesReviewVisibleItems(role, activeTab)
+        const totalPages = Math.max(1, Math.ceil(visibleItems.length / SALES_REVIEW_PAGE_SIZE))
+        state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage || 1))
+        const offset = (state.reviewInsightPage - 1) * SALES_REVIEW_PAGE_SIZE
+        const pageItems = visibleItems.slice(offset, offset + SALES_REVIEW_PAGE_SIZE)
+        const meta = document.getElementById('sales-review-rule-meta')
+        if (meta) meta.textContent = `共 ${visibleItems.length} 条规则`
+
+        list.innerHTML = pageItems.length
+          ? renderSharedInsightTop5Cards(pageItems, {
+              cardTag: 'article',
+              baseCardClass: 'sales-review-issue-card',
+              getCardAttrs: () => 'data-sales-review-card',
+              headerClass: 'sales-review-issue-header sales-review-issue-header-stacked-actions',
+              rankClass: 'sales-review-issue-rank',
+              rankIconClass: 'sales-review-issue-rank-icon',
+              infoClass: 'sales-review-issue-info',
+              titleRowClass: 'sales-review-issue-title-row',
+              titleClass: 'sales-review-issue-title',
+              barRowClass: 'sales-review-issue-bar-row',
+              barTrackClass: 'sales-review-issue-bar-track',
+              barFillClass: 'sales-review-issue-bar-fill',
+              statClass: 'sales-review-issue-stat',
+              actionStackClass: 'issue-actions-stack sales-review-issue-actions',
+              valueAttrName: 'data-target',
+              getRankIndex: (_item, index) => offset + index,
+              getValue: (item) => item.score,
+              getScopeHtml: (item) => renderSalesReviewScope(item.scopeCount),
+              getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openSalesReviewRecordingLibrary('${escapeHtml(role)}','${escapeHtml(activeTab)}',${offset + index})"><span>查看</span></button>`
+            })
+          : '<div class="store-sop-rule-empty">暂无匹配的质检规则</div>'
+
+        renderSalesReviewPagination(role, activeTab, visibleItems.length)
+        animateSalesReviewInsightCards(list)
+      }
+
+      function renderSalesReviewInsights(role) {
+        const state = getSalesRoleState(role)
+        const activeTab = ['sop', 'strength', 'weakness', 'risk'].includes(state.reviewInsightTab) ? state.reviewInsightTab : 'sop'
+        const list = document.getElementById('review-insight-list')
+        if (!list) return
 
         list.classList.add('issue-list')
         list.parentElement?.classList.add('store-dashboard-page')
@@ -14810,27 +15254,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           tab.setAttribute('aria-selected', String(active))
         })
 
-        list.innerHTML = renderSharedInsightTop5Cards(getSalesReviewInsightItems(role, activeTab), {
-          cardTag: 'article',
-          baseCardClass: 'sales-review-issue-card',
-          getCardAttrs: () => 'data-sales-review-card',
-          headerClass: 'sales-review-issue-header sales-review-issue-header-stacked-actions',
-          rankClass: 'sales-review-issue-rank',
-          rankIconClass: 'sales-review-issue-rank-icon',
-          infoClass: 'sales-review-issue-info',
-          titleRowClass: 'sales-review-issue-title-row',
-          titleClass: 'sales-review-issue-title',
-          barRowClass: 'sales-review-issue-bar-row',
-          barTrackClass: 'sales-review-issue-bar-track',
-          barFillClass: 'sales-review-issue-bar-fill',
-          statClass: 'sales-review-issue-stat',
-          actionStackClass: 'issue-actions-stack sales-review-issue-actions',
-          valueAttrName: 'data-target',
-          getValue: (item) => item.score,
-          getScopeHtml: (item) => renderSalesReviewScope(item.scopeCount),
-          getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openSalesReviewRecordingLibrary('${escapeHtml(role)}','${escapeHtml(activeTab)}',${index})"><span>查看</span></button>`
-        })
-        animateSalesReviewInsightCards(list)
+        renderSalesReviewToolbar(role, activeTab)
+        renderSalesReviewInsightContent(role, activeTab)
       }
 
       function buildSalesLeadSessionId(value) {
@@ -15699,6 +16124,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
 
           dccState.reviewInsightTab = button.dataset.reviewInsightTab
+          dccState.reviewInsightPage = 1
           renderDccReview()
         })
 
@@ -15832,7 +16258,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewSummaryTypingTimer: null,
           reviewSummaryTypingDone: false,
           reviewSummaryLastText: '',
-          reviewInsightTab: 'weakness',
+          reviewInsightTab: 'sop',
+          reviewInsightPage: 1,
+          reviewSopQuery: '',
+          reviewSopSort: 'rate-desc',
           recommendRangeTab: 'last7',
           recommendRangeMode: 'last7',
           recommendMode: 'followup',
@@ -16639,6 +17068,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
 
           advisorState.reviewInsightTab = button.dataset.reviewInsightTab
+          advisorState.reviewInsightPage = 1
           renderAdvisorReview()
         })
 

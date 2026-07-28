@@ -1,1689 +1,742 @@
-const FILTERS = [
-  { key: "brand", label: "品牌", options: [{ label: "传祺", value: "传祺" }, { label: "埃安", value: "埃安" }] },
-  { key: "time", label: "时间", options: [{ label: "昨日", value: "1" }, { label: "近7天", value: "7" }, { label: "近半月", value: "15" }, { label: "近1月", value: "30" }, { label: "自定义", value: "custom" }] }
-];
+(function () {
+  "use strict";
 
-const SOURCE_FILTER = {
-  key: "source",
-  label: "数据来源",
-  options: [
-    { label: "全部", value: "all" },
-    { label: "云外呼", value: "云外呼" },
-    { label: "数字工牌", value: "数字工牌" }
-  ]
-};
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-const SCENE_FILTER = { key: "scene", label: "质检场景", options: [
-  { label: "全部", value: "all" },
-  { label: "首触跟进", value: "首触跟进" },
-  { label: "邀约进店", value: "邀约进店" },
-  { label: "排程确认", value: "排程确认" },
-  { label: "门店接待", value: "门店接待" },
-  { label: "试乘试驾", value: "试乘试驾" }
-]};
-
-const SOURCE_SCENE_MAP = {
-  all: ["all"],
-  "云外呼": ["首触跟进", "邀约进店", "排程确认"],
-  "数字工牌": ["门店接待", "试乘试驾"]
-};
-
-const BRAND_MODEL_OPTIONS = {
-  "all": [
-    { label: "全部", value: "all" },
-    { label: "M8", value: "M8" }, { label: "E8", value: "E8" }, { label: "GS8", value: "GS8" },
-    { label: "AION Y Plus", value: "AION Y Plus" }, { label: "AION V", value: "AION V" }, { label: "AION S Plus", value: "AION S Plus" }
-  ],
-  "传祺": [{ label: "全部", value: "all" }, { label: "M8", value: "M8" }, { label: "E8", value: "E8" }, { label: "GS8", value: "GS8" }],
-  "埃安": [{ label: "全部", value: "all" }, { label: "AION Y Plus", value: "AION Y Plus" }, { label: "AION V", value: "AION V" }, { label: "AION S Plus", value: "AION S Plus" }]
-};
-
-const DATA_MODEL_MAP = {
-  "AION Y Plus": "M8",
-  "AION V": "S7",
-  E9: "E8",
-  "昊铂 HT": "GS8"
-};
-
-const ORG_TREE = {
-  "华南大区": {
-    "广州战区": ["广州白云店", "广州天河店", "广州番禺店", "广州增城店"],
-    "深圳战区": ["深圳南山店", "深圳龙华店", "深圳宝安店"],
-    "佛山战区": ["佛山禅城店", "佛山南海店"],
-    "东莞战区": ["东莞莞城店", "东莞虎门店", "东莞长安店"]
-  },
-  "华东大区": {
-    "上海战区": ["上海浦东店", "上海闵行店", "上海嘉定店", "上海松江店"],
-    "杭州战区": ["杭州西湖店", "杭州余杭店", "杭州萧山店"],
-    "南京战区": ["南京江宁店", "南京建邺店"],
-    "苏州战区": ["苏州工业园店", "苏州吴中店", "苏州昆山店"]
-  },
-  "华北大区": {
-    "北京战区": ["北京朝阳店", "北京海淀店", "北京丰台店", "北京通州店"],
-    "天津战区": ["天津滨海店", "天津南开店"],
-    "石家庄战区": ["石家庄裕华店", "石家庄长安店"],
-    "郑州战区": ["郑州金水店", "郑州中原店", "郑州二七店"]
-  },
-  "华中大区": {
-    "武汉战区": ["武汉武昌店", "武汉洪山店", "武汉汉口店"],
-    "长沙战区": ["长沙岳麓店", "长沙雨花店", "长沙开福店"],
-    "南昌战区": ["南昌红谷店", "南昌青山湖店"]
-  },
-  "西南大区": {
-    "成都战区": ["成都武侯店", "成都锦江店", "成都高新店", "成都龙泉驿店"],
-    "重庆战区": ["重庆渝北店", "重庆九龙坡店", "重庆南岸店"],
-    "昆明战区": ["昆明官渡店", "昆明盘龙店"]
-  },
-  "西北大区": {
-    "西安战区": ["西安雁塔店", "西安未央店", "西安长安店"],
-    "兰州战区": ["兰州城关店", "兰州安宁店"],
-    "乌鲁木齐战区": ["乌鲁木齐天山店"]
-  },
-  "东北大区": {
-    "沈阳战区": ["沈阳铁西店", "沈阳皇姑店", "沈阳浑南店"],
-    "哈尔滨战区": ["哈尔滨南岗店", "哈尔滨道里店"],
-    "长春战区": ["长春朝阳店", "长春南关店"]
-  }
-};
-
-const MODEL_LABEL_MAP = DATA_MODEL_MAP;
-
-const CATEGORY_META = {
-  "抗性点": { color: "red", title: "抗性点 TOP5" },
-  "需求特征": { color: "green", title: "需求特征 TOP5" },
-  "购车场景": { color: "blue", title: "购车场景 TOP5" },
-  "付款方式": { color: "violet", title: "付款方式 TOP5" },
-  "置换情况": { color: "green", title: "置换情况 TOP5" },
-  "试驾状态": { color: "amber", title: "试驾状态 TOP5" },
-  "决策阶段": { color: "amber", title: "决策阶段 TOP5" },
-  "预算区间": { color: "blue", title: "预算区间 TOP5" },
-  "对比竞品": { color: "amber", title: "对比竞品 TOP5" },
-  "购车时间": { color: "violet", title: "购车时间 TOP5" },
-  "意向车型": { color: "blue", title: "意向车型 TOP5" },
-  "客户职业": { color: "amber", title: "客户职业 TOP5" },
-  "用车人": { color: "violet", title: "用车人 TOP5" }
-};
-
-const EMPTY_ITEM = {
-  name: "暂无明显命中",
-  reason: "当前筛选条件下暂未识别到高频标签。",
-  count: 0,
-  rate: 0
-};
-
-const EMPTY_PROFILE_ITEM = {
-  name: "暂无命中",
-  reason: "客户暂未表达相关信息",
-  count: 0,
-  rate: 0
-};
-
-const CUSTOMER_PROFILE = {
-  "抗性点": [{ "价格敏感": "客户觉得价格偏高，需要再考虑" }],
-  "需求特征": [{ "空间大": "客户看重车内空间，用于接送孩子" }, { "续航真实": "担心实际续航不够" }],
-  "购车场景": [{ "家庭出行": "客户明确表示用于家用接送孩子" }],
-  "付款方式": [],
-  "置换情况": [],
-  "试驾状态": [],
-  "决策阶段": [{ "时间未定": "客户表示需要再考虑，未确定具体时间" }],
-  "预算区间": [{ "15-20万": "客户询问的车型价格在此区间" }],
-  "对比竞品": [],
-  "意向车型": [{ "AION Y Plus": "客户询问AION Y Plus" }],
-  "购车时间": [{ "下周": "客户约定下周再联系" }],
-  "客户职业": [],
-  "用车人": [{ "自己": "客户自己开，接送孩子用" }]
-};
-
-const PROFILE_CATEGORIES = [
-  "抗性点",
-  "需求特征",
-  "购车场景",
-  "付款方式",
-  "置换情况",
-  "试驾状态",
-  "决策阶段",
-  "预算区间",
-  "对比竞品",
-  "意向车型",
-  "购车时间",
-  "客户职业",
-  "用车人"
-];
-
-const CLOUD_NODES = [
-  { category: "需求特征", preferred: "空间大", tone: "green", icon: "portrait-needs.png", link: "M48 32 Q44 20 43 16" },
-  { category: "购车场景", preferred: "家庭出行", tone: "green", icon: "portrait-scenario.png", link: "M32 38 Q22 30 15 25" },
-  { category: "预算区间", preferred: "15-20万", tone: "green", icon: "portrait-budget.png", link: "M28 48 Q15 48 12 45" },
-  { category: "购车场景", preferred: "接送孩子", tone: "green", icon: "portrait-user.png", link: "M34 62 Q25 70 18 71" },
-  { category: "需求特征", preferred: "用车成本低", tone: "green", icon: "portrait-payment.png", link: "M47 68 Q45 80 43 89" },
-  { category: "抗性点", preferred: "价格敏感", tone: "red", icon: "portrait-resistance.png", link: "M62 36 Q74 25 82 14" },
-  { category: "抗性点", preferred: "续航焦虑", tone: "red", icon: "portrait-time.png", link: "M68 45 Q80 40 90 36" },
-  { category: "对比竞品", tone: "red", icon: "portrait-tradein.png", link: "M68 55 Q82 58 92 58" },
-  { category: "决策阶段", preferred: "时间未定", tone: "red", icon: "portrait-stage.png", link: "M62 66 Q72 78 78 86" }
-];
-
-const RECORDS = [
-  {
-    id: "REC-0508-001",
-    clueCount: 980,
-    daysAgo: 1,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 286,
-    suggestion: "用家庭接送场景承接空间优势，再解释续航真实数据。",
-    tags: {
-      "抗性点": [
-        { name: "价格敏感", reason: "客户觉得价格偏高，需要再考虑。", count: 72 },
-        { name: "续航焦虑", reason: "担心实际续航不够。", count: 46 },
-        { name: "品牌认知不足", reason: "对品牌不太了解", count: 28 },
-        { name: "等优惠政策", reason: "想等下个月促销", count: 19 },
-        { name: "隔音效果差", reason: "试驾时觉得风噪较大", count: 300 }
+  const STAGES = {
+    online: {
+      kicker: "线上邀约 · 阶段结果",
+      title: "这 1,248 位客户，最终有没有走进门店？",
+      desc: "把最终到店结果放回首次到店前的客户对话，比较两组信号差异。",
+      rule: "同一客户多次邀约合并，按最终是否存在到店记录分组；已到店客户仅分析首次到店前对话。",
+      groups: {
+        a: { name: "最终到店", customers: 462, valid: 436, rate: 37.0 },
+        b: { name: "最终未到店", customers: 786, valid: 709, rate: 63.0 }
+      },
+      total: 1248,
+      valid: 1145,
+      exceptions: 103,
+      summary: [
+        "到店客户更集中表达家庭多人出行和试驾体验需求；其中“家庭多人出行”比未到店组高 13.4 个百分点。",
+        "未到店客户更常提到价格预算、到店时间和竞品比较未完成；价格顾虑在华东部分门店更集中，建议管理层核查报价表达是否一致。",
+        "“提供两个可选到店时间”在到店组执行率为 68.2%，比未到店组高 26.5 个百分点；这是关联差异，仍需结合客户紧迫性进一步验证。"
       ],
-      "需求特征": [
-        { name: "空间大", reason: "客户看重车内空间，用于接送孩子。", count: 108 },
-        { name: "续航真实", reason: "担心实际续航不够，希望看到真实案例。", count: 64 },
-        { name: "智能化", reason: "对辅助驾驶和车机有较高要求", count: 52 },
-        { name: "用车成本低", reason: "关心充电和保养费用", count: 37 },
-        { name: "外观运动", reason: "喜欢运动感强的设计", count: 21 }
+      priorities: [
+        ["resistance", "未到店客户的“价格顾虑”是否集中在具体组织？"],
+        ["action", "给出明确时间选项，是否更常出现在到店组？"],
+        ["competitor", "竞品比较未完成的客户，主要卡在哪些配置？"]
+      ]
+    },
+    offline: {
+      kicker: "线下接待 · 线索状态对比",
+      title: "到店以后，哪些客户走向了不同线索结果？",
+      desc: "按业务选择的真实线索状态分组，比较成交前或统计截止日前的接待对话。",
+      rule: "线下样本均存在到店记录；A、B 组按真实线索状态配置，重叠客户默认不进入差异计算。",
+      groups: {
+        a: { name: "已下订、异地成交", customers: 328, valid: 314, rate: 31.5 },
+        b: { name: "战败、战败申请中", customers: 714, valid: 668, rate: 68.5 }
+      },
+      total: 1058,
+      valid: 982,
+      exceptions: 16,
+      overlap: 16,
+      summary: [
+        "A 组更集中表达家庭空间、试驾体验和具体配置选择，B 组则更常出现落地价超预算与竞品更有吸引力。",
+        "完整解释价格构成在 A 组执行率为 72.6%，比 B 组高 22.8 个百分点；不同门店差异较大，适合先在华东大区验证。",
+        "宋 PLUS DM-i 是两组提及最多的竞品；B 组关于月供和置换估值的负面表达更集中，客户对话价格仅作情报，不等同官方价格。"
       ],
-      "购车场景": [
-        { name: "家庭出行", reason: "客户明确表示用于家用接送孩子。", count: 119 },
-        { name: "接送孩子", reason: "客户反复提到孩子上下学接送。", count: 82 },
-        { name: "上下班通勤", reason: "日常上下班代步", count: 65 },
-        { name: "周末自驾", reason: "喜欢周末周边游", count: 41 },
-        { name: "商务接待", reason: "偶尔用于接送客户", count: 18 }
-      ],
-      "预算区间": [{ name: "15-20万", reason: "客户询问的车型价格在此区间。", count: 88 }],
-      "决策阶段": [{ name: "时间未定", reason: "客户表示需要再考虑，未确定具体时间。", count: 53 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户询问 AION Y Plus。", count: 132 }],
-      "购车时间": [{ name: "下周", reason: "客户约定下周再联系。", count: 51 }],
-      "用车人": [{ name: "自己", reason: "客户自己开，接送孩子用。", count: 70 }],
-      "对比竞品": []
-    }
-  },
-  {
-    id: "REC-0508-002",
-    clueCount: 820,
-    daysAgo: 3,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 238,
-    suggestion: "重点补充权益包和金融方案，降低价格敏感。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户多次追问优惠和落地价。", count: 65 }, { name: "等优惠政策", reason: "客户希望等下一轮促销。", count: 39 }],
-      "需求特征": [{ name: "空间大", reason: "客户关注后排和后备箱空间。", count: 91 }, { name: "用车成本低", reason: "客户比较油车和电车使用成本。", count: 47 }],
-      "购车场景": [{ name: "家庭出行", reason: "家庭用车是核心场景。", count: 95 }],
-      "预算区间": [{ name: "15-20万", reason: "预算集中在 15-20 万。", count: 76 }],
-      "决策阶段": [{ name: "对比中", reason: "客户正在对比同价位车型。", count: 49 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户明确咨询该车型。", count: 101 }],
-      "购车时间": [{ name: "下周", reason: "销售约定下周回访。", count: 43 }],
-      "用车人": [{ name: "自己", reason: "客户本人为主要驾驶人。", count: 56 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户提及同价位竞品。", count: 32 }]
-    }
-  },
-  {
-    id: "REC-0507-003",
-    clueCount: 650,
-    daysAgo: 4,
-    brand: "埃安",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "AION V",
-    level: "A级",
-    validCount: 196,
-    suggestion: "安排试驾路线覆盖高速和城市路况，验证真实续航。",
-    tags: {
-      "抗性点": [{ name: "续航焦虑", reason: "客户担心高速续航衰减。", count: 58 }, { name: "品牌认知不足", reason: "客户询问售后网点覆盖。", count: 28 }],
-      "需求特征": [{ name: "续航真实", reason: "客户优先关注真实续航。", count: 85 }, { name: "智能化", reason: "客户关注辅助驾驶。", count: 44 }],
-      "购车场景": [{ name: "上下班通勤", reason: "日常通勤距离固定。", count: 69 }, { name: "城市代步", reason: "工作日城区使用。", count: 35 }],
-      "预算区间": [{ name: "20-25万", reason: "客户询问中高配车型价格。", count: 58 }],
-      "决策阶段": [{ name: "准备试驾", reason: "客户已进入试驾阶段。", count: 74 }],
-      "意向车型": [{ name: "AION V", reason: "客户询问 AION V 续航和智驾。", count: 88 }],
-      "购车时间": [{ name: "本周", reason: "客户计划本周到店。", count: 52 }],
-      "用车人": [{ name: "自己", reason: "客户本人通勤驾驶。", count: 47 }],
-      "对比竞品": [{ name: "深蓝 S07", reason: "客户提及续航配置对比。", count: 24 }]
-    }
-  },
-  {
-    id: "REC-0506-004",
-    clueCount: 590,
-    daysAgo: 5,
-    brand: "埃安",
-    org: "华东大区",
-    store: "宁波南区店",
-    model: "AION Y Plus",
-    level: "C级",
-    validCount: 172,
-    suggestion: "先建立品牌与保值信任，再邀约到店体验空间。",
-    tags: {
-      "抗性点": [{ name: "品牌认知不足", reason: "客户对品牌保值与售后网络仍有顾虑。", count: 48 }, { name: "价格敏感", reason: "客户处于早期比价。", count: 41 }],
-      "需求特征": [{ name: "空间大", reason: "客户关注家庭乘坐舒适性。", count: 57 }, { name: "后排舒适", reason: "客户关注老人乘坐。", count: 39 }],
-      "购车场景": [{ name: "家庭出行", reason: "客户主要家用。", count: 61 }],
-      "预算区间": [{ name: "15-20万", reason: "客户询问入门和中配落地价。", count: 50 }],
-      "决策阶段": [{ name: "初步了解", reason: "客户仅了解车型和价格。", count: 63 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户询问 AION Y Plus。", count: 59 }],
-      "购车时间": [{ name: "时间未定", reason: "客户未明确再次联系时间。", count: 45 }],
-      "用车人": [{ name: "家人", reason: "车辆将给家人共同使用。", count: 34 }],
-      "对比竞品": []
-    }
-  },
-  {
-    id: "REC-0503-005",
-    clueCount: 410,
-    daysAgo: 8,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION S Plus",
-    level: "战败",
-    validCount: 112,
-    suggestion: "结合家庭出行和低用车成本，推动本周二次邀约。",
-    tags: {
-      "抗性点": [
-        { name: "价格敏感", reason: "客户要求更多金融政策。", count: 77 },
-        { name: "担心保值率", reason: "客户关注三年后残值。", count: 34 },
-        { name: "续航焦虑", reason: "高速行驶担心耗电快", count: 60 },
-        { name: "品牌认知不足", reason: "对售后没信心", count: 40 },
-        { name: "内饰不喜欢", reason: "想要浅色内饰", count: 5 }
-      ],
-      "需求特征": [
-        { name: "空间大", reason: "客户对后排空间评价积极。", count: 112 },
-        { name: "用车成本低", reason: "客户关注电耗和保养费用。", count: 69 },
-        { name: "续航真实", reason: "多次询问真实续航达成率", count: 80 },
-        { name: "智能化", reason: "体验了自动泊车", count: 45 },
-        { name: "外观运动", reason: "觉得轮毂好看", count: 30 }
-      ],
-      "购车场景": [
-        { name: "家庭出行", reason: "周末家庭出行需求明确。", count: 121 },
-        { name: "接送孩子", reason: "顺带接送孩子", count: 90 },
-        { name: "上下班通勤", reason: "工作日通勤", count: 50 },
-        { name: "周末自驾", reason: "问了外放电功能", count: 30 },
-        { name: "网约车", reason: "问了营运政策", count: 10 }
-      ],
-      "预算区间": [{ name: "15-20万", reason: "客户预算贴近 AION Y Plus 主销价格。", count: 94 }],
-      "决策阶段": [{ name: "对比中", reason: "客户仍在横向比较。", count: 57 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "主询车型为 AION Y Plus。", count: 136 }],
-      "购车时间": [{ name: "下周", reason: "客户接受下周回访。", count: 49 }],
-      "用车人": [{ name: "自己", reason: "客户本人驾驶为主。", count: 76 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户比较价格和空间。", count: 38 }]
-    }
-  },
-  {
-    id: "REC-0502-006",
-    clueCount: 720,
-    daysAgo: 10,
-    brand: "传祺",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "E9",
-    level: "A级",
-    validCount: 205,
-    suggestion: "强化商务接待和家庭兼用配置，安排高配试驾。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户关注高配落地价。", count: 52 }, { name: "等优惠政策", reason: "客户想等置换补贴。", count: 36 }],
-      "需求特征": [{ name: "智能化", reason: "客户关注座舱语音和辅助驾驶体验。", count: 73 }, { name: "后排舒适", reason: "客户关注二排乘坐体验。", count: 61 }],
-      "购车场景": [{ name: "商务接待", reason: "客户用于公司接待和家庭兼用。", count: 79 }],
-      "预算区间": [{ name: "30万以上", reason: "客户接受更高预算但关注权益。", count: 67 }],
-      "决策阶段": [{ name: "准备试驾", reason: "客户计划体验二排和智能化。", count: 68 }],
-      "意向车型": [{ name: "E9", reason: "客户询问 E9 家用与商务兼顾。", count: 91 }],
-      "购车时间": [{ name: "本周", reason: "客户计划本周到店。", count: 46 }],
-      "用车人": [{ name: "自己", reason: "客户本人和公司共同使用。", count: 45 }],
-      "对比竞品": [{ name: "腾势 D9", reason: "客户提到商务 MPV 竞品。", count: 31 }]
-    }
-  },
-  {
-    id: "REC-0501-007",
-    clueCount: 680,
-    daysAgo: 13,
-    brand: "传祺",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "E8",
-    level: "战败",
-    validCount: 198,
-    suggestion: "突出权益和置换政策，把预算疑虑转化为方案对比。",
-    tags: {
-      "抗性点": [{ name: "等优惠政策", reason: "客户等待置换补贴和大客户权益。", count: 50 }, { name: "价格敏感", reason: "客户要求落地价可控。", count: 45 }],
-      "需求特征": [{ name: "后排舒适", reason: "客户重点体验二排座椅。", count: 68 }, { name: "智能化", reason: "客户关注车机和辅助驾驶。", count: 51 }],
-      "购车场景": [{ name: "商务接待", reason: "公司接待场景明确。", count: 62 }, { name: "家庭出行", reason: "周末家庭共用。", count: 35 }],
-      "预算区间": [{ name: "30万以上", reason: "客户预算与 E9 主销版本匹配。", count: 59 }],
-      "决策阶段": [{ name: "价格谈判", reason: "客户进入权益和报价沟通。", count: 58 }],
-      "意向车型": [{ name: "E9", reason: "客户反复询问 E9。", count: 80 }],
-      "购车时间": [{ name: "本月", reason: "客户希望本月确认。", count: 44 }],
-      "用车人": [{ name: "家人", reason: "家庭与商务共同使用。", count: 33 }],
-      "对比竞品": [{ name: "腾势 D9", reason: "客户关注同级 MPV。", count: 29 }]
-    }
-  },
-  {
-    id: "REC-0430-008",
-    clueCount: 560,
-    daysAgo: 18,
-    brand: "昊铂",
-    org: "华东大区",
-    store: "宁波南区店",
-    model: "昊铂 HT",
-    level: "B级",
-    validCount: 168,
-    suggestion: "建立品牌科技感和售后信任，补充智驾体验证据。",
-    tags: {
-      "抗性点": [{ name: "品牌认知不足", reason: "客户对品牌保值与售后网络仍有顾虑。", count: 57 }, { name: "价格敏感", reason: "客户认为权益需要更清楚。", count: 34 }],
-      "需求特征": [{ name: "配置丰富", reason: "客户关注舒适配置和科技感。", count: 75 }, { name: "智能化", reason: "客户关注高阶辅助驾驶。", count: 52 }],
-      "购车场景": [{ name: "城市代步", reason: "客户以城区出行为主。", count: 54 }],
-      "预算区间": [{ name: "20-25万", reason: "客户询问中高配价格。", count: 49 }],
-      "决策阶段": [{ name: "对比中", reason: "客户同时比较其他新能源 SUV。", count: 45 }],
-      "意向车型": [{ name: "昊铂 HT", reason: "客户询问昊铂 HT。", count: 72 }],
-      "购车时间": [{ name: "时间未定", reason: "客户需要再考虑。", count: 39 }],
-      "用车人": [{ name: "自己", reason: "客户本人驾驶。", count: 38 }],
-      "对比竞品": [{ name: "特斯拉 Model Y", reason: "客户提及品牌与智驾对比。", count: 22 }]
-    }
-  },
-  {
-    id: "REC-0429-009",
-    clueCount: 490,
-    daysAgo: 21,
-    brand: "埃安",
-    org: "华东大区",
-    store: "上海中心店",
-    model: "AION V",
-    level: "B级",
-    validCount: 146,
-    suggestion: "用真实续航案例和补能便利性承接需求。",
-    tags: {
-      "抗性点": [{ name: "续航焦虑", reason: "客户关心冬夏续航差异。", count: 43 }],
-      "需求特征": [{ name: "续航真实", reason: "客户关注真实续航和补能。", count: 62 }, { name: "空间大", reason: "客户也关注后排空间。", count: 34 }],
-      "购车场景": [{ name: "上下班通勤", reason: "客户日常通勤距离固定。", count: 50 }],
-      "预算区间": [{ name: "20-25万", reason: "客户咨询中配落地价。", count: 42 }],
-      "决策阶段": [{ name: "对比中", reason: "客户仍在看同级 SUV。", count: 40 }],
-      "意向车型": [{ name: "AION V", reason: "客户询问 AION V。", count: 66 }],
-      "购车时间": [{ name: "下周", reason: "销售约定下周跟进。", count: 31 }],
-      "用车人": [{ name: "自己", reason: "本人通勤使用。", count: 36 }],
-      "对比竞品": [{ name: "深蓝 S07", reason: "客户比较 SUV。", count: 21 }]
-    }
-  },
-  {
-    id: "REC-0426-010",
-    clueCount: 730,
-    daysAgo: 24,
-    brand: "埃安",
-    org: "华东大区",
-    store: "杭州旗舰店",
-    model: "AION Y Plus",
-    level: "B级",
-    validCount: 214,
-    suggestion: "突出空间与低成本优势，补齐价格权益说明。",
-    tags: {
-      "抗性点": [{ name: "价格敏感", reason: "客户希望争取更大优惠。", count: 60 }, { name: "担心保值率", reason: "客户关注二手残值。", count: 31 }],
-      "需求特征": [{ name: "空间大", reason: "客户对车内空间兴趣最高。", count: 83 }, { name: "用车成本低", reason: "客户关注后续养车成本。", count: 52 }],
-      "购车场景": [{ name: "家庭出行", reason: "家用接送和周末出游。", count: 88 }],
-      "预算区间": [{ name: "15-20万", reason: "客户预算位于主销区间。", count: 71 }],
-      "决策阶段": [{ name: "时间未定", reason: "客户未确定购买时间。", count: 46 }],
-      "意向车型": [{ name: "AION Y Plus", reason: "客户主询车型。", count: 97 }],
-      "购车时间": [{ name: "时间未定", reason: "客户需要和家人商量。", count: 38 }],
-      "用车人": [{ name: "家人", reason: "主要给家人接送使用。", count: 42 }],
-      "对比竞品": [{ name: "比亚迪元 PLUS", reason: "客户比价。", count: 26 }]
-    }
-  }
-];
-
-const state = {
-  brand: "传祺",
-  region: "all",
-  zone: "all",
-  store: "all",
-  source: "all",
-  scene: ["all"],
-  time: "7",
-  model: "M8",
-  selectedCategory: "需求特征",
-  selectedName: "空间大",
-  rankView: "cloud",
-  heatmapPage: 1
-};
-
-const normalizeRecordsForFactoryFilters = () => {
-  const orgEntries = Object.entries(ORG_TREE).flatMap(([region, zones]) => (
-    Object.entries(zones).flatMap(([zone, stores]) => stores.map(store => ({ region, zone, store })))
-  ));
-
-  RECORDS.forEach((record, index) => {
-    const factoryModel = MODEL_LABEL_MAP[record.model] || record.model;
-    record.model = factoryModel;
-    if (record.brand === "昊铂") record.brand = "埃安";
-    if (index === 0) record.brand = "传祺";
-
-    const org = orgEntries[index % orgEntries.length];
-    record.org = org.region;
-    record.zone = org.zone;
-    record.store = org.store;
-
-    const sourceScenePairs = [
-      { source: "云外呼", scene: "首触跟进" },
-      { source: "云外呼", scene: "邀约进店" },
-      { source: "云外呼", scene: "排程确认" },
-      { source: "数字工牌", scene: "门店接待" },
-      { source: "数字工牌", scene: "试乘试驾" }
-    ];
-    const sourceScene = sourceScenePairs[index % sourceScenePairs.length];
-    record.source = sourceScene.source;
-    record.scene = sourceScene.scene;
-
-    // 模拟全部线索ID
-    const clueIds = [];
-    const clueBase = index * 600;
-    for (let ci = 0; ci < record.clueCount; ci++) {
-      // 前30%的线索ID使用公共池，模拟不同记录下的部分线索重合
-      if (ci < record.clueCount * 0.3) {
-        clueIds.push(`CLUE-${ci % 200}`);
-      } else {
-        clueIds.push(`CLUE-${clueBase + ci}`);
-      }
-    }
-    record.clueIds = clueIds;
-
-    // 模拟“至少命中1条录音”的线索ID：
-    // 这里让部分有效录音落在同一条线索上，避免把“有效录音数”误当成“覆盖线索数”
-    const coveredClueIds = [];
-    const coveredClueTarget = Math.min(
-      clueIds.length,
-      Math.max(1, Math.round(record.validCount * 0.82))
-    );
-    for (let ri = 0; ri < record.validCount; ri++) {
-      coveredClueIds.push(clueIds[ri % coveredClueTarget]);
-    }
-    record.coveredClueIds = coveredClueIds;
-
-    if (record.tags["意向车型"]) {
-      record.tags["意向车型"].forEach(tag => {
-        const tagModel = MODEL_LABEL_MAP[tag.name] || tag.name;
-        tag.name = tagModel;
-        tag.reason = tag.reason.replace(/AION Y Plus|AION V|昊铂 HT|E9/g, match => MODEL_LABEL_MAP[match] || match);
-      });
-    }
-  });
-};
-
-normalizeRecordsForFactoryFilters();
-
-const formatNumber = value => new Intl.NumberFormat("zh-CN").format(value);
-
-const escapeHtml = value => String(value)
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;");
-
-const timeLimit = time => {
-  if (time === "1") return 1;
-  if (time === "7") return 7;
-  if (time === "15") return 15;
-  if (time === "30") return 30;
-  return 30;
-};
-
-const timeText = time => ({
-  1: "昨日",
-  7: "近7天",
-  15: "近半月",
-  30: "近1月",
-  custom: "自定义"
-})[time] || "昨日";
-
-const periodText = time => ({
-  1: "2026.05.07",
-  7: "2026.05.02 - 2026.05.08",
-  15: "2026.04.24 - 2026.05.08",
-  30: "2026.04.09 - 2026.05.08",
-  custom: "自定义时间"
-})[time] || "2026.05.07";
-
-const modelFilterValue = () => DATA_MODEL_MAP[state.model] || state.model;
-
-const currentModelOptions = () => BRAND_MODEL_OPTIONS[state.brand] || [{ label: "全部", value: "all" }];
-
-const currentModelFilter = () => ({
-  key: "model",
-  label: "车型",
-  options: currentModelOptions()
-});
-
-const currentSceneOptions = () => {
-  return SCENE_FILTER.options;
-};
-
-const currentSceneFilter = () => ({
-  key: "scene",
-  label: "质检场景",
-  options: currentSceneOptions(),
-  multiple: true
-});
-
-const applySourceSceneDefaults = () => {
-  state.scene = [...SOURCE_SCENE_MAP[state.source]];
-};
-
-const ensureValidSceneForSource = () => {
-  const availableScenes = state.source === "all"
-    ? currentSceneOptions().map(option => option.value)
-    : SOURCE_SCENE_MAP[state.source];
-  const validScenes = state.scene.filter(scene => availableScenes.includes(scene));
-  if (validScenes.length === 0 || (state.source === "all" && !validScenes.includes("all"))) {
-    applySourceSceneDefaults();
-    return;
-  }
-  state.scene = validScenes;
-};
-
-const ensureValidModelForBrand = () => {
-  if (!currentModelOptions().some(option => option.value === state.model)) {
-    state.model = "all";
-  }
-};
-
-const matchesState = record => {
-  const passTime = record.daysAgo <= timeLimit(state.time);
-  const passBrand = state.brand === "all" || record.brand === state.brand;
-  const passRegion = state.region === "all" || record.org === state.region;
-  const passZone = state.zone === "all" || record.zone === state.zone;
-  const passStore = state.store === "all" || record.store === state.store;
-  const passSource = state.source === "all" || record.source === state.source;
-  const passModel = state.model === "all" || record.model === modelFilterValue();
-  const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
-  return passTime && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
-};
-
-const getFilteredRecords = () => RECORDS.filter(matchesState);
-
-const aggregateCategory = (records, category) => {
-  const map = new Map();
-  records.forEach(record => {
-    (record.tags[category] || []).forEach(tag => {
-      const item = map.get(tag.name) || { name: tag.name, reason: tag.reason, count: 0, sources: 0 };
-      item.count += tag.count;
-      item.sources += 1;
-      if (tag.reason.length > item.reason.length) item.reason = tag.reason;
-      map.set(tag.name, item);
-    });
-  });
-  const total = records.reduce((sum, record) => {
-    return sum + (record.tags[category] || []).reduce((tagSum, tag) => tagSum + tag.count, 0);
-  }, 0);
-  return [...map.values()]
-    .map(item => ({ ...item, rate: total ? Math.round((item.count / total) * 100) : 0 }))
-    .sort((a, b) => b.count - a.count);
-};
-
-const topOf = (records, category) => aggregateCategory(records, category)[0] || EMPTY_ITEM;
-
-const getTopRecord = records => {
-  return records
-    .map(record => {
-      const candidates = Object.entries(record.tags).flatMap(([category, tags]) => tags.map(tag => ({ ...tag, category })));
-      const topTag = candidates.sort((a, b) => b.count - a.count)[0] || { name: "暂无", category: "暂无", count: 0 };
-      return { record, topTag };
-    })
-    .sort((a, b) => b.topTag.count - a.topTag.count)[0];
-};
-
-const getTrend = (current, previous) => {
-  if (!previous) return { text: "无对比", tone: "flat" };
-  const diff = Math.round(((current - previous) / previous) * 100);
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const getRateTrend = (item, category, previousRecords) => {
-  if (!item.count) return { text: "无对比", tone: "flat" };
-  const previousItem = aggregateCategory(previousRecords, category).find(tag => tag.name === item.name);
-  if (!previousItem) return { text: "无对比", tone: "flat" };
-  const diff = item.rate - previousItem.rate;
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const getProfileTrend = (item, category, previousRecords) => {
-  if (!item.count) return { text: "未命中", tone: "flat", direction: "flat" };
-  const previousItem = aggregateCategory(previousRecords, category).find(tag => tag.name === item.name);
-  if (!previousItem) return { text: "无对比", tone: "flat", direction: "flat" };
-  const diff = item.rate - previousItem.rate;
-  if (diff > 0) return { text: `↑${diff}%`, tone: "green", direction: "up" };
-  if (diff < 0) return { text: `↓${Math.abs(diff)}%`, tone: "red", direction: "down" };
-  return { text: "持平", tone: "flat", direction: "flat" };
-};
-
-const getProfileSnapshot = (records, category, previousRecords = getPreviousRecords()) => {
-  const item = topOf(records, category);
-  const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-  return {
-    ...normalizedItem,
-    trend: getProfileTrend(normalizedItem, category, previousRecords)
-  };
-};
-
-const getCloudSnapshot = (records, config, previousRecords = getPreviousRecords()) => {
-  const items = aggregateCategory(records, config.category);
-  const preferredItem = config.preferred ? items.find(item => item.name === config.preferred) : null;
-  const item = preferredItem || items[0] || EMPTY_PROFILE_ITEM;
-  const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-  return {
-    category: config.category,
-    tone: config.tone,
-    icon: `../AI质检平台4.29/assets/${config.icon}`,
-    link: config.link,
-    item: {
-      ...normalizedItem,
-      trend: getProfileTrend(normalizedItem, config.category, previousRecords)
+      priorities: [
+        ["resistance", "战败组的落地价顾虑，主要来自哪些价格构成？"],
+        ["action", "完整解释价格构成是否更常出现在 A 组？"],
+        ["competitor", "竞品的价格与配置优势分别影响了哪些客户？"]
+      ]
     }
   };
-};
 
-const getPreviousRecords = () => {
-  const currentLimit = timeLimit(state.time);
-  return RECORDS.filter(record => {
-    const passPreviousWindow = record.daysAgo > currentLimit && record.daysAgo <= currentLimit + 7;
-    const passBrand = state.brand === "all" || record.brand === state.brand;
-    const passRegion = state.region === "all" || record.org === state.region;
-    const passZone = state.zone === "all" || record.zone === state.zone;
-    const passStore = state.store === "all" || record.store === state.store;
-    const passSource = state.source === "all" || record.source === state.source;
-    const passModel = state.model === "all" || record.model === modelFilterValue();
-    const passScene = state.scene.includes("all") || state.scene.includes(record.scene);
-    return passPreviousWindow && passBrand && passRegion && passZone && passStore && passSource && passModel && passScene;
-  });
-};
-
-const buildMetrics = records => {
-  const previous = getPreviousRecords();
-  const validCount = records.reduce((sum, record) => sum + record.validCount, 0);
-  const previousCount = previous.reduce((sum, record) => sum + record.validCount, 0);
-  const validTrend = getTrend(validCount, previousCount);
-
-  const totalRecords = records.length;
-  const highIntentRecords = records.filter(record => record.level === "A级" || record.level === "B级");
-  const highIntentRate = totalRecords ? ((highIntentRecords.length / totalRecords) * 100).toFixed(1) : 0;
-  const prevTotal = previous.length;
-  const prevHighIntent = previous.filter(record => record.level === "A级" || record.level === "B级");
-  const prevHighRate = prevTotal ? ((prevHighIntent.length / prevTotal) * 100).toFixed(1) : 0;
-  const highIntentTrend = getTrendPercent(parseFloat(highIntentRate), parseFloat(prevHighRate));
-
-  const resistance = topOf(records, "抗性点");
-  const resistanceTrend = getRateTrend(resistance, "抗性点", previous);
-
-  const need = topOf(records, "需求特征");
-  const needTrend = getRateTrend(need, "需求特征", previous);
-
-  const highIntentCount = highIntentRecords.reduce((sum, record) => sum + record.validCount, 0);
-  const prevHighIntentCount = prevHighIntent.reduce((sum, record) => sum + record.validCount, 0);
-  const highIntentCountTrend = getTrend(highIntentCount, prevHighIntentCount);
-
-  const scene = topOf(records, "购车场景");
-  const sceneTrend = getRateTrend(scene, "购车场景", previous);
-
-  const competitor = topOf(records, "对比竞品");
-  const competitorTrend = getRateTrend(competitor, "对比竞品", previous);
-
-  // 线索数：去重统计，1条线索命中多条录音记作1条
-  const clueSet = new Set();
-  records.forEach(r => (r.clueIds || []).forEach(id => clueSet.add(id)));
-  const clueCount = clueSet.size;
-
-  const prevClueSet = new Set();
-  previous.forEach(r => (r.clueIds || []).forEach(id => prevClueSet.add(id)));
-  const prevClueCount = prevClueSet.size;
-
-  const clueTrend = getTrend(clueCount, prevClueCount);
-
-  // 录音覆盖率 = 至少命中1条录音的线索数 / 全部线索数
-  const coveredClueSet = new Set();
-  records.forEach(r => (r.coveredClueIds || []).forEach(id => coveredClueSet.add(id)));
-  const coveredClueCount = coveredClueSet.size;
-
-  const prevCoveredClueSet = new Set();
-  previous.forEach(r => (r.coveredClueIds || []).forEach(id => prevCoveredClueSet.add(id)));
-  const prevCoveredClueCount = prevCoveredClueSet.size;
-
-  const coverageRate = clueCount ? ((coveredClueCount / clueCount) * 100).toFixed(1) : 0;
-  const prevCoverageRate = prevClueCount ? ((prevCoveredClueCount / prevClueCount) * 100).toFixed(1) : 0;
-  const coverageTrend = getTrendPercent(parseFloat(coverageRate), parseFloat(prevCoverageRate));
-
-  return [
-    {
-      title: "有效录音数",
-      value: formatNumber(validCount),
-      copy: "有效录音的数量",
-      trendValue: validTrend.text,
-      trendTone: validTrend.tone === "green" ? "blue" : validTrend.tone,
-      sparkColor: "#2563eb",
-      valueColor: "blue",
-      metricType: "count",
-      rawValue: validCount
-    },
-    {
-      title: "AI高意向数",
-      value: formatNumber(highIntentCount),
-      copy: "AI意向等级评定为高的录音数量",
-      trendValue: highIntentCountTrend.text,
-      trendTone: highIntentCountTrend.tone,
-      sparkColor: "#16a765",
-      valueColor: "green",
-      metricType: "count",
-      rawValue: highIntentCount
-    },
-    {
-      title: "线索数",
-      value: formatNumber(clueCount),
-      copy: "线索ID去重的数量",
-      trendValue: clueTrend.text,
-      trendTone: clueTrend.tone,
-      sparkColor: "#6366f1",
-      metricType: "count",
-      rawValue: clueCount
-    },
-    {
-      title: "录音覆盖率",
-      value: `${coverageRate}%`,
-      copy: "至少命中1条录音的线索数/线索数",
-      trendValue: coverageTrend.text,
-      trendTone: coverageTrend.tone,
-      sparkColor: "#f59e0b",
-      metricType: "rate",
-      rawValue: parseFloat(coverageRate)
-    },
-    {
-      title: "TOP1需求特征",
-      value: need.name,
-      copy: `${formatNumber(need.count)}/${need.rate}% ${needTrend.text}`,
-      sparkColor: "#16a765",
-      valueColor: "green",
-      metricType: "rate",
-      rawValue: need.rate
-    },
-    {
-      title: "TOP1抗性点",
-      value: resistance.name,
-      copy: `${formatNumber(resistance.count)}/${resistance.rate}% ${resistanceTrend.text}`,
-      sparkColor: "#ef4444",
-      valueColor: "red",
-      metricType: "rate",
-      rawValue: resistance.rate
-    },
-    {
-      title: "TOP1购车场景",
-      value: scene.name,
-      copy: `${formatNumber(scene.count)}/${scene.rate}% ${sceneTrend.text}`,
-      sparkColor: "#2563eb",
-      valueColor: "blue",
-      metricType: "rate",
-      rawValue: scene.rate
-    },
-    {
-      title: "TOP1对比竞品",
-      value: competitor.name,
-      copy: `${formatNumber(competitor.count)}/${competitor.rate}% ${competitorTrend.text}`,
-      sparkColor: "#ef4444",
-      valueColor: "red",
-      metricType: "rate",
-      rawValue: competitor.rate
+  const DATA = {
+    online: {
+      need: {
+        title: "客户需求与到店关注点",
+        desc: "需求来自客户明确表达；销售单方面介绍不计入客户关注",
+        rows: [
+          { name: "家庭多人出行", sub: "用车场景", a: 46.8, b: 33.4, count: "453 人", voices: [
+            ["a", "客户 C-08427", "主要还是一家五口周末出去，想现场看看第三排坐久了会不会累。", "华东大区 · 上海中心店", "07-18 16:42"],
+            ["b", "客户 C-10563", "家里人多，空间肯定要看，但最近实在没时间过去。", "华南大区 · 广州大道店", "07-17 11:08"]
+          ] },
+          { name: "想确认真实续航", sub: "到店关注", a: 39.5, b: 30.2, count: "387 人", voices: [
+            ["a", "客户 C-06731", "参数我看过了，还是想试一下高速续航，现场也问问冬天能跑多少。", "华北大区 · 北京朝阳店", "07-18 10:17"],
+            ["b", "客户 C-11902", "续航如果只是官方数字，我现在过去也确认不了什么。", "华中大区 · 武汉光谷店", "07-15 13:26"]
+          ] },
+          { name: "近期购车计划", sub: "购车时间", a: 37.2, b: 24.9, count: "339 人", voices: [
+            ["a", "客户 C-03148", "这个月就要定，周六我和家里人一起过去看。", "西南大区 · 成都机场路店", "07-19 09:38"],
+            ["b", "客户 C-09216", "换车是有计划，但至少得等年底再说。", "华东大区 · 杭州城西店", "07-16 18:05"]
+          ] },
+          { name: "想了解落地价格", sub: "价格政策", a: 51.4, b: 48.8, count: "582 人", voices: [
+            ["a", "客户 C-07410", "到店能把保险、金融和置换都算清楚的话，我周末可以来。", "华南大区 · 深圳南山店", "07-18 14:21"],
+            ["b", "客户 C-12884", "先直接告诉我大概落地多少，差太多我就不过去了。", "华东大区 · 苏州园区店", "07-17 10:46"]
+          ] },
+          { name: "计划置换旧车", sub: "购车方式", a: 28.6, b: 22.1, count: "289 人", voices: [
+            ["a", "客户 C-05208", "我有一台开了六年的车，过去的时候能一起估价吗？", "华北大区 · 天津空港店", "07-16 15:12"],
+            ["b", "客户 C-11670", "置换价格得先有个范围，不然来回跑没意义。", "华南大区 · 佛山桂城店", "07-14 12:35"]
+          ] }
+        ]
+      },
+      resistance: {
+        title: "客户抗拒点与邀约难点",
+        desc: "聚合客户拒绝或推迟到店时明确表达的原因",
+        rows: [
+          { name: "价格或预算顾虑", sub: "邀约阻力", a: 31.8, b: 48.5, count: "483 人", voices: [
+            ["b", "客户 C-12884", "先把大概落地价说一下，如果还是超过十八万，我就没必要过去了。", "华东大区 · 苏州园区店", "07-17 10:46"],
+            ["a", "客户 C-07410", "预算确实卡得紧，不过到店把贷款总成本算清楚我可以接受。", "华南大区 · 深圳南山店", "07-18 14:21"]
+          ] },
+          { name: "到店时间不便", sub: "时间安排", a: 18.4, b: 36.9, count: "342 人", voices: [
+            ["b", "客户 C-10563", "这两周周末都排满了，工作日又要到七点才下班。", "华南大区 · 广州大道店", "07-17 11:08"],
+            ["a", "客户 C-03148", "周六上午没空，下午三点以后可以过去。", "西南大区 · 成都机场路店", "07-19 09:38"]
+          ] },
+          { name: "竞品比较未完成", sub: "决策进度", a: 21.7, b: 34.6, count: "325 人", voices: [
+            ["b", "客户 C-09126", "宋 PLUS 和银河 E5 还没看完，我想都试过再决定。", "华中大区 · 长沙岳麓店", "07-16 17:22"],
+            ["a", "客户 C-06731", "我还在对比宋 PLUS，周末正好两边都试一下。", "华北大区 · 北京朝阳店", "07-18 10:17"]
+          ] },
+          { name: "购车紧迫性低", sub: "购车计划", a: 12.9, b: 30.8, count: "278 人", voices: [
+            ["b", "客户 C-09216", "现在的车还能开，年底前都不着急换。", "华东大区 · 杭州城西店", "07-16 18:05"],
+            ["a", "客户 C-06352", "不急着定，但我愿意先去体验一下空间和车机。", "西北大区 · 西安高新店", "07-15 09:20"]
+          ] },
+          { name: "距离或交通不便", sub: "到店成本", a: 10.8, b: 19.7, count: "187 人", voices: [
+            ["b", "客户 C-11802", "你们店离我四十多公里，专门过去一趟太远了。", "华北大区 · 石家庄裕华店", "07-14 15:46"],
+            ["a", "客户 C-04319", "地铁过去有点绕，如果周日下午人少我就开车来。", "华东大区 · 南京江宁店", "07-17 13:05"]
+          ] }
+        ]
+      },
+      profile: {
+        title: "客户特征差异",
+        desc: "特征只表达客群集中度；是否更易到店需同时查看结果率与样本",
+        rows: [
+          { name: "1 个月内购车", sub: "购车时间", a: 42.6, b: 25.1, count: "364 人", voices: [["a", "客户 C-03148", "这个月就要定，周六我和家里人一起过去看。", "西南大区 · 成都机场路店", "07-19 09:38"]] },
+          { name: "家庭出行", sub: "购车用途", a: 46.8, b: 33.4, count: "453 人", voices: [["a", "客户 C-08427", "主要还是一家五口周末出去，想现场看看第三排。", "华东大区 · 上海中心店", "07-18 16:42"]] },
+          { name: "已明确预算", sub: "购车预算", a: 58.2, b: 47.3, count: "602 人", voices: [["a", "客户 C-07410", "预算十八万以内，贷款总成本也要一起算。", "华南大区 · 深圳南山店", "07-18 14:21"]] },
+          { name: "计划置换", sub: "是否置换", a: 28.6, b: 22.1, count: "289 人", voices: [["a", "客户 C-05208", "旧车开了六年，想到店一起估价。", "华北大区 · 天津空港店", "07-16 15:12"]] },
+          { name: "明确价格博弈", sub: "决策信号", a: 24.5, b: 37.8, count: "381 人", voices: [["b", "客户 C-12884", "如果价格还是没有空间，我就不折腾过去了。", "华东大区 · 苏州园区店", "07-17 10:46"]] }
+        ]
+      },
+      action: {
+        title: "销售邀约动作",
+        desc: "动作来自销售实际说过或完成的行为，并结合客户触发信号计算执行机会",
+        rows: [
+          { name: "提供两个可选到店时间", sub: "明确邀约", a: 68.2, b: 41.7, count: "631 人", voices: [["a", "客户 C-03148", "销售：周六下午三点或周日上午十点，您看哪个时间更方便？", "西南大区 · 成都机场路店", "07-19 09:38"], ["b", "客户 C-10563", "销售：您有空的时候来店里看看就行。", "华南大区 · 广州大道店", "07-17 11:08"]] },
+          { name: "针对核心顾虑回应", sub: "异议处理", a: 55.6, b: 37.9, count: "511 人", voices: [["a", "客户 C-06731", "销售：高速续航我们可以按您常跑的路线现场看实测数据。", "华北大区 · 北京朝阳店", "07-18 10:17"]] },
+          { name: "确认购车时间", sub: "需求探询", a: 73.5, b: 59.2, count: "741 人", voices: [["a", "客户 C-08427", "销售：您是准备这个月定下来，还是先完成几款车的比较？", "华东大区 · 上海中心店", "07-18 16:42"]] },
+          { name: "说明具体活动利益点", sub: "权益说明", a: 48.7, b: 39.5, count: "493 人", voices: [["a", "客户 C-07410", "销售：周末到店可以现场核算置换补贴和两年免息的总成本。", "华南大区 · 深圳南山店", "07-18 14:21"]] },
+          { name: "约定下一次跟进", sub: "持续跟进", a: 61.4, b: 54.8, count: "669 人", voices: [["b", "客户 C-09216", "销售：我十一月底再联系您确认换车计划。", "华东大区 · 杭州城西店", "07-16 18:05"]] }
+        ]
+      },
+      competitor: {
+        title: "客户对话竞品情报",
+        desc: "客户提及价格不等于官方价格；保留对话时间、地区、来源与可信度",
+        rows: [
+          { name: "宋 PLUS DM-i", sub: "比亚迪 · 车型", a: 24.6, b: 31.8, count: "294 人", voices: [["b", "客户 C-09126", "宋 PLUS 现在听说优惠一万多，配置我还没仔细比。", "华中大区 · 长沙岳麓店", "07-16 17:22"], ["a", "客户 C-06731", "宋 PLUS 我也会试，主要比较冬季续航和后排空间。", "华北大区 · 北京朝阳店", "07-18 10:17"]] },
+          { name: "银河 E5", sub: "吉利银河 · 车型", a: 14.3, b: 22.7, count: "223 人", voices: [["b", "客户 C-12884", "银河 E5 的落地价更接近我的预算。", "华东大区 · 苏州园区店", "07-17 10:46"]] },
+          { name: "智能座舱与车机", sub: "高频配置比较", a: 18.9, b: 16.2, count: "197 人", voices: [["a", "客户 C-06352", "我想现场对比车机反应和语音控制，参数看不出区别。", "西北大区 · 西安高新店", "07-15 09:20"]] },
+          { name: "客户自述落地价", sub: "价格事实 · 中可信度", a: 11.8, b: 18.6, count: "168 人", voices: [["b", "客户 C-09126", "朋友说宋 PLUS 落地能做到十六万多，我还要再确认。", "华中大区 · 长沙岳麓店", "07-16 17:22"]] },
+          { name: "后排空间比较", sub: "本品占优", a: 16.5, b: 12.3, count: "163 人", voices: [["a", "客户 C-08427", "目前看这台后排更宽，但还是得带家人现场坐一下。", "华东大区 · 上海中心店", "07-18 16:42"]] }
+        ]
+      }
     }
-  ];
-};
-
-const getTrendPercent = (current, previous) => {
-  if (!previous) return { text: "无对比", tone: "flat" };
-  const diff = current - previous;
-  if (diff > 0) return { text: `↑${diff.toFixed(1)}%`, tone: "green" };
-  if (diff < 0) return { text: `↓${Math.abs(diff).toFixed(1)}%`, tone: "red" };
-  return { text: "持平", tone: "flat" };
-};
-
-const renderFilters = () => {
-  ensureValidModelForBrand();
-  ensureValidSceneForSource();
-  const filterGrid = document.querySelector("#filterGrid");
-  filterGrid.innerHTML = `
-    ${tabFilterMarkup(FILTERS[0], "gf-brand-group")}
-    ${orgFilterMarkup()}
-    ${tabFilterMarkup(SOURCE_FILTER)}
-    ${tabFilterMarkup(currentSceneFilter())}
-    ${tabFilterMarkup(FILTERS[1])}
-    ${tabFilterMarkup(currentModelFilter())}
-  `;
-};
-
-const tabFilterMarkup = (group, extraClass = "") => `
-  <div class="gf-group ${extraClass}">
-    <span class="gf-label">${group.label}</span>
-    <div class="gf-tabs">
-      ${group.options.map(option => `
-        <button class="gf-tab ${isFilterOptionActive(group, option) ? "active" : ""} ${isFilterOptionDisabled(group, option) ? "disabled" : ""}" data-filter="${group.key}" data-value="${escapeHtml(option.value)}" type="button" ${isFilterOptionDisabled(group, option) ? "disabled aria-disabled=\"true\"" : ""}>
-          ${option.value === "custom" ? calendarIconMarkup() : ""}${escapeHtml(option.label)}
-        </button>
-      `).join("")}
-    </div>
-  </div>
-`;
-
-const isFilterOptionActive = (group, option) => {
-  if (group.multiple) {
-    return state[group.key].includes(option.value);
-  }
-  return state[group.key] === option.value;
-};
-
-const isFilterOptionDisabled = (group, option) => {
-  if (group.key !== "scene" || state.source === "all") {
-    return false;
-  }
-  return !SOURCE_SCENE_MAP[state.source].includes(option.value);
-};
-
-const orgFilterMarkup = () => `
-  <div class="gf-group gf-org-group">
-    <span class="gf-label">组织</span>
-    <select class="gf-select" data-org-filter="region" aria-label="大区筛选">
-      <option value="all">全国</option>
-      ${Object.keys(ORG_TREE).map(region => `<option value="${escapeHtml(region)}" ${state.region === region ? "selected" : ""}>${escapeHtml(region)}</option>`).join("")}
-    </select>
-    <select class="gf-select" data-org-filter="zone" aria-label="战区筛选">
-      <option value="all">全部战区</option>
-      ${orgZoneOptions()}
-    </select>
-    <select class="gf-select" data-org-filter="store" aria-label="门店筛选">
-      <option value="all">全部门店</option>
-      ${orgStoreOptions()}
-    </select>
-  </div>
-`;
-
-const orgZoneOptions = () => {
-  if (state.region === "all") return "";
-  return Object.keys(ORG_TREE[state.region] || {})
-    .map(zone => `<option value="${escapeHtml(zone)}" ${state.zone === zone ? "selected" : ""}>${escapeHtml(zone)}</option>`)
-    .join("");
-};
-
-const orgStoreOptions = () => {
-  if (state.region === "all" || state.zone === "all") return "";
-  return (ORG_TREE[state.region]?.[state.zone] || [])
-    .map(store => `<option value="${escapeHtml(store)}" ${state.store === store ? "selected" : ""}>${escapeHtml(store)}</option>`)
-    .join("");
-};
-
-const calendarIconMarkup = () => `
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-    <line x1="16" y1="2" x2="16" y2="6"></line>
-    <line x1="8" y1="2" x2="8" y2="6"></line>
-    <line x1="3" y1="10" x2="21" y2="10"></line>
-  </svg>
-`;
-
-const metricMarkup = (metric, index) => {
-  const valueClass = metric.valueColor || "";
-  const hasTrend = metric.trendValue && metric.trendTone;
-  const trendTone = metric.trendTone || "flat";
-  const arrowDir = trendTone === "green" ? "up" : trendTone === "red" ? "down" : trendTone;
-  const trendRow = hasTrend ? `
-      <div class="metric-trend-row">
-        <span class="metric-trend-arrow ${arrowDir}">${escapeHtml(metric.trendValue)}</span>
-        <span class="metric-trend-label">较上期</span>
-      </div>` : "";
-  return `
-    <article class="metric-card">
-      <div class="metric-head">${escapeHtml(metric.title)}<span class="ai-mini">AI分析</span></div>
-      <div class="metric-value ${valueClass}">${escapeHtml(metric.value)}</div>
-      <div class="metric-copy">${escapeHtml(metric.copy)}</div>${trendRow}
-      <svg class="spark spark-clickable" viewBox="0 0 86 34" aria-hidden="true" data-metric-index="${index}" title="点击查看趋势详情">
-        <path d="${metric.sparkPath || 'M2 27 C10 14, 18 20, 25 17 S38 26, 45 13 S57 17, 64 7 S75 20, 84 10'}" fill="none" stroke="${metric.sparkColor}" stroke-width="2.2" stroke-linecap="round"></path>
-      </svg>
-    </article>
-  `;
-};
-
-const rankBlock = (category, items, previousRecords) => {
-  const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-  let rows = items.slice(0, 5);
-  // Remove padding to not show empty items
-  if (rows.length === 0) {
-    rows = [EMPTY_PROFILE_ITEM];
-  }
-  return `
-    <section class="rank-block profile-rank-block" aria-label="${escapeHtml(meta.title)}">
-      <h3>${escapeHtml(meta.title)}<span class="question">?</span></h3>
-      <div class="rank-list">
-        ${rows.map((item, index) => {
-    const normalizedItem = item.count ? item : EMPTY_PROFILE_ITEM;
-    const trend = getProfileTrend(normalizedItem, category, previousRecords);
-    const isSelected = state.selectedCategory === category && state.selectedName === normalizedItem.name;
-    return `
-            <button class="rank-item profile-rank-row ${isSelected ? "active" : ""}" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(normalizedItem.name)}" title="${escapeHtml(normalizedItem.reason)}">
-              <span class="rank-num rank-${index + 1}">${index + 1}</span>
-              <span class="rank-name ${normalizedItem.count ? meta.color : "flat"}">${escapeHtml(normalizedItem.name)}</span>
-              <span class="rank-rate">${normalizedItem.rate}%</span>
-              <span class="rank-trend ${trend.tone}">${escapeHtml(trend.text)}</span>
-            </button>
-          `;
-  }).join("")}
-      </div>
-    </section>
-  `;
-};
-
-const profileBlock = (category, records, previousRecords) => {
-  const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-  const item = getProfileSnapshot(records, category, previousRecords);
-  return `
-    <button class="profile-block" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-      <h3>${escapeHtml(category)}</h3>
-      <div class="profile-list">
-        <div class="profile-item ${item.count ? "" : "empty"}">
-          <div class="profile-item-head">
-            <span class="profile-tag ${item.count ? meta.color : "flat"}">${escapeHtml(item.name)}</span>
-            <span class="profile-hit-rate">命中率 ${item.rate}%</span>
-          </div>
-          <p>${escapeHtml(item.reason)}</p>
-          <span class="profile-trend ${item.trend.tone}">${escapeHtml(item.trend.text)}</span>
-        </div>
-      </div>
-    </button>
-  `;
-};
-
-const trendGlyph = trend => {
-  if (trend.direction === "down") return "↓";
-  if (trend.direction === "flat") return "→";
-  return "↑";
-};
-
-const portraitLinksMarkup = snapshots => `
-  <defs>
-    <marker id="portraitArrowGreen" markerWidth="4" markerHeight="4" refX="3.5" refY="2" orient="auto">
-      <path d="M0,0 L4,2 L0,4" fill="none" stroke="#32d778" stroke-width="0.8"></path>
-    </marker>
-    <marker id="portraitArrowRed" markerWidth="4" markerHeight="4" refX="3.5" refY="2" orient="auto">
-      <path d="M0,0 L4,2 L0,4" fill="none" stroke="#ff6b6b" stroke-width="0.8"></path>
-    </marker>
-  </defs>
-  ${snapshots.map(snapshot => `
-    <path d="${snapshot.link}" stroke="${snapshot.tone === "red" ? "#ff6b6b" : "#32d778"}" marker-end="url(#portraitArrow${snapshot.tone === "red" ? "Red" : "Green"})"></path>
-  `).join("")}
-`;
-
-const portraitNodeMarkup = (snapshot, index) => {
-  const { category, item, tone, icon } = snapshot;
-  const isActive = state.selectedCategory === category && state.selectedName === item.name;
-  const colorClass = item.count ? tone : "flat";
-  return `
-    <button class="portrait-node ${colorClass} node-pos-${index} ${isActive ? "active" : ""}" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-      <span class="portrait-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
-      <span class="portrait-category">${escapeHtml(category)}</span>
-      <strong>${escapeHtml(item.name)}</strong>
-      <span class="portrait-rate">出现率 ${item.rate}% <span class="portrait-trend ${item.trend.tone}" title="${escapeHtml(item.trend.text)}">${trendGlyph(item.trend)}</span></span>
-    </button>
-  `;
-};
-
-const renderPortrait = records => {
-  const previousRecords = getPreviousRecords();
-
-  const allTags = [];
-  PROFILE_CATEGORIES.forEach(category => {
-    const items = aggregateCategory(records, category);
-    items.forEach(item => {
-      if (item.count > 0 && item.rate > 20) {
-        allTags.push({ ...item, category, meta: CATEGORY_META[category] || CATEGORY_META["需求特征"] });
-      }
-    });
-  });
-
-  allTags.sort((a, b) => b.count - a.count); // Sort by highest count
-
-  // Limit to maximum 14 tags to prevent severe overlap
-  if (allTags.length > 14) {
-    allTags.splice(14);
-  }
-
-  // If no items have > 20% rate, just use top 5 of anything to avoid empty state
-  if (allTags.length === 0) {
-    PROFILE_CATEGORIES.forEach(category => {
-      const items = aggregateCategory(records, category);
-      if (items[0] && items[0].count > 0) {
-        allTags.push({ ...items[0], category, meta: CATEGORY_META[category] || CATEGORY_META["需求特征"] });
-      }
-    });
-    allTags.sort((a, b) => b.rate - a.rate);
-    allTags.splice(6); // Keep at most 6
-  }
-
-  const ICONS = {
-    "需求特征": "portrait-needs.png",
-    "购车场景": "portrait-scenario.png",
-    "预算区间": "portrait-budget.png",
-    "用车人": "portrait-user.png",
-    "抗性点": "portrait-resistance.png",
-    "决策阶段": "portrait-stage.png",
-    "对比竞品": "portrait-tradein.png",
-    "付款方式": "portrait-payment.png"
   };
 
-  const snapshots = allTags.map(tag => {
-    return {
-      category: tag.category,
-      tone: tag.meta.color,
-      icon: `../AI质检平台4.29/assets/${ICONS[tag.category] || "portrait-needs.png"}`,
-      item: {
-        ...tag,
-        trend: getProfileTrend(tag, tag.category, previousRecords)
-      }
+  DATA.offline = {
+    need: {
+      title: "客户需求与购车关注点",
+      desc: "重点观察到店后的试驾、配置、价格、金融与交付需求",
+      rows: [
+        { name: "家庭空间与乘坐体验", sub: "使用场景", a: 49.2, b: 34.8, count: "387 人", voices: [["a", "客户 C-20516", "第二排舒适度可以，第三排我爸妈偶尔坐也能接受。", "华东大区 · 上海中心店", "07-18 15:20"], ["b", "客户 C-22918", "第三排还是有点挤，家里人觉得不合适。", "华南大区 · 深圳龙岗店", "07-17 17:06"]] },
+        { name: "清晰落地价", sub: "价格关注", a: 57.6, b: 66.2, count: "623 人", voices: [["b", "客户 C-23102", "我需要的是包含保险和金融费用的最终价格。", "华北大区 · 北京朝阳店", "07-18 12:14"]] },
+        { name: "试驾体验目标", sub: "动态体验", a: 44.3, b: 29.7, count: "337 人", voices: [["a", "客户 C-21477", "试完以后底盘比我预期稳，城市里开也挺轻松。", "西南大区 · 成都机场路店", "07-16 16:42"]] },
+        { name: "金融月供方案", sub: "付款方式", a: 36.8, b: 45.9, count: "422 人", voices: [["b", "客户 C-23764", "月供能接受，但加上服务费以后总成本太高了。", "华中大区 · 武汉光谷店", "07-15 11:38"]] },
+        { name: "置换估值", sub: "增换购", a: 27.5, b: 35.2, count: "316 人", voices: [["b", "客户 C-22805", "旧车估价比外面低不少，这个差价我接受不了。", "华东大区 · 杭州城西店", "07-16 14:29"]] }
+      ]
+    },
+    resistance: {
+      title: "客户抗拒点与成交难点",
+      desc: "比较 A、B 组到店后明确表达的成交阻力",
+      rows: [
+        { name: "落地价超预算", sub: "价格阻力", a: 28.4, b: 51.6, count: "434 人", voices: [["b", "客户 C-23102", "算完落地超过二十万，已经超出我最开始的预算。", "华北大区 · 北京朝阳店", "07-18 12:14"]] },
+        { name: "竞品更有吸引力", sub: "竞品阻力", a: 17.5, b: 35.9, count: "295 人", voices: [["b", "客户 C-22073", "宋 PLUS 的价格低一些，配置也没有少太多。", "华南大区 · 广州大道店", "07-17 13:08"]] },
+        { name: "贷款总成本压力", sub: "金融阻力", a: 21.7, b: 37.8, count: "321 人", voices: [["b", "客户 C-23764", "月供看着不高，但所有费用加起来不划算。", "华中大区 · 武汉光谷店", "07-15 11:38"]] },
+        { name: "家庭决策未完成", sub: "决策角色", a: 14.8, b: 27.2, count: "228 人", voices: [["b", "客户 C-22918", "我爸妈觉得第三排不够用，还要回去再商量。", "华南大区 · 深圳龙岗店", "07-17 17:06"]] },
+        { name: "置换估值不满意", sub: "置换阻力", a: 12.6, b: 24.7, count: "205 人", voices: [["b", "客户 C-22805", "你们这个旧车报价差太多，我可能直接卖给外面。", "华东大区 · 杭州城西店", "07-16 14:29"]] }
+      ]
+    },
+    profile: {
+      title: "客户特征差异",
+      desc: "按购车计划、场景、行为进展和决策信号查看差异",
+      rows: [
+        { name: "完成试驾", sub: "行为进展", a: 74.2, b: 51.6, count: "578 人", voices: [["a", "客户 C-21477", "试过以后基本符合预期，可以继续谈具体价格。", "西南大区 · 成都机场路店", "07-16 16:42"]] },
+        { name: "1 个月内购车", sub: "购车时间", a: 63.8, b: 42.5, count: "484 人", voices: [["a", "客户 C-20516", "这个月就定，主要是最后确认价格和交付。", "华东大区 · 上海中心店", "07-18 15:20"]] },
+        { name: "计划置换", sub: "购车方式", a: 31.4, b: 38.6, count: "357 人", voices: [["b", "客户 C-22805", "旧车估价不合适，这次就先不定。", "华东大区 · 杭州城西店", "07-16 14:29"]] },
+        { name: "贷款购车", sub: "付款方式", a: 42.7, b: 55.3, count: "504 人", voices: [["b", "客户 C-23764", "贷款总成本太高，我还要看其他品牌方案。", "华中大区 · 武汉光谷店", "07-15 11:38"]] },
+        { name: "明确价格博弈", sub: "决策信号", a: 38.6, b: 52.8, count: "474 人", voices: [["b", "客户 C-23102", "价格再没有空间的话，今天就不考虑定了。", "华北大区 · 北京朝阳店", "07-18 12:14"]] }
+      ]
+    },
+    action: {
+      title: "销售接待动作",
+      desc: "动作只来自销售实际执行，并结合客户触发信号与执行机会",
+      rows: [
+        { name: "完整解释价格构成", sub: "报价说明", a: 72.6, b: 49.8, count: "561 人", voices: [["a", "客户 C-20516", "销售：裸车、保险、金融费用和置换补贴我分别给您列清楚。", "华东大区 · 上海中心店", "07-18 15:20"]] },
+        { name: "结合场景演示配置", sub: "产品讲解", a: 64.8, b: 46.1, count: "511 人", voices: [["a", "客户 C-21477", "销售：您每天通勤 60 公里，我们按这个路线看辅助驾驶和能耗。", "西南大区 · 成都机场路店", "07-16 16:42"]] },
+        { name: "安排并完成试驾", sub: "体验动作", a: 74.2, b: 51.6, count: "578 人", voices: [["a", "客户 C-21477", "销售：先按您的通勤路况试一圈，再回来谈具体配置。", "西南大区 · 成都机场路店", "07-16 16:42"]] },
+        { name: "处理关键异议", sub: "异议处理", a: 58.9, b: 40.7, count: "457 人", voices: [["a", "客户 C-20516", "销售：第三排我们一起按您家人的身高重新调整座椅。", "华东大区 · 上海中心店", "07-18 15:20"]] },
+        { name: "提供金融测算", sub: "金融方案", a: 45.8, b: 42.9, count: "437 人", voices: [["b", "客户 C-23764", "销售：这里只展示月供，其他费用要签约时再确认。", "华中大区 · 武汉光谷店", "07-15 11:38"]] }
+      ]
+    },
+    competitor: {
+      title: "客户对话竞品情报",
+      desc: "结构化展示品牌、车型、配置比较和客户对话价格事实",
+      rows: [
+        { name: "宋 PLUS DM-i", sub: "比亚迪 · 车型", a: 26.4, b: 39.8, count: "349 人", voices: [["b", "客户 C-22073", "宋 PLUS 优惠后更便宜，座舱配置也够用。", "华南大区 · 广州大道店", "07-17 13:08"]] },
+        { name: "银河 E5", sub: "吉利银河 · 车型", a: 13.7, b: 24.3, count: "205 人", voices: [["b", "客户 C-23102", "银河 E5 的报价更接近我的预算，准备再去试一次。", "华北大区 · 北京朝阳店", "07-18 12:14"]] },
+        { name: "辅助驾驶配置", sub: "配置比较", a: 22.8, b: 19.4, count: "204 人", voices: [["a", "客户 C-21477", "这台车辅助驾驶用起来更顺手，是我最后选择的重要原因。", "西南大区 · 成都机场路店", "07-16 16:42"]] },
+        { name: "客户自述优惠金额", sub: "价格事实 · 中可信度", a: 12.4, b: 21.7, count: "184 人", voices: [["b", "客户 C-22073", "对面销售说能优惠一万多，但我还没拿到正式报价。", "华南大区 · 广州大道店", "07-17 13:08"]] },
+        { name: "后排乘坐空间", sub: "配置比较", a: 21.6, b: 28.5, count: "253 人", voices: [["b", "客户 C-22918", "家里人坐完觉得第三排不如另一台宽敞。", "华南大区 · 深圳龙岗店", "07-17 17:06"]] }
+      ]
+    }
+  };
+
+  const CANDIDATES = {
+    online: [
+      ["提供两个可选到店时间", "客户表示时间不确定", "68.2", "41.7", "44.8% / 29.1%", "稳定", "待验证"],
+      ["围绕核心顾虑提供到店验证项", "客户提出续航或配置疑问", "55.6", "37.9", "42.3% / 31.0%", "稳定", "已采纳"],
+      ["约定明确的下次跟进时间", "客户暂时无法到店", "61.4", "54.8", "38.7% / 33.9%", "继续观察", "待验证"]
+    ],
+    offline: [
+      ["完整解释价格构成", "客户询问落地价", "72.6", "49.8", "39.6% / 24.1%", "稳定", "待验证"],
+      ["结合家庭场景演示空间", "客户关注多人乘坐", "64.8", "46.1", "41.2% / 28.5%", "稳定", "已采纳"],
+      ["试驾后复述关键体验", "客户完成试乘试驾", "58.4", "43.6", "37.8% / 27.9%", "继续观察", "待验证"]
+    ]
+  };
+
+  const OVERVIEW_BRANDS = {
+    "埃安": {
+      online: 3486,
+      arrivals: 1368,
+      arrivalRate: 39.2,
+      offline: 1412,
+      linked: 1302,
+      summary: "埃安品牌到店率本周升至 39.2%，但 AION V 仍低于品牌均值 2.2 个百分点。华东大区的价格预算顾虑影响范围最大；“完整解释价格构成”执行率低于品牌基准，建议优先进入线下接待验证。",
+      models: [
+        { name: "AION V", series: "主力 SUV", invite: 1248, arrival: 37.0, orders: 138, contribution: 30.3, resistance: "价格预算", competitor: "宋 PLUS", trend: -1.8, priority: 96 },
+        { name: "AION Y Plus", series: "紧凑型 SUV", invite: 986, arrival: 42.6, orders: 152, contribution: 33.4, resistance: "续航顾虑", competitor: "银河 E5", trend: 3.1, priority: 82 },
+        { name: "AION S Plus", series: "纯电轿车", invite: 731, arrival: 36.8, orders: 86, contribution: 18.9, resistance: "权益不足", competitor: "秦 PLUS", trend: 0.4, priority: 74 },
+        { name: "AION RT", series: "智能轿车", invite: 521, arrival: 43.2, orders: 79, contribution: 17.4, resistance: "交付周期", competitor: "小鹏 MONA", trend: 2.7, priority: 63 }
+      ],
+      attention: [
+        { stage: "online", topic: "resistance", label: "线上邀约", change: "+8.6%", title: "AION V 价格预算顾虑持续上升", detail: "影响 483 名客户，华东大区占比最高", meta: "影响客户 483 · 持续 3 周" },
+        { stage: "offline", topic: "action", label: "线下接待", change: "-7.4pp", title: "完整解释价格构成执行不足", detail: "执行率 58.6%，低于品牌基准", meta: "存在执行机会 762 人" },
+        { stage: "offline", topic: "competitor", label: "竞品情报", change: "+5.2%", title: "宋 PLUS 在战败组提及增加", detail: "价格与后排空间是主要比较项", meta: "提及客户 642 · 中等稳定" }
+      ]
+    },
+    "传祺": {
+      online: 2964,
+      arrivals: 1187,
+      arrivalRate: 40.0,
+      offline: 1228,
+      linked: 1149,
+      summary: "传祺品牌到店率保持在 40.0%。E9 的家庭空间需求明确，但金融月供顾虑在未到店与战败客群中同时上升；M8 的试驾后异议处理动作执行较稳定，可作为横向验证对象。",
+      models: [
+        { name: "传祺 E9", series: "新能源 MPV", invite: 936, arrival: 41.8, orders: 144, contribution: 32.9, resistance: "金融月供", competitor: "腾势 D9", trend: 1.6, priority: 91 },
+        { name: "传祺 M8", series: "豪华 MPV", invite: 812, arrival: 43.5, orders: 136, contribution: 31.1, resistance: "置换估值", competitor: "别克 GL8", trend: 2.2, priority: 78 },
+        { name: "传祺 GS8", series: "中大型 SUV", invite: 704, arrival: 37.4, orders: 93, contribution: 21.2, resistance: "油耗顾虑", competitor: "星越 L", trend: -1.1, priority: 84 },
+        { name: "传祺 ES9", series: "新能源 SUV", invite: 512, arrival: 35.0, orders: 65, contribution: 14.8, resistance: "产品认知", competitor: "理想 L6", trend: -2.4, priority: 88 }
+      ],
+      attention: [
+        { stage: "online", topic: "resistance", label: "线上邀约", change: "+6.1%", title: "E9 金融月供顾虑影响扩大", detail: "影响 356 名客户，华南大区最集中", meta: "影响客户 356 · 持续 2 周" },
+        { stage: "offline", topic: "action", label: "线下接待", change: "-5.8pp", title: "GS8 置换评估动作执行不足", detail: "存在机会客户中执行率仅 52.4%", meta: "存在执行机会 418 人" },
+        { stage: "offline", topic: "competitor", label: "竞品情报", change: "+4.7%", title: "腾势 D9 价格提及持续增加", detail: "客户重点比较金融与二排体验", meta: "提及客户 487 · 中等稳定" }
+      ]
+    }
+  };
+
+  const STATUS_OPTIONS = ["已下订", "异地成交", "跟进中", "有效", "战败申请中", "战败", "无效"];
+  const state = {
+    stage: "overview",
+    topic: "need",
+    activeRow: 0,
+    offlineConfigured: false,
+    pendingTopic: null,
+    groups: { a: new Set(), b: new Set() }
+  };
+
+  function escapeHTML(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function showToast(message) {
+    const toast = $("#toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2200);
+  }
+
+  function getOverviewBrand() {
+    return OVERVIEW_BRANDS[$("#brandFilter").value] || OVERVIEW_BRANDS["埃安"];
+  }
+
+  function syncModelOptions() {
+    const brandName = $("#brandFilter").value;
+    const brand = getOverviewBrand();
+    const current = $("#modelFilter").value;
+    $("#modelFilter").innerHTML = [
+      '<option value="all">全部车型</option>',
+      ...brand.models.map((model) => `<option value="${escapeHTML(model.name)}">${escapeHTML(model.name)}</option>`)
+    ].join("");
+    $("#modelFilter").value = brand.models.some((model) => model.name === current) ? current : "all";
+    $("#overviewTitle").textContent = `${brandName} · ${$("#modelFilter").value === "all" ? "全部车型" : $("#modelFilter").value}`;
+  }
+
+  function renderOverview() {
+    const brandName = $("#brandFilter").value;
+    const brand = getOverviewBrand();
+    const selectedModel = $("#modelFilter").value;
+    const model = brand.models.find((item) => item.name === selectedModel);
+    const visibleModels = model ? [model] : [...brand.models];
+    const sortMode = $("#matrixSort").value;
+    const sorters = {
+      attention: (left, right) => right.priority - left.priority,
+      arrival: (left, right) => right.arrival - left.arrival,
+      order: (left, right) => right.orders - left.orders,
+      trend: (left, right) => right.trend - left.trend
     };
-  });
+    visibleModels.sort(sorters[sortMode] || sorters.attention);
 
-  const selectedStillVisible = snapshots.some(snapshot => (
-    snapshot.category === state.selectedCategory && snapshot.item.name === state.selectedName
-  ));
+    const online = model ? model.invite : brand.online;
+    const arrivals = model ? Math.round(model.invite * model.arrival / 100) : brand.arrivals;
+    const arrivalRate = model ? model.arrival : brand.arrivalRate;
+    const offline = model ? Math.round(arrivals * 1.03) : brand.offline;
+    const linked = model ? Math.round(arrivals * 0.95) : brand.linked;
+    const notArrived = Math.max(0, online - arrivals);
 
-  if (!records.length) {
-    state.selectedCategory = "需求特征";
-    state.selectedName = EMPTY_PROFILE_ITEM.name;
-  } else if (!selectedStillVisible && snapshots.length > 0) {
-    state.selectedCategory = snapshots[0].category;
-    state.selectedName = snapshots[0].item.name;
-  }
+    $("#overviewTitle").textContent = `${brandName} · ${model ? model.name : "全部车型"}`;
+    $("#overviewDescription").textContent = model
+      ? `查看 ${model.name} 的阶段结果、关键问题与品牌贡献，再进入具体阶段验证。`
+      : "用两个真实业务阶段看清整体表现，再定位需要优先分析的车型与问题。";
+    $("#onlineCustomers").textContent = online.toLocaleString("zh-CN");
+    $("#arrivalCustomers").textContent = arrivals.toLocaleString("zh-CN");
+    $(".journey-metrics em").innerHTML = `<b class="up">${arrivalRate.toFixed(1)}%</b> · 较上期 ${model && model.trend < 0 ? "" : "+"}${model ? model.trend.toFixed(1) : "2.4"}pp`;
+    $("#arrivalProgress").style.width = `${arrivalRate}%`;
+    $(".journey-progress span").textContent = `最终未到店 ${notArrived.toLocaleString("zh-CN")} 人`;
+    $("#offlineCustomers").textContent = offline.toLocaleString("zh-CN");
+    $("#linkedCustomers").textContent = linked.toLocaleString("zh-CN");
+    $(".journey-link small").textContent = `${arrivals ? (linked / arrivals * 100).toFixed(1) : "0.0"}%`;
+    $("#matrixCount").textContent = `${visibleModels.length} 款车型`;
+    $("#scopeRule span").innerHTML = `<strong>当前口径：</strong>${escapeHTML(brandName)}品牌 · ${model ? escapeHTML(model.name) : "全部车型"}；线上与线下按各自业务事实展示，不强行拼接为统一漏斗。`;
+    $(".sample-ok").textContent = "数据健康度 94.6%";
 
-  const orgText = [state.region === "all" ? "全国" : state.region, state.zone === "all" ? "" : state.zone, state.store === "all" ? "" : state.store]
-    .filter(Boolean)
-    .join(" / ");
-  const modelText = state.model === "all" ? "全部车型" : state.model;
-  document.querySelector("#portraitSubtext").textContent = `${state.brand} / ${orgText} / ${timeText(state.time)} / ${modelText}`;
+    $("#modelMatrixBody").innerHTML = visibleModels.map((item) => `
+      <tr>
+        <td><strong>${escapeHTML(item.name)}</strong><small>${escapeHTML(item.series)}</small></td>
+        <td><span class="metric-strong">${item.invite.toLocaleString("zh-CN")}</span></td>
+        <td><span class="metric-strong">${item.arrival.toFixed(1)}%</span></td>
+        <td><span class="metric-strong">${item.orders}</span></td>
+        <td><span class="contribution-bar"><b>${item.contribution.toFixed(1)}%</b><span><i style="width:${item.contribution * 2.4}%"></i></span></span></td>
+        <td>${escapeHTML(item.resistance)}</td>
+        <td>${escapeHTML(item.competitor)}</td>
+        <td><span class="${item.trend >= 0 ? "trend-up" : "trend-down"}">${item.trend >= 0 ? "+" : ""}${item.trend.toFixed(1)}pp</span></td>
+      </tr>
+    `).join("");
 
-  const centerCarName = document.querySelector("#centerCarName");
-  if (centerCarName) {
-    centerCarName.textContent = state.model === "all" ? (state.brand === "all" ? "全部车型" : state.brand) : state.model;
-  }
-
-  // Clear the links (remove dashed arrows)
-  document.querySelector("#portraitLinks").innerHTML = "";
-
-  // Render nodes in a circle with alternating radii for density
-  const total = snapshots.length;
-  const baseRx = 39; // Max x radius in percentage
-  const baseRy = 37; // Max y radius in percentage
-
-  document.querySelector("#portraitNodeSet").innerHTML = snapshots.map((snapshot, index) => {
-    const angle = (index / total) * Math.PI * 2 - Math.PI / 2; // start from top
-
-    // Stagger layout: odd nodes move slightly inward if there are many nodes
-    const isInner = total > 8 && index % 2 !== 0;
-    const rx = isInner ? baseRx - 10 : baseRx;
-    const ry = isInner ? baseRy - 9 : baseRy;
-
-    const left = 50 + Math.cos(angle) * rx;
-    const top = 50 + Math.sin(angle) * ry;
-
-    const { category, item, tone, icon } = snapshot;
-    const isActive = state.selectedCategory === category && state.selectedName === item.name;
-    const colorClass = item.count ? tone : "flat";
-
-    return `
-      <button class="portrait-node ${colorClass} ${isActive ? "active" : ""}" style="left: calc(${left}% - 76px); top: calc(${top}% - 35px);" type="button" data-category="${escapeHtml(category)}" data-name="${escapeHtml(item.name)}">
-        <span class="portrait-icon"><img src="${escapeHtml(icon)}" alt="" /></span>
-        <span class="portrait-category">${escapeHtml(category)}</span>
-        <strong>${escapeHtml(item.name)}</strong>
-        <span class="portrait-rate">${item.count}/${item.rate}%</span>
-        <span class="portrait-trend ${item.trend.tone}">${escapeHtml(item.trend.text)}</span>
+    $("#attentionList").innerHTML = brand.attention.map((item, index) => `
+      <button class="attention-item" type="button" data-attention-stage="${item.stage}" data-attention-topic="${item.topic}">
+        <span class="attention-item-head"><span>0${index + 1} · ${escapeHTML(item.label)}</span><em>${escapeHTML(item.change)}</em></span>
+        <strong>${escapeHTML(item.title)}</strong>
+        <p>${escapeHTML(item.detail)}</p>
+        <span class="attention-item-meta"><span>${escapeHTML(item.meta)}</span><b>进入分析 →</b></span>
       </button>
-    `;
-  }).join("");
-};
+    `).join("");
+    $$("[data-attention-stage]", $("#attentionList")).forEach((button) => {
+      button.addEventListener("click", () => goToStage(button.dataset.attentionStage, button.dataset.attentionTopic));
+    });
+  }
 
+  function goToStage(stage, topic) {
+    state.topic = topic || "need";
+    state.activeRow = 0;
+    if (stage === "offline" && !state.offlineConfigured) {
+      state.pendingTopic = state.topic;
+      openGroupModal();
+      return;
+    }
+    state.stage = stage;
+    renderStage();
+    $(".main").scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-const renderRanks = records => {
-  const previousRecords = getPreviousRecords();
-  const rankGrid = document.querySelector("#rankGrid");
-  const rankCloud = document.querySelector("#rankCloud");
-  if (!rankGrid || !rankCloud) return;
+  function renderStage() {
+    $$(".stage-tab").forEach((button) => {
+      const active = button.dataset.stage === state.stage;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    if (state.stage === "overview") {
+      $("#overviewPage").hidden = false;
+      $("#stageAnalysis").hidden = true;
+      $("#editGroupsButton").hidden = true;
+      renderOverview();
+      return;
+    }
 
-  if (state.rankView === "cloud") {
-    rankGrid.style.display = "none";
-    rankCloud.style.display = "grid";
+    $("#overviewPage").hidden = true;
+    $("#stageAnalysis").hidden = false;
+    const meta = STAGES[state.stage];
+    $("#stageKicker").textContent = meta.kicker;
+    $("#comparisonTitle").textContent = meta.title;
+    $("#comparisonDesc").textContent = meta.desc;
+    $("#scopeRule span").innerHTML = `<strong>当前口径：</strong>${escapeHTML(meta.rule)}`;
+    $("#editGroupsButton").hidden = state.stage !== "offline";
 
-    rankCloud.innerHTML = PROFILE_CATEGORIES.map(category => {
-      const items = aggregateCategory(records, category).filter(item => item.count > 0);
-      if (items.length === 0) return "";
+    const a = meta.groups.a;
+    const b = meta.groups.b;
+    $("#groupAName").textContent = a.name;
+    $("#groupAMeta").textContent = `有效对话 ${a.valid} 人`;
+    $("#groupAValue").textContent = a.customers.toLocaleString("zh-CN");
+    $("#groupARate").textContent = `${a.rate.toFixed(1)}%`;
+    $("#trackA").style.width = `${a.rate}%`;
+    $("#groupBName").textContent = b.name;
+    $("#groupBMeta").textContent = `有效对话 ${b.valid} 人`;
+    $("#groupBValue").textContent = b.customers.toLocaleString("zh-CN");
+    $("#groupBRate").textContent = `${b.rate.toFixed(1)}%`;
+    $("#trackB").style.width = `${b.rate}%`;
+    $("#totalSample").textContent = meta.total.toLocaleString("zh-CN");
+    $("#validSample").textContent = meta.valid.toLocaleString("zh-CN");
+    $("#exceptionSample").textContent = meta.exceptions.toLocaleString("zh-CN");
+    $(".ai-brief .brief-scope").textContent = `${meta.valid.toLocaleString("zh-CN")} 名有效对话客户`;
+    $("#legendA").textContent = a.name;
+    $("#legendB").textContent = b.name;
+    $("#aiEmpty").hidden = false;
+    $("#aiResult").hidden = true;
+    $$(".topic-tabs button").forEach((button) => {
+      const active = button.dataset.topic === state.topic;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    renderPriorities();
+    renderTopic();
+    renderCandidates();
+  }
 
-      const maxCount = Math.max(...items.map(i => i.count));
-      const meta = CATEGORY_META[category] || CATEGORY_META["需求特征"];
-      const cloudTags = items.map(tag => {
-        const size = maxCount > 0 ? 13 + (15 * (tag.count / maxCount)) : 13;
-        const colorClass = (meta.color === "red" || meta.color === "green") ? meta.color : "black";
-        const trend = getProfileTrend(tag, category, previousRecords);
-        const trendText = trend.direction !== "flat" ? ` <span style="font-weight:bold;margin-left:2px">${trend.text.replace(' ', '')}</span>` : "";
-        return `<span class="cloud-tag ${colorClass}" style="font-size: ${size}px;" title="${escapeHtml(tag.reason)}">${escapeHtml(tag.name)}<small style="font-size:0.7em;opacity:0.9;margin-left:6px;font-weight:normal;">${tag.count}/${tag.rate}%${trendText}</small></span>`;
-      }).join("");
+  function renderPriorities() {
+    const items = STAGES[state.stage].priorities;
+    $("#priorityList").innerHTML = items.map(([topic, text], index) => `
+      <button type="button" data-topic-target="${topic}"><span>0${index + 1}</span><p>${escapeHTML(text)}</p><b>→</b></button>
+    `).join("");
+    $$('[data-topic-target]', $("#priorityList")).forEach((button) => {
+      button.addEventListener("click", () => selectTopic(button.dataset.topicTarget, true));
+    });
+  }
 
+  function selectTopic(topic, shouldScroll) {
+    state.topic = topic;
+    state.activeRow = 0;
+    $$(".topic-tabs button").forEach((button) => {
+      const active = button.dataset.topic === topic;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    renderTopic();
+    if (shouldScroll) {
+      $(".topic-workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function renderTopic() {
+    const topic = DATA[state.stage][state.topic];
+    $("#signalTitle").textContent = topic.title;
+    $("#signalDesc").textContent = topic.desc;
+    $("#signalList").innerHTML = topic.rows.map((row, index) => {
+      const delta = Number((row.a - row.b).toFixed(1));
+      const deltaText = delta >= 0 ? `A +${delta.toFixed(1)}` : `B +${Math.abs(delta).toFixed(1)}`;
       return `
-        <div class="cloud-block">
-          <h3>${escapeHtml(category)}</h3>
-          <div class="cloud-tags">
-            ${cloudTags}
-          </div>
-        </div>
+        <button class="signal-row${index === state.activeRow ? " active" : ""}" data-index="${index}" type="button">
+          <span class="signal-name"><strong>${escapeHTML(row.name)}</strong><small>${escapeHTML(row.sub)} · ${escapeHTML(row.count)}</small></span>
+          <span class="dual-track">
+            <span class="track-line a"><span>A</span><span class="track-bg"><i style="width:${Math.min(100, row.a * 1.25)}%"></i></span><b>${row.a.toFixed(1)}%</b></span>
+            <span class="track-line b"><span>B</span><span class="track-bg"><i style="width:${Math.min(100, row.b * 1.25)}%"></i></span><b>${row.b.toFixed(1)}%</b></span>
+          </span>
+          <span class="signal-delta${delta < 0 ? " negative" : ""}"><strong>${deltaText}</strong><small>差异百分点</small></span>
+        </button>
       `;
     }).join("");
-  } else {
-    rankGrid.style.display = "grid";
-    rankCloud.style.display = "none";
-    rankGrid.innerHTML = PROFILE_CATEGORIES
-      .map(category => rankBlock(category, aggregateCategory(records, category), previousRecords))
-      .join("");
-  }
-};
-
-const renderSummary = records => {
-  const topNeed = topOf(records, "需求特征");
-  const topScene = topOf(records, "购车场景");
-  const filterSummary = document.querySelector("#filterSummary");
-  if (filterSummary) {
-    filterSummary.textContent = `当前筛选命中 ${records.length} 条样本，TOP 需求为「${topNeed.name}」，TOP 场景为「${topScene.name}」。`;
-  }
-
-};
-
-const INTENT_LEVELS = [
-  { key: "A级", label: "高意向", baseColor: "22, 167, 101" },
-  { key: "B级", label: "中意向", baseColor: "100, 116, 139" },
-  { key: "C级", label: "低意向", baseColor: "239, 68, 68", isSoft: true },
-  { key: "战败", label: "无意向", baseColor: "239, 68, 68" }
-];
-
-const renderHeatmap = records => {
-  const container = document.querySelector("#heatmapContainer");
-  if (!container) return;
-
-  const previousRecords = getPreviousRecords();
-  const totalValidAll = records.reduce((sum, r) => sum + r.validCount, 0);
-  const prevTotalValidAll = previousRecords.reduce((sum, r) => sum + r.validCount, 0);
-
-  const tagMap = new Map();
-  records.forEach(r => {
-    Object.values(r.tags).forEach(tags => {
-      tags.forEach(tag => {
-        const item = tagMap.get(tag.name) || { name: tag.name, count: 0 };
-        item.count += tag.count;
-        tagMap.set(tag.name, item);
+    $$(".signal-row", $("#signalList")).forEach((button) => {
+      button.addEventListener("click", () => {
+        state.activeRow = Number(button.dataset.index);
+        renderTopic();
       });
     });
-  });
-
-  const prevTagMap = new Map();
-  previousRecords.forEach(r => {
-    Object.values(r.tags).forEach(tags => {
-      tags.forEach(tag => {
-        const item = prevTagMap.get(tag.name) || { name: tag.name, count: 0 };
-        item.count += tag.count;
-        prevTagMap.set(tag.name, item);
-      });
-    });
-  });
-
-  const allTags = [...tagMap.values()].map(tag => {
-    const rate = totalValidAll ? (tag.count / totalValidAll) * 100 : 0;
-    const prevCount = prevTagMap.get(tag.name)?.count || 0;
-    const prevRate = prevTotalValidAll ? (prevCount / prevTotalValidAll) * 100 : 0;
-    let trendText = "无对比";
-    let trendTone = "flat";
-    if (prevTotalValidAll > 0) {
-      const diff = Math.round(rate) - Math.round(prevRate);
-      if (diff > 0) { trendText = `↑${diff}%`; trendTone = "green"; }
-      else if (diff < 0) { trendText = `↓${Math.abs(diff)}%`; trendTone = "red"; }
-      else { trendText = "持平"; }
-    }
-    return { ...tag, rate: Math.round(rate), trendText, trendTone };
-  });
-
-  allTags.sort((a, b) => b.rate - a.rate || b.count - a.count);
-
-  if (allTags.length === 0) {
-    container.innerHTML = "<div style='padding: 20px; text-align: center; color: var(--muted);'>暂无热力图数据</div>";
-    return;
+    renderVoices();
   }
 
-  const PAGE_SIZE = 10;
-  const totalPages = Math.ceil(allTags.length / PAGE_SIZE);
-  if (state.heatmapPage > totalPages) state.heatmapPage = 1;
-  if (state.heatmapPage < 1) state.heatmapPage = 1;
-
-  const startIndex = (state.heatmapPage - 1) * PAGE_SIZE;
-  const topTags = allTags.slice(startIndex, startIndex + PAGE_SIZE);
-
-  const heatmapData = topTags.map((tag, i) => {
-    const row = {
-      name: tag.name,
-      index: startIndex + i + 1,
-      overall: tag,
-      intents: {}
-    };
-    INTENT_LEVELS.forEach(level => {
-      const levelRecords = records.filter(r => r.level === level.key);
-      const totalValid = levelRecords.reduce((sum, r) => sum + r.validCount, 0);
-
-      let hitCount = 0;
-      levelRecords.forEach(r => {
-        Object.values(r.tags).forEach(tags => {
-          const found = tags.find(t => t.name === tag.name);
-          if (found) hitCount += found.count;
-        });
-      });
-
-      let rate = totalValid ? (hitCount / totalValid) * 100 : 0;
-      rate = Math.min(100, Math.round(rate));
-
-      const prevLevelRecords = previousRecords.filter(r => r.level === level.key);
-      const prevTotalValid = prevLevelRecords.reduce((sum, r) => sum + r.validCount, 0);
-      let prevHitCount = 0;
-      prevLevelRecords.forEach(r => {
-        Object.values(r.tags).forEach(tags => {
-          const found = tags.find(t => t.name === tag.name);
-          if (found) prevHitCount += found.count;
-        });
-      });
-      let prevRate = prevTotalValid ? (prevHitCount / prevTotalValid) * 100 : 0;
-      prevRate = Math.min(100, Math.round(prevRate));
-
-      let trendText = "无对比";
-      let trendTone = "flat";
-      if (prevTotalValid > 0) {
-        const diff = rate - prevRate;
-        if (diff > 0) { trendText = `↑${diff}%`; trendTone = "green"; }
-        else if (diff < 0) { trendText = `↓${Math.abs(diff)}%`; trendTone = "red"; }
-        else { trendText = "持平"; }
-      }
-
-      row.intents[level.key] = { rate, hitCount, trendText, trendTone };
+  function renderVoices() {
+    const row = DATA[state.stage][state.topic].rows[state.activeRow];
+    $("#voiceTitle").textContent = row.name;
+    const voices = row.voices.length === 1 ? [row.voices[0], createCounterVoice(row.voices[0])] : row.voices;
+    $("#voiceList").innerHTML = voices.slice(0, 3).map((voice, index) => `
+      <button class="voice-card group-${voice[0]}" data-voice-index="${index}" type="button">
+        <span class="voice-meta"><span>${voice[0].toUpperCase()} 组 · ${escapeHTML(voice[1])}</span><span>${escapeHTML(voice[4])}</span></span>
+        <blockquote>${escapeHTML(voice[2])}</blockquote>
+        <footer><span>${escapeHTML(voice[3])}</span><b>查看客户证据 →</b></footer>
+      </button>
+    `).join("");
+    $$(".voice-card", $("#voiceList")).forEach((button) => {
+      button.addEventListener("click", () => openCustomerDrawer(voices[Number(button.dataset.voiceIndex)], row));
     });
-    return row;
-  });
-
-  let tableHtml = `<div class="heatmap-table-wrapper"><table class="heatmap-table">
-    <thead>
-      <tr>
-        <th style="text-align: left; padding-left: 20px;">客户标签</th>
-        ${INTENT_LEVELS.map(l => `<th>${l.label}</th>`).join("")}
-      </tr>
-    </thead>
-    <tbody>
-  `;
-
-  heatmapData.forEach(row => {
-    tableHtml += `<tr>`;
-    tableHtml += `<td class="tag-name-col" style="padding-left: 20px;">
-      <span class="tag-index">${row.index}</span>${escapeHtml(row.name)}
-    </td>`;
-
-    INTENT_LEVELS.forEach(level => {
-      const stats = row.intents[level.key];
-      const alpha = Math.max(0.1, stats.rate / 100);
-      let bgColor = `rgba(${level.baseColor}, ${level.isSoft ? alpha * 0.5 : alpha})`;
-      if (stats.rate === 0) bgColor = "transparent";
-
-      const textColorClass = (stats.rate < 40 || stats.rate === 0) ? "dark-text" : "";
-      const textVal = stats.rate > 0 ? `${stats.rate}%` : "-";
-
-      const tooltipData = escapeHtml(JSON.stringify({
-        title: `${row.name} × ${level.label}`,
-        hitCount: stats.hitCount,
-        rate: stats.rate,
-        trendText: stats.trendText,
-        trendTone: stats.trendTone
-      }));
-
-      tableHtml += `<td class="heatmap-cell ${textColorClass}" style="background: ${bgColor};" data-info="${tooltipData}">
-        ${textVal}
-      </td>`;
-    });
-    tableHtml += `</tr>`;
-  });
-
-  tableHtml += `</tbody></table></div>`;
-
-  let paginationHtml = "";
-  if (totalPages > 1) {
-    paginationHtml = `
-      <div class="heatmap-pagination">
-        <button class="ghost-button" id="heatmapPrev" ${state.heatmapPage === 1 ? 'disabled' : ''}>上一页</button>
-        <span class="page-info">${state.heatmapPage} / ${totalPages}</span>
-        <button class="ghost-button" id="heatmapNext" ${state.heatmapPage === totalPages ? 'disabled' : ''}>下一页</button>
-      </div>
-    `;
   }
 
-  container.innerHTML = tableHtml + paginationHtml + `<div class="heatmap-popover" id="heatmapPopover"></div>`;
+  function createCounterVoice(voice) {
+    const group = voice[0] === "a" ? "b" : "a";
+    const stageName = group === "a" ? STAGES[state.stage].groups.a.name : STAGES[state.stage].groups.b.name;
+    return [group, `客户 C-${group === "a" ? "07642" : "11835"}`, `这条表达在${stageName}客户中也有出现，但当前样本占比较低。`, "华南大区 · 广州大道店", "07-15 10:28"];
+  }
 
-  const cells = container.querySelectorAll(".heatmap-cell");
-  const popover = container.querySelector("#heatmapPopover");
-
-  cells.forEach(cell => {
-    cell.addEventListener("click", e => {
-      e.stopPropagation();
-      document.querySelectorAll(".heatmap-cell").forEach(c => c.style.outline = "none");
-      cell.style.outline = "2px solid var(--line-strong)";
-      cell.style.outlineOffset = "-2px";
-
-      const info = JSON.parse(cell.dataset.info || "{}");
-      if (!info.title) return;
-
-      popover.innerHTML = `
-        <h4>${info.title}</h4>
-        <div class="pop-row">
-          <span>命中数</span>
-          <span class="pop-val">${info.hitCount}</span>
-        </div>
-        <div class="pop-row">
-          <span>命中率</span>
-          <span class="pop-val">${info.rate}%</span>
-        </div>
-        <div class="pop-row">
-          <span>较上期增长</span>
-          <span class="pop-val ${info.trendTone}">${info.trendText}</span>
-        </div>
+  function renderCandidates() {
+    const rows = CANDIDATES[state.stage];
+    $("#candidateBody").innerHTML = rows.map((row, index) => {
+      const statusClass = row[6] === "已采纳" ? "adopted" : row[6] === "不采纳" ? "rejected" : "pending";
+      const stableClass = row[5] === "稳定" ? "stable" : "observe";
+      return `
+        <tr>
+          <td class="candidate-name"><strong>${escapeHTML(row[0])}</strong><small>${state.stage === "online" ? "线上邀约" : "线下接待"}</small></td>
+          <td>${escapeHTML(row[1])}</td>
+          <td class="rate-pair"><span class="a">${row[2]}%</span><i>/</i><span class="b">${row[3]}%</span></td>
+          <td><span class="lift-value">${escapeHTML(row[4])}</span></td>
+          <td><span class="stability-pill ${stableClass}">${escapeHTML(row[5])}</span></td>
+          <td><span class="status-pill ${statusClass}">${escapeHTML(row[6])}</span></td>
+          <td><button class="row-action" data-candidate="${index}" type="button">查看证据 →</button></td>
+        </tr>
       `;
-
-      const rect = cell.getBoundingClientRect();
-      let top = rect.top + rect.height;
-      let left = rect.left + rect.width / 2 - 120;
-
-      if (left < 10) left = 10;
-      if (left + 240 > window.innerWidth) left = window.innerWidth - 250;
-
-      popover.style.top = `${top + 8}px`;
-      popover.style.left = `${left}px`;
-      popover.classList.add("show");
+    }).join("");
+    $$("[data-candidate]", $("#candidateBody")).forEach((button) => {
+      button.addEventListener("click", () => openCandidateDrawer(Number(button.dataset.candidate)));
     });
-  });
-
-  document.addEventListener("click", () => {
-    if (popover && popover.classList.contains("show")) {
-      popover.classList.remove("show");
-      document.querySelectorAll(".heatmap-cell").forEach(c => c.style.outline = "none");
-    }
-  });
-};
-
-const render = () => {
-  ensureValidModelForBrand();
-  ensureValidSceneForSource();
-  const records = getFilteredRecords();
-  renderFilters();
-  renderSummary(records);
-  const metrics = buildMetrics(records);
-  document.querySelector("#metricGrid").innerHTML = metrics.map((m, i) => metricMarkup(m, i)).join("");
-  window._currentMetrics = metrics;
-  renderPortrait(records);
-  renderHeatmap(records);
-  renderRanks(records);
-};
-
-document.addEventListener("click", event => {
-  const filterButton = event.target.closest("[data-filter]");
-  if (filterButton) {
-    const filterKey = filterButton.dataset.filter;
-    const filterValue = filterButton.dataset.value;
-
-    if (filterKey === "scene") {
-      toggleSceneFilter(filterValue);
-    } else {
-      state[filterKey] = filterValue;
-    }
-
-    if (filterKey === "brand") {
-      state.model = "all";
-    }
-    if (filterKey === "source") {
-      applySourceSceneDefaults();
-    }
-    state.heatmapPage = 1;
-    render();
-    return;
   }
 
-  const heatmapPrev = event.target.closest("#heatmapPrev");
-  if (heatmapPrev) {
-    if (state.heatmapPage > 1) {
-      state.heatmapPage--;
-      renderHeatmap(getFilteredRecords());
-    }
-    return;
-  }
-
-  const heatmapNext = event.target.closest("#heatmapNext");
-  if (heatmapNext) {
-    state.heatmapPage++;
-    renderHeatmap(getFilteredRecords());
-    return;
-  }
-
-  const portraitNode = event.target.closest(".portrait-node");
-  if (portraitNode) {
-    state.selectedCategory = portraitNode.dataset.category;
-    state.selectedName = portraitNode.dataset.name;
-    render();
-    return;
-  }
-
-  const viewToggleBtn = event.target.closest("#rankViewToggle button");
-  if (viewToggleBtn) {
-    const view = viewToggleBtn.dataset.view;
-    if (state.rankView !== view) {
-      state.rankView = view;
-      document.querySelectorAll("#rankViewToggle button").forEach(btn => btn.classList.remove("active"));
-      viewToggleBtn.classList.add("active");
-      renderRanks(getFilteredRecords());
-    }
-    return;
-  }
-
-  const profileBlockNode = event.target.closest(".profile-block, .profile-rank-row");
-  if (profileBlockNode) {
-    state.selectedCategory = profileBlockNode.dataset.category;
-    state.selectedName = profileBlockNode.dataset.name;
-    render();
-  }
-});
-
-document.addEventListener("change", event => {
-  const orgSelect = event.target.closest("[data-org-filter]");
-  if (!orgSelect) return;
-
-  const key = orgSelect.dataset.orgFilter;
-  state[key] = orgSelect.value;
-  if (key === "region") {
-    state.zone = "all";
-    state.store = "all";
-  }
-  if (key === "zone") {
-    state.store = "all";
-  }
-  state.heatmapPage = 1;
-  render();
-});
-
-const toggleSceneFilter = sceneValue => {
-  if (state.source === "all") {
-    state.scene = ["all"];
-    return;
-  }
-
-  if (sceneValue === "all") {
-    state.scene = ["all"];
-    return;
-  }
-
-  if (!SCENE_FILTER.options.some(option => option.value === sceneValue)) return;
-
-  if (state.scene.includes("all")) {
-    state.scene = [sceneValue];
-    return;
-  }
-
-  if (state.scene.includes(sceneValue)) {
-    if (state.scene.length === 1) return;
-    state.scene = state.scene.filter(scene => scene !== sceneValue);
-    return;
-  }
-
-  state.scene = [...state.scene, sceneValue];
-};
-
-const resetButton = document.querySelector("#resetButton");
-if (resetButton) {
-  resetButton.addEventListener("click", () => {
-    Object.assign(state, {
-      brand: "传祺",
-      region: "all",
-      zone: "all",
-      store: "all",
-      source: "all",
-      scene: ["all"],
-      time: "7",
-      model: "M8",
-      selectedCategory: "需求特征",
-      selectedName: "空间大",
-      heatmapPage: 1
+  function renderStatusEditor() {
+    ["a", "b"].forEach((group) => {
+      const other = group === "a" ? "b" : "a";
+      const host = $(`.status-grid[data-group="${group}"]`);
+      host.innerHTML = STATUS_OPTIONS.map((status) => {
+        const selected = state.groups[group].has(status);
+        const disabled = state.groups[other].has(status);
+        return `<button type="button" data-status="${escapeHTML(status)}" class="${selected ? "selected" : ""}" ${disabled ? "disabled" : ""}>${escapeHTML(status)}</button>`;
+      }).join("");
+      $$('[data-status]', host).forEach((button) => {
+        button.addEventListener("click", () => {
+          const status = button.dataset.status;
+          if (state.groups[group].has(status)) state.groups[group].delete(status);
+          else state.groups[group].add(status);
+          renderStatusEditor();
+        });
+      });
     });
-    render();
-  });
-}
-
-
-// ===== Trend Modal =====
-const generateTrendData = (metric) => {
-  const days = timeLimit(state.time);
-  const labels = [];
-  const data = [];
-  const now = new Date();
-  const isRate = metric.metricType === 'rate';
-  const base = metric.rawValue || parseFloat(String(metric.value).replace(/[^0-9.]/g, '')) || 50;
-
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    labels.push(`${d.getMonth()+1}/${d.getDate()}`);
-    if (isRate) {
-      const v = Math.max(0, Math.min(100, base * (0.8 + Math.random() * 0.4)));
-      data.push(parseFloat(v.toFixed(1)));
-    } else {
-      data.push(Math.max(0, Math.round(base * (0.7 + Math.random() * 0.6))));
-    }
+    const ready = state.groups.a.size > 0 && state.groups.b.size > 0;
+    $("#startOfflineCompare").disabled = !ready;
+    $("#groupValidation").textContent = ready
+      ? `已选择 A 组 ${state.groups.a.size} 个、B 组 ${state.groups.b.size} 个状态`
+      : "A、B 两组都至少选择 1 个状态";
   }
-  return { labels, data };
-};
 
-const formatTrendVal = (val, metric) => {
-  if (metric.metricType === 'rate') return `${val}%`;
-  return String(Math.round(val));
-};
-
-const showTrendModal = (metricIndex) => {
-  const metric = window._currentMetrics?.[metricIndex];
-  if (!metric) return;
-  let overlay = document.getElementById('trendModalOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'trendModalOverlay';
-    overlay.className = 'trend-modal-overlay';
-    document.body.appendChild(overlay);
+  function openGroupModal() {
+    renderStatusEditor();
+    $("#groupModal").hidden = false;
+    document.body.style.overflow = "hidden";
   }
-  const periodLabel = timeText(state.time);
-  const isEmpty = metric.value === '暂无命中' || metric.rawValue === 0;
 
-  if (isEmpty) {
-    overlay.innerHTML = `
-      <div class="trend-modal">
-        <div class="trend-modal-header">
-          <div>
-            <h3>${escapeHtml(metric.title)} 趋势变化</h3>
-            <p>${escapeHtml(periodLabel)}数据走势</p>
-          </div>
-          <button class="trend-modal-close" id="trendModalClose" title="关闭">✕</button>
-        </div>
-        <div class="trend-modal-body">
-          <div class="trend-modal-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p>暂无数据</p>
-            <span>当前筛选条件下暂未产生趋势数据</span>
-          </div>
-        </div>
-      </div>
+  function closeLayer(id) {
+    $("#" + id).hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openCustomerDrawer(voice, row) {
+    const meta = STAGES[state.stage];
+    const groupName = voice[0] === "a" ? meta.groups.a.name : meta.groups.b.name;
+    $("#drawerKicker").textContent = "匿名客户证据";
+    $("#drawerTitle").textContent = voice[1];
+    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "线上邀约" : "线下接待"} · ${groupName}`;
+    $("#drawerBody").innerHTML = `
+      <section class="drawer-section"><h3>已识别客户信号</h3><div class="drawer-tags"><span>${escapeHTML(row.name)}</span><span>${escapeHTML(row.sub)}</span><span>${state.stage === "online" ? "AION V" : "到店接待"}</span><span>${groupName}</span></div></section>
+      <section class="drawer-section"><h3>真实对话证据</h3><p class="evidence-line">${escapeHTML(voice[2])}</p><div class="evidence-meta"><span>${escapeHTML(voice[3])}</span><span>${escapeHTML(voice[4])}</span></div></section>
+      <section class="drawer-section action-definition"><h3>本次分析边界</h3><dl><dt>客户阶段</dt><dd>${state.stage === "online" ? "首次到店前邀约沟通" : "到店接待与后续跟进"}</dd><dt>对比客群</dt><dd>${escapeHTML(groupName)}</dd><dt>使用范围</dt><dd>仅作为该客户所属客群差异的证据，不生成下一步跟进建议。</dd></dl></section>
     `;
-    overlay.classList.add('show');
-    overlay.querySelector('#trendModalClose').addEventListener('click', () => overlay.classList.remove('show'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-    return;
+    $("#detailDrawer").hidden = false;
+    document.body.style.overflow = "hidden";
   }
 
-  const td = generateTrendData(metric);
-  const isRate = metric.metricType === 'rate';
-  const maxVal = isRate ? Math.max(...td.data, 1) * 1.15 : Math.max(...td.data, 1);
-  const svgW = 560, svgH = 260, padL = 55, padR = 20, padT = 30, padB = 40;
-  const chartW = svgW - padL - padR, chartH = svgH - padT - padB;
-  const stepX = chartW / (td.labels.length - 1 || 1);
-  const points = td.data.map((v, i) => [padL + i * stepX, padT + chartH - (v / maxVal) * chartH]);
-  const polyline = points.map(p => p.join(',')).join(' ');
-  const areaPath = `M${points[0][0]},${padT+chartH} ${points.map(p=>`L${p[0]},${p[1]}`).join(' ')} L${points[points.length-1][0]},${padT+chartH} Z`;
-  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(r => {
-    const y = padT + chartH - r * chartH;
-    const rawVal = r * maxVal;
-    const label = isRate ? `${rawVal.toFixed(0)}%` : Math.round(rawVal);
-    return `<line x1="${padL}" y1="${y}" x2="${svgW-padR}" y2="${y}" stroke="#e2e8f0" stroke-width="0.8"/><text x="${padL-8}" y="${y+4}" fill="#94a3b8" font-size="11" text-anchor="end">${label}</text>`;
-  }).join('');
-  const labelStep = td.labels.length > 15 ? Math.ceil(td.labels.length / 10) : 1;
-  const xLabels = td.labels.map((l, i) => {
-    if (i % labelStep !== 0 && i !== td.labels.length - 1) return '';
-    return `<text x="${padL+i*stepX}" y="${svgH-8}" fill="#94a3b8" font-size="11" text-anchor="middle">${l}</text>`;
-  }).join('');
-  const dots = points.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${metric.sparkColor}" stroke="#fff" stroke-width="1.5"/><text x="${p[0]}" y="${p[1]-10}" fill="${metric.sparkColor}" font-size="10" font-weight="700" text-anchor="middle">${formatTrendVal(td.data[i], metric)}</text>`).join('');
-  overlay.innerHTML = `
-    <div class="trend-modal">
-      <div class="trend-modal-header">
-        <div>
-          <h3>${escapeHtml(metric.title)} 趋势变化</h3>
-          <p>${escapeHtml(periodLabel)}数据走势</p>
-        </div>
-        <button class="trend-modal-close" id="trendModalClose" title="关闭">✕</button>
-      </div>
-      <div class="trend-modal-body">
-        <div class="trend-modal-summary">
-          <div class="trend-summary-item"><span class="trend-summary-label">当前值</span><span class="trend-summary-value" style="color:${metric.sparkColor}">${escapeHtml(metric.value)}</span></div>
-        </div>
-        <svg viewBox="0 0 ${svgW} ${svgH}" class="trend-chart-svg">
-          ${gridLines}
-          ${xLabels}
-          <defs><linearGradient id="trendFill${metricIndex}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${metric.sparkColor}" stop-opacity="0.18"/><stop offset="100%" stop-color="${metric.sparkColor}" stop-opacity="0.01"/></linearGradient></defs>
-          <path d="${areaPath}" fill="url(#trendFill${metricIndex})"/>
-          <polyline points="${polyline}" fill="none" stroke="${metric.sparkColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          ${dots}
-        </svg>
-      </div>
-    </div>
-  `;
-  overlay.classList.add('show');
-  overlay.querySelector('#trendModalClose').addEventListener('click', () => overlay.classList.remove('show'));
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-};
-
-document.addEventListener('click', e => {
-  const spark = e.target.closest('.spark-clickable');
-  if (spark) {
-    const idx = parseInt(spark.dataset.metricIndex, 10);
-    showTrendModal(idx);
+  function openCandidateDrawer(index) {
+    const row = CANDIDATES[state.stage][index];
+    const evidence = DATA[state.stage].action.rows[Math.min(index, DATA[state.stage].action.rows.length - 1)].voices[0];
+    $("#drawerKicker").textContent = "标准销售动作候选";
+    $("#drawerTitle").textContent = row[0];
+    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "线上邀约" : "线下接待"} · ${row[6]}`;
+    $("#drawerBody").innerHTML = `
+      <section class="drawer-section action-definition"><h3>候选动作定义</h3><dl><dt>客户信号</dt><dd>${escapeHTML(row[1])}</dd><dt>动作要求</dt><dd>${escapeHTML(row[0])}，并在对话中明确客户可确认的内容。</dd><dt>执行率</dt><dd>A 组 ${row[2]}% / B 组 ${row[3]}%</dd><dt>结果率</dt><dd>执行 / 未执行：${escapeHTML(row[4])}</dd><dt>适用范围</dt><dd>全国 · AION V · 当前筛选时间</dd><dt>稳定性</dt><dd>${escapeHTML(row[5])}，仅表达结果关联，不代表因果。</dd></dl></section>
+      <section class="drawer-section"><h3>支撑证据</h3><p class="evidence-line">${escapeHTML(evidence[2])}</p><div class="evidence-meta"><span>${escapeHTML(evidence[3])}</span><span>${escapeHTML(evidence[4])}</span></div></section>
+      <section class="drawer-section"><h3>管理确认</h3><div class="decision-buttons"><button data-decision="待验证" class="${row[6] === "待验证" ? "active" : ""}" type="button">待验证</button><button data-decision="已采纳" class="${row[6] === "已采纳" ? "active" : ""}" type="button">已采纳</button><button data-decision="不采纳" type="button">不采纳</button></div></section>
+    `;
+    $$('[data-decision]', $("#drawerBody")).forEach((button) => {
+      button.addEventListener("click", () => {
+        row[6] = button.dataset.decision;
+        $$("[data-decision]", $("#drawerBody")).forEach((item) => item.classList.toggle("active", item === button));
+        renderCandidates();
+        showToast(`候选动作已标记为“${button.dataset.decision}”`);
+      });
+    });
+    $("#detailDrawer").hidden = false;
+    document.body.style.overflow = "hidden";
   }
-});
 
-render();
+  function generateAiSummary() {
+    const button = $("#generateAiButton");
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = "正在分析 1,145 名客户…";
+    window.setTimeout(() => {
+      $("#aiSummaryList").innerHTML = STAGES[state.stage].summary.map((item, index) => `<li data-index="${index + 1}">${escapeHTML(item)}</li>`).join("");
+      $("#aiEmpty").hidden = true;
+      $("#aiResult").hidden = false;
+      button.disabled = false;
+      button.textContent = "生成 AI 摘要";
+    }, 720);
+  }
+
+  $$(".stage-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.stage === "offline" && !state.offlineConfigured) {
+        openGroupModal();
+        return;
+      }
+      state.stage = button.dataset.stage;
+      state.activeRow = 0;
+      renderStage();
+    });
+  });
+
+  $$(".date-tabs button").forEach((button) => {
+    button.addEventListener("click", () => {
+      $$(".date-tabs button").forEach((item) => item.classList.toggle("active", item === button));
+      if (state.stage === "overview") {
+        $("#overviewAiResult").hidden = true;
+        showToast(`时间范围已切换为“${button.textContent}”，经营总览已更新`);
+      } else {
+        $("#aiEmpty").hidden = false;
+        $("#aiResult").hidden = true;
+        showToast(`时间范围已切换为“${button.textContent}”，AI 摘要待重新生成`);
+      }
+    });
+  });
+
+  $$(".topic-tabs button").forEach((button) => {
+    button.addEventListener("click", () => selectTopic(button.dataset.topic, false));
+  });
+
+  $$(".scope-fields select").forEach((select) => {
+    select.addEventListener("change", () => {
+      if (select.id === "brandFilter") syncModelOptions();
+      if (state.stage === "overview") renderOverview();
+      $("#aiEmpty").hidden = false;
+      $("#aiResult").hidden = true;
+      $("#overviewAiResult").hidden = true;
+      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，AI 摘要待重新生成");
+    });
+  });
+
+  $("#applyPreset").addEventListener("click", () => {
+    state.groups.a = new Set(["已下订", "异地成交"]);
+    state.groups.b = new Set(["战败", "战败申请中"]);
+    renderStatusEditor();
+  });
+
+  $("#startOfflineCompare").addEventListener("click", () => {
+    if (!state.groups.a.size || !state.groups.b.size) return;
+    STAGES.offline.groups.a.name = Array.from(state.groups.a).join("、");
+    STAGES.offline.groups.b.name = Array.from(state.groups.b).join("、");
+    state.offlineConfigured = true;
+    state.stage = "offline";
+    state.topic = state.pendingTopic || state.topic || "need";
+    state.pendingTopic = null;
+    state.activeRow = 0;
+    closeLayer("groupModal");
+    renderStage();
+    showToast("线下接待客群已配置，已生成对比结果");
+  });
+
+  $("#editGroupsButton").addEventListener("click", openGroupModal);
+  $("#generateAiButton").addEventListener("click", generateAiSummary);
+  $("#regenerateButton").addEventListener("click", () => {
+    $("#aiEmpty").hidden = false;
+    $("#aiResult").hidden = true;
+    generateAiSummary();
+  });
+
+  $("#resetFilters").addEventListener("click", () => {
+    $$(".scope-fields select").forEach((select) => { select.selectedIndex = 0; });
+    syncModelOptions();
+    $("#aiEmpty").hidden = false;
+    $("#aiResult").hidden = true;
+    $("#overviewAiResult").hidden = true;
+    if (state.stage === "overview") renderOverview();
+    showToast("经营范围已重置");
+  });
+
+  $$("[data-enter-stage]").forEach((button) => {
+    button.addEventListener("click", () => goToStage(button.dataset.enterStage, "need"));
+  });
+
+  $$("[data-overview-topic]").forEach((button) => {
+    button.addEventListener("click", () => goToStage(button.dataset.overviewStage, button.dataset.overviewTopic));
+  });
+
+  $("#matrixSort").addEventListener("change", renderOverview);
+  $("#generateOverviewAi").addEventListener("click", () => {
+    const button = $("#generateOverviewAi");
+    button.disabled = true;
+    button.textContent = "正在生成…";
+    window.setTimeout(() => {
+      $("#overviewAiText").textContent = getOverviewBrand().summary;
+      $("#overviewAiResult").hidden = false;
+      button.disabled = false;
+      button.textContent = "AI 生成经营摘要";
+    }, 620);
+  });
+  $("#closeOverviewAi").addEventListener("click", () => { $("#overviewAiResult").hidden = true; });
+  $("#viewPriorityRules").addEventListener("click", () => showToast("优先级由影响客户数、异常程度、持续性、可控程度和数据稳定性共同决定"));
+  $("#viewAllOrgs").addEventListener("click", () => showToast("已展开全部大区、经销商与门店数据"));
+  $$(".org-list button").forEach((button) => button.addEventListener("click", () => showToast(`已选择${button.querySelector("strong").textContent}，总览范围已更新`)));
+  $$(".mini-tabs button").forEach((button) => {
+    button.addEventListener("click", () => {
+      $$(".mini-tabs button").forEach((item) => item.classList.toggle("active", item === button));
+      showToast(`趋势指标已切换为“${button.textContent}”`);
+    });
+  });
+
+  $("#exportButton").addEventListener("click", () => showToast("当前视图已加入导出任务"));
+  $("#exportAdopted").addEventListener("click", () => showToast("已采纳动作已加入导出任务"));
+  $("#generateCandidate").addEventListener("click", () => showToast("已基于当前范围更新标准动作候选"));
+  $("#viewAllVoices").addEventListener("click", () => showToast("已展示该信号的全部脱敏客户原声"));
+  $("#exceptionButton").addEventListener("click", () => showToast(state.stage === "online" ? "103 条数据因身份或到店记录无法匹配" : "16 名重叠客户已单列，不进入差异计算"));
+
+  $$('[data-close]').forEach((button) => button.addEventListener("click", () => closeLayer(button.dataset.close)));
+  $("#groupModal").addEventListener("click", (event) => { if (event.target === $("#groupModal")) closeLayer("groupModal"); });
+  $("#detailDrawer").addEventListener("click", (event) => { if (event.target === $("#detailDrawer")) closeLayer("detailDrawer"); });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!$("#detailDrawer").hidden) closeLayer("detailDrawer");
+    else if (!$("#groupModal").hidden) closeLayer("groupModal");
+  });
+
+  syncModelOptions();
+  renderStage();
+})();

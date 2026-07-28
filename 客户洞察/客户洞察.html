@@ -3,79 +3,369 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>客户洞察</title>
-    <link rel="icon" href="../AI质检平台4.29/assets/ds-logo.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <meta name="description" content="从品牌与车型总览进入线上邀约、线下接待分析，并回溯真实对话证据" />
+    <title>客户洞察 · AI质检平台</title>
+    <link rel="icon" href="../assets/ds-logo.png" />
     <link rel="stylesheet" href="./客户洞察.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <main class="workspace">
-        <header class="page-header">
+    <div class="page-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <a class="brand" href="../factory-dashboard/index.html" aria-label="返回 AI质检平台">
+          <span class="brand-mark"><img src="../assets/ds-logo.png" alt="" /></span>
+          <span class="brand-copy"><strong>AI质检平台</strong></span>
+        </a>
+
+        <nav class="nav-scroll">
+          <div class="nav-group">
+            <div class="nav-label">看板</div>
+            <div class="nav-menu">
+              <a class="nav-item" href="../factory-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5v2h2v1H7v-1h2v-2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v12h16V5H4Zm2 8h2v2H6v-2Zm4-4h2v6h-2V9Zm4-2h2v8h-2V7Z"/></svg>
+                <span class="nav-text">厂端看板</span>
+              </a>
+              <a class="nav-item active" href="./客户洞察.html" aria-current="page">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.5 3a7.5 7.5 0 1 1-5.3 12.8A7.5 7.5 0 0 1 10.5 3Zm0 2a5.5 5.5 0 1 0 3.89 9.39A5.5 5.5 0 0 0 10.5 5Zm6.7 10.8 4.1 4.1-1.4 1.4-4.1-4.1 1.4-1.4ZM7 10h2v3H7v-3Zm3-3h2v6h-2V7Zm3 2h2v4h-2V9Z"/></svg>
+                <span class="nav-text">首页</span>
+              </a>
+              <a class="nav-item" href="../store-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 2h11a2 2 0 0 1 2 2v5h3a2 2 0 0 1 2 2v11H2V4a2 2 0 0 1 2-2Zm0 2v16h11V4H4Zm13 7v9h3v-9h-3ZM6 7h2v2H6V7Zm5 0h2v2h-2V7Zm-5 5h2v2H6v-2Zm5 0h2v2h-2v-2Z"/></svg>
+                <span class="nav-text">门店看板</span>
+              </a>
+              <a class="nav-item" href="../sales-dashboard/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0-2a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0 3c-5 0-9 2.5-9 6v3h18v-3c0-3.5-4-6-9-6Zm-7 7v-1c0-2 2.8-4 7-4s7 2 7 4v1H5Z"/></svg>
+                <span class="nav-text">销售看板</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">业务</div>
+            <div class="nav-menu">
+              <a class="nav-item" href="../script-library/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-6 3V5a2 2 0 0 1 2-2Zm0 2v13.76L7.53 17H20V5H4Zm3 3h10v2H7V8Zm0 4h7v2H7v-2Z"/></svg>
+                <span class="nav-text">优秀话术库</span>
+              </a>
+              <a class="nav-item" href="../session/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 1 7 7v1a4 4 0 0 1 3 3.87V17a4 4 0 0 1-4 4h-2v-9h1V9a5 5 0 0 0-10 0v3h1v9H6a4 4 0 0 1-4-4v-3.13A4 4 0 0 1 5 10V9a7 7 0 0 1 7-7ZM6 12a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2v-7Zm12 0v7a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2Z"/></svg>
+                <span class="nav-text">录音列表</span>
+              </a>
+              <a class="nav-item" href="../leads/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 3h8v2h3a2 2 0 0 1 2 2v14H3V7a2 2 0 0 1 2-2h3V3Zm2 2h4V4h-4v1ZM5 7v12h14V7H5Zm3 3h8v2H8v-2Zm0 4h6v2H8v-2Z"/></svg>
+                <span class="nav-text">线索列表</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">管理</div>
+            <div class="nav-menu">
+              <a class="nav-item" href="../config/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.9 2.1 15 4.3c.5.2 1 .5 1.4.8l2.4-.2 1.9 3.3-1.4 2c0 .5 0 1-.1 1.5l1.5 1.9-1.9 3.3-2.4-.2c-.4.3-.9.6-1.4.8L13.9 20h-3.8L9 17.7c-.5-.2-1-.5-1.4-.8l-2.4.2-1.9-3.3 1.4-2c-.1-.5-.1-1 0-1.5l-1.4-2 1.9-3.3 2.4.2c.4-.3.9-.6 1.4-.8l1.1-2.3h3.8ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg>
+                <span class="nav-text">质检配置</span>
+              </a>
+              <a class="nav-item" href="../system/index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h18v14H3V3Zm2 2v10h14V5H5Zm4 14h6v2H9v-2Z"/></svg>
+                <span class="nav-text">系统管理</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
           <div>
-            <h1>客户洞察</h1>
-            <p>基于录音结构化标签实时聚合，筛选后自动生成AI画像。</p>
+            <h1 class="page-title">客户洞察</h1>
+            <p class="page-desc">先看品牌与车型经营全貌，再定位需要下钻的阶段、问题和销售动作。</p>
+          </div>
+          <div class="topbar-actions">
+            <span class="freshness"><i></i>数据更新至 07-20 23:59</span>
+            <button class="button secondary" id="exportButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              导出当前视图
+            </button>
           </div>
         </header>
 
-        <section class="filter-panel global-filter-bar" aria-label="全局筛选">
-          <div class="filter-grid" id="filterGrid"></div>
-        </section>
-
-        <section class="metric-grid metric-grid-8" id="metricGrid" aria-label="客户洞察指标"></section>
-
-        <section class="insight-layout">
-          <article class="portrait-panel">
-            <div class="panel-heading">
-              <div>
-                <h2>AI画像</h2>
-                <p id="portraitSubtext">识别真正影响成交的关键因素</p>
-              </div>
+        <div class="page-host">
+          <section class="stage-control card" aria-label="页面入口与时间范围">
+            <div class="stage-tabs" role="tablist" aria-label="页面入口">
+              <button class="stage-tab active" data-stage="overview" role="tab" aria-selected="true" type="button"><span class="stage-dot">总</span><span><strong>首页</strong><small>品牌与车型经营全貌</small></span></button>
+              <button class="stage-tab" data-stage="online" role="tab" aria-selected="false" type="button"><span class="stage-dot">邀</span><span><strong>线上邀约</strong><small>最终到店 vs 最终未到店</small></span></button>
+              <button class="stage-tab" data-stage="offline" role="tab" aria-selected="false" type="button"><span class="stage-dot">接</span><span><strong>线下接待</strong><small>按真实线索状态对比</small></span></button>
             </div>
+            <div class="date-tabs" role="group" aria-label="时间范围">
+              <button type="button">昨日</button><button class="active" type="button">近7天</button><button type="button">近半月</button><button type="button">近1月</button><button type="button">自定义</button>
+            </div>
+          </section>
 
-            <div class="portrait-map" id="portraitMap">
-              <svg class="portrait-links" id="portraitLinks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
-              <div class="center-model">
-                <div class="car-plate">
-                  <img src="../AI质检平台4.29/assets/portrait-model.png" alt="" />
-                  <strong id="centerCarName">AION Y Plus</strong>
-                  <span>当前分析车型</span>
+          <section class="scope-panel card" aria-labelledby="scopeTitle">
+            <div class="scope-title"><div><h2 id="scopeTitle">经营范围</h2><p>选择全部车型查看品牌总览，选择单车型进入车型总览</p></div><button class="text-button" id="resetFilters" type="button">重置筛选</button></div>
+            <div class="scope-fields">
+              <label><span>组织</span><select id="orgFilter"><option>全国</option><option>华东大区</option><option>华南大区</option></select></label>
+              <label><span>品牌</span><select id="brandFilter"><option>埃安</option><option>传祺</option></select></label>
+              <label><span>目标车型</span><select id="modelFilter"><option value="all">全部车型</option><option>AION V</option><option>AION Y Plus</option><option>AION S Plus</option><option>AION RT</option></select></label>
+            </div>
+            <div class="scope-rule" id="scopeRule">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm0 5v5m0 3h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span><strong>当前口径：</strong>埃安品牌 · 全部车型；线上与线下按各自业务事实展示，不强行拼接为统一漏斗。</span>
+              <span class="sample-ok">数据健康度 94.6%</span>
+            </div>
+          </section>
+
+
+          <section class="overview-page" id="overviewPage" aria-label="品牌与车型总览">
+            <section class="overview-hero card" aria-labelledby="overviewTitle">
+              <div class="overview-hero-head">
+                <div>
+                  <span class="section-kicker">品牌经营总览</span>
+                  <div class="overview-title-line"><h2 id="overviewTitle">埃安 · 全部车型</h2><span id="overviewCompareBadge">较上个 7 天</span></div>
+                  <p id="overviewDescription">用两个真实业务阶段看清整体表现，再定位需要优先分析的车型与问题。</p>
                 </div>
+                <button class="button primary compact" id="generateOverviewAi" type="button">AI 生成经营摘要</button>
               </div>
-              <div class="portrait-node-set" id="portraitNodeSet"></div>
-            </div>
-          </article>
 
-          <article class="data-panel">
-            <div class="panel-heading">
-              <div>
-                <h2>意向特征热力图</h2>
-                <p>各意向等级客户在关键标签上的命中分布情况</p>
+              <div class="overview-ai-result" id="overviewAiResult" hidden>
+                <span class="ai-pill">AI</span>
+                <div><strong>本周经营摘要</strong><p id="overviewAiText"></p></div>
+                <button class="text-button" id="closeOverviewAi" type="button">收起</button>
               </div>
-            </div>
-            <div class="heatmap-container" id="heatmapContainer"></div>
-          </article>
 
-          <article class="rank-panel" style="grid-column: 1 / -1;">
-            <div class="panel-heading compact">
-              <div>
-                <h2>画像明细</h2>
-                <p>按TOP排行展示画像标签、命中率与趋势。</p>
+              <div class="overview-journey">
+                <div class="journey-lanes">
+                  <article class="journey-stage online-stage">
+                    <div class="journey-stage-head"><span>线上邀约</span><button type="button" data-enter-stage="online">进入分析 →</button></div>
+                    <div class="journey-metrics">
+                      <div><small>邀约阶段客户</small><strong id="onlineCustomers">3,486</strong><em>自然客户</em></div>
+                      <i></i>
+                      <div><small>到店</small><strong id="arrivalCustomers">1,368</strong><em><b class="up">39.2%</b> · 较上期 +2.4pp</em></div>
+                    </div>
+                    <div class="journey-progress"><i id="arrivalProgress" style="width:39.2%"></i><span>最终未到店 2,118 人</span></div>
+                  </article>
+
+                  <div class="journey-link" aria-label="阶段数据关联覆盖">
+                    <span>可关联</span><strong id="linkedCustomers">1,302</strong><small>94.6%</small><i></i>
+                  </div>
+
+                  <article class="journey-stage offline-stage">
+                    <div class="journey-stage-head"><span>线下接待</span><button type="button" data-enter-stage="offline">配置对比 →</button></div>
+                    <div class="offline-total"><span><small>到店客户</small><strong id="offlineCustomers">1,412</strong></span><em>有效接待对话 1,327 人</em></div>
+                    <div class="status-distribution" aria-label="线索状态分布">
+                      <span class="ordered" style="width:29.6%" title="已下订 418 人"></span><span class="remote" style="width:7.5%" title="异地成交 106 人"></span><span class="following" style="width:35.8%" title="跟进中 506 人"></span><span class="lost" style="width:27.1%" title="战败及其他 382 人"></span>
+                    </div>
+                    <div class="status-legend"><span><i class="ordered"></i>已下订 418</span><span><i class="remote"></i>异地成交 106</span><span><i class="following"></i>跟进中 506</span><span><i class="lost"></i>战败及其他 382</span></div>
+                  </article>
+                </div>
+
+                <aside class="health-card">
+                  <div class="health-score"><span>数据健康度</span><strong>94.6<small>%</small></strong><em>可支撑总览分析</em></div>
+                  <div class="health-list">
+                    <span><i style="--health:97%"></i><b>有效对话覆盖</b><em>97.0%</em></span>
+                    <span><i style="--health:95%"></i><b>到店记录关联</b><em>95.1%</em></span>
+                    <span><i style="--health:92%"></i><b>线索状态关联</b><em>92.4%</em></span>
+                    <span><i style="--health:96%"></i><b>目标车型明确</b><em>96.3%</em></span>
+                  </div>
+                </aside>
               </div>
-              <div class="view-toggle" id="rankViewToggle">
-                <button class="active" data-view="cloud">词云视图</button>
-                <button data-view="list">列表视图</button>
+              <div class="journey-boundary"><span>i</span>线上与线下按各自业务事实展示；中间数字只表示数据关联覆盖，不代表一条统一销售漏斗。</div>
+            </section>
+
+            <section class="overview-main-grid">
+              <article class="model-matrix card" aria-labelledby="modelMatrixTitle">
+                <div class="panel-header overview-panel-head">
+                  <div class="panel-title"><div class="title-line"><h2 id="modelMatrixTitle">车型表现矩阵</h2><span class="matrix-count" id="matrixCount">4 款车型</span></div><p>同时看车型自身结果和它对品牌结果的贡献</p></div>
+                  <label class="matrix-sort">排序 <select id="matrixSort"><option value="attention">优先关注</option><option value="arrival">到店率</option><option value="order">已下订</option><option value="trend">趋势变化</option></select></label>
+                </div>
+                <div class="overview-table-wrap">
+                  <table class="overview-table">
+                    <thead>
+                      <tr>
+                        <th>车型</th><th>邀约客户</th><th>到店率</th><th>已下订</th>
+                        <th>
+                          <span class="metric-definition">品牌结果贡献率
+                            <button class="metric-help-button" type="button" aria-label="查看品牌结果贡献率定义" aria-describedby="brandContributionDefinition">i</button>
+                            <span class="metric-tooltip" id="brandContributionDefinition" role="tooltip"><strong>指标定义</strong>衡量该车型为当前品牌已下订结果贡献的占比。<br>计算方式：该车型已下订客户数 ÷ 当前品牌全部车型已下订客户数 × 100%。</span>
+                          </span>
+                        </th>
+                        <th>Top1 抗性点</th><th>Top1 竞品</th><th>趋势</th>
+                      </tr>
+                    </thead>
+                    <tbody id="modelMatrixBody"></tbody>
+                  </table>
+                </div>
+              </article>
+
+              <aside class="attention-panel card" aria-labelledby="attentionTitle">
+                <div class="panel-title"><div class="title-line"><h2 id="attentionTitle">优先关注</h2><span class="attention-badge">可解释排序</span></div><p>按影响客户数、异常程度、持续性与可控程度排序</p></div>
+                <div class="attention-list" id="attentionList"></div>
+                <div class="attention-foot"><span>排序不代表因果或预估转化提升</span><button type="button" id="viewPriorityRules">查看排序依据</button></div>
+              </aside>
+            </section>
+
+            <section class="overview-lower-grid">
+              <article class="trend-overview card" aria-labelledby="trendOverviewTitle">
+                <div class="panel-header overview-panel-head">
+                  <div class="panel-title"><h2 id="trendOverviewTitle">阶段结果趋势</h2><p>默认比较上一个等长周期</p></div>
+                  <div class="mini-tabs" role="group" aria-label="趋势指标"><button class="active" type="button">到店率</button><button type="button">已下订客户</button><button type="button">动作执行率</button></div>
+                </div>
+                <div class="trend-summary"><span><i class="brand-line"></i>品牌整体 <strong>39.2%</strong></span><span><i class="model-line"></i>AION V <strong>37.0%</strong></span><em>品牌整体较上期 +2.4pp</em></div>
+                <div class="overview-chart" aria-label="最近七周到店率趋势图">
+                  <div class="chart-grid"><i></i><i></i><i></i><i></i></div>
+                  <svg viewBox="0 0 720 180" role="img" aria-label="品牌整体与 AION V 到店率趋势">
+                    <defs><linearGradient id="brandArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6ff4" stop-opacity=".2"/><stop offset="1" stop-color="#2f6ff4" stop-opacity="0"/></linearGradient></defs>
+                    <path class="chart-area" d="M30 135 L138 123 L246 130 L354 103 L462 94 L570 76 L678 58 L678 158 L30 158 Z"/>
+                    <path class="chart-line brand" d="M30 135 L138 123 L246 130 L354 103 L462 94 L570 76 L678 58"/>
+                    <path class="chart-line model" d="M30 145 L138 139 L246 142 L354 124 L462 115 L570 101 L678 89"/>
+                    <g class="chart-dots"><circle cx="678" cy="58" r="4"/><circle class="model-dot" cx="678" cy="89" r="4"/></g>
+                  </svg>
+                  <div class="chart-labels"><span>第1周</span><span>第2周</span><span>第3周</span><span>第4周</span><span>第5周</span><span>第6周</span><span>本周</span></div>
+                </div>
+              </article>
+
+              <article class="org-overview card" aria-labelledby="orgOverviewTitle">
+                <div class="panel-header overview-panel-head"><div class="panel-title"><h2 id="orgOverviewTitle">组织差异</h2><p>相对品牌平均，定位需要优先下钻的大区</p></div><button class="text-button" type="button" id="viewAllOrgs">查看全部</button></div>
+                <div class="org-list">
+                  <button type="button"><span><strong>华南大区</strong><small>样本 1,026 人</small></span><b>42.8%</b><em class="positive">+3.6pp</em><i><u style="width:86%"></u></i></button>
+                  <button type="button"><span><strong>华东大区</strong><small>样本 1,184 人</small></span><b>36.1%</b><em class="negative">-3.1pp</em><i><u style="width:72%"></u></i></button>
+                  <button type="button"><span><strong>华北大区</strong><small>样本 792 人</small></span><b>39.7%</b><em class="positive">+0.5pp</em><i><u style="width:79%"></u></i></button>
+                  <button type="button"><span><strong>西南大区</strong><small>样本 484 人</small></span><b>38.4%</b><em class="negative">-0.8pp</em><i><u style="width:77%"></u></i></button>
+                </div>
+              </article>
+            </section>
+
+            <section class="overview-signals card" aria-labelledby="overviewSignalsTitle">
+              <div class="panel-header overview-panel-head"><div class="panel-title"><h2 id="overviewSignalsTitle">本周关键经营信号</h2><p>每个信号都可进入对应阶段查看客户原声与业务事实</p></div><span class="brief-scope">基于 3,272 名有效对话客户</span></div>
+              <div class="overview-signal-grid">
+                <button type="button" data-overview-topic="need" data-overview-stage="online"><span class="signal-icon need">需</span><div><small>TOP 客户需求</small><strong>家庭多人出行</strong><p>影响 1,286 人 · 较上期 +4.2%</p></div><b>线上邀约 →</b></button>
+                <button type="button" data-overview-topic="resistance" data-overview-stage="online"><span class="signal-icon resist">阻</span><div><small>TOP 未到店原因</small><strong>价格或预算顾虑</strong><p>影响 483 人 · 华东最集中</p></div><b>线上邀约 →</b></button>
+                <button type="button" data-overview-topic="competitor" data-overview-stage="offline"><span class="signal-icon compete">竞</span><div><small>TOP 竞品车型</small><strong>宋 PLUS DM-i</strong><p>提及 642 人 · 战败组更集中</p></div><b>线下接待 →</b></button>
+                <button type="button" data-overview-topic="action" data-overview-stage="offline"><span class="signal-icon action">动</span><div><small>关键销售动作</small><strong>完整解释价格构成</strong><p>执行率 58.6% · 低于品牌基准</p></div><b>线下接待 →</b></button>
+              </div>
+            </section>
+          </section>
+
+          <div class="stage-analysis" id="stageAnalysis" hidden>
+
+          <section class="comparison-hero card" aria-labelledby="comparisonTitle">
+            <div class="comparison-heading">
+              <div><span class="section-kicker" id="stageKicker">线上邀约 · 阶段结果</span><h2 id="comparisonTitle">这 1,248 位客户，最终有没有走进门店？</h2><p id="comparisonDesc">把最终到店结果放回首次到店前的客户对话，比较两组信号差异。</p></div>
+              <button class="button secondary compact" id="editGroupsButton" type="button" hidden>修改对比客群</button>
+            </div>
+            <div class="cohort-rail" aria-label="客群对比概览">
+              <article class="cohort cohort-a">
+                <div class="cohort-label"><span>A</span><div><strong id="groupAName">最终到店</strong><small id="groupAMeta">有效对话 436 人</small></div></div>
+                <div class="cohort-value"><strong id="groupAValue">462</strong><span>名客户</span><em id="groupARate">37.0%</em></div>
+                <div class="signal-track"><i id="trackA" style="width:37%"></i></div>
+              </article>
+              <div class="rail-core" aria-hidden="true"><span>VS</span><i></i></div>
+              <article class="cohort cohort-b">
+                <div class="cohort-label"><span>B</span><div><strong id="groupBName">最终未到店</strong><small id="groupBMeta">有效对话 709 人</small></div></div>
+                <div class="cohort-value"><strong id="groupBValue">786</strong><span>名客户</span><em id="groupBRate">63.0%</em></div>
+                <div class="signal-track"><i id="trackB" style="width:63%"></i></div>
+              </article>
+            </div>
+            <div class="sample-foot">
+              <span><strong id="totalSample">1,248</strong> 自然客户</span><i></i><span><strong id="validSample">1,145</strong> 有有效对话</span><i></i><button id="exceptionButton" type="button"><strong id="exceptionSample">103</strong> 条关联异常 <u>查看</u></button>
+            </div>
+          </section>
+
+          <section class="insight-layout">
+            <article class="ai-brief card" aria-labelledby="aiTitle">
+              <div class="panel-header">
+                <div class="panel-title"><div class="title-line"><h2 id="aiTitle">阶段 AI 摘要</h2><span class="ai-pill">AI</span></div><p>总结当前两组最值得管理层关注的差异</p></div>
+                <span class="brief-scope">1,145 名有效对话客户</span>
+              </div>
+              <div class="ai-empty" id="aiEmpty">
+                <div class="ai-orbit" aria-hidden="true"><span>AI</span><i></i><i></i><i></i></div>
+                <div><strong>让 AI 把差异整理成管理问题</strong><p>结论会引用下方指标与客户原声，只表达关联，不宣称因果。</p></div>
+                <button class="button primary" id="generateAiButton" type="button">生成 AI 摘要</button>
+              </div>
+              <div class="ai-result" id="aiResult" hidden>
+                <ol id="aiSummaryList"></ol>
+                <div class="ai-result-foot"><span>生成于刚刚 · 基于当前筛选范围</span><button class="text-button" id="regenerateButton" type="button">重新生成</button></div>
+              </div>
+            </article>
+
+            <aside class="priority-card card" aria-labelledby="priorityTitle">
+              <div class="priority-head"><span>管理关注</span><h2 id="priorityTitle">优先验证的 3 个问题</h2></div>
+              <div class="priority-list" id="priorityList">
+                <button type="button" data-topic-target="resistance"><span>01</span><p>未到店客户的“价格顾虑”是否集中在具体组织？</p><b>→</b></button>
+                <button type="button" data-topic-target="action"><span>02</span><p>给出明确时间选项，是否更常出现在到店组？</p><b>→</b></button>
+                <button type="button" data-topic-target="competitor"><span>03</span><p>竞品比较未完成的客户，主要卡在哪些配置？</p><b>→</b></button>
+              </div>
+            </aside>
+          </section>
+
+          <section class="topic-workspace card" aria-labelledby="workspaceTitle">
+            <div class="topic-nav">
+              <div><span class="section-kicker">对话信号</span><h2 id="workspaceTitle">两组客户在说什么，销售做了什么</h2></div>
+              <div class="topic-tabs" role="tablist" aria-label="洞察主题">
+                <button class="active" data-topic="need" role="tab" aria-selected="true" type="button">需求与关注</button>
+                <button data-topic="resistance" role="tab" aria-selected="false" type="button">抗性与难点</button>
+                <button data-topic="profile" role="tab" aria-selected="false" type="button">客户特征</button>
+                <button data-topic="action" role="tab" aria-selected="false" type="button">销售动作</button>
+                <button data-topic="competitor" role="tab" aria-selected="false" type="button">竞品情报</button>
               </div>
             </div>
-            <div class="rank-grid" id="rankGrid"></div>
-            <div class="rank-cloud" id="rankCloud" style="display: none;"></div>
-          </article>
-        </section>
+
+            <div class="workspace-grid">
+              <div class="signal-panel">
+                <div class="signal-head">
+                  <div><h3 id="signalTitle">客户需求与到店关注点</h3><p id="signalDesc">点击任一信号，下方原声同步切换</p></div>
+                  <div class="legend"><span class="a"><i></i><b id="legendA">最终到店</b></span><span class="b"><i></i><b id="legendB">最终未到店</b></span><em>占有效对话客户比例</em></div>
+                </div>
+                <div class="signal-list" id="signalList"></div>
+                <div class="signal-note"><span>i</span>差值为 A 组占比减 B 组占比；单项少于 5 名客户时不生成强结论。</div>
+              </div>
+
+              <aside class="voice-panel">
+                <div class="voice-head"><div><span class="section-kicker">证据下钻</span><h3 id="voiceTitle">家庭多人出行</h3></div><button class="text-button" id="viewAllVoices" type="button">查看全部</button></div>
+                <div class="voice-list" id="voiceList"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="action-section card" aria-labelledby="actionTitle">
+            <div class="panel-header">
+              <div class="panel-title"><div class="title-line"><h2 id="actionTitle">标准销售动作候选</h2><span class="candidate-count">3 项待验证</span></div><p>只沉淀在目标结果客群中更常出现的动作，由管理层确认后再进入标准库。</p></div>
+              <div class="candidate-actions"><button class="button secondary compact" id="exportAdopted" type="button">导出已采纳动作</button><button class="button primary compact" id="generateCandidate" type="button">AI 生成候选</button></div>
+            </div>
+            <div class="candidate-table-wrap">
+              <table class="candidate-table">
+                <thead><tr><th>候选动作</th><th>客户触发信号</th><th>执行率 A / B</th><th>执行 / 未执行结果率</th><th>稳定性</th><th>管理状态</th><th></th></tr></thead>
+                <tbody id="candidateBody"></tbody>
+              </table>
+            </div>
+            <div class="association-note"><span>关联 ≠ 因果</span> 候选动作仅说明与目标结果同时出现得更频繁，建议结合组织、车型和样本范围进一步验证。</div>
+          </section>
+          </div>
+        </div>
       </main>
     </div>
 
+    <div class="modal-backdrop" id="groupModal" hidden>
+      <section class="modal group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+        <header><div><span class="section-kicker">线下接待</span><h2 id="groupModalTitle">配置要比较的线索状态</h2><p>系统不替业务定义“成交”或“未成交”，请分别选择 A、B 两组。</p></div><button class="icon-button" data-close="groupModal" type="button" aria-label="关闭">×</button></header>
+        <div class="preset-row"><span>常用组合</span><button id="applyPreset" type="button">已下订、异地成交 <b>vs</b> 战败、战败申请中</button></div>
+        <div class="group-editor">
+          <div class="group-box group-a"><div class="group-box-title"><span>A</span><div><strong>对比组 A</strong><small>至少选择 1 个状态</small></div></div><div class="status-grid" data-group="a"></div></div>
+          <div class="editor-vs">VS</div>
+          <div class="group-box group-b"><div class="group-box-title"><span>B</span><div><strong>对比组 B</strong><small>同一状态不能重复选择</small></div></div><div class="status-grid" data-group="b"></div></div>
+        </div>
+        <div class="overlap-hint"><span>i</span>若同一自然客户同时命中两组，将单列为重叠客户，默认不进入差异计算。</div>
+        <footer><span id="groupValidation">A、B 两组都至少选择 1 个状态</span><div><button class="button secondary" data-close="groupModal" type="button">取消</button><button class="button primary" id="startOfflineCompare" type="button" disabled>开始对比</button></div></footer>
+      </section>
+    </div>
+
+    <div class="drawer-backdrop" id="detailDrawer" hidden>
+      <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">线上邀约 · 最终未到店</p></div><button class="icon-button" data-close="detailDrawer" type="button" aria-label="关闭">×</button></header>
+        <div class="drawer-body" id="drawerBody"></div>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./客户洞察.js"></script>
   </body>
 </html>

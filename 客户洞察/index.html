@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI 客户洞察原型版本选择" />
+    <title>客户洞察版本选择 · AI质检平台</title>
+    <link rel="icon" href="../assets/ds-logo.png" />
+    <link rel="stylesheet" href="./version-selector.css" />
+  </head>
+  <body>
+    <main class="selector-shell">
+      <header class="selector-header">
+        <a class="brand" href="../launcher.html" aria-label="返回 AI质检平台页面导航">
+          <img src="../assets/ds-logo.png" alt="" />
+          <span>AI质检平台</span>
+        </a>
+        <span class="prototype-badge">客户评审原型</span>
+      </header>
+
+      <section class="selector-intro">
+        <span class="eyebrow">AI CUSTOMER INSIGHT</span>
+        <h1>请选择要演示的客户洞察版本</h1>
+        <p>两个版本使用不同的分析入口和管理视角，功能相互独立，可分别打开进行客户评审。</p>
+      </section>
+
+      <section class="version-grid" aria-label="客户洞察版本">
+        <article class="version-card version-one">
+          <div class="version-head">
+            <div class="version-number"><span>V1</span><small>洞察主题版</small></div>
+            <span class="version-status">第一版</span>
+          </div>
+          <div class="version-copy">
+            <h2>从“想了解什么”开始</h2>
+            <p>以洞察主题为入口，适合快速查看客户是谁、为什么决策，以及正在比较哪些竞品。</p>
+          </div>
+
+          <div class="version-map" aria-hidden="true">
+            <div class="map-top">选择洞察主题</div>
+            <div class="map-flow">
+              <span><i>像</i>客群画像</span>
+              <b>→</b>
+              <span><i>因</i>决策归因</span>
+              <b>→</b>
+              <span><i>竞</i>竞品洞察</span>
+            </div>
+          </div>
+
+          <ul class="feature-list">
+            <li><span></span>客群画像、决策归因、竞品洞察三个主题</li>
+            <li><span></span>支持发起邀约结果或线索状态客群对比</li>
+            <li><span></span>查看主题排行、趋势、组织差异和客户原声</li>
+          </ul>
+
+          <a class="open-button" href="./v1/index.html">
+            打开 V1 原型
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </a>
+        </article>
+
+        <article class="version-card version-two">
+          <div class="version-head">
+            <div class="version-number"><span>V2</span><small>首页总览版</small></div>
+            <span class="version-status current">最新需求</span>
+          </div>
+          <div class="version-copy">
+            <h2>先看品牌全貌，再定位问题</h2>
+            <p>以品牌/车型总览为默认首页，再进入线上邀约、线下接待分析，把异常追溯到销售动作和真实原声。</p>
+          </div>
+
+          <div class="version-map" aria-hidden="true">
+            <div class="map-top">首页 · 品牌/车型总览</div>
+            <div class="map-flow stage-flow">
+              <span><i>邀</i>线上邀约</span>
+              <b>或</b>
+              <span><i>接</i>线下接待</span>
+            </div>
+            <div class="map-result"><span>A 组</span><b>双声道证据对比</b><span>B 组</span></div>
+          </div>
+
+          <ul class="feature-list">
+            <li><span></span>品牌与单车型总览、阶段结果及车型表现矩阵</li>
+            <li><span></span>需求、抗性、特征、销售动作、竞品五类洞察</li>
+            <li><span></span>AI 管理摘要、客户证据及标准动作候选</li>
+          </ul>
+
+          <a class="open-button primary" href="./v2/index.html">
+            打开 V2 原型
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </a>
+        </article>
+      </section>
+
+      <footer class="selector-footer">
+        <span>两个版本均为前端演示数据</span>
+        <i></i>
+        <span>建议分别演示后记录客户选择及原因</span>
+      </footer>
+    </main>
+  </body>
+</html>
