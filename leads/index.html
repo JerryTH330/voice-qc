@@ -483,40 +483,55 @@
                     <article class="lead-detail-tag-section">
                       <div class="lead-detail-tag-section-header">
                         <div class="lead-detail-tag-section-title intention-item-head">
-                          <img src="../assets/lead-tag-dialogue.svg" class="intention-item-icon" alt="" aria-hidden="true" />
+                          <img src="../assets/lead-tag-dialogue-figma.svg" class="intention-item-icon" alt="" aria-hidden="true" />
                           <h3>对话</h3>
                         </div>
                         <p>解析客户真实对话，动态识别需求、偏好、意向与决策阶段，深化客户个体洞察。</p>
                       </div>
-                      <div class="lead-tag-cloud" aria-label="客户对话标签词云" id="leadDetailConversationTagCloud" data-lead-detail-tag-cloud>
-                        <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">高意向</span></span>
-                        <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">价格敏感</span></span>
-                        <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">家庭出行</span></span>
-                        <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">金融方案诉求</span></span>
-                        <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">关注静谧性</span></span>
-                        <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">周末试驾</span></span>
-                        <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">竞品对比</span></span>
-                        <span class="lead-cloud-term red sm"><span class="lead-cloud-term-copy">决策待推动</span></span>
+                      <div class="lead-tag-relationship-map" id="leadDetailConversationMap" aria-label="客户对话标签关系图">
+                        <div class="lead-tag-relationship-path path-1" aria-hidden="true"><img src="../assets/lead-tag-path-01.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-2" aria-hidden="true"><img src="../assets/lead-tag-path-02.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-3" aria-hidden="true"><img src="../assets/lead-tag-path-03.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-4" aria-hidden="true"><img src="../assets/lead-tag-path-04.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-5" aria-hidden="true"><img src="../assets/lead-tag-path-05.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-6" aria-hidden="true"><img src="../assets/lead-tag-path-06.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-7" aria-hidden="true"><img src="../assets/lead-tag-path-07.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-8" aria-hidden="true"><img src="../assets/lead-tag-path-08.svg" alt="" /></div>
+                        <div class="lead-tag-relationship-path path-9" aria-hidden="true"><img src="../assets/lead-tag-path-09.svg" alt="" /></div>
+                        <span class="lead-relationship-chip tone-blue position-1">高意向</span>
+                        <span class="lead-relationship-chip tone-red position-2">价格敏感</span>
+                        <span class="lead-relationship-chip tone-green position-3">家庭出行</span>
+                        <span class="lead-relationship-chip tone-green position-4">周末试驾</span>
+                        <span class="lead-relationship-chip tone-red position-5">决策待推动</span>
+                        <span class="lead-relationship-chip tone-amber position-6">竞品对比</span>
+                        <span class="lead-relationship-chip tone-violet position-7">金融方案诉求</span>
+                        <span class="lead-relationship-chip tone-blue position-8">关注静谧性</span>
                       </div>
                     </article>
                     <article class="lead-detail-tag-section">
                       <div class="lead-detail-tag-section-header">
                         <div class="lead-detail-tag-section-title intention-item-head">
-                          <img src="../assets/lead-tag-public.svg" class="intention-item-icon" alt="" aria-hidden="true" />
+                          <img src="../assets/lead-tag-public-figma.svg" class="intention-item-icon" alt="" aria-hidden="true" />
                           <h3>公域</h3>
                         </div>
                         <p>融合公域用户属性、兴趣与行为数据，补充客户基础画像，构建完整客户视图。</p>
                       </div>
-                      <div class="lead-tag-cloud" aria-label="客户公域标签词云" id="leadDetailPublicTagCloud" data-lead-detail-tag-cloud>
-                        <span class="lead-cloud-term blue xl"><span class="lead-cloud-term-copy">30-39岁</span></span>
-                        <span class="lead-cloud-term red lg offset-up"><span class="lead-cloud-term-copy">已婚有孩</span></span>
-                        <span class="lead-cloud-term green lg"><span class="lead-cloud-term-copy">上海常驻</span></span>
-                        <span class="lead-cloud-term violet md offset-down"><span class="lead-cloud-term-copy">中高消费能力</span></span>
-                        <span class="lead-cloud-term amber md"><span class="lead-cloud-term-copy">汽车兴趣人群</span></span>
-                        <span class="lead-cloud-term blue md offset-up"><span class="lead-cloud-term-copy">新能源车关注</span></span>
-                        <span class="lead-cloud-term green sm"><span class="lead-cloud-term-copy">家庭出行偏好</span></span>
-                        <span class="lead-cloud-term amber sm offset-down"><span class="lead-cloud-term-copy">近期浏览汽车内容</span></span>
-                        <span class="lead-cloud-term violet sm"><span class="lead-cloud-term-copy">科技数码兴趣</span></span>
+                      <div class="lead-public-profile" id="leadDetailPublicProfile">
+                        <div class="lead-public-profile-highlights">
+                          <div class="lead-public-highlight tone-blue"><img class="lead-public-highlight-icon" src="../assets/lead-tag-public-intent.svg" alt="" aria-hidden="true" /><strong>高意向</strong></div>
+                          <div class="lead-public-highlight tone-red"><img class="lead-public-highlight-icon" src="../assets/lead-tag-public-consumption.svg" alt="" aria-hidden="true" /><strong>2档消费</strong></div>
+                          <div class="lead-public-highlight tone-green"><img class="lead-public-highlight-icon" src="../assets/lead-tag-public-location.svg" alt="" aria-hidden="true" /><strong>广东省广州市番禺区</strong></div>
+                        </div>
+                        <div class="lead-public-profile-divider" aria-hidden="true"><img src="../assets/lead-tag-public-divider.svg" alt="" /></div>
+                        <div class="lead-public-profile-attributes">
+                          <span class="lead-public-attribute tone-blue"><img src="../assets/lead-tag-public-gender.svg" alt="" aria-hidden="true" />男</span>
+                          <span class="lead-public-attribute tone-red"><img src="../assets/lead-tag-public-age.svg" alt="" aria-hidden="true" />年龄</span>
+                          <span class="lead-public-attribute tone-green"><img src="../assets/lead-tag-public-education.svg" alt="" aria-hidden="true" />本科</span>
+                          <span class="lead-public-attribute tone-violet"><img src="../assets/lead-tag-public-career.svg" alt="" aria-hidden="true" />资深白领</span>
+                          <span class="lead-public-attribute tone-amber"><img src="../assets/lead-tag-public-car.svg" alt="" aria-hidden="true" />有车</span>
+                          <span class="lead-public-attribute tone-blue"><img src="../assets/lead-tag-public-new-energy.svg" alt="" aria-hidden="true" />新能源</span>
+                          <span class="lead-public-attribute tone-red"><img src="../assets/lead-tag-public-tech.svg" alt="" aria-hidden="true" />科技爱好者</span>
+                        </div>
                       </div>
                     </article>
                   </div>
