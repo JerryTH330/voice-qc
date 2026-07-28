@@ -386,9 +386,9 @@
               </div>
               <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
                 <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势发掘TOP5</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">待改善短板TOP5</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">短板识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险势识别</button>
               </div>
 
               <div class="issue-detail-section">
@@ -396,20 +396,22 @@
                   <div class="store-section-content issue-detail-content">
                     <div class="issue-detail-pad">
                       <div class="store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
-                        <label class="store-sop-rule-search">
-                          <span>搜索规则</span>
-                          <input id="store-sop-rule-search" type="search" placeholder="输入规则名称" autocomplete="off">
+                        <label class="store-sop-rule-field store-sop-rule-field--search">
+                          <span>搜索内容</span>
+                          <input class="store-sop-rule-input" id="store-sop-rule-search" type="search" placeholder="输入规则名称" autocomplete="off">
                         </label>
-                        <label class="store-sop-rule-sort">
-                          <span>排序</span>
-                          <select id="store-sop-rule-sort" aria-label="SOP 规则排序">
+                        <label class="store-sop-rule-field">
+                          <span>排序方式</span>
+                          <select class="store-sop-rule-select" id="store-sop-rule-sort" aria-label="SOP 规则排序">
                             <option value="rate-desc">命中率从高到低</option>
                             <option value="rate-asc">命中率从低到高</option>
                             <option value="name-asc">规则名称</option>
                           </select>
                         </label>
+                        <div class="store-sop-rule-meta" id="store-sop-rule-meta">共 21 条规则</div>
                       </div>
                       <div id="sop-rule-chart" class="issue-list"></div>
+                      <div class="session-pagination issue-rule-pagination" id="sop-rule-pagination" aria-label="SOP 质检规则分页"></div>
                     </div>
                   </div>
                 </section>
@@ -418,6 +420,7 @@
                   <div class="store-section-content issue-detail-content">
                     <div class="issue-detail-pad">
                       <div id="strength-chart" class="issue-list"></div>
+                      <div class="session-pagination issue-rule-pagination" id="strength-pagination" aria-label="优势识别分页"></div>
                     </div>
                   </div>
                 </section>
@@ -426,6 +429,7 @@
                   <div class="store-section-content issue-detail-content">
                     <div class="issue-detail-pad">
                       <div id="weakness-chart" class="issue-list"></div>
+                      <div class="session-pagination issue-rule-pagination" id="weakness-pagination" aria-label="短板识别分页"></div>
                     </div>
                   </div>
                 </section>
