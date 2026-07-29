@@ -1698,7 +1698,7 @@ function initStoreDashboardPage() {
   let currentFilter = "all";
   let currentClientTimeMode = "followup";
   let currentSort = { key: 'qa_pass', desc: true };
-  let advisorPaginationState = { page: 1, pageSize: 5 };
+  let advisorPaginationState = { page: 1, pageSize: 10 };
   let storeTimeStartDate = "";
   let storeTimeEndDate = "";
   const storeTeamSummaryState = {
@@ -3985,8 +3985,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     if (!sopRuleEl) return;
 
     const visibleRules = getVisibleStoreSopRules();
-    const metaEl = document.getElementById('store-sop-rule-meta');
-    if (metaEl) metaEl.textContent = `共 ${visibleRules.length} 条规则`;
     const { items: pagedRules, offset } = getStoreIssuePageSlice('sop', visibleRules);
     sopRuleEl.style.height = 'auto';
     sopRuleEl.innerHTML = visibleRules.length
@@ -4003,7 +4001,33 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   const setupStoreSopRuleControls = () => {
     const searchInput = document.getElementById('store-sop-rule-search');
-    const sortSelect = document.getElementById('store-sop-rule-sort');
+    const sortField = document.querySelector('#detail-sop .store-sop-rule-field--sort');
+    const sortTrigger = sortField?.querySelector('[data-store-sop-rule-sort-trigger]');
+    const sortPanel = sortField?.querySelector('[data-store-sop-rule-sort-panel]');
+    const sortValue = sortField?.querySelector('.store-sop-rule-sort-value');
+    let outsideClickHandler = null;
+
+    const closeSortPanel = () => {
+      sortPanel?.classList.remove('show');
+      sortTrigger?.classList.remove('active');
+      sortTrigger?.setAttribute('aria-expanded', 'false');
+      if (outsideClickHandler) {
+        document.removeEventListener('click', outsideClickHandler);
+        outsideClickHandler = null;
+      }
+    };
+
+    const openSortPanel = () => {
+      sortPanel?.classList.add('show');
+      sortTrigger?.classList.add('active');
+      sortTrigger?.setAttribute('aria-expanded', 'true');
+      outsideClickHandler = (event) => {
+        if (!sortField?.contains(event.target)) {
+          closeSortPanel();
+        }
+      };
+      document.addEventListener('click', outsideClickHandler);
+    };
 
     searchInput?.addEventListener('input', (event) => {
       storeSopRuleState.query = event.target.value || '';
@@ -4011,9 +4035,30 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       renderStoreIssueSections();
     });
 
-    sortSelect?.addEventListener('change', (event) => {
-      storeSopRuleState.sort = event.target.value || 'rate-desc';
+    sortTrigger?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (sortPanel?.classList.contains('show')) {
+        closeSortPanel();
+      } else {
+        openSortPanel();
+      }
+    });
+
+    sortPanel?.addEventListener('click', (event) => {
+      const option = event.target.closest('[data-store-sop-rule-sort]');
+      if (!option) return;
+
+      storeSopRuleState.sort = option.dataset.storeSopRuleSort || 'rate-desc';
       storeIssuePaginationState.sop = 1;
+      if (sortValue) {
+        sortValue.textContent = option.textContent.trim();
+      }
+      sortPanel.querySelectorAll('[data-store-sop-rule-sort]').forEach((node) => {
+        const isActive = node === option;
+        node.classList.toggle('active', isActive);
+        node.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      closeSortPanel();
       renderStoreIssueSections();
     });
   };
@@ -11908,19 +11953,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (storeCount > 1) {
           return {
-            title: '跨店共性与差异',
             result: '共性关注：客户在多家门店均围绕传祺M8展开沟通，持续关注家庭出行所需的空间、舒适性，以及价格和金融方案。\n门店差异：上海浦东门店的沟通更深入，客户已完成试驾并重点验证空间与静谧性；杭州滨江门店主要比较总价、金融免息和置换补贴；杭州西湖门店仍处于早期车型、竞品和价格了解阶段。\n多店对比原因：客户对车型方向和产品体验已基本认可，目前接触多家门店主要是为了比较报价、金融、置换补贴等成交条件，而不是重新选择车型。'
           }
         }
 
         return {
-          title: '阶段共性与差异',
           result: '共性关注：客户在首次跟进、到店和试驾阶段始终围绕家庭出行需求，持续关注车型空间、乘坐舒适性和整体购车成本。\n阶段差异：首次跟进阶段主要了解优惠、现车和到店安排；到店阶段开始具体比较空间、静谧性、交付周期和金融方案；试驾后对产品体验基本认可，关注点进一步集中到价格、金融和置换补贴。\n阶段特征：不同阶段的差异主要体现在决策逐步深入——从了解车型与优惠，到验证产品体验，再到比较成交条件。'
         }
       }
 
       function getCustomerAiPortraitPreviewHtml() {
         return `
+          <span class="customer-insight-ai-description">客户在多家门店/单门店多旅程的共性与差异分析</span>
           <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
         `
       }
@@ -11943,15 +11987,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        const insightMeta = getCustomerAiInsightModeMeta()
         panel.classList.add('is-generated')
         panel.innerHTML = `
           <div class="customer-ai-result">
-            <span class="customer-ai-result-title">${escapeHtml(insightMeta.title)}</span>
             <div class="customer-ai-generated-copy">${escapeHtml(text)}</div>
             <button class="customer-ai-regenerate" type="button" data-customer-ai-generate>重新生成</button>
           </div>
         `
+        setCustomerInsightRobotPlayback(false)
       }
 
       function startCustomerAiPortraitTyping(panel, text) {
@@ -11983,10 +12026,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           visibleLength = Math.min(fullText.length, visibleLength + 1)
           panel.innerHTML = `
             <div class="customer-ai-result">
-              <span class="customer-ai-result-title">${escapeHtml(getCustomerAiInsightModeMeta().title)}</span>
-              <div class="customer-ai-generated-copy-typing">
-                ${escapeHtml(fullText.slice(0, visibleLength))}<span class="customer-ai-typing-caret" aria-hidden="true"></span>
-              </div>
+              <div class="customer-ai-generated-copy-typing">${escapeHtml(fullText.slice(0, visibleLength))}<span class="customer-ai-typing-caret" aria-hidden="true"></span></div>
             </div>
           `
 
@@ -12047,6 +12087,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerAiPortraitState.lastText = ''
       }
 
+      function setCustomerInsightRobotPlayback(isPlaying) {
+        const robotImage = pageHost.querySelector('.customer-insight-robot')
+        const robotVideo = pageHost.querySelector('.customer-insight-robot-video')
+
+        if (!robotImage || !robotVideo) {
+          return
+        }
+
+        if (!isPlaying) {
+          robotVideo.pause()
+          robotVideo.currentTime = 0
+          robotVideo.hidden = true
+          robotImage.hidden = false
+          return
+        }
+
+        robotImage.hidden = true
+        robotVideo.hidden = false
+        robotVideo.currentTime = 0
+
+        const playResult = robotVideo.play()
+        if (playResult && typeof playResult.catch === 'function') {
+          playResult.catch(() => {
+            setCustomerInsightRobotPlayback(false)
+          })
+        }
+      }
+
       function startCustomerAiPortraitGenerationFlow() {
         if (customerAiPortraitState.generated || customerAiPortraitState.generating) {
           return
@@ -12075,8 +12143,24 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function bindCustomerAiPortraitGeneration() {
         const panel = pageHost.querySelector('.customer-ai-generate-panel')
+        const robotVideo = pageHost.querySelector('.customer-insight-robot-video')
         if (!panel) {
           return
+        }
+
+        if (robotVideo) {
+          robotVideo.addEventListener('ended', () => {
+            const insightOutputInProgress = customerAiPortraitState.generating
+              || (customerAiPortraitState.generated && !customerAiPortraitState.typingDone)
+            if (insightOutputInProgress) {
+              setCustomerInsightRobotPlayback(true)
+              return
+            }
+            setCustomerInsightRobotPlayback(false)
+          })
+          robotVideo.addEventListener('error', () => {
+            setCustomerInsightRobotPlayback(false)
+          })
         }
 
         panel.addEventListener('click', (event) => {
@@ -12084,6 +12168,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           if (!generateButton) {
             return
           }
+          setCustomerInsightRobotPlayback(true)
           if (customerAiPortraitState.generated) {
             resetCustomerAiPortraitGeneration()
           }
@@ -12170,11 +12255,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return diff !== 0 ? diff : left.index - right.index
           })
           .map(({ item }) => item)
-        let selectedFilters = new Set(
-          storeButtons
-            .map((button) => button.dataset.customerJourneyFilter || '')
-            .filter(Boolean)
-        )
+        let selectedFilters = new Set(['current'])
         let sortMode = 'store'
 
         const applyFilter = () => {
@@ -13921,6 +14002,70 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         roleState.reviewSummaryTypingTimer = null
       }
 
+      function isSalesReviewSummaryInProgress(role) {
+        const roleState = getSalesRoleState(role)
+        return Boolean(
+          roleState?.reviewSummaryGenerating
+          || (roleState?.reviewSummaryGenerated && !roleState?.reviewSummaryTypingDone)
+        )
+      }
+
+      function setSalesReviewRobotPlayback(role, isPlaying) {
+        const robotMedia = document.querySelector('[data-sales-review-robot-media]')
+        const robotImage = robotMedia?.querySelector('.sales-review-robot-image')
+        const robotVideo = robotMedia?.querySelector('.sales-review-robot-video')
+
+        if (!robotImage || !robotVideo) {
+          return
+        }
+
+        if (!isPlaying) {
+          robotVideo.pause()
+          robotVideo.currentTime = 0
+          robotVideo.hidden = true
+          robotImage.hidden = false
+          return
+        }
+
+        robotImage.hidden = true
+        robotVideo.hidden = false
+        if (robotVideo.paused) {
+          robotVideo.currentTime = 0
+          const playResult = robotVideo.play()
+          if (playResult && typeof playResult.catch === 'function') {
+            playResult.catch(() => {
+              setSalesReviewRobotPlayback(role, false)
+            })
+          }
+        }
+      }
+
+      function bindSalesReviewRobotPlayback(role) {
+        const robotVideo = document.querySelector('[data-sales-review-robot-media] .sales-review-robot-video')
+        if (!robotVideo || robotVideo.dataset.salesReviewRobotBound === 'true') {
+          return
+        }
+
+        robotVideo.dataset.salesReviewRobotBound = 'true'
+        robotVideo.addEventListener('ended', () => {
+          if (!isSalesReviewSummaryInProgress(role)) {
+            setSalesReviewRobotPlayback(role, false)
+            return
+          }
+
+          robotVideo.currentTime = 0
+          const playResult = robotVideo.play()
+          if (playResult && typeof playResult.catch === 'function') {
+            playResult.catch(() => {
+              setSalesReviewRobotPlayback(role, false)
+            })
+          }
+        })
+        robotVideo.addEventListener('error', () => {
+          setSalesReviewRobotPlayback(role, false)
+        })
+      }
+
       function renderSalesReviewSummaryStatic(summaryNode, summaryText) {
         summaryNode.innerHTML = `<div class="review-ai-summary-content">${escapeHtml(summaryText)}</div>`
       }
@@ -13940,6 +14085,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (!fullText) {
           renderSalesReviewSummaryStatic(summaryNode, '')
           roleState.reviewSummaryTypingDone = true
+          setSalesReviewRobotPlayback(role, false)
           return
         }
 
@@ -13964,6 +14110,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             clearSalesReviewTypingTimer(roleState)
             roleState.reviewSummaryTypingDone = true
             renderSalesReviewSummaryStatic(summaryNode, fullText)
+            setSalesReviewRobotPlayback(role, false)
           }
         }
 
@@ -15128,23 +15275,43 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const state = getSalesRoleState(role)
-        const totalItems = getSalesReviewVisibleItems(role, activeTab).length
+        const sortOptions = [
+          { value: 'rate-desc', label: '命中率从高到低' },
+          { value: 'rate-asc', label: '命中率从低到高' },
+          { value: 'name-asc', label: '规则名称' }
+        ]
+        const activeSort = sortOptions.find((option) => option.value === state.reviewSopSort) || sortOptions[0]
         toolbar.hidden = false
         toolbar.innerHTML = `
           <div class="store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
             <label class="store-sop-rule-field store-sop-rule-field--search">
-              <span>搜索内容</span>
+              <span>搜索规则</span>
               <input class="store-sop-rule-input" type="search" value="${escapeHtml(state.reviewSopQuery || '')}" placeholder="输入规则名称" autocomplete="off" data-sales-review-sop-search>
             </label>
-            <label class="store-sop-rule-field">
-              <span>排序方式</span>
-              <select class="store-sop-rule-select" aria-label="SOP 规则排序" data-sales-review-sop-sort>
-                <option value="rate-desc"${state.reviewSopSort === 'rate-desc' ? ' selected' : ''}>命中率从高到低</option>
-                <option value="rate-asc"${state.reviewSopSort === 'rate-asc' ? ' selected' : ''}>命中率从低到高</option>
-                <option value="name-asc"${state.reviewSopSort === 'name-asc' ? ' selected' : ''}>规则名称</option>
-              </select>
-            </label>
-            <div class="store-sop-rule-meta" id="sales-review-rule-meta">共 ${totalItems} 条规则</div>
+            <div class="store-sop-rule-field store-sop-rule-field--sort">
+              <span>排序</span>
+              <div class="sales-review-sop-sort-dropdown">
+                <button type="button" class="sales-review-sop-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-sales-review-sop-sort-trigger>
+                  <span class="sales-review-sop-sort-value">${escapeHtml(activeSort.label)}</span>
+                  <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </button>
+                <div class="sales-review-sop-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式" data-sales-review-sop-sort-panel>
+                  <div class="session-menu-option-list">
+                    ${sortOptions.map((option) => `
+                      <button
+                        type="button"
+                        class="sales-review-sop-sort-option store-model-option session-menu-option${activeSort.value === option.value ? ' active' : ''}"
+                        data-sales-review-sop-sort="${option.value}"
+                        role="option"
+                        aria-selected="${activeSort.value === option.value ? 'true' : 'false'}"
+                      ><span>${escapeHtml(option.label)}</span></button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>`
 
         toolbar.querySelector('[data-sales-review-sop-search]')?.addEventListener('input', (event) => {
@@ -15152,9 +15319,47 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           state.reviewInsightPage = 1
           renderSalesReviewInsightContent(role, activeTab)
         })
-        toolbar.querySelector('[data-sales-review-sop-sort]')?.addEventListener('change', (event) => {
-          state.reviewSopSort = event.target.value || 'rate-desc'
+        const sortField = toolbar.querySelector('.store-sop-rule-field--sort')
+        const sortTrigger = toolbar.querySelector('[data-sales-review-sop-sort-trigger]')
+        const sortPanel = toolbar.querySelector('[data-sales-review-sop-sort-panel]')
+        let outsideClickHandler = null
+        const closeSortPanel = () => {
+          sortPanel?.classList.remove('show')
+          sortTrigger?.classList.remove('active')
+          sortTrigger?.setAttribute('aria-expanded', 'false')
+          if (outsideClickHandler) {
+            document.removeEventListener('click', outsideClickHandler)
+            outsideClickHandler = null
+          }
+        }
+        const openSortPanel = () => {
+          sortPanel?.classList.add('show')
+          sortTrigger?.classList.add('active')
+          sortTrigger?.setAttribute('aria-expanded', 'true')
+          outsideClickHandler = (event) => {
+            if (!sortField?.contains(event.target)) {
+              closeSortPanel()
+            }
+          }
+          document.addEventListener('click', outsideClickHandler)
+        }
+
+        sortTrigger?.addEventListener('click', (event) => {
+          event.stopPropagation()
+          if (sortPanel?.classList.contains('show')) {
+            closeSortPanel()
+          } else {
+            openSortPanel()
+          }
+        })
+
+        sortPanel?.addEventListener('click', (event) => {
+          const option = event.target.closest('[data-sales-review-sop-sort]')
+          if (!option) return
+          state.reviewSopSort = option.dataset.salesReviewSopSort || 'rate-desc'
           state.reviewInsightPage = 1
+          closeSortPanel()
+          renderSalesReviewToolbar(role, activeTab)
           renderSalesReviewInsightContent(role, activeTab)
         })
       }
@@ -15208,9 +15413,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage || 1))
         const offset = (state.reviewInsightPage - 1) * SALES_REVIEW_PAGE_SIZE
         const pageItems = visibleItems.slice(offset, offset + SALES_REVIEW_PAGE_SIZE)
-        const meta = document.getElementById('sales-review-rule-meta')
-        if (meta) meta.textContent = `共 ${visibleItems.length} 条规则`
-
         list.innerHTML = pageItems.length
           ? renderSharedInsightTop5Cards(pageItems, {
               cardTag: 'article',
@@ -16030,6 +16232,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             `
           }
         }
+        setSalesReviewRobotPlayback('dcc', isSalesReviewSummaryInProgress('dcc'))
         renderSalesReviewInsights('dcc')
       }
 
@@ -16092,6 +16295,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function bindDccEvents() {
+        bindSalesReviewRobotPlayback('dcc')
         document.getElementById('review-ai-summary')?.addEventListener('click', (event) => {
           const generateButton = event.target.closest('[data-review-generate]')
           if (!generateButton || dccState.reviewSummaryGenerated || dccState.reviewSummaryGenerating) {
@@ -16974,6 +17178,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             `
           }
         }
+        setSalesReviewRobotPlayback('advisor', isSalesReviewSummaryInProgress('advisor'))
         renderSalesReviewInsights('advisor')
       }
 
@@ -17036,6 +17241,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function bindAdvisorEvents() {
+        bindSalesReviewRobotPlayback('advisor')
         document.getElementById('review-ai-summary')?.addEventListener('click', (event) => {
           const generateButton = event.target.closest('[data-review-generate]')
           if (!generateButton || advisorState.reviewSummaryGenerated || advisorState.reviewSummaryGenerating) {

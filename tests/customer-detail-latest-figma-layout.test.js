@@ -17,11 +17,61 @@ test('customer detail uses latest Figma summary timeline layout', () => {
   assert.equal((template.match(/customer-hero-journey-row/g) || []).length, 0);
 });
 
-test('customer detail keeps right AI generation and tag panels', () => {
+test('customer journey overview and toolbar sit between the heading and detail board', () => {
+  const journeyHeadingIndex = template.indexOf('<h3>客户旅程</h3>');
+  const overviewIndex = template.indexOf('class="customer-hero-flat-timeline"');
+  const journeyToolbarIndex = template.indexOf('class="customer-journey-toolbar"');
+  const journeyBoardIndex = template.indexOf('class="customer-journey-board"');
+
+  assert.ok(journeyHeadingIndex >= 0);
+  assert.ok(overviewIndex > journeyHeadingIndex);
+  assert.ok(journeyToolbarIndex > overviewIndex);
+  assert.ok(journeyBoardIndex > journeyToolbarIndex);
+});
+
+test('customer detail follows the Figma insight hierarchy', () => {
   assert.ok(template.includes('customer-ai-generate-panel'));
   assert.ok(template.includes('立即生成'));
-  assert.ok(template.includes('customer-intention-panel'));
-  assert.ok(template.includes('customer-detail-tag-panel'));
+  assert.ok(template.includes('customer-insight-panel'));
+  assert.ok(template.includes('customer-insight-summary'));
+  assert.ok(template.includes('customer-insight-tags'));
+  assert.ok(template.includes('customer-insight-robot-222.png'));
+  assert.equal(template.includes('class="ai-badge"'), false);
+});
+
+test('customer detail uses downloaded Figma image and icon assets', () => {
+  const assetNames = [
+    'customer-detail-avatar-figma.png',
+    'customer-insight-avatar-figma.png',
+    'customer-insight-robot-222.png',
+    'customer-summary-leads-figma.svg',
+    'customer-summary-stores-figma.svg',
+    'customer-summary-time-figma.svg',
+    'customer-insight-judgement-figma.svg',
+    'customer-public-married-figma.svg',
+    'customer-public-consumption-figma.svg',
+    'customer-public-location-figma.svg',
+    'customer-public-gender-figma.svg',
+    'customer-public-age-figma.svg',
+    'customer-public-education-figma.svg',
+    'customer-public-career-figma.svg',
+    'customer-public-car-figma.svg',
+    'customer-public-energy-figma.svg',
+    'customer-public-tech-figma.svg'
+  ];
+
+  assetNames.forEach((assetName) => {
+    assert.ok(template.includes(`../assets/${assetName}`), `${assetName} should be referenced`);
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', assetName)), `${assetName} should exist`);
+  });
+});
+
+test('customer insight public labels match the Figma node', () => {
+  ['已婚已育', '2档消费', '上海常驻', '男', '年龄', '本科', '资深白领', '有车', '新能源', '科技爱好者'].forEach((label) => {
+    assert.ok(template.includes(`<span>${label}</span>`));
+  });
+  assert.equal(template.includes('30–39岁'), false);
+  assert.equal(template.includes('汽车兴趣人群'), false);
 });
 
 test('customer detail summary uses first contact label', () => {
@@ -37,6 +87,11 @@ test('lead page includes direct styles for the latest customer detail layout', (
   assert.ok(css.includes('.customer-hero-summary-chip'));
 });
 
+test('customer insight shell matches the latest Figma white panel', () => {
+  assert.match(css, /\.customer-insight-panel\s*{[\s\S]*?border:\s*1\.5px solid #dbeafe;[\s\S]*?border-radius:\s*18px;[\s\S]*?background:\s*#fff;/);
+  assert.equal(css.includes('linear-gradient(180deg, #eff6ff 0%, #fff 100%)'), false);
+});
+
 test('customer detail AI portrait generation uses loading and typing interaction', () => {
   assert.ok(template.includes('data-customer-ai-generate'));
   assert.ok(runtime.includes('customerAiPortraitState.generating'));
@@ -44,6 +99,50 @@ test('customer detail AI portrait generation uses loading and typing interaction
   assert.ok(runtime.includes('customer-ai-generate-loading'));
   assert.ok(css.includes('.customer-ai-generate-loading'));
   assert.ok(css.includes('.customer-ai-typing-caret'));
+});
+
+test('customer insight robot plays a local video during generation and restores the image', () => {
+  assert.ok(template.includes('customer-insight-robot-generating.mp4'));
+  assert.ok(template.includes('class="customer-insight-robot-video"'));
+  assert.ok(template.includes('muted'));
+  assert.ok(template.includes('playsinline'));
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'customer-insight-robot-generating.mp4')));
+  assert.ok(runtime.includes('setCustomerInsightRobotPlayback(true)'));
+  assert.ok(runtime.includes("robotVideo.addEventListener('ended'"));
+  assert.ok(runtime.includes('setCustomerInsightRobotPlayback(false)'));
+  assert.ok(css.includes('.customer-insight-robot-video[hidden]'));
+});
+
+test('customer insight robot loops through typing and stops after the regenerate button appears', () => {
+  assert.match(runtime, /const insightOutputInProgress = customerAiPortraitState\.generating[\s\S]*?\|\| \(customerAiPortraitState\.generated && !customerAiPortraitState\.typingDone\)/);
+  assert.match(runtime, /if \(insightOutputInProgress\) \{[\s\S]*?setCustomerInsightRobotPlayback\(true\)[\s\S]*?return/);
+  assert.match(runtime, /<button class="customer-ai-regenerate"[\s\S]*?重新生成<\/button>[\s\S]*?setCustomerInsightRobotPlayback\(false\)/);
+  assert.doesNotMatch(runtime, /customerAiPortraitState\.generateTimer = window\.setTimeout\([\s\S]*?customerAiPortraitState\.generateTimer = null\s+setCustomerInsightRobotPlayback\(false\)/);
+});
+
+test('customer insight description sits left of the generate button with 24px spacing', () => {
+  const panelIndex = template.indexOf('class="customer-ai-generate-panel"');
+  const descriptionIndex = template.indexOf('class="customer-insight-ai-description"');
+  const buttonIndex = template.indexOf('data-customer-ai-generate');
+
+  assert.ok(panelIndex >= 0);
+  assert.ok(descriptionIndex > panelIndex);
+  assert.ok(buttonIndex > descriptionIndex);
+  assert.ok(runtime.includes('<span class="customer-insight-ai-description">客户在多家门店/单门店多旅程的共性与差异分析</span>'));
+  assert.match(css, /\.customer-ai-generate-panel\s*{[\s\S]*?flex-direction:\s*row;[\s\S]*?gap:\s*12px 24px;/);
+});
+
+test('generated customer insight omits the result mode badge', () => {
+  assert.equal(runtime.includes('customer-ai-result-title'), false);
+  assert.equal(runtime.includes("title: '跨店共性与差异'"), false);
+  assert.equal(runtime.includes("title: '阶段共性与差异'"), false);
+  assert.equal(css.includes('.customer-ai-result-title'), false);
+});
+
+test('typing customer insight starts directly with generated text without a leading newline', () => {
+  assert.ok(runtime.includes('<div class="customer-ai-generated-copy-typing">${escapeHtml(fullText.slice(0, visibleLength))}'));
+  assert.equal(runtime.includes('class="customer-ai-generated-copy-typing">\\n'), false);
+  assert.equal(css.includes('.customer-ai-generate-panel.is-typing'), false);
 });
 
 test('customer detail journey markers match lead detail marker style weight', () => {
@@ -54,10 +153,18 @@ test('customer detail journey markers match lead detail marker style weight', ()
   assert.equal(css.includes('0 0 0 7px'), false);
 });
 
-test('customer detail AI portrait expands after generated text exceeds card height', () => {
-  assert.match(css, /\.customer-detail-page \.customer-intention-panel:has\(\.customer-ai-generate-panel\.is-generated\)\s*{[\s\S]*?height:\s*auto;/);
-  assert.match(css, /\.customer-detail-page \.customer-intention-panel:has\(\.customer-ai-generate-panel\.is-generated\)\s*{[\s\S]*?min-height:\s*240px;/);
+test('customer detail AI portrait fills the card without an empty generated-state footer', () => {
+  assert.match(css, /\.customer-ai-generate-panel\s*{[\s\S]*?min-height:\s*120px;[\s\S]*?flex:\s*1 1 auto;/);
+  assert.equal(css.includes('.customer-insight-ai:has(.customer-ai-generate-panel.is-generated)'), false);
   assert.match(css, /\.customer-ai-generate-panel\.is-generated\s*{[\s\S]*?overflow:\s*visible;/);
+});
+
+test('generated AI insight keeps the preview panel appearance', () => {
+  const generatedRule = css.match(/\.customer-ai-generate-panel\.is-generated\s*{([^}]*)}/)?.[1] || '';
+
+  assert.equal(generatedRule.includes('background:'), false);
+  assert.equal(generatedRule.includes('border-color:'), false);
+  assert.match(css, /\.customer-ai-generate-panel\s*{[\s\S]*?border:\s*1px solid #dbeafe;[\s\S]*?border-radius:\s*14px;[\s\S]*?background:\s*linear-gradient/);
 });
 
 test('customer journey store filter is rendered through shared multi-select utility', () => {
@@ -68,4 +175,24 @@ test('customer journey store filter is rendered through shared multi-select util
   assert.ok(runtime.includes('renderCustomerJourneyStoreFilter'));
   assert.ok(runtime.includes('renderCheckboxFilterOptionsMarkup'));
   assert.ok(runtime.includes('factory-multi-select-option'));
+});
+
+test('customer journey toolbar matches Figma node 507:3287 with 20px bottom spacing', () => {
+  assert.ok(html.includes('page.css?v=20260729journey-toolbar-507-3287'));
+  assert.match(css, /\.customer-journey-panel > \.customer-journey-toolbar\s*{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?gap:\s*24px;[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0 24px 20px;/);
+  assert.match(css, /\.customer-journey-toolbar \.customer-journey-control-group\s*{[\s\S]*?min-height:\s*44px;[\s\S]*?gap:\s*12px;[\s\S]*?padding:\s*1px 15px;[\s\S]*?border:\s*1px solid rgba\(201, 210, 224, 0\.88\);[\s\S]*?border-radius:\s*16px;/);
+  assert.match(css, /\.customer-journey-toolbar \.customer-journey-sort-btn\.is-active\s*{[\s\S]*?background:\s*rgba\(37, 99, 235, 0\.1\);/);
+  assert.match(css, /\.customer-journey-toolbar \.customer-journey-filter-check\s*{[\s\S]*?width:\s*16px;[\s\S]*?height:\s*16px;/);
+  assert.ok(css.includes('customer-journey-check-figma.svg'));
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'customer-journey-check-figma.svg')));
+  assert.ok(runtime.includes("let selectedFilters = new Set(['current'])"));
+});
+
+test('customer journey store options use one consistent type scale', () => {
+  ['current', 'other', 'extra'].forEach((tone) => {
+    const rule = css.match(new RegExp(String.raw`\.customer-journey-toolbar \.customer-journey-filter-btn-${tone}\s*\{([^}]*)\}`))?.[1] || '';
+    assert.ok(rule.includes('font-size: 14px;'));
+    assert.ok(rule.includes('font-weight: 500;'));
+    assert.ok(rule.includes('line-height: 20px;'));
+  });
 });

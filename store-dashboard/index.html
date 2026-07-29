@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260717120000" />
+        <link rel="stylesheet" href="./page.css?v=20260729store-sop-toolbar-match" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -397,18 +397,27 @@
                     <div class="issue-detail-pad">
                       <div class="store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
                         <label class="store-sop-rule-field store-sop-rule-field--search">
-                          <span>搜索内容</span>
+                          <span>搜索规则</span>
                           <input class="store-sop-rule-input" id="store-sop-rule-search" type="search" placeholder="输入规则名称" autocomplete="off">
                         </label>
-                        <label class="store-sop-rule-field">
-                          <span>排序方式</span>
-                          <select class="store-sop-rule-select" id="store-sop-rule-sort" aria-label="SOP 规则排序">
-                            <option value="rate-desc">命中率从高到低</option>
-                            <option value="rate-asc">命中率从低到高</option>
-                            <option value="name-asc">规则名称</option>
-                          </select>
-                        </label>
-                        <div class="store-sop-rule-meta" id="store-sop-rule-meta">共 21 条规则</div>
+                        <div class="store-sop-rule-field store-sop-rule-field--sort">
+                          <span>排序</span>
+                          <div class="store-sop-rule-sort-dropdown">
+                            <button type="button" class="store-sop-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-store-sop-rule-sort-trigger>
+                              <span class="store-sop-rule-sort-value">命中率从高到低</span>
+                              <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                              </svg>
+                            </button>
+                            <div class="store-sop-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式" data-store-sop-rule-sort-panel>
+                              <div class="session-menu-option-list">
+                                <button type="button" class="store-sop-rule-sort-option store-model-option session-menu-option active" data-store-sop-rule-sort="rate-desc" role="option" aria-selected="true"><span>命中率从高到低</span></button>
+                                <button type="button" class="store-sop-rule-sort-option store-model-option session-menu-option" data-store-sop-rule-sort="rate-asc" role="option" aria-selected="false"><span>命中率从低到高</span></button>
+                                <button type="button" class="store-sop-rule-sort-option store-model-option session-menu-option" data-store-sop-rule-sort="name-asc" role="option" aria-selected="false"><span>规则名称</span></button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div id="sop-rule-chart" class="issue-list"></div>
                       <div class="session-pagination issue-rule-pagination" id="sop-rule-pagination" aria-label="SOP 质检规则分页"></div>
@@ -842,6 +851,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260717120000"></script>
+    <script src="./page.js?v=20260729store-advisor-page-size"></script>
   </body>
 </html>
