@@ -13,13 +13,16 @@
     setSourceSelection,
     toggleSceneSelection,
     getInvitationSceneCount,
-    getSceneVolumeLabel
+    getSceneVolumeLabel,
+    getSceneLabel
   } = FILTER_UTILS;
   const {
-    getFactoryHeroSubtitle = (profile) => String(profile?.organization || profile?.region || '').trim()
+    getFactoryHeroSubtitle = (profile) => String(profile?.organization || profile?.region || '').trim(),
+    buildFactoryRecordingSummary
   } = FACTORY_HERO_UTILS;
   const {
-    sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : [])
+    sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : []),
+    aggregateIssueRulesByScenes = (rules) => (Array.isArray(rules) ? [...rules] : [])
   } = ISSUE_RULE_ANALYSIS_UTILS;
   const {
     normalizeSOPLeadStatuses: normalizeSharedSOPLeadStatuses,
@@ -140,14 +143,6 @@
           </div>
         </div>
         <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
-        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-source">
-          <span class="gf-label">数据来源</span>
-          <div class="gf-tabs todo-filter-tabs" id="gf-source" role="group" aria-label="数据来源">
-            <button class="gf-tab todo-filter-tab active" data-source="all" aria-pressed="true">全部</button>
-            <button class="gf-tab todo-filter-tab" data-source="cloud" aria-pressed="false">云外呼</button>
-            <button class="gf-tab todo-filter-tab" data-source="badge" aria-pressed="false">工牌</button>
-          </div>
-        </div>
       </div>
       <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-secondary">
         <div id="factorySceneFilterSlot"></div>
@@ -1331,6 +1326,8 @@
     '邀约录音数':    '当期邀约场景下进入质检分析的录音条数',
     '接待录音数':    '当期门店接待场景下进入质检分析的录音条数',
     '试驾录音数':    '当期试乘试驾场景下进入质检分析的录音条数',
+    '云外呼录音数':  '当期云外呼来源下进入质检分析的录音总条数',
+    '门店工牌录音数': '当期门店工牌来源下进入质检分析的录音总条数',
     '分析用户数':    '进入 SOP 分析样本池的去重客户数',
     '分析录音数':    '进入 SOP 分析样本池的录音条数',
     '下订用户数':    '样本周期内已下订客户的去重人数',
@@ -2519,12 +2516,73 @@
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const renderRecordingSummaryScene = (scene) => `
+    <div class="factory-recording-scene" data-recording-scene="${escapeHtml(scene.key)}">
+      <span class="factory-recording-scene-label">${escapeHtml(scene.label)}</span>
+      <strong class="factory-recording-scene-value" ${buildFactoryHeroCounterAttrs(scene.value, '条')}>${renderFactoryHeroCounterValue(scene.value, '条')}</strong>
+    </div>
+  `;
+
+  const renderRecordingSummaryGroup = (group) => `
+    <section class="factory-recording-summary-group tone-${escapeHtml(group.tone)}" aria-label="${escapeHtml(group.label)}">
+      <div class="factory-recording-summary-total">
+        <span class="factory-recording-level-label">录音总计</span>
+        ${metricBtn(group.label)}
+        <div class="hm-label-row">
+          ${renderStoreHeroMetricIcon(group.tone)}
+          <div class="hm-label">${escapeHtml(group.label)}</div>
+        </div>
+        <div class="hm-val-row">
+          <span class="hm-value" ${buildFactoryHeroCounterAttrs(group.value, group.unit)}>${renderFactoryHeroCounterValue(group.value, group.unit)}</span>
+        </div>
+      </div>
+      ${group.scenes.length
+        ? `<div class="factory-recording-breakdown">
+            <div class="factory-recording-scenes" style="--recording-scene-count:${group.scenes.length}">${group.scenes.map(renderRecordingSummaryScene).join('')}</div>
+          </div>`
+        : ''}
+    </section>
+  `;
+
+  const getFactoryRecordingSummaryData = () => {
+    const selection = getFactorySceneSelection();
+    const selectedScenes = selection.isAllSelected
+      ? selection.allowedScenes
+      : selection.activeScenes;
+    const cloudTotal = Number(ALL_KPI_DATA.invitation.num) || 0;
+    const receptionTotal = Number(ALL_KPI_DATA.reception.num) || 0;
+    const testDriveTotal = Number(ALL_KPI_DATA.test_drive.num) || 0;
+
+    return buildFactoryRecordingSummary({
+      selectedScenes,
+      cloudTotal,
+      badgeTotal: receptionTotal + testDriveTotal,
+      sceneCounts: {
+        [SCENE_KEYS.firstFollow]: getInvitationSceneCount(cloudTotal, SCENE_KEYS.firstFollow),
+        [SCENE_KEYS.inviteStore]: getInvitationSceneCount(cloudTotal, SCENE_KEYS.inviteStore),
+        [SCENE_KEYS.scheduleConfirm]: getInvitationSceneCount(cloudTotal, SCENE_KEYS.scheduleConfirm),
+        [SCENE_KEYS.storeReception]: receptionTotal,
+        [SCENE_KEYS.testDrive]: testDriveTotal
+      }
+    });
+  };
+
+  const renderFactoryRecordingSummary = () => {
+    const summary = getFactoryRecordingSummaryData();
+    return `
+      <div class="factory-recording-summary" aria-label="录音数统计">
+        ${renderRecordingSummaryGroup(summary.cloud)}
+        ${renderRecordingSummaryGroup(summary.badge)}
+      </div>
+    `;
+  };
+
   const renderExecutionHeroKpiLayout = (kpiData, kpiItems) => {
-    const topFlowCards = [];
     const bottomMetricCards = [];
-    let previousSummaryTone = null;
 
     kpiItems.forEach((item) => {
+      if (SUMMARY_GROUP_METRIC_KEYS.has(item.key)) return;
+
       const primaryMetricRaw = kpiData[item.key];
       const secondaryMetricRaw = item.pairedWith ? kpiData[item.pairedWith] : null;
       if (!primaryMetricRaw) return;
@@ -2532,26 +2590,16 @@
       const primaryMetric = buildFactoryHeroMetric(item.key, primaryMetricRaw);
       const secondaryMetric = secondaryMetricRaw ? buildFactoryHeroMetric(item.pairedWith, secondaryMetricRaw) : null;
 
-      if (secondaryMetric && SUMMARY_GROUP_METRIC_KEYS.has(item.key)) {
-        if (topFlowCards.length) {
-          topFlowCards.push(renderFlowLink(previousSummaryTone, primaryMetric.tone || 'cyan'));
-        }
-        topFlowCards.push(renderGroupedKpiMetric(primaryMetric, secondaryMetric, { summary: true, hideSubRow: true }));
-        previousSummaryTone = primaryMetric.tone || 'blue';
-        return;
-      }
-
       bottomMetricCards.push(renderSingleKpiMetric(primaryMetric));
       if (secondaryMetric) {
         bottomMetricCards.push(renderSingleKpiMetric(secondaryMetric));
       }
     });
 
-    const layoutSections = [];
-    if (topFlowCards.length) {
-      layoutSections.push(`<div class="hm-layout-top">${topFlowCards.join('')}</div>`);
-    }
-    if (topFlowCards.length && bottomMetricCards.length) {
+    const layoutSections = [
+      `<div class="hm-layout-top">${renderFactoryRecordingSummary()}</div>`
+    ];
+    if (bottomMetricCards.length) {
       layoutSections.push('<div class="hm-layout-divider" aria-hidden="true"></div>');
     }
     if (bottomMetricCards.length) {
@@ -6029,14 +6077,69 @@
     ]
   };
 
-  const makeIssueRule = (id, name, category, rate, sampleCount) => ({
+  const makeIssueRule = (id, name, category, rate, sampleCount, extra = {}) => ({
     id,
     name,
     category,
     rate,
     sampleCount,
+    hitCount: Math.round(sampleCount * rate / 100),
+    ...extra
+  });
+
+  const makeIssueSceneStat = (rate, sampleCount) => ({
+    rate,
+    sampleCount,
     hitCount: Math.round(sampleCount * rate / 100)
   });
+
+  const makeCloudIssueRule = (id, name, category, rate, sampleCount) => {
+    const firstFollowSamples = Math.round(sampleCount * 0.42);
+    const inviteStoreSamples = Math.round(sampleCount * 0.36);
+    const scheduleConfirmSamples = Math.max(0, sampleCount - firstFollowSamples - inviteStoreSamples);
+    return makeIssueRule(id, name, category, rate, sampleCount, {
+      sceneStats: {
+        [SCENE_KEYS.firstFollow]: makeIssueSceneStat(Math.max(1, rate - 2), firstFollowSamples),
+        [SCENE_KEYS.inviteStore]: makeIssueSceneStat(Math.min(98, rate + 1), inviteStoreSamples),
+        [SCENE_KEYS.scheduleConfirm]: makeIssueSceneStat(Math.min(98, rate + 3), scheduleConfirmSamples)
+      }
+    });
+  };
+
+  const makeSingleSceneIssueRule = (id, name, category, rate, sampleCount, scene) => (
+    makeIssueRule(id, name, category, rate, sampleCount, {
+      sceneStats: {
+        [scene]: makeIssueSceneStat(rate, sampleCount)
+      }
+    })
+  );
+
+  const makeScopedIssueRule = (id, name, category, rate, sampleCount, scenes) => {
+    const applicableScenes = [...new Set(Array.isArray(scenes) ? scenes : [])];
+    const baseSampleCount = applicableScenes.length
+      ? Math.floor(sampleCount / applicableScenes.length)
+      : 0;
+    const remainder = applicableScenes.length
+      ? sampleCount - baseSampleCount * applicableScenes.length
+      : 0;
+    const sceneStats = applicableScenes.reduce((result, scene, index) => {
+      result[scene] = makeIssueSceneStat(rate, baseSampleCount + (index < remainder ? 1 : 0));
+      return result;
+    }, {});
+
+    return makeIssueRule(id, name, category, rate, sampleCount, { sceneStats });
+  };
+
+  const CLOUD_ISSUE_SCENES = [
+    SCENE_KEYS.firstFollow,
+    SCENE_KEYS.inviteStore,
+    SCENE_KEYS.scheduleConfirm
+  ];
+  const ALL_ISSUE_SCENES = [
+    ...CLOUD_ISSUE_SCENES,
+    SCENE_KEYS.storeReception,
+    SCENE_KEYS.testDrive
+  ];
 
   const ISSUE_RULE_TABS = {
     sop: {
@@ -6047,27 +6150,40 @@
       topTitle: '表现最好 TOP5',
       bottomTitle: '表现待提升 BOT5',
       rules: [
-        makeIssueRule('sop-compare-model', '对比车型', '需求确认', 78, 1280),
-        makeIssueRule('sop-intent-model', '意向车型', '需求确认', 74, 1280),
-        makeIssueRule('sop-rebuy', '增换购情况', '需求确认', 67, 1180),
-        makeIssueRule('sop-concern', '购车关注点', '需求确认', 63, 1180),
-        makeIssueRule('sop-wechat', '添加微信要求', '留资承接', 61, 1120),
-        makeIssueRule('sop-buy-time', '计划购车时间', '需求确认', 58, 1090),
-        makeIssueRule('sop-test-drive-time', '试乘试驾时间', '到店邀约', 55, 1060),
-        makeIssueRule('sop-budget', '预算范围确认', '需求确认', 72, 1190),
-        makeIssueRule('sop-purpose', '用车场景确认', '需求确认', 69, 1170),
-        makeIssueRule('sop-family', '家庭成员需求', '需求确认', 64, 980),
-        makeIssueRule('sop-config-guide', '配置版本推荐', '产品讲解', 62, 1050),
-        makeIssueRule('sop-value-rights', '权益政策说明', '产品讲解', 60, 1010),
-        makeIssueRule('sop-price-anchor', '价格锚点铺垫', '价格沟通', 57, 990),
-        makeIssueRule('sop-finance', '金融方案介绍', '促单转化', 53, 960),
-        makeIssueRule('sop-trade-in', '置换政策说明', '促单转化', 51, 880),
-        makeIssueRule('sop-next-step', '下一步跟进约定', '跟进承接', 49, 920),
-        makeIssueRule('sop-store-route', '到店路线引导', '到店邀约', 47, 760),
-        makeIssueRule('sop-objection-price', '价格异议承接', '异议处理', 46, 870),
-        makeIssueRule('sop-objection-wait', '等待周期解释', '异议处理', 44, 690),
-        makeIssueRule('sop-summary', '接待结束总结', '跟进承接', 42, 820),
-        makeIssueRule('sop-customer-tag', '客户标签补充', '跟进承接', 39, 760)
+        makeCloudIssueRule('sop-compare-model', '对比车型', '需求确认', 78, 1280),
+        makeCloudIssueRule('sop-intent-model', '意向车型', '需求确认', 74, 1280),
+        makeCloudIssueRule('sop-rebuy', '增换购情况', '需求确认', 67, 1180),
+        makeCloudIssueRule('sop-concern', '购车关注点', '需求确认', 63, 1180),
+        makeCloudIssueRule('sop-wechat', '添加微信要求', '留资承接', 61, 1120),
+        makeCloudIssueRule('sop-buy-time', '计划购车时间', '需求确认', 58, 1090),
+        makeCloudIssueRule('sop-test-drive-time', '试乘试驾时间', '到店邀约', 55, 1060),
+        makeCloudIssueRule('sop-budget', '预算范围确认', '需求确认', 72, 1190),
+        makeCloudIssueRule('sop-purpose', '用车场景确认', '需求确认', 69, 1170),
+        makeCloudIssueRule('sop-family', '家庭成员需求', '需求确认', 64, 980),
+        makeCloudIssueRule('sop-config-guide', '配置版本推荐', '产品讲解', 62, 1050),
+        makeCloudIssueRule('sop-value-rights', '权益政策说明', '产品讲解', 60, 1010),
+        makeCloudIssueRule('sop-price-anchor', '价格锚点铺垫', '价格沟通', 57, 990),
+        makeCloudIssueRule('sop-finance', '金融方案介绍', '促单转化', 53, 960),
+        makeCloudIssueRule('sop-trade-in', '置换政策说明', '促单转化', 51, 880),
+        makeCloudIssueRule('sop-next-step', '下一步跟进约定', '跟进承接', 49, 920),
+        makeCloudIssueRule('sop-store-route', '到店路线引导', '到店邀约', 47, 760),
+        makeCloudIssueRule('sop-objection-price', '价格异议承接', '异议处理', 46, 870),
+        makeCloudIssueRule('sop-objection-wait', '等待周期解释', '异议处理', 44, 690),
+        makeCloudIssueRule('sop-summary', '接待结束总结', '跟进承接', 42, 820),
+        makeCloudIssueRule('sop-customer-tag', '客户标签补充', '跟进承接', 39, 760),
+        makeSingleSceneIssueRule('sop-reception-needs-confirm', '需求确认', '接待流程', 81, 860, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-reception-opening', '接待开场规范', '接待流程', 79, 860, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-reception-product', '车型核心卖点讲解', '产品讲解', 73, 810, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-reception-competitor', '竞品差异回应', '产品讲解', 68, 760, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-reception-price', '报价信息说明', '价格沟通', 64, 720, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-reception-next-step', '接待后续安排', '跟进承接', 59, 690, SCENE_KEYS.storeReception),
+        makeSingleSceneIssueRule('sop-drive-needs-confirm', '需求确认', '试驾准备', 76, 540, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-qualification', '试驾资格确认', '试驾准备', 82, 540, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-safety', '试驾安全说明', '试驾准备', 88, 520, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-route', '试驾路线说明', '试驾过程', 71, 500, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-feature', '车辆功能讲解', '试驾过程', 69, 490, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-feedback', '驾乘感受追问', '试驾复盘', 63, 470, SCENE_KEYS.testDrive),
+        makeSingleSceneIssueRule('sop-drive-conversion', '试驾后转化引导', '试驾复盘', 57, 450, SCENE_KEYS.testDrive)
       ]
     },
     advantage: {
@@ -6078,16 +6194,16 @@
       topTitle: '优势组织 TOP5',
       bottomTitle: '优势待提升 BOT5',
       rules: [
-        makeIssueRule('adv-need', '深度需求挖掘', '需求洞察', 83, 980),
-        makeIssueRule('adv-product-value', '本品价值塑造', '产品表达', 76, 960),
-        makeIssueRule('adv-competitor', '竞品差异化对比', '产品表达', 71, 930),
-        makeIssueRule('adv-price', '价格异议处理', '异议处理', 64, 890),
-        makeIssueRule('adv-version', '版本配置引导', '产品表达', 62, 850),
-        makeIssueRule('adv-store', '门店/公司优势塑造', '信任建立', 59, 820),
-        makeIssueRule('adv-wechat', '微信留资承接', '留资承接', 56, 800),
-        makeIssueRule('adv-retain-lead', '留人稳线索', '线索承接', 52, 760),
-        makeIssueRule('adv-invite', '到店邀约推进', '到店邀约', 49, 740),
-        makeIssueRule('adv-boundary', '承诺与风险边界', '风险边界', 45, 680)
+        makeScopedIssueRule('adv-need', '深度需求挖掘', '需求洞察', 83, 980, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('adv-product-value', '本品价值塑造', '产品表达', 76, 960, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception, SCENE_KEYS.testDrive]),
+        makeScopedIssueRule('adv-competitor', '竞品差异化对比', '产品表达', 71, 930, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('adv-price', '价格异议处理', '异议处理', 64, 890, [...CLOUD_ISSUE_SCENES, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('adv-version', '版本配置引导', '产品表达', 62, 850, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('adv-store', '门店/公司优势塑造', '信任建立', 59, 820, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('adv-wechat', '微信留资承接', '留资承接', 56, 800, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('adv-retain-lead', '留人稳线索', '线索承接', 52, 760, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('adv-invite', '到店邀约推进', '到店邀约', 49, 740, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('adv-boundary', '承诺与风险边界', '风险边界', 45, 680, ALL_ISSUE_SCENES)
       ]
     },
     defect: {
@@ -6098,16 +6214,16 @@
       topTitle: '缺陷最高 TOP5',
       bottomTitle: '缺陷最低 BOT5',
       rules: [
-        makeIssueRule('defect-need', '深度需求挖掘不足', '需求洞察', 68, 980),
-        makeIssueRule('defect-product-value', '本品价值塑造偏弱', '产品表达', 63, 960),
-        makeIssueRule('defect-competitor', '竞品对比缺少差异点', '产品表达', 59, 930),
-        makeIssueRule('defect-price', '价格异议承接不到位', '异议处理', 55, 890),
-        makeIssueRule('defect-version', '版本配置引导不清晰', '产品表达', 52, 850),
-        makeIssueRule('defect-store', '门店/公司优势未建立', '信任建立', 48, 820),
-        makeIssueRule('defect-wechat', '微信留资承接缺失', '留资承接', 45, 800),
-        makeIssueRule('defect-retain-lead', '线索承接节奏断档', '线索承接', 42, 760),
-        makeIssueRule('defect-invite', '到店邀约推进不足', '到店邀约', 39, 740),
-        makeIssueRule('defect-boundary', '承诺边界表达不清', '风险边界', 35, 680)
+        makeScopedIssueRule('defect-need', '深度需求挖掘不足', '需求洞察', 68, 980, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('defect-product-value', '本品价值塑造偏弱', '产品表达', 63, 960, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception, SCENE_KEYS.testDrive]),
+        makeScopedIssueRule('defect-competitor', '竞品对比缺少差异点', '产品表达', 59, 930, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('defect-price', '价格异议承接不到位', '异议处理', 55, 890, [...CLOUD_ISSUE_SCENES, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('defect-version', '版本配置引导不清晰', '产品表达', 52, 850, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception]),
+        makeScopedIssueRule('defect-store', '门店/公司优势未建立', '信任建立', 48, 820, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('defect-wechat', '微信留资承接缺失', '留资承接', 45, 800, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('defect-retain-lead', '线索承接节奏断档', '线索承接', 42, 760, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('defect-invite', '到店邀约推进不足', '到店邀约', 39, 740, CLOUD_ISSUE_SCENES),
+        makeScopedIssueRule('defect-boundary', '承诺边界表达不清', '风险边界', 35, 680, ALL_ISSUE_SCENES)
       ]
     },
     risk: {
@@ -6118,11 +6234,11 @@
       topTitle: '风险最高 TOP5',
       bottomTitle: '风险最低 BOT5',
       rules: [
-        makeIssueRule('risk-abuse', '辱骂/嘲讽客户', '服务红线', 12, 860),
-        makeIssueRule('risk-impatient', '明显不耐烦、催促打断客户', '服务红线', 18, 910),
-        makeIssueRule('risk-conflict', '与客户争执、冲突', '服务红线', 9, 820),
-        makeIssueRule('risk-no-apology-complaint', '客户明确表达不满后，销售未致歉', '服务补救', 21, 940),
-        makeIssueRule('risk-no-apology-problem', '出现问题，或是客户不满时，未及时表示歉意', '服务补救', 24, 970)
+        makeScopedIssueRule('risk-abuse', '辱骂/嘲讽客户', '服务红线', 12, 860, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('risk-impatient', '明显不耐烦、催促打断客户', '服务红线', 18, 910, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('risk-conflict', '与客户争执、冲突', '服务红线', 9, 820, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('risk-no-apology-complaint', '客户明确表达不满后，销售未致歉', '服务补救', 21, 940, ALL_ISSUE_SCENES),
+        makeScopedIssueRule('risk-no-apology-problem', '出现问题，或是客户不满时，未及时表示歉意', '服务补救', 24, 970, ALL_ISSUE_SCENES)
       ]
     }
   };
@@ -6150,7 +6266,21 @@
 
   const getActiveIssueRuleConfig = () => ISSUE_RULE_TABS[issueRuleAnalysisState.activeTab] || ISSUE_RULE_TABS.sop;
 
-  const getActiveIssueRule = () => getActiveIssueRuleConfig().rules.find(rule => rule.id === issueRuleAnalysisState.selectedRuleId) || null;
+  const getSelectedIssueScenes = () => {
+    const selection = getFactorySceneSelection();
+    return selection.isAllSelected
+      ? selection.allowedScenes
+      : selection.activeScenes;
+  };
+
+  const getIssueRulesForCurrentFilter = () => {
+    const config = getActiveIssueRuleConfig();
+    return aggregateIssueRulesByScenes(config.rules, getSelectedIssueScenes());
+  };
+
+  const getActiveIssueRule = () => (
+    getIssueRulesForCurrentFilter().find(rule => rule.id === issueRuleAnalysisState.selectedRuleId) || null
+  );
   const getIssueRuleSortLabel = (value) => ISSUE_RULE_SORT_OPTIONS.find(option => option.value === value)?.label || ISSUE_RULE_SORT_OPTIONS[0].label;
 
   const getIssueRuleBaseOrg = () => {
@@ -6206,7 +6336,8 @@
     const hashOffset = (textHash(`${rule.id}-${org.name}`) % 13) - 6;
     const levelOffset = org.level === 'region' ? 0 : org.level === 'zone' ? -1 : -2;
     const sampleBase = org.level === 'region' ? 980 : org.level === 'zone' ? 360 : 118;
-    const sampleCount = Math.max(30, sampleBase - index * 23 + (textHash(org.name) % 37));
+    const ruleScopeFactor = Math.max(0.2, Math.min(1.2, (Number(rule.sampleCount) || 0) / 1200));
+    const sampleCount = Math.max(20, Math.round((sampleBase - index * 23 + (textHash(org.name) % 37)) * ruleScopeFactor));
     const orgSopRate = Number(org.sopRate || 75);
     const orgWeakItems = Number(org.weakItems || 4);
     const orgRiskRate = Number(org.riskHit || 6);
@@ -6227,11 +6358,14 @@
   };
 
   const getVisibleIssueRules = () => {
-    const config = getActiveIssueRuleConfig();
+    const availableRules = getIssueRulesForCurrentFilter();
     const query = issueRuleAnalysisState.query.trim();
     const filtered = query
-      ? config.rules.filter(rule => `${rule.name}${rule.category}`.includes(query))
-      : [...config.rules];
+      ? availableRules.filter(rule => {
+          const sceneText = (rule.applicableScenes || []).map(getSceneLabel).join('');
+          return `${rule.name}${sceneText}`.includes(query);
+        })
+      : availableRules;
 
     const sorted = filtered.sort((a, b) => {
       if (issueRuleAnalysisState.sort === 'rate-asc') return a.rate - b.rate;
@@ -6248,25 +6382,30 @@
     const currentPage = Math.min(issueRuleAnalysisState.page, pageCount);
     const start = (currentPage - 1) * ISSUE_RULE_PAGE_SIZE;
     const visibleRules = rules.slice(start, start + ISSUE_RULE_PAGE_SIZE);
-    const rows = visibleRules.map(rule => `
-      <button type="button" class="issue-rule-row" data-rule-id="${rule.id}">
-        <span class="issue-rule-name">
-          <span class="issue-rule-name-line">
-            <strong>${escapeHtml(rule.name)}</strong>
-            <em>${escapeHtml(rule.category)}</em>
+    const rows = visibleRules.map(rule => {
+      const tagLabels = (rule.applicableScenes || []).map(getSceneLabel);
+      const tagsMarkup = tagLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('');
+
+      return `
+        <button type="button" class="issue-rule-row" data-rule-id="${rule.id}">
+          <span class="issue-rule-name">
+            <span class="issue-rule-name-line">
+              <strong>${escapeHtml(rule.name)}</strong>
+              ${tagsMarkup}
+            </span>
           </span>
-        </span>
-        <span class="issue-rule-rate">${rule.rate}%</span>
-        <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
-        <span class="issue-rule-action">看组织表现</span>
-      </button>
-    `).join('');
+          <span class="issue-rule-rate">${rule.rate}%</span>
+          <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
+          <span class="issue-rule-action">看组织表现</span>
+        </button>
+      `;
+    }).join('');
 
     return `
       <div class="issue-rule-toolbar">
         <label class="issue-rule-search">
           <span>搜索规则</span>
-          <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称" autocomplete="off">
+          <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称或适用场景" autocomplete="off">
         </label>
         <div class="issue-rule-sort">
           <span>排序</span>

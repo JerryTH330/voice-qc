@@ -113,7 +113,7 @@
           </div>
 
           <section class="scope-panel" aria-label="经营范围筛选">
-            <div class="scope-fields">
+            <div class="scope-fields" id="scopeFields">
               <label><span>品牌</span><select id="brandFilter"><option>埃安</option><option>传祺</option></select></label>
               <label><span>组织</span><select id="orgFilter"><option>全国</option><option>华东大区</option><option>华南大区</option></select></label>
               <label><span>目标车型</span><select id="modelFilter"><option value="all">全部车型</option><option>AION V</option><option>AION Y Plus</option><option>AION S Plus</option><option>AION RT</option></select></label>
@@ -135,6 +135,21 @@
                     </div>
                   </div>
                 </details>
+              </div>
+              <div class="scope-field scene-filter overview-status-filter" id="overviewStatusFilterField">
+                <span>线索状态</span>
+                <details id="overviewStatusFilter">
+                  <summary id="overviewStatusFilterSummary">全部线索状态（18）</summary>
+                  <div class="scene-filter-menu overview-status-filter-menu" role="group" aria-label="线索状态">
+                    <div class="overview-status-options" id="overviewStatusOptions"></div>
+                  </div>
+                </details>
+              </div>
+              <div class="scope-field comparison-status-filter" id="comparisonStatusFilterField" hidden>
+                <span>线索状态对比筛选</span>
+                <button class="customer-date-trigger comparison-status-trigger" id="editGroupsButton" type="button" aria-haspopup="dialog">
+                  <strong id="comparisonStatusFilterSummary">A组 3 项 vs B组 2 项</strong><span aria-hidden="true">⌄</span>
+                </button>
               </div>
               <div class="scope-field overview-date-field" id="overviewTimeControls">
                 <span>统计日期</span>
@@ -173,7 +188,7 @@
                     <button class="active" data-window="7" type="button">7 天</button><button data-window="15" type="button">15 天</button><button data-window="30" type="button">30 天</button>
                   </div>
                   <div class="observation-period-inline" aria-label="观测周期示意">
-                    <b>统计周期</b><i aria-hidden="true">→</i><b>继续观察 <strong id="observationDaysHint">7 天</strong></b><i aria-hidden="true">→</i><b id="observationResultHint">确认到店结果</b>
+                    <b>统计周期</b><i aria-hidden="true">→</i><b>继续观察 <strong id="observationDaysHint">7 天</strong></b><i aria-hidden="true">→</i><b id="observationResultHint">确认线索状态</b>
                   </div>
                 </div>
               </div>
@@ -207,7 +222,7 @@
                   </span>
                   <div>
                     <div class="overview-ai-summary-title-line">
-                      <h2 id="overviewAiSummaryTitle">智能洞察</h2>
+                      <h2 id="overviewAiSummaryTitle">客户洞察</h2>
                       <span class="overview-ai-summary-status" id="overviewAiSummaryStatus" hidden>已生成 · 刚刚</span>
                     </div>
                     <p id="overviewAiSummaryMeta">综合客户画像、区域画像矩阵与 3 类深度洞察，一次生成 5 条关键结论</p>
@@ -217,7 +232,6 @@
               <div class="overview-ai-summary-result" id="overviewAiSummaryResult">
                 <div class="overview-ai-executive is-pending" id="overviewAiExecutive">
                   <div class="overview-ai-executive-toolbar">
-                    <span class="overview-ai-result-kicker">AI 综合判断</span>
                     <button class="button primary compact overview-ai-generate" id="generateOverviewAiSummary" type="button">
                       <span aria-hidden="true">✦</span>生成 AI 综合判断
                     </button>
@@ -228,12 +242,6 @@
                       <div><strong>AI 正在进行跨模块归纳</strong><small>读取 5 类洞察，交叉核对指标、区域车型差异与客户原声…</small></div>
                     </div>
                     <p id="overviewAiExecutiveConclusion" hidden></p>
-                  </div>
-                  <div class="overview-ai-evidence-stats" id="overviewAiEvidenceStats" aria-label="本次洞察数据范围" hidden>
-                    <span><strong id="overviewAiInsightCount">5</strong><small>类洞察</small></span>
-                    <span><strong id="overviewAiCustomerCount">0</strong><small>名客户</small></span>
-                    <span><strong id="overviewAiEvidenceCount">0</strong><small>条录音证据</small></span>
-                    <em>基于当前筛选</em>
                   </div>
                 </div>
                 <div class="overview-ai-insight-scroll">
@@ -352,30 +360,23 @@
           <div class="stage-analysis" id="stageAnalysis" hidden>
 
           <section class="comparison-hero card" aria-labelledby="comparisonTitle">
-            <button class="button primary comparison-primary-action" id="editGroupsButton" type="button" hidden>
-              <span class="comparison-primary-action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h7M15 18h5M14 3v6M7 9v6M11 15v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </span>
-              <span class="comparison-primary-action-copy"><strong>筛选线索状态</strong><small>优先配置 A/B 对比客群</small></span>
-              <em>立即筛选 →</em>
-            </button>
             <div class="comparison-heading">
               <div>
-                <div class="comparison-title-row"><span class="section-kicker" id="stageKicker">邀约场景 · 阶段结果</span><h2 id="comparisonTitle">客群对比分析</h2></div>
-                <p id="comparisonDesc">把最终到店结果放回首次到店前的客户对话，比较两组信号差异。</p>
+                <div class="comparison-title-row"><span class="section-kicker" id="stageKicker">邀约场景 · 线索状态对比</span><h2 id="comparisonTitle">客群对比分析</h2></div>
+                <p id="comparisonDesc">A/B 客群按“观测 7 天 + 用户选中的线索状态”定义，比较邀约对话信号与销售动作。</p>
               </div>
             </div>
             <div class="cohort-rail" aria-label="客群对比概览">
               <article class="cohort cohort-a">
-                <div class="cohort-label"><span>A</span><div><strong id="groupAName">7日内已到店</strong><small id="groupAMeta">有效对话 436 人</small></div></div>
-                <div class="cohort-value"><strong id="groupAValue">462</strong><span>可分析样本数</span><em id="groupARate">37.0%</em></div>
-                <div class="signal-track"><i id="trackA" style="width:37%"></i></div>
+                <div class="cohort-label"><span>A</span><div><strong id="groupAName">已预约到店、已邀约到店、到店跟进中</strong><small id="groupAMeta">可分析客户 248 人</small></div></div>
+                <div class="cohort-value"><strong id="groupAValue">262</strong><span>可分析样本数</span><em id="groupARate">79.9%</em></div>
+                <div class="signal-track"><i id="trackA" style="width:79.9%"></i></div>
               </article>
               <div class="rail-core" aria-hidden="true"><span>VS</span><i></i></div>
               <article class="cohort cohort-b">
-                <div class="cohort-label"><span>B</span><div><strong id="groupBName">7日内未到店</strong><small id="groupBMeta">有效对话 709 人</small></div></div>
-                <div class="cohort-value"><strong id="groupBValue">786</strong><span>可分析样本数</span><em id="groupBRate">63.0%</em></div>
-                <div class="signal-track"><i id="trackB" style="width:63%"></i></div>
+                <div class="cohort-label"><span>B</span><div><strong id="groupBName">未跟进、战败已通过(未到店)</strong><small id="groupBMeta">可分析客户 52 人</small></div></div>
+                <div class="cohort-value"><strong id="groupBValue">66</strong><span>可分析样本数</span><em id="groupBRate">20.1%</em></div>
+                <div class="signal-track"><i id="trackB" style="width:20.1%"></i></div>
               </article>
             </div>
           </section>
@@ -389,10 +390,10 @@
                   </span>
                   <div>
                     <div class="overview-ai-summary-title-line">
-                      <h2 id="aiTitle">智能洞察</h2>
+                      <h2 id="aiTitle">A/B 对比洞察</h2>
                       <span class="overview-ai-summary-status" id="compareAiSummaryStatus" hidden>已生成 · 刚刚</span>
                     </div>
-                    <p id="aiDesc">7日内已到店 vs 7日内未到店 · 总结当前两组最值得管理层关注的差异</p>
+                    <p id="aiDesc">基于客户画像、区域画像、产品、金融政策与竞品五个维度，对比两组客群的共同点与关键差异</p>
                   </div>
                 </div>
                 <div class="overview-ai-summary-actions">
@@ -408,14 +409,14 @@
                   <div class="overview-ai-executive-content">
                     <div class="overview-ai-summary-loading" id="compareAiSummaryLoading" role="status" hidden>
                       <span class="overview-ai-loading-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
-                      <div><strong>AI 正在归纳两组客群差异</strong><small>交叉核对需求、阶段难点、销售动作、竞品信号与客户原声…</small></div>
+                      <div><strong>AI 正在归纳两组客群差异</strong><small>交叉核对客户画像、区域画像、产品、金融政策、竞品与客户原声…</small></div>
                     </div>
                     <p id="aiExecutiveConclusion" hidden></p>
                   </div>
                   <div class="overview-ai-evidence-stats" id="compareAiEvidenceStats" aria-label="本次对比数据范围" hidden>
-                    <span><strong id="compareAiInsightCount">4</strong><small>类差异</small></span>
+                    <span><strong id="compareAiInsightCount">5</strong><small>类洞察</small></span>
                     <span><strong id="compareAiCustomerCount">0</strong><small>名客户</small></span>
-                    <span><strong id="compareAiGroupCount">2</strong><small>组客群</small></span>
+                    <span><strong id="compareAiRecordingCount">0</strong><small>条录音证据</small></span>
                     <em>基于当前筛选</em>
                   </div>
                 </div>
@@ -428,32 +429,44 @@
 
           <section class="topic-workspace card" aria-labelledby="workspaceTitle">
             <div class="topic-nav">
-              <div><span class="section-kicker">对话信号</span><h2 id="workspaceTitle">两组客户在说什么，销售做了什么</h2></div>
-              <div class="topic-tabs" role="tablist" aria-label="洞察主题">
-                <button class="active" data-topic="need" role="tab" aria-selected="true" type="button">需求与关注</button>
-                <button data-topic="resistance" role="tab" aria-selected="false" type="button">抗性与难点</button>
-                <button data-topic="profile" role="tab" aria-selected="false" type="button">客户特征</button>
-                <button data-topic="action" role="tab" aria-selected="false" type="button">销售动作</button>
-                <button data-topic="testdrive" id="testDriveTab" role="tab" aria-selected="false" type="button" hidden>试驾双口径</button>
-                <button data-topic="competitor" role="tab" aria-selected="false" type="button">竞品情报</button>
+              <div><span class="section-kicker">五维对比</span><h2 id="workspaceTitle">五维对比明细</h2></div>
+              <div class="topic-tabs" role="tablist" aria-label="五维对比洞察">
+                <button class="active" data-topic="profile" role="tab" aria-selected="true" type="button">客户画像对比</button>
+                <button data-topic="region" role="tab" aria-selected="false" type="button">区域画像对比</button>
+                <button data-topic="product" role="tab" aria-selected="false" type="button">产品对比</button>
+                <button data-topic="policy" role="tab" aria-selected="false" type="button">金融政策对比</button>
+                <button data-topic="competitor" role="tab" aria-selected="false" type="button">竞品对比</button>
               </div>
             </div>
 
             <div class="workspace-grid">
               <div class="signal-panel">
                 <div class="signal-head">
-                  <div><h3 id="signalTitle">客户需求与到店关注点</h3><p id="signalDesc">点击任一信号，下方原声同步切换</p></div>
-                  <div class="legend"><span class="a"><i></i><b id="legendA">最终到店</b></span><span class="b"><i></i><b id="legendB">最终未到店</b></span><em>占当前客群可分析客户比例</em></div>
+                  <div><h3 id="signalTitle">热门标签 A/B 分布</h3><p id="signalDesc">点击任一标签，差异解读和客户原声同步切换</p></div>
+                  <div class="legend"><span class="a"><i></i><b id="legendA">已预约到店、已邀约到店、到店跟进中</b></span><span class="b"><i></i><b id="legendB">未跟进、战败已通过(未到店)</b></span><em>A 向左、B 向右，共用中间基准线</em></div>
                 </div>
                 <div class="signal-list" id="signalList"></div>
                 <div class="signal-note"><span>i</span>差值为 A 组占比减 B 组占比；单项少于 5 名客户时不生成强结论。</div>
               </div>
 
+              <aside class="difference-panel" aria-labelledby="differenceTitle">
+                <div class="difference-head"><span class="section-kicker">横向解读</span><h3 id="differenceTitle">关键差异解读</h3></div>
+                <div class="difference-insight-list" id="differenceInsightList"></div>
+              </aside>
+
               <aside class="voice-panel">
-                <div class="voice-head"><div><span class="section-kicker">证据下钻</span><h3 id="voiceTitle">家庭多人出行</h3></div><button class="text-button" id="viewAllVoices" type="button">查看全部</button></div>
+                <div class="voice-head">
+                  <div><span class="section-kicker">证据下钻</span><h3 id="voiceTitle">家庭出行</h3></div>
+                  <div class="voice-group-switch" role="group" aria-label="切换客群原声">
+                    <button class="active" data-voice-group="a" type="button">A 组证据</button>
+                    <button data-voice-group="b" type="button">B 组证据</button>
+                  </div>
+                </div>
                 <div class="voice-list" id="voiceList"></div>
+                <button class="text-button voice-view-all" id="viewAllVoices" type="button">查看全部证据</button>
               </aside>
             </div>
+            <div class="comparison-causality-note">说明：差异表示两组客群中的相关性差别，不直接代表因果关系。</div>
           </section>
 
           <section class="unified-action-section card" aria-labelledby="unifiedActionTitle">
@@ -490,15 +503,15 @@
 
     <div class="modal-backdrop" id="groupModal" hidden>
       <section class="modal group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
-        <header><div><span class="section-kicker">到店客群对比</span><h2 id="groupModalTitle">选择 A/B 客群线索状态</h2><p>分别选择两组线索结果，比较对应客群的对话信号、销售动作与结果差异。</p></div><button class="icon-button" data-close="groupModal" type="button" aria-label="关闭">×</button></header>
-        <div class="preset-row"><span>常用组合</span><button id="applyPreset" type="button">已下定、异地 <b>vs</b> 战败、战败申请中(已到店)</button></div>
+        <header><div><span class="section-kicker" id="groupModalKicker">客群对比</span><h2 id="groupModalTitle">选择 A/B 客群线索状态</h2><p id="groupModalDescription">分别选择两组线索结果，比较对应客群的对话信号、销售动作与结果差异。</p></div><button class="icon-button" data-close="groupModal" type="button" aria-label="关闭">×</button></header>
+        <div class="preset-row"><span>常用组合</span><button id="applyPreset" type="button">下订单 <b>vs</b> 战败</button></div>
         <div class="group-editor">
           <div class="group-box group-a"><div class="group-box-title"><span>A</span><div><strong>对比组 A</strong><small>至少选择 1 个状态</small></div></div><div class="status-grid" data-group="a"></div></div>
           <div class="editor-vs">VS</div>
           <div class="group-box group-b"><div class="group-box-title"><span>B</span><div><strong>对比组 B</strong><small>可与 A 组存在重叠状态</small></div></div><div class="status-grid" data-group="b"></div></div>
         </div>
         <div class="overlap-hint"><span>i</span>重叠客户在两组中分别保留，各组占比仍以本组客户为分母；下钻时展示不同线索旅程。</div>
-        <footer><span id="groupValidation">A、B 两组都至少选择 1 个状态</span><div><button class="button secondary" data-close="groupModal" type="button">取消</button><button class="button primary" id="startOfflineCompare" type="button" disabled>开始对比</button></div></footer>
+        <footer><span id="groupValidation">A、B 两组都至少选择 1 个状态</span><div><button class="button secondary" data-close="groupModal" type="button">取消</button><button class="button primary" id="startOfflineCompare" type="button" disabled>应用并开始对比</button></div></footer>
       </section>
     </div>
 

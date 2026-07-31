@@ -6,10 +6,10 @@
 
   const STAGES = {
     online: {
-      kicker: "邀约场景 · 阶段结果",
+      kicker: "邀约场景 · 线索状态对比",
       title: "客群对比分析",
-      desc: "以首条邀约类录音为 T0，只使用首次到店前或观察窗口结束前的对话证据。",
-      rule: "先按线索旅程判断结果，再在客群内按手机号去重；未完整经过窗口且尚未到店的样本不纳入分析。",
+      desc: "按业务选择的真实线索状态分组，比较观察窗口内的邀约对话信号与销售动作。",
+      rule: "以首条邀约类录音为 T0，按观察期结束时的线索状态分组；重叠客户在两组分别保留。",
       groups: {
         a: { name: "最终到店", customers: 462, valid: 436, rate: 37.0 },
         b: { name: "最终未到店", customers: 786, valid: 709, rate: 63.0 }
@@ -205,6 +205,107 @@
         { name: "客户自述优惠金额", sub: "价格事实 · 中可信度", a: 12.4, b: 21.7, count: "184 人", voices: [["b", "客户 C-22073", "对面销售说能优惠一万多，但我还没拿到正式报价。", "华南大区 · 广州大道店", "07-17 13:08"]] },
         { name: "后排乘坐空间", sub: "配置比较", a: 21.6, b: 28.5, count: "253 人", voices: [["b", "客户 C-22918", "家里人坐完觉得第三排不如另一台宽敞。", "华南大区 · 深圳龙岗店", "07-17 17:06"]] }
       ]
+    }
+  };
+
+  const COMPARE_DIMENSIONS = [
+    { topic: "profile", label: "客户画像对比", onlineFocus: "家庭出行", offlineFocus: "完成试驾" },
+    { topic: "region", label: "区域画像对比", onlineFocus: "华东大区", offlineFocus: "华东大区" },
+    { topic: "product", label: "产品对比", onlineFocus: "空间与乘坐体验", offlineFocus: "空间与乘坐体验" },
+    { topic: "policy", label: "金融政策对比", onlineFocus: "低首付方案", offlineFocus: "月供压力" },
+    { topic: "competitor", label: "竞品对比", onlineFocus: "宋 PLUS DM-i", offlineFocus: "宋 PLUS DM-i" }
+  ];
+
+  const COMPARE_DATA = {
+    online: {
+      profile: {
+        ...DATA.online.profile,
+        title: "热门标签 A/B 分布",
+        desc: "比较两组客户在购车时间、用途、预算、置换与决策信号上的标签占比"
+      },
+      region: {
+        title: "区域画像 A/B 分布",
+        desc: "比较同一经营范围内两组客群在重点区域的客户占比",
+        rows: [
+          { name: "华东大区", sub: "区域客户占比", a: 42.6, b: 33.9, count: "438 人", voices: DATA.online.profile.rows[1].voices },
+          { name: "华南大区", sub: "区域客户占比", a: 24.8, b: 29.6, count: "309 人", voices: DATA.online.need.rows[3].voices },
+          { name: "华北大区", sub: "区域客户占比", a: 18.7, b: 20.9, count: "221 人", voices: DATA.online.need.rows[1].voices },
+          { name: "华中大区", sub: "区域客户占比", a: 8.4, b: 11.8, count: "116 人", voices: DATA.online.competitor.rows[0].voices },
+          { name: "西南大区", sub: "区域客户占比", a: 5.5, b: 3.8, count: "61 人", voices: DATA.online.profile.rows[0].voices }
+        ]
+      },
+      product: {
+        title: "产品关注 A/B 分布",
+        desc: "比较客户对空间、续航、座舱、辅助驾驶和舒适性的明确关注",
+        rows: [
+          { name: "空间与乘坐体验", sub: "产品体验", a: 46.8, b: 35.6, count: "462 人", voices: DATA.online.need.rows[0].voices },
+          { name: "真实续航", sub: "产品能力", a: 39.5, b: 30.2, count: "387 人", voices: DATA.online.need.rows[1].voices },
+          { name: "智能座舱", sub: "产品配置", a: 31.6, b: 25.4, count: "306 人", voices: DATA.online.competitor.rows[2].voices },
+          { name: "辅助驾驶", sub: "产品配置", a: 27.8, b: 23.1, count: "264 人", voices: DATA.online.competitor.rows[2].voices },
+          { name: "底盘舒适性", sub: "产品体验", a: 22.6, b: 19.4, count: "217 人", voices: DATA.online.need.rows[0].voices }
+        ]
+      },
+      policy: {
+        title: "金融政策 A/B 分布",
+        desc: "比较客户对首付、月供、免息、置换和保险费用的认可或顾虑",
+        rows: [
+          { name: "低首付方案", sub: "金融认可", a: 38.9, b: 29.3, count: "376 人", voices: DATA.online.need.rows[3].voices },
+          { name: "月供压力", sub: "金融顾虑", a: 23.7, b: 36.8, count: "344 人", voices: DATA.online.resistance.rows[0].voices },
+          { name: "置换补贴", sub: "政策权益", a: 31.2, b: 24.6, count: "297 人", voices: DATA.online.need.rows[4].voices },
+          { name: "两年免息", sub: "金融认可", a: 28.5, b: 21.9, count: "264 人", voices: DATA.online.action.rows[3].voices },
+          { name: "保险费用", sub: "费用顾虑", a: 17.8, b: 22.6, count: "219 人", voices: DATA.online.need.rows[3].voices }
+        ]
+      },
+      competitor: {
+        ...DATA.online.competitor,
+        title: "竞品关注 A/B 分布",
+        desc: "比较两组客群提及的竞品车型、配置和客户自述价格事实"
+      }
+    },
+    offline: {
+      profile: {
+        ...DATA.offline.profile,
+        title: "热门标签 A/B 分布",
+        desc: "比较两组客户在行为进展、购车时间、置换、付款方式与决策信号上的标签占比"
+      },
+      region: {
+        title: "区域画像 A/B 分布",
+        desc: "比较同一经营范围内两组客群在重点区域的客户占比",
+        rows: [
+          { name: "华东大区", sub: "区域客户占比", a: 39.4, b: 30.7, count: "356 人", voices: DATA.offline.profile.rows[1].voices },
+          { name: "华南大区", sub: "区域客户占比", a: 25.1, b: 32.8, count: "301 人", voices: DATA.offline.need.rows[0].voices },
+          { name: "华北大区", sub: "区域客户占比", a: 17.8, b: 19.6, count: "185 人", voices: DATA.offline.need.rows[1].voices },
+          { name: "华中大区", sub: "区域客户占比", a: 10.2, b: 11.9, count: "112 人", voices: DATA.offline.need.rows[3].voices },
+          { name: "西南大区", sub: "区域客户占比", a: 7.5, b: 5.0, count: "73 人", voices: DATA.offline.need.rows[2].voices }
+        ]
+      },
+      product: {
+        title: "产品关注 A/B 分布",
+        desc: "比较客户对空间、续航、座舱、辅助驾驶和舒适性的明确评价",
+        rows: [
+          { name: "空间与乘坐体验", sub: "产品体验", a: 49.2, b: 38.0, count: "405 人", voices: DATA.offline.need.rows[0].voices },
+          { name: "真实续航", sub: "产品能力", a: 34.6, b: 43.1, count: "378 人", voices: DATA.offline.competitor.rows[4].voices },
+          { name: "智能座舱", sub: "产品配置", a: 32.8, b: 27.6, count: "296 人", voices: DATA.offline.competitor.rows[2].voices },
+          { name: "辅助驾驶", sub: "产品配置", a: 28.7, b: 23.4, count: "256 人", voices: DATA.offline.competitor.rows[2].voices },
+          { name: "底盘舒适性", sub: "产品体验", a: 35.9, b: 24.5, count: "306 人", voices: DATA.offline.need.rows[2].voices }
+        ]
+      },
+      policy: {
+        title: "金融政策 A/B 分布",
+        desc: "比较客户对首付、月供、免息、置换和保险费用的认可或顾虑",
+        rows: [
+          { name: "低首付方案", sub: "金融认可", a: 33.6, b: 28.4, count: "304 人", voices: DATA.offline.need.rows[3].voices },
+          { name: "月供压力", sub: "金融顾虑", a: 24.9, b: 41.0, count: "389 人", voices: DATA.offline.resistance.rows[2].voices },
+          { name: "置换补贴", sub: "政策权益", a: 30.8, b: 37.2, count: "352 人", voices: DATA.offline.need.rows[4].voices },
+          { name: "两年免息", sub: "金融认可", a: 29.7, b: 22.6, count: "271 人", voices: DATA.offline.action.rows[4].voices },
+          { name: "保险费用", sub: "费用顾虑", a: 18.6, b: 27.9, count: "257 人", voices: DATA.offline.need.rows[1].voices }
+        ]
+      },
+      competitor: {
+        ...DATA.offline.competitor,
+        title: "竞品关注 A/B 分布",
+        desc: "比较两组客群提及的竞品车型、配置和客户自述价格事实"
+      }
     }
   };
 
@@ -447,6 +548,7 @@
     "到店跟进中",
     "已下定",
     "已预约到店",
+    "已邀约到店",
     "异地",
     "战败",
     "战败已通过(已到店)",
@@ -466,6 +568,7 @@
     "到店跟进中": { customers: 126, valid: 120 },
     "已下定": { customers: 184, valid: 178 },
     "已预约到店": { customers: 72, valid: 68 },
+    "已邀约到店": { customers: 64, valid: 60 },
     "异地": { customers: 48, valid: 44 },
     "战败": { customers: 238, valid: 221 },
     "战败已通过(已到店)": { customers: 87, valid: 81 },
@@ -490,8 +593,9 @@
   const state = {
     pageMode: "insight",
     stage: "overview",
-    topic: "need",
+    topic: "profile",
     activeRow: 0,
+    compareVoiceGroup: "a",
     analysisPeriod: "统计日期 2026-07-14 至 2026-07-20",
     batchDays: 1,
     statisticsDays: 7,
@@ -510,8 +614,6 @@
     stageDatePickerOpen: false,
     mode: "compare",
     singleGroup: "a",
-    offlineConfigured: true,
-    offlineCustom: true,
     pendingTopic: null,
     matrixView: "distribution",
     matrixCategory: "resistance",
@@ -522,7 +624,17 @@
     deepEvaluationIndex: 0,
     currentStageSampleValid: 0,
     scenes: new Set(SCENE_VALUES),
-    groups: { a: new Set(["已下定", "异地"]), b: new Set(["战败", "战败申请中(已到店)"]) }
+    overviewStatuses: new Set(STATUS_OPTIONS),
+    groups: {
+      online: {
+        a: new Set(["已预约到店", "已邀约到店", "到店跟进中"]),
+        b: new Set(["未跟进", "战败已通过(未到店)"])
+      },
+      offline: {
+        a: new Set(["下订单"]),
+        b: new Set(["战败"])
+      }
+    }
   };
   let currentRegionModelEntries = [];
   let overviewAiSummaryGenerationId = 0;
@@ -624,6 +736,46 @@
     });
   }
 
+  function renderOverviewStatusFilter() {
+    const host = $("#overviewStatusOptions");
+    host.innerHTML = STATUS_OPTIONS.map((status) => {
+      const selected = state.overviewStatuses.has(status);
+      return `<label><input type="checkbox" value="${escapeHTML(status)}"${selected ? " checked" : ""} /><span>${escapeHTML(status)}</span></label>`;
+    }).join("");
+    const count = state.overviewStatuses.size;
+    $("#overviewStatusFilterSummary").textContent = count === STATUS_OPTIONS.length
+      ? `全部线索状态（${STATUS_OPTIONS.length}）`
+      : count
+        ? `已选 ${count} 个状态`
+        : "未选择线索状态";
+  }
+
+  function getOverviewStatusScale() {
+    const total = STATUS_OPTIONS.reduce((sum, status) => sum + (OFFLINE_STATUS_DATA[status]?.customers || 0), 0);
+    const selected = Array.from(state.overviewStatuses)
+      .reduce((sum, status) => sum + (OFFLINE_STATUS_DATA[status]?.customers || 0), 0);
+    return total ? selected / total : 0;
+  }
+
+  function hasOverviewScopeData() {
+    return state.scenes.size > 0 && state.overviewStatuses.size > 0;
+  }
+
+  function getCurrentStatusGroups() {
+    return state.groups[state.stage] || state.groups.online;
+  }
+
+  function updateComparisonStatusFilterSummary() {
+    const groups = getCurrentStatusGroups();
+    const a = Array.from(groups.a);
+    const b = Array.from(groups.b);
+    const summary = a.length === 1 && b.length === 1
+      ? `${a[0]} vs ${b[0]}`
+      : `A组 ${a.length} 项 vs B组 ${b.length} 项`;
+    $("#comparisonStatusFilterSummary").textContent = summary;
+    $("#editGroupsButton").title = `A组：${a.join("、")}；B组：${b.join("、")}`;
+  }
+
   function getTimeScale() {
     const rangeDays = state.stage === "overview" ? state.statisticsDays : state.batchDays;
     const batchScale = Math.max(1 / 7, (rangeDays || 1) / 7);
@@ -664,6 +816,11 @@
     const brand = $("#brandFilter").value;
     const model = $("#modelFilter").value === "all" ? "全部车型" : $("#modelFilter").value;
     const parts = [organization, brand, model];
+    if (state.stage === "overview") {
+      parts.push(state.overviewStatuses.size === STATUS_OPTIONS.length
+        ? "全部线索状态"
+        : `已选 ${state.overviewStatuses.size} 个线索状态`);
+    }
     if (includeScenes && state.stage !== "overview") {
       parts.push(`已选 ${getSelectedStageSceneCount(state.stage)} 个相关场景`);
     }
@@ -892,26 +1049,15 @@
     state.analysisPeriod = `统计周期 ${getDateRangeLabel(state.stageStartDate, state.stageEndDate)}`;
     $("#latestSelectableDate").textContent = `结束日期最晚可选 ${formatISODate(latestStageDate)}`;
     $("#observationDaysHint").textContent = `${state.windowDays} 天`;
-    $("#observationResultHint").textContent = state.stage === "online" ? "确认到店结果" : "确认成交结果";
+    $("#observationResultHint").textContent = "确认线索状态";
     renderCustomerDatePicker();
     renderStageDatePicker();
   }
 
   function getStageGroups(meta) {
-    if (state.stage === "online") {
-      return {
-        a: { ...meta.groups.a, name: `${state.windowDays}日内已到店` },
-        b: { ...meta.groups.b, name: `${state.windowDays}日内未到店` }
-      };
-    }
-    if (!state.offlineCustom) {
-      return {
-        a: { ...meta.groups.a, name: `到店后 ${state.windowDays} 日成交` },
-        b: { ...meta.groups.b, name: `到店后 ${state.windowDays} 日未成交` }
-      };
-    }
+    const selectedGroups = getCurrentStatusGroups();
     const buildGroup = (key) => {
-      const statuses = Array.from(state.groups[key]);
+      const statuses = Array.from(selectedGroups[key]);
       return statuses.reduce((group, status) => {
         const statusData = OFFLINE_STATUS_DATA[status] || { customers: 0, valid: 0 };
         group.customers += statusData.customers;
@@ -994,7 +1140,7 @@
     const selectedModelValue = $("#modelFilter").value;
     const selectedModel = brand.models.find((model) => model.name === selectedModelValue);
     const sceneScale = state.scenes.size / SCENE_VALUES.length;
-    const scopeScale = getTimeScale() * getOrgScale() * sceneScale;
+    const scopeScale = getTimeScale() * getOrgScale() * sceneScale * getOverviewStatusScale();
     const deepScale = scopeScale * (selectedModel ? selectedModel.valid / brand.onlineValid : 1);
     const scopedCustomers = Math.max(0, Math.round((selectedModel ? selectedModel.valid : brand.onlineValid) * scopeScale));
     const evidenceCount = Math.max(0, Math.round(scopedCustomers * 4.182));
@@ -1073,9 +1219,6 @@
   function renderOverviewRuleInsights() {
     const data = getOverviewRuleInsightData();
     $("#overviewAiSummaryMeta").textContent = `5 类规则洞察 · ${data.scopedCustomers.toLocaleString("zh-CN")} 名客户 · ${data.evidenceCount.toLocaleString("zh-CN")} 条录音证据`;
-    $("#overviewAiInsightCount").textContent = data.cards.length;
-    $("#overviewAiCustomerCount").textContent = data.scopedCustomers.toLocaleString("zh-CN");
-    $("#overviewAiEvidenceCount").textContent = data.evidenceCount.toLocaleString("zh-CN");
     $("#overviewAiInsightGrid").innerHTML = data.cards.map((card, index) => `
       <article class="overview-ai-insight-card">
         <div class="overview-ai-insight-card-head">
@@ -1103,21 +1246,21 @@
     $("#overviewAiExecutive").classList.add("is-pending");
     $("#overviewAiExecutiveConclusion").hidden = true;
     $("#overviewAiExecutiveConclusion").textContent = "";
-    $("#overviewAiEvidenceStats").hidden = true;
     const status = $("#overviewAiSummaryStatus");
     status.hidden = !hadResult;
     status.classList.toggle("is-stale", hadResult);
     status.textContent = hadResult ? "筛选已更新 · 待重新生成" : "";
     const button = $("#generateOverviewAiSummary");
-    button.disabled = !state.scenes.size;
-    setOverviewAiGenerateLabel(state.scenes.size
-      ? (hadResult ? "重新生成 AI 综合判断" : "生成 AI 综合判断")
+    button.disabled = !hasOverviewScopeData();
+    setOverviewAiGenerateLabel(hasOverviewScopeData()
+      ? (hadResult ? "重新生成" : "生成 AI 综合判断")
       : "暂无可分析数据");
     if (!state.scenes.size) $("#overviewAiSummaryMeta").textContent = "当前未选择业务场景，请先选择至少一个场景";
+    else if (!state.overviewStatuses.size) $("#overviewAiSummaryMeta").textContent = "当前未选择线索状态，请先选择至少一个状态";
   }
 
   function generateOverviewAiSummary() {
-    if (!state.scenes.size) return;
+    if (!hasOverviewScopeData()) return;
     const requestId = ++overviewAiSummaryGenerationId;
     const button = $("#generateOverviewAiSummary");
     button.disabled = true;
@@ -1126,14 +1269,12 @@
     $("#overviewAiSummaryResult").hidden = false;
     $("#overviewAiExecutive").classList.add("is-pending");
     $("#overviewAiExecutiveConclusion").hidden = true;
-    $("#overviewAiEvidenceStats").hidden = true;
     $("#overviewAiSummaryLoading").hidden = false;
     window.setTimeout(() => {
       if (requestId !== overviewAiSummaryGenerationId) return;
       const data = renderOverviewRuleInsights();
       $("#overviewAiExecutiveConclusion").textContent = data.executive;
       $("#overviewAiExecutiveConclusion").hidden = false;
-      $("#overviewAiEvidenceStats").hidden = false;
       $("#overviewAiExecutive").classList.remove("is-pending");
       overviewAiSummaryGenerated = true;
       $("#overviewAiSummaryLoading").hidden = true;
@@ -1142,7 +1283,7 @@
       status.classList.remove("is-stale");
       status.textContent = "已生成 · 刚刚";
       button.disabled = false;
-      setOverviewAiGenerateLabel("重新生成 AI 综合判断");
+      setOverviewAiGenerateLabel("重新生成");
     }, 720);
   }
 
@@ -1173,6 +1314,7 @@
       * getTimeScale()
       * getOrgScale()
       * (state.scenes.size / SCENE_VALUES.length)
+      * getOverviewStatusScale()
     ));
     const labels = getHotDistributionLabels(config);
     const organization = $("#orgFilter").value;
@@ -1199,7 +1341,7 @@
 
     $("#hotDistributionCategory").textContent = categoryLabel;
     $("#hotDistributionScope").textContent = `当前筛选范围 · ${getScopeLabel()}`;
-    $("#hotDistributionBody").innerHTML = state.scenes.size && entries.length
+    $("#hotDistributionBody").innerHTML = hasOverviewScopeData() && entries.length
       ? entries.map((entry, index) => `
         <tr>
           <td><span class="hot-rank ${index < 3 ? `top-${index + 1}` : ""}">${index + 1}</span></td>
@@ -1299,7 +1441,8 @@
     const scopeScale = getTimeScale()
       * getOrgScale()
       * (selectedModelData ? selectedModelData.valid / brand.onlineValid : 1)
-      * (state.scenes.size / SCENE_VALUES.length);
+      * (state.scenes.size / SCENE_VALUES.length)
+      * getOverviewStatusScale();
     const sentimentLabels = [
       ["positive", "正向", topic.sentiment[0]],
       ["neutral", "中性", topic.sentiment[1]],
@@ -1318,12 +1461,12 @@
       button.setAttribute("aria-selected", String(active));
     });
 
-    if (!state.scenes.size) {
-      $("#deepTopList").innerHTML = '<div class="deep-empty">当前未选择业务场景，暂无 TOP10 数据</div>';
+    if (!hasOverviewScopeData()) {
+      $("#deepTopList").innerHTML = `<div class="deep-empty">${state.scenes.size ? "当前未选择线索状态" : "当前未选择业务场景"}，暂无 TOP10 数据</div>`;
       $("#deepSentimentTopic").textContent = "当前选择";
-      $("#deepSentimentContent").innerHTML = '<div class="deep-empty">选择业务场景后可查看评价解构</div>';
+      $("#deepSentimentContent").innerHTML = '<div class="deep-empty">完善筛选后可查看评价解构</div>';
       $("#deepVoiceTopic").textContent = "当前选择";
-      $("#deepVoiceList").innerHTML = '<div class="deep-empty">选择业务场景后可查看评价证据</div>';
+      $("#deepVoiceList").innerHTML = '<div class="deep-empty">完善筛选后可查看评价证据</div>';
       return;
     }
 
@@ -1576,8 +1719,8 @@
     $("#regionModelMatrixHead").innerHTML = `<th scope="col">区域</th>${visibleModels.map((item) => `<th scope="col">${escapeHTML(item.name)}</th>`).join("")}`;
     matrix.style.setProperty("--matrix-content-width", `${112 + visibleModels.length * 190}px`);
     currentRegionModelEntries = [];
-    if (!state.scenes.size) {
-      $("#regionModelMatrixBody").innerHTML = `<tr><td class="matrix-empty" colspan="${visibleModels.length + 1}">当前未选择业务场景，暂无客户关注差异</td></tr>`;
+    if (!hasOverviewScopeData()) {
+      $("#regionModelMatrixBody").innerHTML = `<tr><td class="matrix-empty" colspan="${visibleModels.length + 1}">${state.scenes.size ? "当前未选择线索状态" : "当前未选择业务场景"}，暂无客户关注差异</td></tr>`;
       $("#regionModelMatrixPagination").hidden = true;
       refreshRegionModelHorizontalScroll();
       return;
@@ -1650,8 +1793,9 @@
   }
 
   function goToStage(stage, topic) {
-    state.topic = topic || "need";
+    state.topic = topic || "profile";
     state.activeRow = 0;
+    state.compareVoiceGroup = "a";
     state.pageMode = "compare";
     state.stage = stage;
     setDefaultScenesForStage(stage);
@@ -1669,6 +1813,10 @@
 
   function renderStage() {
     renderMatureBatchExplanation();
+    const isInsightMode = state.pageMode === "insight";
+    $("#overviewStatusFilterField").hidden = !isInsightMode;
+    $("#comparisonStatusFilterField").hidden = isInsightMode;
+    $("#scopeFields").classList.toggle("is-compare", !isInsightMode);
     $$("[data-page-mode]").forEach((button) => {
       const active = button.dataset.pageMode === state.pageMode;
       button.classList.toggle("active", active);
@@ -1683,7 +1831,6 @@
     if (state.stage === "overview") {
       $("#overviewPage").hidden = false;
       $("#stageAnalysis").hidden = true;
-      $("#editGroupsButton").hidden = true;
       renderOverview();
       return;
     }
@@ -1697,13 +1844,12 @@
     const isSingle = false;
     const selectedSceneLabels = getSelectedSceneLabels(state.stage);
     $("#stageAnalysis").classList.toggle("single-mode", isSingle);
-    $("#testDriveTab").hidden = state.stage !== "offline";
     $("#stageKicker").textContent = meta.kicker;
     $("#comparisonTitle").textContent = isSingle ? `聚焦“${single.name}”客群的对话特征` : meta.title;
     $("#comparisonDesc").textContent = selectedSceneLabels.length
-      ? `${getScopeLabel()} · 当前纳入：${selectedSceneLabels.join("、")}。`
+      ? `A/B 客群按“观测 ${state.windowDays} 天 + 用户选中的线索状态”定义 · ${getScopeLabel()} · 当前纳入：${selectedSceneLabels.join("、")}。`
       : "当前阶段未选择业务场景，请在经营范围中至少选择一个场景。";
-    $("#editGroupsButton").hidden = state.stage !== "offline";
+    updateComparisonStatusFilterSummary();
 
     const a = groups.a;
     const b = groups.b;
@@ -1719,16 +1865,12 @@
     $("#groupBValue").textContent = Math.round(b.customers * scale).toLocaleString("zh-CN");
     $("#groupBRate").textContent = `${scopedBRate.toFixed(1)}%`;
     $("#trackB").style.width = `${scopedBRate}%`;
-    const sampleValid = Math.round((isSingle ? single.valid : meta.valid) * scale);
+    const sampleValid = Math.round((a.valid + b.valid) * scale);
     state.currentStageSampleValid = sampleValid;
     $(".ai-brief .brief-scope").textContent = `${isSingle ? single.name : `${a.name} vs ${b.name}`} · ${sampleValid.toLocaleString("zh-CN")} 名可分析客户`;
-    $("#aiTitle").textContent = "智能洞察";
-    $("#aiDesc").textContent = isSingle
-      ? `${single.name} · 根据当前指标总结高频需求、阶段难点、动作与竞品发现`
-      : `${a.name} vs ${b.name} · 根据当前指标总结两组最明显的数据差异`;
-    const targetResultName = state.stage === "online"
-      ? `${state.windowDays} 日内到店率`
-      : state.offlineCustom ? `${a.name}目标结果率` : `到店后 ${state.windowDays} 日成交率`;
+    $("#aiTitle").textContent = "A/B 对比洞察";
+    $("#aiDesc").textContent = "基于客户画像、区域画像、产品、金融政策与竞品五个维度，对比两组客群的共同点与关键差异";
+    const targetResultName = "A 组目标结果率";
     $("#unifiedResultRateLabel").textContent = targetResultName;
     $("#candidateResultRateLabel").textContent = `${targetResultName}：完成 / 未完成`;
     $("#legendA").textContent = a.name;
@@ -1758,16 +1900,22 @@
     }
   }
 
+  function getCompareTopicData(topicName = state.topic) {
+    return COMPARE_DATA[state.stage]?.[topicName];
+  }
+
   function renderTopic() {
-    const topic = DATA[state.stage][state.topic];
+    const topic = getCompareTopicData();
     if (!topic) {
-      state.topic = "need";
+      state.topic = "profile";
       return renderTopic();
     }
+    if (state.activeRow >= topic.rows.length) state.activeRow = 0;
     $("#signalTitle").textContent = topic.title;
     $("#signalDesc").textContent = topic.desc;
     if (!getSelectedStageSceneCount(state.stage)) {
       $("#signalList").innerHTML = '<div class="analysis-filter-empty">当前阶段未选择业务场景，暂无信号数据</div>';
+      $("#differenceInsightList").innerHTML = '<div class="analysis-filter-empty">选择业务场景后可查看差异解读</div>';
       $("#voiceTitle").textContent = "客户原声";
       $("#voiceList").innerHTML = '<div class="analysis-filter-empty">选择业务场景后可查看对应原声</div>';
       return;
@@ -1775,17 +1923,20 @@
     $("#signalList").innerHTML = topic.rows.map((row, index) => {
       const delta = Number((row.a - row.b).toFixed(1));
       const deltaText = delta >= 0 ? `A +${delta.toFixed(1)}` : `B +${Math.abs(delta).toFixed(1)}`;
-      const value = state.singleGroup === "a" ? row.a : row.b;
       const scaledCount = scaleCountText(row.count);
-      const source = state.topic === "action" ? (row.name === "确认购车时间" ? "已有 SOP" : "新增识别") : "";
       return `
         <button class="signal-row${index === state.activeRow ? " active" : ""}" data-index="${index}" type="button">
-          <span class="signal-name"><strong>${escapeHTML(row.name)}</strong><small>${escapeHTML(row.sub)} · ${escapeHTML(scaledCount)}</small>${source ? `<em class="source-tag ${source === "已有 SOP" ? "sop" : "new"}">${source}</em>` : ""}</span>
-          ${state.mode === "single" ? `<span class="single-track"><span class="track-bg"><i style="width:${Math.min(100, value * 1.25)}%"></i></span><b>${value.toFixed(1)}%</b></span><span class="signal-delta"><strong>${escapeHTML(scaledCount)}</strong><small>命中客户</small></span>` : `<span class="dual-track">
-            <span class="track-line a"><span>A</span><span class="track-bg"><i style="width:${Math.min(100, row.a * 1.25)}%"></i></span><b>${row.a.toFixed(1)}%</b></span>
-            <span class="track-line b"><span>B</span><span class="track-bg"><i style="width:${Math.min(100, row.b * 1.25)}%"></i></span><b>${row.b.toFixed(1)}%</b></span>
+          <span class="signal-name"><strong>${escapeHTML(row.name)}</strong><small>${escapeHTML(row.sub)} · ${escapeHTML(scaledCount)}</small></span>
+          <span class="mirror-comparison" aria-label="A 组 ${row.a.toFixed(1)}%，B 组 ${row.b.toFixed(1)}%">
+            <span class="mirror-value a"><em>A</em><b>${row.a.toFixed(1)}%</b></span>
+            <span class="mirror-bars" aria-hidden="true">
+              <span class="mirror-half a"><i style="width:${Math.min(100, row.a)}%"></i></span>
+              <span class="mirror-axis"></span>
+              <span class="mirror-half b"><i style="width:${Math.min(100, row.b)}%"></i></span>
+            </span>
+            <span class="mirror-value b"><b>${row.b.toFixed(1)}%</b><em>B</em></span>
           </span>
-          <span class="signal-delta${delta < 0 ? " negative" : ""}"><strong>${deltaText}</strong><small>差异百分点</small></span>`}
+          <span class="signal-delta${delta < 0 ? " negative" : ""}"><strong>${deltaText}</strong><small>差异百分点</small></span>
         </button>
       `;
     }).join("");
@@ -1795,20 +1946,55 @@
         renderTopic();
       });
     });
+    renderDifferenceInsights(topic);
+    $$("[data-voice-group]").forEach((button) => {
+      const active = button.dataset.voiceGroup === state.compareVoiceGroup;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
     renderVoices();
   }
 
+  function renderDifferenceInsights(topic) {
+    const groups = getStageGroups(STAGES[state.stage]);
+    const ranked = topic.rows.map((row) => ({ row, delta: Number((row.a - row.b).toFixed(1)) }));
+    const common = ranked.reduce((best, item) => !best || Math.min(item.row.a, item.row.b) > Math.min(best.row.a, best.row.b) ? item : best, null);
+    const aStrong = ranked.reduce((best, item) => !best || item.delta > best.delta ? item : best, null);
+    const bStrong = ranked.reduce((best, item) => !best || item.delta < best.delta ? item : best, null);
+    const insights = [
+      {
+        type: "common",
+        label: "共同特征",
+        text: `${common.row.name}在两组中均为高频信号，A 组 ${common.row.a.toFixed(1)}%，B 组 ${common.row.b.toFixed(1)}%。`
+      },
+      {
+        type: "a",
+        label: "A 组突出",
+        text: `${aStrong.row.name}在“${groups.a.name}”中高 ${Math.abs(aStrong.delta).toFixed(1)} 个百分点。`
+      },
+      {
+        type: "b",
+        label: "B 组突出",
+        text: `${bStrong.row.name}在“${groups.b.name}”中高 ${Math.abs(bStrong.delta).toFixed(1)} 个百分点。`
+      }
+    ];
+    $("#differenceInsightList").innerHTML = insights.map((insight) => `
+      <article class="difference-insight ${insight.type}">
+        <span>${insight.label}</span>
+        <p>${escapeHTML(insight.text)}</p>
+      </article>
+    `).join("");
+  }
+
   function renderVoices() {
-    const row = DATA[state.stage][state.topic].rows[state.activeRow];
+    const row = getCompareTopicData().rows[state.activeRow];
     $("#voiceTitle").textContent = row.name;
     let voices = row.voices.length === 1 ? [row.voices[0], createCounterVoice(row.voices[0])] : row.voices;
-    if (state.mode === "single") {
-      const matched = voices.filter((voice) => voice[0] === state.singleGroup);
-      voices = matched.length ? matched : [createVoiceForGroup(voices[0], state.singleGroup)];
-    }
+    const matched = voices.filter((voice) => voice[0] === state.compareVoiceGroup);
+    voices = matched.length ? matched : [createVoiceForGroup(voices[0], state.compareVoiceGroup)];
     $("#voiceList").innerHTML = voices.slice(0, 3).map((voice, index) => `
       <button class="voice-card group-${voice[0]}" data-voice-index="${index}" type="button">
-        <span class="voice-meta"><span>${state.mode === "single" ? "目标客群" : `${voice[0].toUpperCase()} 组`} · ${escapeHTML(voice[1])}</span><span>${escapeHTML(voice[4])}</span></span>
+        <span class="voice-meta"><span>${voice[0].toUpperCase()} 组 · ${escapeHTML(voice[1])}</span><span>${escapeHTML(voice[4])}</span></span>
         <blockquote>${escapeHTML(voice[2])}</blockquote>
         <footer><span>${escapeHTML(getScopedVoiceLocation(voice[3]))}</span><b>查看客户证据 →</b></footer>
       </button>
@@ -1877,29 +2063,38 @@
   }
 
   function renderStatusEditor() {
+    const groups = getCurrentStatusGroups();
     ["a", "b"].forEach((group) => {
       const host = $(`.status-grid[data-group="${group}"]`);
       host.innerHTML = STATUS_OPTIONS.map((status) => {
-        const selected = state.groups[group].has(status);
+        const selected = groups[group].has(status);
         return `<button type="button" data-status="${escapeHTML(status)}" class="${selected ? "selected" : ""}" aria-pressed="${selected}">${escapeHTML(status)}</button>`;
       }).join("");
       $$('[data-status]', host).forEach((button) => {
         button.addEventListener("click", () => {
           const status = button.dataset.status;
-          if (state.groups[group].has(status)) state.groups[group].delete(status);
-          else state.groups[group].add(status);
+          if (groups[group].has(status)) groups[group].delete(status);
+          else groups[group].add(status);
           renderStatusEditor();
         });
       });
     });
-    const ready = state.groups.a.size > 0 && state.groups.b.size > 0;
+    const ready = groups.a.size > 0 && groups.b.size > 0;
     $("#startOfflineCompare").disabled = !ready;
     $("#groupValidation").textContent = ready
-      ? `已选择 A 组 ${state.groups.a.size} 个、B 组 ${state.groups.b.size} 个状态`
+      ? `已选择 A 组 ${groups.a.size} 个、B 组 ${groups.b.size} 个状态`
       : "A、B 两组都至少选择 1 个状态";
   }
 
   function openGroupModal() {
+    const isOnline = state.stage === "online";
+    $("#groupModalKicker").textContent = isOnline ? "邀约客群对比" : "门店客群对比";
+    $("#groupModalDescription").textContent = isOnline
+      ? `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较邀约场景中的对话信号与销售动作。`
+      : `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较门店场景中的对话信号、销售动作与结果差异。`;
+    $("#applyPreset").innerHTML = isOnline
+      ? "已预约到店、已邀约到店、到店跟进中 <b>vs</b> 未跟进、战败已通过(未到店)"
+      : "下订单 <b>vs</b> 战败";
     renderStatusEditor();
     $("#groupModal").hidden = false;
     document.body.style.overflow = "hidden";
@@ -1918,7 +2113,7 @@
       "华中大区": 0.15,
       "西南大区": 0.12
     }[entry.region] || 0.2;
-    const scopedCustomers = Math.max(1, Math.round(entry.modelData.valid * getTimeScale() * regionShare));
+    const scopedCustomers = Math.max(1, Math.round(entry.modelData.valid * getTimeScale() * getOverviewStatusScale() * regionShare));
     const impactRate = Math.min(0.68, 0.16 + entry.value / 30);
     const impactCustomers = Math.max(1, Math.round(scopedCustomers * impactRate));
     return {
@@ -2046,7 +2241,7 @@
     $("#drawerBody").innerHTML = `
       <section class="drawer-section"><h3>已识别客户信号</h3><div class="drawer-tags"><span>${escapeHTML(row.name)}</span><span>${escapeHTML(row.sub)}</span><span>${escapeHTML($("#modelFilter").value === "all" ? $("#brandFilter").value : $("#modelFilter").value)}</span><span>${groupName}</span></div></section>
       <section class="drawer-section"><h3>真实对话证据</h3><p class="evidence-line">${escapeHTML(voice[2])}</p><div class="evidence-meta"><span>${escapeHTML(getScopedVoiceLocation(voice[3]))}</span><span>${escapeHTML(voice[4])}</span></div></section>
-      <section class="drawer-section action-definition"><h3>线索旅程与证据窗口</h3><dl><dt>客群</dt><dd>${escapeHTML(groupName)} · ${state.windowDays} 天窗口</dd><dt>T0</dt><dd>${state.stage === "online" ? "07-11 09:26 · 首条邀约类录音" : "07-14 13:40 · 首次真实到店"}</dd><dt>结果事件</dt><dd>${voice[0] === "a" ? (state.stage === "online" ? "07-18 15:12 · 真实到店" : "07-19 10:08 · 进入已下订状态") : `窗口内未发生目标结果`}</dd><dt>证据截止</dt><dd>${voice[0] === "a" ? "结果事件发生前" : `T0＋${state.windowDays} 天`}，结果后的录音不用于解释</dd><dt>使用范围</dt><dd>仅作为该客户所属客群的证据，不生成下一步跟进建议。</dd></dl></section>
+      <section class="drawer-section action-definition"><h3>线索旅程与证据窗口</h3><dl><dt>客群</dt><dd>${escapeHTML(groupName)} · ${state.windowDays} 天窗口</dd><dt>T0</dt><dd>${state.stage === "online" ? "07-11 09:26 · 首条邀约类录音" : "07-14 13:40 · 首次真实到店"}</dd><dt>结果事件</dt><dd>观察期内进入“${escapeHTML(groupName)}”线索状态</dd><dt>证据截止</dt><dd>线索状态确认前，结果后的录音不用于解释</dd><dt>使用范围</dt><dd>仅作为该客户所属客群的证据，不生成下一步跟进建议。</dd></dl></section>
     `;
     $("#detailDrawer").hidden = false;
     document.body.style.overflow = "hidden";
@@ -2092,7 +2287,7 @@
   }
 
   function getTopRow(topicName, group) {
-    const rows = DATA[state.stage][topicName].rows;
+    const rows = getCompareTopicData(topicName).rows;
     return rows.reduce((best, row, index) => {
       const value = row[group];
       return !best || value > best.value ? { row, index, value } : best;
@@ -2100,7 +2295,7 @@
   }
 
   function getLargestGap(topicName) {
-    const rows = DATA[state.stage][topicName].rows;
+    const rows = getCompareTopicData(topicName).rows;
     return rows.reduce((best, row, index) => {
       const delta = Number((row.a - row.b).toFixed(1));
       return !best || Math.abs(delta) > Math.abs(best.delta) ? { row, index, delta } : best;
@@ -2109,52 +2304,36 @@
 
   function getCompareRuleInsightItems() {
     const groups = getStageGroups(STAGES[state.stage]);
-    if (state.mode === "single") {
-      const group = state.singleGroup;
-      const groupName = groups[group].name;
-      const topics = [
-        ["need", "高频需求"],
-        ["resistance", "主要阶段难点"],
-        ["action", "高频销售动作"],
-        ["competitor", "主要竞品信号"]
-      ];
-      return topics.map(([topic, label]) => {
-        const finding = getTopRow(topic, group);
-        const suffix = topic === "action" ? "动作完成率" : topic === "competitor" ? "提及客户占比" : "客户占比";
-        return {
-          title: `${label}：${finding.row.name}`,
-          detail: `“${groupName}”客群中该信号${suffix}为 ${finding.value.toFixed(1)}%，涉及 ${scaleCountText(finding.row.count)}。`,
-          topic,
-          row: finding.index
-        };
-      });
-    }
-
-    return [
-      ["need", "客户需求差异", "客户占比"],
-      ["resistance", "阶段难点差异", "客户占比"],
-      ["action", "销售动作差异", "动作完成率"],
-      ["competitor", "竞品信号差异", "提及客户占比"]
-    ].map(([topic, label, metric]) => {
-      const finding = getLargestGap(topic);
+    return COMPARE_DIMENSIONS.map((dimension) => {
+      const rows = getCompareTopicData(dimension.topic).rows;
+      const focusName = state.stage === "online" ? dimension.onlineFocus : dimension.offlineFocus;
+      const focusIndex = rows.findIndex((row) => row.name === focusName);
+      const focusRow = rows[focusIndex >= 0 ? focusIndex : 0];
+      const finding = {
+        row: focusRow,
+        index: focusIndex >= 0 ? focusIndex : 0,
+        delta: Number((focusRow.a - focusRow.b).toFixed(1))
+      };
       const highGroup = finding.delta >= 0 ? groups.a.name : groups.b.name;
       const lowGroup = finding.delta >= 0 ? groups.b.name : groups.a.name;
       const highValue = finding.delta >= 0 ? finding.row.a : finding.row.b;
       const lowValue = finding.delta >= 0 ? finding.row.b : finding.row.a;
       return {
-        title: `${label}：${finding.row.name}`,
-        detail: `“${highGroup}”${metric}为 ${highValue.toFixed(1)}%，比“${lowGroup}”的 ${lowValue.toFixed(1)}% 高 ${Math.abs(finding.delta).toFixed(1)} 个百分点，涉及 ${scaleCountText(finding.row.count)}。`,
-        topic,
-        row: finding.index
+        title: dimension.label,
+        metric: `${finding.row.name} ${finding.delta >= 0 ? "A" : "B"} +${Math.abs(finding.delta).toFixed(1)}pp`,
+        detail: `“${highGroup}”占比 ${highValue.toFixed(1)}%，比“${lowGroup}”的 ${lowValue.toFixed(1)}% 高 ${Math.abs(finding.delta).toFixed(1)} 个百分点。`,
+        topic: dimension.topic,
+        row: finding.index,
+        winner: finding.delta >= 0 ? "a" : "b"
       };
     });
   }
 
   function openMetricGlossaryDrawer() {
     const stageLabel = state.stage === "overview" ? "首页概览、邀约场景与门店场景通用" : state.stage === "online" ? "邀约场景" : "门店场景";
-    const resultLabel = state.stage === "online"
-      ? `${state.windowDays} 日内到店`
-      : state.stage === "offline" ? `到店后 ${state.windowDays} 日成交或当前选定状态` : "线上到店 / 线下成交";
+    const resultLabel = state.stage === "overview"
+      ? "当前选定线索状态"
+      : `观察 ${state.windowDays} 天后的 A/B 组选定线索状态`;
     $("#drawerKicker").textContent = "全页面通用口径";
     $("#drawerTitle").textContent = "指标口径说明";
     $("#drawerSubtitle").textContent = `${stageLabel} · 当前目标结果：${resultLabel}`;
@@ -2179,21 +2358,23 @@
   function renderCompareRuleInsights() {
     const items = getCompareRuleInsightItems();
     const sampleValid = Math.max(0, Number(state.currentStageSampleValid) || 0);
-    const groupCount = state.mode === "single" ? 1 : 2;
+    const recordingCount = Math.round(STAGES[state.stage].recordings * getWindowScale());
     $("#compareAiInsightCount").textContent = items.length;
     $("#compareAiCustomerCount").textContent = sampleValid.toLocaleString("zh-CN");
-    $("#compareAiGroupCount").textContent = groupCount;
+    $("#compareAiRecordingCount").textContent = recordingCount.toLocaleString("zh-CN");
     $("#aiSummaryList").innerHTML = items.map((item, index) => `
       <article class="overview-ai-insight-card">
         <div class="overview-ai-insight-card-head"><span class="overview-ai-insight-index">${index + 1}</span><strong>${escapeHTML(item.title)}</strong></div>
+        <div class="compare-insight-metric ${item.winner}">${escapeHTML(item.metric)}</div>
         <p>${escapeHTML(item.detail)}</p>
-        <button class="overview-ai-insight-link" type="button" data-ai-topic="${item.topic}" data-ai-row="${item.row}">查看明细</button>
+        <button class="overview-ai-insight-link" type="button" data-ai-topic="${item.topic}" data-ai-row="${item.row}" data-ai-winner="${item.winner}">查看明细</button>
       </article>
     `).join("");
     $$('[data-ai-topic]', $("#aiSummaryList")).forEach((link) => {
       link.addEventListener("click", () => {
         state.topic = link.dataset.aiTopic;
         state.activeRow = Number(link.dataset.aiRow);
+        state.compareVoiceGroup = link.dataset.aiWinner;
         $$(".topic-tabs button").forEach((tab) => {
           const active = tab.dataset.topic === state.topic;
           tab.classList.toggle("active", active);
@@ -2240,8 +2421,9 @@
     window.setTimeout(() => {
       if (requestId !== compareAiSummaryGenerationId) return;
       const items = renderCompareRuleInsights();
-      const prioritySignal = items[0].title.split("：")[1] || items[0].title;
-      $("#aiExecutiveConclusion").textContent = `综合客户需求、阶段难点、销售动作和竞品信号 4 个方面后，“${prioritySignal}”是当前最值得优先复盘的差异；其余三方面共同指向两组客群在决策关注和销售承接上的不同，建议进入明细核对对应客户原声。`;
+      const aSignals = items.filter((item) => item.winner === "a").slice(0, 2).map((item) => item.metric.split(" A +")[0]).join("、") || "部分客户画像标签";
+      const bSignals = items.filter((item) => item.winner === "b").slice(0, 2).map((item) => item.metric.split(" B +")[0]).join("、") || "部分竞品与政策顾虑";
+      $("#aiExecutiveConclusion").textContent = `综合客户画像、区域画像、产品、金融政策与竞品 5 个维度后，A 组在${aSignals}方面更突出，B 组在${bSignals}方面更集中。建议优先进入五维明细核对差异指标与客户原声，再确定对应管理动作。`;
       $("#aiExecutiveConclusion").hidden = false;
       $("#compareAiEvidenceStats").hidden = false;
       $("#compareAiExecutive").classList.remove("is-pending");
@@ -2276,9 +2458,9 @@
   $$("[data-compare-stage]").forEach((button) => {
     button.addEventListener("click", () => {
       state.stage = button.dataset.compareStage;
-      if (state.stage === "online" && state.topic === "testdrive") state.topic = "need";
       setDefaultScenesForStage(state.stage);
       state.activeRow = 0;
+      state.compareVoiceGroup = "a";
       renderStage();
     });
   });
@@ -2416,7 +2598,7 @@
         showToast(`已切换为 ${button.textContent} 进入的客户`);
       } else {
         invalidateCompareAiSummary();
-        showToast(`已切换为 ${button.textContent} 进入的客户，智能洞察待重新生成`);
+        showToast(`已切换为 ${button.textContent} 进入的客户，A/B 对比洞察待重新生成`);
       }
     });
   });
@@ -2444,6 +2626,13 @@
     button.addEventListener("click", () => selectTopic(button.dataset.topic, false));
   });
 
+  $$("[data-voice-group]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.compareVoiceGroup = button.dataset.voiceGroup;
+      renderTopic();
+    });
+  });
+
   $$(".scope-fields select").forEach((select) => {
     select.addEventListener("change", () => {
       if (select.id === "brandFilter") syncModelOptions();
@@ -2451,7 +2640,7 @@
       renderStage();
       invalidateOverviewAiSummary();
       invalidateCompareAiSummary();
-      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，智能洞察待重新生成");
+      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成");
     });
   });
 
@@ -2463,27 +2652,43 @@
       renderStage();
       invalidateOverviewAiSummary();
       invalidateCompareAiSummary();
-      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，智能洞察待重新生成");
+      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成");
     });
   });
 
+  $("#overviewStatusOptions").addEventListener("change", (event) => {
+    const checkbox = event.target.closest('input[type="checkbox"]');
+    if (!checkbox) return;
+    if (checkbox.checked) state.overviewStatuses.add(checkbox.value);
+    else state.overviewStatuses.delete(checkbox.value);
+    state.matrixRegionPage = 1;
+    renderOverviewStatusFilter();
+    renderStage();
+    invalidateOverviewAiSummary();
+    showToast("线索状态筛选已更新");
+  });
+
   $("#applyPreset").addEventListener("click", () => {
-    state.groups.a = new Set(["已下定", "异地"]);
-    state.groups.b = new Set(["战败", "战败申请中(已到店)"]);
+    const groups = getCurrentStatusGroups();
+    if (state.stage === "online") {
+      groups.a = new Set(["已预约到店", "已邀约到店", "到店跟进中"]);
+      groups.b = new Set(["未跟进", "战败已通过(未到店)"]);
+    } else {
+      groups.a = new Set(["下订单"]);
+      groups.b = new Set(["战败"]);
+    }
     renderStatusEditor();
   });
 
   $("#startOfflineCompare").addEventListener("click", () => {
-    if (!state.groups.a.size || !state.groups.b.size) return;
-    state.offlineCustom = true;
-    state.offlineConfigured = true;
-    state.stage = "offline";
-    state.topic = state.pendingTopic || state.topic || "need";
+    const groups = getCurrentStatusGroups();
+    if (!groups.a.size || !groups.b.size) return;
+    state.topic = state.pendingTopic || state.topic || "profile";
     state.pendingTopic = null;
     state.activeRow = 0;
     closeLayer("groupModal");
     renderStage();
-    showToast("门店场景客群已配置；重叠客户将在两组中分别保留");
+    showToast(`${state.stage === "online" ? "邀约" : "门店"}场景客群已配置；重叠客户将在两组中分别保留`);
   });
 
   $("#editGroupsButton").addEventListener("click", openGroupModal);
@@ -2539,6 +2744,7 @@
   $("#openSopDetail").addEventListener("click", () => showToast("将携带当前窗口、客群、组织、品牌与车型条件进入 SOP 专门页面"));
 
   updateSceneFilterSummary();
+  renderOverviewStatusFilter();
 
   $$('[data-close]').forEach((button) => button.addEventListener("click", () => closeLayer(button.dataset.close)));
   $("#groupModal").addEventListener("click", (event) => { if (event.target === $("#groupModal")) closeLayer("groupModal"); });

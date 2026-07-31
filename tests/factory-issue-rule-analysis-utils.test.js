@@ -1,7 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { sortIssueOrgRows } = require('../factory-dashboard/issue-rule-analysis-utils.js');
+const {
+  sortIssueOrgRows,
+  aggregateIssueRulesByScenes
+} = require('../factory-dashboard/issue-rule-analysis-utils.js');
 
 const sampleRows = [
   { name: '广州天河店', rate: 50, hitCount: 72, sampleCount: 144 },
@@ -47,4 +50,60 @@ test('issue org drill list follows sample count priority sort', () => {
     sorted.map(item => item.name),
     ['广州天河店', '广州从化店', '广州花都店', '广州白云店', '广州番禺店', '广州增城店']
   );
+});
+
+test('same rule id aggregates hit and sample counts across selected applicable scenes', () => {
+  const rules = [{
+    id: 'rule-shared',
+    name: '需求确认',
+    sceneStats: {
+      first_follow: { hitCount: 80, sampleCount: 100 },
+      invite_store: { hitCount: 30, sampleCount: 50 },
+      schedule_confirm: { hitCount: 18, sampleCount: 20 }
+    }
+  }];
+
+  const [rule] = aggregateIssueRulesByScenes(rules, ['first_follow', 'invite_store']);
+
+  assert.deepEqual(rule.applicableScenes, ['first_follow', 'invite_store']);
+  assert.equal(rule.hitCount, 110);
+  assert.equal(rule.sampleCount, 150);
+  assert.equal(rule.rate, 73);
+});
+
+test('different rule ids remain separate even when their names are the same', () => {
+  const rules = [
+    {
+      id: 'reception-needs',
+      name: '需求确认',
+      sceneStats: {
+        store_reception: { hitCount: 36, sampleCount: 60 }
+      }
+    },
+    {
+      id: 'test-drive-needs',
+      name: '需求确认',
+      sceneStats: {
+        test_drive: { hitCount: 32, sampleCount: 40 }
+      }
+    }
+  ];
+
+  const visible = aggregateIssueRulesByScenes(rules, ['store_reception', 'test_drive']);
+
+  assert.equal(visible.length, 2);
+  assert.deepEqual(visible.map(rule => rule.id), ['reception-needs', 'test-drive-needs']);
+  assert.deepEqual(visible.map(rule => rule.applicableScenes), [['store_reception'], ['test_drive']]);
+});
+
+test('rules outside the selected scene range are hidden', () => {
+  const rules = [{
+    id: 'test-drive-safety',
+    name: '试驾安全说明',
+    sceneStats: {
+      test_drive: { hitCount: 32, sampleCount: 40 }
+    }
+  }];
+
+  assert.deepEqual(aggregateIssueRulesByScenes(rules, ['store_reception']), []);
 });

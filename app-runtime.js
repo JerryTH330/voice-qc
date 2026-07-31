@@ -2044,6 +2044,8 @@ function initStoreDashboardPage() {
     '邀约录音数':    '当期邀约场景下进入质检分析的录音条数',
     '接待录音数':    '当期门店接待场景下进入质检分析的录音条数',
     '试驾录音数':    '当期试乘试驾场景下进入质检分析的录音条数',
+    '云外呼录音数':  '当期云外呼来源下进入质检分析的录音总条数',
+    '门店工牌录音数': '当期门店工牌来源下进入质检分析的录音总条数',
     'SOP单项命中率': '各 SOP 话术项的未命中率，数值越低代表执行越好'
   };
 
@@ -2336,6 +2338,87 @@ function initStoreDashboardPage() {
     <div class="hm-sep hm-sep-divider" aria-hidden="true"></div>
   `;
 
+  const renderStoreRecordingSummaryScene = (scene) => `
+    <div class="store-recording-summary-scene" data-recording-scene="${escapeHtml(scene.key)}">
+      <span class="store-recording-summary-scene-label">${escapeHtml(scene.label)}</span>
+      <strong class="store-recording-summary-scene-value" ${buildStoreHeroCounterAttrs(scene.value, '条')}>${renderStoreHeroCounterValue(scene.value, '条')}</strong>
+    </div>
+  `;
+
+  const renderStoreRecordingSummaryGroup = (group) => `
+    <section class="store-recording-summary-group tone-${escapeHtml(group.tone)}" aria-label="${escapeHtml(group.label)}">
+      <div class="store-recording-summary-total">
+        <span class="store-recording-summary-level">录音总计</span>
+        ${metricBtn(group.label)}
+        <div class="hm-label-row">
+          ${renderStoreHeroMetricIcon(group.tone)}
+          <div class="hm-label">${escapeHtml(group.label)}</div>
+        </div>
+        <div class="hm-val-row">
+          <span class="hm-value" ${buildStoreHeroCounterAttrs(group.value, '条')}>${renderStoreHeroCounterValue(group.value, '条')}</span>
+        </div>
+      </div>
+      ${group.scenes.length
+        ? `<div class="store-recording-summary-breakdown">
+            <div class="store-recording-summary-scenes" style="--recording-scene-count:${group.scenes.length}">
+              ${group.scenes.map(renderStoreRecordingSummaryScene).join('')}
+            </div>
+          </div>`
+        : ''}
+    </section>
+  `;
+
+  const getStoreRecordingSourceTotal = (key) => {
+    const baseValue = Number(ALL_KPI_DATA[key]?.num) || 0;
+    const roleFactor = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 1;
+    const modelFactor = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 1;
+    return Math.max(0, Math.round(baseValue * getStoreKpiVolumeScale() * roleFactor * modelFactor));
+  };
+
+  const getStoreRecordingSummaryData = () => {
+    const selection = getStoreSceneSelection();
+    const selectedScenes = selection.isAllSelected
+      ? selection.allowedScenes
+      : selection.activeScenes;
+    const selected = new Set(selectedScenes);
+    const cloudTotal = getStoreRecordingSourceTotal('invitation');
+    const receptionTotal = getStoreRecordingSourceTotal('reception');
+    const testDriveTotal = getStoreRecordingSourceTotal('test_drive');
+    const createScene = (key, label, value) => ({ key, label, value });
+
+    return {
+      cloud: {
+        label: '云外呼录音数',
+        value: cloudTotal,
+        tone: 'blue',
+        scenes: [
+          createScene(SCENE_KEYS.firstFollow, '首触跟进', getInvitationSceneCount(cloudTotal, SCENE_KEYS.firstFollow)),
+          createScene(SCENE_KEYS.inviteStore, '邀约进店', getInvitationSceneCount(cloudTotal, SCENE_KEYS.inviteStore)),
+          createScene(SCENE_KEYS.scheduleConfirm, '排程确认', getInvitationSceneCount(cloudTotal, SCENE_KEYS.scheduleConfirm))
+        ].filter((scene) => selected.has(scene.key))
+      },
+      badge: {
+        label: '门店工牌录音数',
+        value: receptionTotal + testDriveTotal,
+        tone: 'green',
+        scenes: [
+          createScene(SCENE_KEYS.storeReception, '进店接待', receptionTotal),
+          createScene(SCENE_KEYS.testDrive, '试乘试驾', testDriveTotal)
+        ].filter((scene) => selected.has(scene.key))
+      }
+    };
+  };
+
+  const renderStoreRecordingSummary = () => {
+    const summary = getStoreRecordingSummaryData();
+    return `
+      <div class="store-recording-summary" aria-label="录音数统计">
+        ${renderStoreRecordingSummaryGroup(summary.cloud)}
+        ${renderStoreRecordingSummaryGroup(summary.badge)}
+      </div>
+    `;
+  };
+
 const HERO_BIZ_KPI_ITEM_MAP = {
     invitation: { key: 'invitation', pairedWith: 'visit_rate', isBiz: true },
     reception: { key: 'reception', pairedWith: 'drive_rate', isBiz: true },
@@ -2361,21 +2444,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     if (!grid) return;
 
     const currentKpiData = buildStoreFilteredKpiData();
-    const bizItems = getBusinessMetricKeysForSelection(currentSource, currentScenes)
-      .map((key) => HERO_BIZ_KPI_ITEM_MAP[key])
-      .filter(Boolean)
-      .map((item) => currentKpiData[item.key])
-      .filter(Boolean);
-
-    const topRowCards = [];
-    bizItems.forEach((metric, index) => {
-      topRowCards.push(renderGroupedKpiMetric(metric, metric, { summary: true, hideSubRow: true }));
-      if (index < bizItems.length - 1) {
-        const nextMetric = bizItems[index + 1];
-        topRowCards.push(renderFlowLink(metric.tone || 'blue', nextMetric.tone || 'cyan'));
-      }
-    });
-
     const bottomRowCards = [];
     if (currentKpiData.avg_duration) {
       bottomRowCards.push(renderSingleKpiMetric(currentKpiData.avg_duration));
@@ -2383,20 +2451,25 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     if (currentKpiData.hit_rate) {
       bottomRowCards.push(renderSingleKpiMetric(currentKpiData.hit_rate));
     }
-    if (currentKpiData.qa_pass_count && currentKpiData.qa_pass_rate) {
-      bottomRowCards.push(renderInlinePairKpiMetric(currentKpiData.qa_pass_count, currentKpiData.qa_pass_rate, 'hm-inline-pair-qa'));
+    if (currentKpiData.qa_pass_count) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.qa_pass_count));
     }
-    if (currentKpiData.risk_record && currentKpiData.risk_rate) {
-      bottomRowCards.push(renderInlinePairKpiMetric(currentKpiData.risk_record, currentKpiData.risk_rate, 'hm-inline-pair-risk'));
+    if (currentKpiData.qa_pass_rate) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.qa_pass_rate));
+    }
+    if (currentKpiData.risk_record) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.risk_record));
+    }
+    if (currentKpiData.risk_rate) {
+      bottomRowCards.push(renderSingleKpiMetric(currentKpiData.risk_rate));
     }
 
     grid.innerHTML = `
-      ${topRowCards.length ? `<div class="hm-layout-top">${topRowCards.join('')}</div>` : ''}
-      ${topRowCards.length && bottomRowCards.length ? '<div class="hm-layout-divider" aria-hidden="true"></div>' : ''}
+      <div class="hm-layout-top">${renderStoreRecordingSummary()}</div>
+      ${bottomRowCards.length ? '<div class="hm-layout-divider" aria-hidden="true"></div>' : ''}
       ${bottomRowCards.length ? `<div class="hm-layout-bottom">${bottomRowCards.join('')}</div>` : ''}
     `;
     window.requestAnimationFrame(() => animateStoreHeroCounters(grid));
-    drawFunnelFlow();
   };
 
   // ══════════════════════════════════════════════

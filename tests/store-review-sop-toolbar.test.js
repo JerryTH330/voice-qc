@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, 'store-dashboard', 'page.css'), 'utf
 const runtime = fs.readFileSync(path.join(root, 'app-runtime.js'), 'utf8');
 
 test('store review SOP toolbar matches the sales dashboard shell and custom options', () => {
-  assert.ok(html.includes('page.css?v=20260729store-sop-toolbar-match'));
+  assert.ok(html.includes('page.css?v=20260731131500'));
   assert.ok(html.includes('<span>搜索规则</span>'));
   assert.ok(html.includes('<span>排序</span>'));
   assert.ok(html.includes('data-store-sop-rule-sort-trigger'));

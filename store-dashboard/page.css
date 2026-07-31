@@ -1,6 +1,6 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260717120000");
-@import url("../app-inline.css?v=20260717120000");
+@import url("../voice-qc-admin.css?v=20260731131500");
+@import url("../app-inline.css?v=20260731131500");
 
 .store-dashboard-page #detail-sop .store-sop-rule-toolbar {
   display: grid;
