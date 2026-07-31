@@ -4,17 +4,50 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const css = fs.readFileSync(path.join(__dirname, '..', 'leads', 'page.css'), 'utf8');
+const runtime = fs.readFileSync(path.join(__dirname, '..', 'app-runtime.js'), 'utf8');
+const pageJs = fs.readFileSync(path.join(__dirname, '..', 'leads', 'page.js'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', 'leads', 'index.html'), 'utf8');
 
-test('lead detail desktop layout uses two equal-width columns', () => {
+test('lead detail desktop layout gives customer tags up to 800px and lets intention fill the rest', () => {
   assert.match(
     css,
-    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-detail-layout\s*{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/
+    /\.lead-detail-overview-grid\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) minmax\(600px, 800px\);[\s\S]*?gap:\s*16px;[\s\S]*?align-items:\s*stretch;/
   );
 });
 
-test('lead detail keeps a single column below the existing desktop breakpoint', () => {
+test('lead detail moves both top cards into the overview and keeps journey below it', () => {
+  assert.ok(runtime.includes('function arrangeLeadDetailFigmaLayout()'));
+  assert.ok(runtime.includes('overviewGrid.append(intentionPanel, tagPanel)'));
+  assert.ok(runtime.includes("overviewPanel.insertAdjacentElement('afterend', journeyPanel)"));
+  assert.equal(html.includes('lead-detail-profile-card'), false);
   assert.match(
     css,
-    /@media \(max-width: 1320px\)\s*{[\s\S]*?\.leads-detail-page:not\(\.customer-detail-page\) \.lead-detail-layout\s*{[\s\S]*?grid-template-columns:\s*1fr;/
+    /\.lead-detail-overview-grid > \.intention-panel,\s*\.lead-detail-overview-grid > \.lead-detail-tag-panel\s*{[\s\S]*?height:\s*auto;[\s\S]*?align-self:\s*stretch;/
   );
+});
+
+test('lead detail keeps the new section order in a single column below the desktop breakpoint', () => {
+  assert.match(
+    css,
+    /@media \(max-width: 1320px\)\s*{[\s\S]*?\.lead-detail-overview-grid\s*{[\s\S]*?grid-template-columns:\s*1fr;/
+  );
+});
+
+test('lead journey uses its natural content height instead of fitting the viewport', () => {
+  const resizeFunction = runtime.match(
+    /function handleLeadDetailResize\(\)\s*{([\s\S]*?)\n\s*function destroyLeadDetailPage/
+  )?.[1] || '';
+
+  assert.ok(resizeFunction);
+  assert.doesNotMatch(runtime, /function syncLeadDetailJourneyHeight/);
+  assert.doesNotMatch(runtime, /journeyPanel\.style\.height/);
+  assert.doesNotMatch(runtime, /journeyScroll\.style\.maxHeight/);
+  assert.doesNotMatch(runtime, /window\.innerHeight\s*-\s*24/);
+  assert.doesNotMatch(resizeFunction, /syncLeadDetailJourneyHeight/);
+  assert.match(resizeFunction, /syncLeadDetailTagCloudLayout/);
+  assert.match(runtime, /pageHost\.querySelector\('\.intention-panel'\)/);
+  assert.match(runtime, /pageHost\.querySelector\('\.lead-detail-tag-panel'\)/);
+  assert.doesNotMatch(runtime, /resizeTargets[\s\S]*?lead-detail-profile-card/);
+  assert.ok(pageJs.includes('app-runtime.js?v=20260731lead-journey-auto-height'));
+  assert.ok(html.includes('page.js?v=20260731lead-journey-auto-height'));
 });

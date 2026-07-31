@@ -20,6 +20,74 @@ test('last touch time is shown before Lead ID instead of inside the hero subtitl
   assert.ok(runtime.includes("setText('#leadDetailLastTouch', `最后触达时间：${payload.lastTouchTime}`)"));
 });
 
+test('lead summary pills keep Figma 533:8765 styling inside the new overview header', () => {
+  const summaryAssets = [
+    'lead-summary-time-figma-533-8765.svg',
+    'lead-summary-id-figma-533-8765.svg',
+    'lead-summary-store-figma-533-8765.svg',
+    'lead-summary-advisor-figma-533-8765.svg',
+    'lead-summary-status-figma-533-8765.svg'
+  ];
+
+  assert.match(
+    template,
+    /class="btn lead-detail-back-button"[\s\S]*?class="leads-detail-actions-side"[\s\S]*?lead-summary-time-figma-533-8765\.svg[\s\S]*?id="leadDetailLastTouch"[\s\S]*?lead-summary-id-figma-533-8765\.svg[\s\S]*?id="leadDetailLeadId"[\s\S]*?lead-summary-store-figma-533-8765\.svg[\s\S]*?id="leadDetailStore"[\s\S]*?lead-summary-advisor-figma-533-8765\.svg[\s\S]*?id="leadDetailAdvisor"[\s\S]*?lead-summary-status-figma-533-8765\.svg[\s\S]*?id="leadDetailStatus"/
+  );
+  summaryAssets.forEach((asset) => {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', asset)));
+  });
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.leads-detail-actions\s*{[\s\S]*?min-height:\s*36px;[\s\S]*?justify-content:\s*flex-start;[\s\S]*?padding-bottom:\s*2px;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-detail-back-button\s*{[\s\S]*?height:\s*34px;[\s\S]*?padding:\s*1px 15px;[\s\S]*?border:\s*1px solid #d9e2ef;[\s\S]*?border-radius:\s*999px;[\s\S]*?font-size:\s*13px;[\s\S]*?font-weight:\s*600;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-detail-summary-pill\s*{[\s\S]*?min-height:\s*30px;[\s\S]*?gap:\s*8px;[\s\S]*?padding:\s*1px 17px;[\s\S]*?border:\s*1px solid rgba\(37, 99, 235, 0\.18\);[\s\S]*?border-radius:\s*999px;[\s\S]*?linear-gradient\(180deg, rgba\(248, 251, 255, 0\.98\), rgba\(241, 246, 255, 0\.92\)\);[\s\S]*?color:\s*#334155;[\s\S]*?font-size:\s*14px;[\s\S]*?font-weight:\s*600;[\s\S]*?line-height:\s*14px;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-detail-summary-pill img\s*{[\s\S]*?width:\s*20px;[\s\S]*?height:\s*20px;[\s\S]*?flex:\s*0 0 20px;/
+  );
+  assert.ok(runtime.includes("setText('#leadDetailLeadId', `Lead ID：${payload.leadId}`)"));
+  assert.ok(runtime.includes("setText('#leadDetailStore', `门店：${payload.store}`)"));
+  assert.ok(runtime.includes("setText('#leadDetailStatus', `线索状态：${payload.leadStatus}`)"));
+});
+
+test('customer insight header matches Figma node 533:8804', () => {
+  assert.match(
+    template,
+    /class="lead-intention-insight-header"[\s\S]*?class="lead-intention-insight-avatar"[\s\S]*?src="\.\.\/assets\/lead-customer-insight-figma-533-8804\.png"[\s\S]*?<h3 class="intention-title">客户洞察<\/h3>[\s\S]*?class="intention-ai-copy">综合分析左侧线索旅程数据输出<\/p>[\s\S]*?class="intention-top-tags"/
+  );
+  assert.equal(template.includes('<span class="ai-badge">AI</span>'), false);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'lead-customer-insight-figma-533-8804.png')));
+  assert.match(
+    css,
+    /\.lead-intention-insight-header\s*{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*flex-start;[\s\S]*?justify-content:\s*space-between;/
+  );
+  assert.match(
+    css,
+    /\.lead-intention-insight-main\s*{[\s\S]*?gap:\s*12px;[\s\S]*?align-items:\s*center;/
+  );
+  assert.match(
+    css,
+    /\.lead-intention-insight-avatar\s*{[\s\S]*?width:\s*56px;[\s\S]*?height:\s*56px;[\s\S]*?overflow:\s*hidden;/
+  );
+  assert.match(
+    css,
+    /\.lead-intention-insight-copy \.intention-title\s*{[\s\S]*?color:\s*#162033;[\s\S]*?font-size:\s*18px;[\s\S]*?font-weight:\s*600;[\s\S]*?letter-spacing:\s*-0\.36px;/
+  );
+  assert.match(
+    css,
+    /\.lead-intention-insight-copy \.intention-ai-copy\s*{[\s\S]*?color:\s*#64748b;[\s\S]*?font-size:\s*14px;[\s\S]*?font-weight:\s*400;[\s\S]*?line-height:\s*22\.4px;/
+  );
+  assert.match(css, /\.lead-intention-insight-header \.intention-level\s*{[\s\S]*?height:\s*24px;[\s\S]*?padding:\s*1px 14px;/);
+  assert.match(css, /\.lead-intention-insight-header \.intention-model-chip\s*{[\s\S]*?height:\s*24px;[\s\S]*?padding:\s*0 8px;[\s\S]*?border-radius:\s*4px;/);
+});
+
 test('customer tags follow the Figma relationship-map and public-profile structure', () => {
   assert.match(template, /<h3>客户标签<\/h3>[\s\S]*?class="lead-detail-tag-split"/);
   assert.ok(template.includes('<h3>对话</h3>'));
@@ -64,16 +132,24 @@ test('customer tag icons and relationship vectors use downloaded Figma assets', 
   });
 });
 
-test('tag panels use two equal columns and stack based on their own container width', () => {
+test('tag panels stay side by side and fill the available outer-card height', () => {
   assert.match(
     css,
     /\.lead-detail-tag-split\s*{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/
   );
   assert.match(css, /\.lead-detail-tag-split\s*{[\s\S]*?gap:\s*16px;/);
+  assert.match(css, /\.lead-detail-tag-split\s*{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?align-items:\s*stretch;/);
   assert.match(css, /\.lead-detail-tag-panel\s*{[\s\S]*?container-type:\s*inline-size;/);
   assert.match(
     css,
-    /@container\s+lead-tag-panel\s+\(max-width:\s*720px\)\s*{[\s\S]*?\.lead-detail-tag-split\s*{[\s\S]*?grid-template-columns:\s*1fr;/
+    /@container\s+lead-tag-panel\s+\(max-width:\s*520px\)\s*{[\s\S]*?\.lead-detail-tag-split\s*{[\s\S]*?grid-template-columns:\s*1fr;/
+  );
+});
+
+test('dialogue and public tag sections use a pure white background', () => {
+  assert.match(
+    css,
+    /\.lead-detail-tag-section\s*{[\s\S]*?background:\s*#fff;/
   );
 });
 

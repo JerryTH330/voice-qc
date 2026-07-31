@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260729journey-toolbar-507-3287" />
+        <link rel="stylesheet" href="./page.css?v=20260731lead-tag-sections-fill" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -180,32 +180,52 @@
           <div class="page-stack leads-detail-page">
             <div class="actions-inline leads-detail-actions">
               <div class="leads-detail-actions-main">
-                <button class="btn" data-route="leads" data-leads-view-target="leads">返回线索视图</button>
-              </div>
-              <div class="leads-detail-actions-side">
-                <div class="mini-pill" id="leadDetailLastTouch">最后触达时间：2026-03-13 16:00:00</div>
-                <div class="mini-pill" id="leadDetailLeadId">Lead ID: LEAD-20260313-118</div>
-                <div class="mini-pill" id="leadDetailStore">门店: 上海浦东门店</div>
-                <div class="mini-pill" id="leadDetailAdvisor">顾问姓名：郭芹</div>
-                <div class="mini-pill" id="leadDetailStatus">线索状态: 跟进中</div>
+                <button class="btn lead-detail-back-button" data-route="leads" data-leads-view-target="leads">返回线索视图</button>
               </div>
             </div>
+
+            <section class="lead-detail-overview-panel">
+              <div class="lead-detail-overview-header">
+                <div class="lead-detail-overview-customer">
+                  <img class="lead-detail-overview-customer-avatar" src="../assets/lead-customer-avatar-figma-534-8898.png" alt="" aria-hidden="true" />
+                  <div class="lead-detail-overview-customer-name" id="leadDetailHeroTitle">王*生</div>
+                </div>
+              <div class="leads-detail-actions-side" aria-label="线索摘要">
+                <div class="lead-detail-summary-pill">
+                  <img src="../assets/lead-summary-time-figma-533-8765.svg" alt="" />
+                  <span id="leadDetailLastTouch">最后触达时间：2026-03-13 16:00:00</span>
+                </div>
+                <div class="lead-detail-summary-pill">
+                  <img src="../assets/lead-summary-id-figma-533-8765.svg" alt="" />
+                  <span id="leadDetailLeadId">Lead ID：LEAD-20260313-118</span>
+                </div>
+                <div class="lead-detail-summary-pill">
+                  <img src="../assets/lead-summary-store-figma-533-8765.svg" alt="" />
+                  <span id="leadDetailStore">门店：上海浦东门店</span>
+                </div>
+                <div class="lead-detail-summary-pill">
+                  <img src="../assets/lead-summary-advisor-figma-533-8765.svg" alt="" />
+                  <span id="leadDetailAdvisor">顾问姓名：郭芹</span>
+                </div>
+                <div class="lead-detail-summary-pill">
+                  <img src="../assets/lead-summary-status-figma-533-8765.svg" alt="" />
+                  <span id="leadDetailStatus">线索状态：跟进中</span>
+                </div>
+              </div>
+              </div>
+              <div class="lead-detail-overview-grid"></div>
+            </section>
     
             <div class="lead-detail-layout">
               <div class="stack-16 lead-detail-main-column">
-                <section class="hero-card lead-detail-profile-card">
-                  <div class="hero-top">
-                    <div class="lead-detail-hero-main">
-                      <div class="lead-detail-hero-profile">
-                        <div class="lead-detail-hero-avatar" id="leadDetailHeroAvatar">王</div>
-                        <div class="lead-detail-hero-copy">
-                          <div class="lead-detail-hero-name-row">
-                            <div class="hero-title" id="leadDetailHeroTitle">王先生</div>
-                            <div class="hero-subtitle" id="leadDetailHeroSubtitle">139****1268 · ES6</div>
-                          </div>
-                        </div>
-                      </div>
+                <section class="card lead-journey-panel">
+                  <div class="panel-header">
+                    <div class="panel-title">
+                      <h3>线索旅程</h3>
+                      <p>按时间轴展示关键跟进节点，重点提取时间与录音ID。</p>
                     </div>
+                  </div>
+                  <div class="lead-detail-journey-evolution">
                     <div class="lead-detail-hero-evolution" aria-label="客户意向演变">
                       <div class="lead-detail-hero-steps" id="leadDetailHeroEvolutionSteps">
                         <div class="lead-detail-hero-step is-complete">
@@ -226,15 +246,6 @@
                           <div class="lead-detail-hero-step-meta">03/13</div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </section>
-    
-                <section class="card lead-journey-panel">
-                  <div class="panel-header">
-                    <div class="panel-title">
-                      <h3>线索旅程</h3>
-                      <p>按时间轴展示关键跟进节点，重点提取时间与录音ID。</p>
                     </div>
                   </div>
                   <div class="journey-timeline lead-journey-scroll">
@@ -435,18 +446,22 @@
               <div class="stack-16 lead-detail-side-column">
                 <section class="card intention-panel">
                   <div class="intention-card">
-                    <div class="intention-top">
-                      <h3 class="intention-title">客户意向</h3>
+                    <div class="lead-intention-insight-header">
+                      <div class="lead-intention-insight-main">
+                        <span class="lead-intention-insight-avatar" aria-hidden="true">
+                          <img src="../assets/lead-customer-insight-figma-533-8804.png" alt="" />
+                        </span>
+                        <div class="lead-intention-insight-copy">
+                          <h3 class="intention-title">客户洞察</h3>
+                          <p class="intention-ai-copy">综合分析左侧线索旅程数据输出</p>
+                        </div>
+                      </div>
                       <div class="intention-top-tags">
                         <span class="intention-level" id="leadDetailIntentLevel">高</span>
                         <div class="intention-model-row" id="leadDetailModelRow">
                           <span class="intention-model-chip">传祺M8</span>
                         </div>
                       </div>
-                    </div>
-                    <div class="intention-ai-row">
-                      <span class="ai-badge">AI</span>
-                      <span class="intention-ai-copy">综合分析左侧线索旅程数据输出</span>
                     </div>
                     <div class="intention-body">
                       <div class="intention-item">
@@ -612,6 +627,7 @@
                           ></video>
                         </div>
                         <div class="customer-insight-ai-title">
+                          <img src="../assets/customer-insight-ai-title-figma.svg" alt="" />
                           <span>AI客户洞察</span>
                         </div>
                         <div class="customer-ai-generate-panel" aria-label="AI洞察生成区域">
@@ -948,6 +964,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260727customer-ai-tags-layout"></script>
+    <script src="./page.js?v=20260731lead-journey-auto-height"></script>
   </body>
 </html>

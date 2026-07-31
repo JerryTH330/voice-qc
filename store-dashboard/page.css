@@ -2,6 +2,277 @@
 @import url("../voice-qc-admin.css?v=20260731131500");
 @import url("../app-inline.css?v=20260731131500");
 
+/* Figma 514:6817 — 门店 / 大区质检合格率对比 */
+.store-dashboard-page .sop-overview-track .sop-metric-row {
+  grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-panel {
+  display: flex;
+  min-width: 0;
+  height: 105px;
+  align-items: stretch;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-panel-store {
+  filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.05));
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-panel-zone {
+  filter: drop-shadow(0 4px 6px rgba(239, 68, 68, 0.05));
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-card {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  height: 105px;
+  min-height: 103px;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 21.5px 20px;
+  overflow: hidden;
+  border-width: 1.5px;
+  border-style: solid;
+  border-radius: 0;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-card-store {
+  padding-left: 21.5px;
+  border-color: #dbeafe;
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-card-zone {
+  padding-right: 21.5px;
+  border-color: #facece;
+  border-left: 0;
+  border-radius: 0 18px 18px 0;
+  background: linear-gradient(180deg, #ffefef 0%, #ffffff 100%);
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-tail {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 50px;
+  height: 105px;
+  flex: 0 0 50px;
+  margin-left: -2px;
+  overflow: hidden;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-panel-zone .sop-metric-tail {
+  margin-right: -2px;
+  margin-left: 0;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-tail img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 44.148px;
+  height: 105px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-panel-zone .sop-metric-tail img {
+  right: 0;
+  left: auto;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-card-image {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 80px;
+  border-radius: 0;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-card-content {
+  min-width: 120px;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-label {
+  color: #5f7190;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-score-wrap {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-score {
+  color: #2f6bff;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 30px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-score span {
+  margin-left: 1px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-score-zone {
+  color: #ef4444;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-vs {
+  width: 48px;
+  height: 48px;
+  overflow: visible;
+}
+
+.store-dashboard-page .sop-overview-track .sop-metric-vs-image {
+  width: 88px;
+  height: 88px;
+  max-width: none;
+}
+
+.store-dashboard-page .sop-overview-track .sop-improve {
+  gap: 0;
+  padding: 0 24px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-improve-copy {
+  align-items: center;
+  gap: 4px;
+}
+
+.store-dashboard-page .sop-overview-track .sop-improve-label {
+  font-size: 40px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.store-dashboard-page .sop-overview-track .sop-improve-value {
+  font-size: 40px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+@media (max-width: 980px) {
+  .store-dashboard-page .sop-overview-track .sop-metric-row {
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .store-dashboard-page .sop-overview-track .sop-improve {
+    grid-column: 1 / -1;
+    justify-self: end;
+    padding-right: 0;
+  }
+}
+
+/* Figma 514:6865 — 优势 / 短板 / 风险总结卡 */
+.store-dashboard-page .sop-overview-track .summary-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
+  min-height: 108px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 17px 15px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item.success,
+.store-dashboard-page .sop-overview-track .summary-item.warning,
+.store-dashboard-page .sop-overview-track .summary-item.danger {
+  border-top: 1px solid #e2e8f0;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item-icon-shell {
+  box-sizing: border-box;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  padding: 0;
+  border-radius: 10.667px;
+  background: transparent;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item-icon,
+.store-dashboard-page .sop-overview-track .summary-item.danger .summary-item-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  object-fit: contain;
+}
+
+.store-dashboard-page .sop-overview-track #sop-summary-weakness > .summary-item-icon-shell,
+.store-dashboard-page .sop-overview-track #sop-summary-risk > .summary-item-icon-shell {
+  display: grid;
+  width: 48px;
+  max-width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  align-self: flex-start;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.store-dashboard-page .sop-overview-track #sop-summary-weakness > .summary-item-copy,
+.store-dashboard-page .sop-overview-track #sop-summary-risk > .summary-item-copy {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item-copy strong {
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+.store-dashboard-page .sop-overview-track .summary-item-copy > span {
+  display: block;
+  width: 100%;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
 .store-dashboard-page #detail-sop .store-sop-rule-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;

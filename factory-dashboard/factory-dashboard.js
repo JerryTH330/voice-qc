@@ -202,34 +202,43 @@
               <div class="track-body">
                 <div class="sop-overview-grid">
                   <div class="sop-metric-row">
-                    <div class="sop-metric-card sop-metric-card-store">
-                      <img class="sop-metric-card-image" src="../assets/store-overview-store-card.png" alt="" aria-hidden="true">
-                      <div class="sop-metric-card-content">
-                        <div class="sop-metric-label">质检合格率</div>
-                        <div class="sop-metric-score-wrap">
-                          <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
-                          <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3%</span></div>
+                    <div class="sop-metric-panel sop-metric-panel-store">
+                      <div class="sop-metric-card sop-metric-card-store">
+                        <img class="sop-metric-card-image" src="../assets/store-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
+                        <div class="sop-metric-card-content">
+                          <div class="sop-metric-label">质检合格率</div>
+                          <div class="sop-metric-score-wrap">
+                            <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
+                            <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3%</span></div>
+                          </div>
                         </div>
                       </div>
+                      <span class="sop-metric-tail" aria-hidden="true">
+                        <img src="../assets/store-quality-tail-figma-514-6817.svg" alt="">
+                      </span>
                     </div>
                     <div class="sop-metric-vs" aria-hidden="true">
-                      <img class="sop-metric-vs-image" src="../assets/store-overview-vs.png" alt="" aria-hidden="true">
+                      <img class="sop-metric-vs-image" src="../assets/quality-rate-vs-figma-514-6817.png" alt="" aria-hidden="true">
                     </div>
-                    <div class="sop-metric-card sop-metric-card-zone">
-                      <img class="sop-metric-card-image" src="../assets/store-overview-zone-card.png" alt="" aria-hidden="true">
-                      <div class="sop-metric-card-content">
-                        <div class="sop-metric-label">全国均值</div>
-                        <div class="sop-metric-score-wrap">
-                          <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                    <div class="sop-metric-panel sop-metric-panel-zone">
+                      <span class="sop-metric-tail" aria-hidden="true">
+                        <img src="../assets/zone-quality-tail-figma-514-6817.svg" alt="">
+                      </span>
+                      <div class="sop-metric-card sop-metric-card-zone">
+                        <img class="sop-metric-card-image" src="../assets/zone-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
+                        <div class="sop-metric-card-content">
+                          <div class="sop-metric-label">全国均值</div>
+                          <div class="sop-metric-score-wrap">
+                            <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     <div class="sop-improve up" id="sop-national-diff">
                       <span class="sop-improve-copy">
-                        <span class="sop-improve-label sop-national-diff-label">提升</span>
+                        <span class="sop-improve-label sop-national-diff-label">+</span>
                         <span class="sop-improve-value sop-national-diff-value">9%</span>
                       </span>
-                      <img class="sop-improve-arrow-image sop-national-diff-arrow" src="../assets/store-overview-arrow-up-hover.gif" alt="" aria-hidden="true">
                     </div>
                   </div>
                   <div id="sop-ai-summary" class="sop-ai-summary">
@@ -239,31 +248,31 @@
                 </div>
                 <div class="summary-list">
                   <div class="summary-item success" id="sop-summary-trend">
-                    <div class="summary-item-head">
-                      <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-strength.svg" alt="" aria-hidden="true">
-                      </span>
+                    <span class="summary-item-icon-shell" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-summary-strength-figma-514-6868.png" alt="" aria-hidden="true">
+                    </span>
+                    <div class="summary-item-copy">
                       <strong id="sop-summary-trend-title">优势发掘</strong>
+                      <span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span>
                     </div>
-                    <span id="sop-summary-trend-text">需求挖掘、接待礼仪、客户异议处理等环节表现突出，可作为团队培训样本。</span>
                   </div>
                   <div class="summary-item warning" id="sop-summary-weakness">
-                    <div class="summary-item-head">
-                      <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-weakness.svg" alt="" aria-hidden="true">
-                      </span>
+                    <span class="summary-item-icon-shell" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-summary-weakness-figma-514-6878.png" alt="" aria-hidden="true">
+                    </span>
+                    <div class="summary-item-copy">
                       <strong>短板改善</strong>
+                      <span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span>
                     </div>
-                    <span id="sop-summary-weakness-text">竞品对比、试驾邀约、需求深挖三项未命中率仍高。</span>
                   </div>
                   <div class="summary-item danger" id="sop-summary-risk">
-                    <div class="summary-item-head">
-                      <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-risk.svg" alt="" aria-hidden="true">
-                      </span>
+                    <span class="summary-item-icon-shell" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-summary-risk-figma-514-6888.png" alt="" aria-hidden="true">
+                    </span>
+                    <div class="summary-item-copy">
                       <strong>风险管控</strong>
+                      <span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span>
                     </div>
-                    <span id="sop-summary-risk-text">超授权优惠和贬低竞品话术需纳入红线提醒。</span>
                   </div>
                 </div>
               </div>
@@ -6716,10 +6725,14 @@
     const avgEl = document.getElementById('sop-national-avg');
     if (avgEl) avgEl.textContent = String(SOP_DIAL.nationalAvg);
     const nationalDiffEl = document.getElementById('sop-national-diff');
+    const nationalDiffLabelEl = nationalDiffEl?.querySelector('.sop-national-diff-label');
     const nationalDiffValueEl = nationalDiffEl?.querySelector('.sop-national-diff-value');
     if (nationalDiffEl) {
       const diff = SOP_DIAL.score - SOP_DIAL.nationalAvg;
-      const diffText = `${diff >= 0 ? diff : diff}%`;
+      const diffText = `${Math.abs(diff)}%`;
+      if (nationalDiffLabelEl) {
+        nationalDiffLabelEl.textContent = diff >= 0 ? '+' : '-';
+      }
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
       } else {

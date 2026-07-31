@@ -1,5 +1,82 @@
 # 交接日志归档
 
+## 2026-07-31 补齐客户标签外层卡片投影
+- 用户想做什么：补上客户标签外层卡片漏掉的投影，并与 Figma 设计稿对齐。
+- 已经完成了什么：重新读取 Figma 节点 `534:9085`，确认客户标签与客户洞察使用相同投影；将右侧卡片从无投影改为 `0 12px 28px rgba(37, 99, 235, 0.12)`，并更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-figma-533-8216.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：专项测试 29/29、全量测试 138/138、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器确认左右两卡计算后的投影完全一致、两卡同高 487.8px、仍为 436px + 800px 双列，无横向溢出和控制台警告。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新加载新缓存版本。
+
+## 2026-07-31 修复线索详情 1327px 响应式挤压
+- 用户想做什么：修复 1327×990 宽度下客户洞察被压成竖排、顶部摘要被裁切的问题。
+- 已经完成了什么：将响应式判断从浏览器宽度改为总览卡自身可用宽度；总览内容宽度不超过 1240px 时，客户洞察与客户标签自动上下排列，客户身份与摘要改为上下结构；提高摘要换行规则优先级，使 5 个胶囊完整左对齐换行；宽屏继续保持左右双列等高。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-figma-533-8216.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：回归测试先复现失败后修复；全量测试 138/138、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器在 1327px 下单列宽 1012px、摘要完整换行且无横向溢出，在 1567px 下仍为 436px + 800px 双列且两卡同高 487.7px，控制台无警告。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新加载新缓存版本。
+
+## 2026-07-31 按 Figma 533:8216 重排线索详情页面
+- 用户想做什么：按 Figma 节点 `533:8216` 调整线索详情排版；新增图标下载到本地，意图、证据、对话、公域沿用已有图标。
+- 已经完成了什么：返回按钮保留独立一行；新建顶部总览外层卡，将脱敏客户姓名、5 个摘要胶囊、客户洞察和客户标签合并其中；桌面端右侧标签最大 800px、左侧自适应且两卡动态等高；移除旧王先生独立卡；将客户意向演变移入线索旅程卡顶部，旅程继续按自身内容自然撑高；下载并本地调用新的 40px 客户头像，原有 4 类图标保持不变。
+- 改动了哪些文件：`leads/index.html`、`leads/page.css`、`app-runtime.js`、`assets/lead-customer-avatar-figma-534-8898.png`、5 个线索详情相关测试、交接日志。
+- 做过哪些验证：全量测试 137/137、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器在 1567px 下确认无横向溢出、顶部两卡同高 487.7px、右卡宽 800px、线索旅程自然高 928px；1200px 下自动单列且无控制台警告。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新加载新缓存版本。
+
+## 2026-07-31 按 Figma 533:8765 调整顶部线索摘要栏
+- 用户想做什么：将“返回线索视图 / 最后触达时间 / Lead ID / 门店 / 顾问姓名 / 线索状态”按 Figma 节点 `533:8765` 修改。
+- 已经完成了什么：返回按钮改为 34px 高、13px/600；右侧 5 个信息胶囊改为 30px 高、14px/600、8px 间距、设计稿蓝色描边与浅色渐变；下载并本地引用 5 个 20px 图标；文案标点统一为设计稿中文冒号；保留 1320px 以下自动换行规则并更新样式缓存版本。
+- 改动了哪些文件：`leads/index.html`、`leads/page.css`、`app-runtime.js`、5 个 `assets/lead-summary-*-figma-533-8765.svg`、`tests/leads-detail-meta-and-tag-panels.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：专项测试 39/39、全量测试 131/131、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器确认整行 36px、按钮 34px、胶囊均 30px、图标均 20px，1567px 视口无横向溢出，并对照设计稿截图检查视觉。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新样式版本。
+
+## 2026-07-31 按 Figma 533:8804 调整客户洞察头部
+- 用户想做什么：将原客户意向卡片的标题、小字和标签按 Figma 节点 `533:8804` 修改。
+- 已经完成了什么：按 Figma 设计实现流程读取节点结构与截图；标题由“客户意向”改为“客户洞察”，使用 18px/600、`#162033`；说明文字使用 14px/400、22.4px 行高、`#64748b`；移除旧 AI 方形徽标，下载设计稿机器人图片到本地并按 56px 裁切展示；“高 / 传祺M8”标签统一为 24px 高并匹配设计稿颜色、圆角和间距；更新样式缓存版本。
+- 改动了哪些文件：`leads/index.html`、`leads/page.css`、`assets/lead-customer-insight-figma-533-8804.png`、`tests/leads-detail-meta-and-tag-panels.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：专项测试 38/38、全量测试 130/130、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器确认头部高 56px、图片 56×56、标题 18px/600、小字 14px/400/22.4px、两个标签均高 24px，图片正常加载且顶部双卡高度差为 0。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新样式版本。
+
+## 2026-07-31 修复旧高度同步脚本导致的顶部双卡空白
+- 用户想做什么：按已确认的根因修复客户意向和客户标签底部大面积空白。
+- 已经完成了什么：移除旧高度同步脚本对父级网格 `min-height` 和客户标签 `height` 的行内写入；高度同步函数只继续管理下方线索旅程卡片及其滚动区；ResizeObserver 改为观察客户意向、客户标签和客户资料卡，内容或窗口变化后可重新计算线索旅程高度；增加回归测试并更新脚本缓存版本。
+- 改动了哪些文件：`app-runtime.js`、`leads/page.js`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、交接日志。
+- 做过哪些验证：回归测试修改前稳定失败、修复后通过；全量测试 129/129、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器在 1567px 下两张外层卡片均为 429px、异常空白从约 403–406px 降到 1–4px，在 1400px 下两卡均为 493px且内部子卡仍为 348px；1200px 窄屏下旧行内高度保持为空。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新缓存版本。
+
+## 2026-07-31 诊断顶部双卡大面积空白根因
+- 用户想做什么：确认客户意向和客户标签底部仍有大面积空白的原因。
+- 已经完成了什么：按 `ask-matt` 路由使用问题诊断流程；启动本地页面并建立实际尺寸失败检查，确认两卡高 811px、内容仅约 348–384px、底部空白约 403–406px；定位旧版 `syncLeadDetailJourneyHeight()` 仍给父级写入 `min-height: 811px`、给客户标签写入 `height: 811px`；临时清除后两卡立即变为 429px、空白降至 21–24px，随后 ResizeObserver 再次写回并复现。
+- 改动了哪些文件：未修改业务代码；仅更新交接日志。
+- 做过哪些验证：同一浏览器尺寸检查可稳定失败；单变量清除旧行内高度后立即通过，确认根因不是 CSS 网格、内部子卡或固定最小高度。
+- 还有哪些待办或风险：尚未实施修复；需要改造 `app-runtime.js` 的旧高度同步逻辑，并新增能覆盖实际空白的回归测试。
+
+## 2026-07-31 实现客户意向与客户标签外框动态双向等高
+- 用户想做什么：让客户意向和客户标签两个外层卡片先按内容计算自然高度，再取较大值作为同一行高度；内部子卡不拉伸。
+- 已经完成了什么：取消客户标签外框的内容高度覆盖，使两个外层卡片重新参与父级网格行拉伸；父级行按两边自然高度较大值动态等高，白色背景、边框和圆角同步拉伸；内部“对话 / 公域”继续保持内容高度和顶部对齐；宽度、横向双列、窄屏与下方板块不变；更新缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：较矮外层卡片底部留白属于动态等高的预期结果；需用户手动刷新 `file://` 页面确认视觉。
+
+## 2026-07-30 让客户标签白色外框自适应高度
+- 用户想做什么：让客户标签的白色外框也按照内容自适应高度。
+- 已经完成了什么：客户标签外框改为顶部内容对齐并按自身内容高度收口，不再随左侧客户意向拉伸；内部“对话 / 公域”继续按内容高度展示；横向双列、右侧 600–800px 响应式宽度和窄屏规则保持不变；更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：客户标签与客户意向底边在内容高度不同时不会对齐；需用户手动刷新 `file://` 页面确认视觉。
+
+## 2026-07-30 取消客户标签内部子卡高度填充
+- 用户想做什么：保留客户意向与客户标签外框等高，同时去掉客户标签内部“对话 / 公域”子卡被拉长后产生的底部空白。
+- 已经完成了什么：将客户标签内部双列容器从填满剩余高度改为内容高度，并让两张子卡分别按自身内容顶部对齐；外层客户标签仍与左侧客户意向等高，横向双列、800px 右侧宽度和窄屏规则不变；更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-meta-and-tag-panels.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：浏览器安全策略阻止自动刷新 `file://` 页面，需用户手动刷新确认内部子卡底部空白已消失。
+
+## 2026-07-30 让客户标签与客户意向自适应等高
+- 用户想做什么：让右侧客户标签的高度与左侧客户意向自适应对齐。
+- 已经完成了什么：将等高逻辑放到父级网格行统一控制；父级比较两边内容最小高度，取较大值作为整行高度并自动拉伸另一边；发现网格默认把容器剩余高度分配给自动行后，增加顶部内容对齐规则，避免两卡被一起拉高产生大面积空白；下方两卡保持内容高度；更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：浏览器安全策略阻止自动刷新 `file://` 页面，需用户手动刷新确认两张卡片实际底边对齐。
+
 ## 2026-06-04 第一轮落地全局日期筛选组件
 - 用户想做什么：确认按“全局通用日期筛选组件”方案开始实现，并把厂端这块时间筛选也接进来。
 - 已经完成了什么：新增公共组件工具 `voice-qc-admin-html/date-filter-component-utils.js`，提供通用日期触发器和日期面板渲染；新增测试 `voice-qc-admin-html/tests/date-filter-component-utils.test.js`；门店兼容层 `store-date-control-utils.js` 改为转调公共组件；门店、厂端、销售的页面 bootstrap 已先加载公共组件；`app-runtime.js` 中门店、销售日期渲染以及 `factory-dashboard/factory-dashboard.js` 中厂端日期渲染都已改成调用公共组件。
@@ -176,3 +253,129 @@
 - 改动了哪些文件：`store-dashboard/index.html`；同步改了 `/Users/jerry/Desktop/voice-qc/store-dashboard/index.html`。
 - 做过哪些验证：Playwright 打开 Desktop 页面，确认 Tab 顺序、默认 active、默认面板、优势列表 5 条均正确，无控制台错误。
 - 还有哪些待办或风险：暂无。
+## 2026-07-30 统一线索旅程卡片为纯白底色
+- 用户想做什么：将线索详情中所有旅程内容卡片的底色改为白色。
+- 已经完成了什么：为线索详情旅程卡增加页面级纯白背景覆盖，五张卡片全部生效；保留卡片顶部日期、阶段标签、录音 ID、边框、圆角和时间轴样式；更新页面样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 25/25、全量测试 130/130、`git diff --check` 均通过。
+- 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
+## 2026-07-30 为线索旅程卡片顶部增加信息栏底色
+- 用户想做什么：让日期、阶段标签和录音 ID 区域单独突出，并增加底色。
+- 已经完成了什么：五张旅程卡顶部统一增加铺满宽度的浅蓝信息栏 `#f5f8ff`，设置 12px×16px 内边距、顶部圆角和底部分隔线；正文卡片继续保持纯白，阶段标签原色和录音跳转不变。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 26/26、全量测试 131/131、`git diff --check` 均通过。
+- 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
+## 2026-07-30 修复线索旅程滚动后连线中断
+- 用户想做什么：解决线索旅程时间轴在列表中段断开的现象。
+- 已经完成了什么：确认旧连线高度只覆盖可视区域，改为每条记录分别绘制连续轴段并向上下延伸，首尾在圆点处收口。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
+- 做过哪些验证：回归测试修复后 5/5；相关专项测试 24/24、全量测试 132/132、`git diff --check` 均通过。
+- 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
+## 2026-07-30 去除线索旅程时间轴左侧留白
+- 用户想做什么：去掉时间轴连线左侧的多余间距。
+- 已经完成了什么：移除旅程条目 18px 左内边距，将轴线横向位置从 28px 调整到 10px，仅保留圆点半径所需空间；右侧卡片与轴线之间仍保持 10px。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 27/27、全量测试 132/132、`git diff --check` 均通过。
+- 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
+## 2026-07-30 撤回线索旅程全部改版并恢复初始样式
+- 用户想做什么：将线索旅程的所有修改恢复为初始样式。
+- 已经完成了什么：仅撤回线索详情旅程范围内的连续改动；日期、阶段标签和录音 ID 恢复到左侧信息列，恢复原三列时间轴布局、卡片底色、连线、间距和悬浮行为。
+- 改动了哪些文件：`leads/index.html`、`leads/page.css`、`tests/customer-detail-latest-figma-layout.test.js`；移除 `tests/lead-journey-card-meta.test.js`；更新交接日志。
+- 做过哪些验证：相关专项测试 26/26、全量测试 127/127、`git diff --check` 均通过。
+- 还有哪些待办或风险：无。
+## 2026-07-30 重排线索详情四个核心板块
+- 用户想做什么：将“客户意向”和“客户标签”横向并排放到上方，下方横向放置“王先生”客户卡片和“线索旅程”。
+- 已经完成了什么：使用页面网格重新指定四个板块的位置；桌面端为两行两列，窄屏按客户意向、客户标签、客户卡片、线索旅程的顺序纵向排列。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：布局专项测试 25/25、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：无。
+## 2026-07-30 将客户标签的对话与公域改为横向排列
+- 用户想做什么：将客户标签板块中的“对话”和“公域”两个子板块改为横向排列。
+- 已经完成了什么：保留原双列网格，将触发上下堆叠的容器宽度从 720px 收紧到 520px；当前线索详情宽度下两个子板块左右各占一列，真正窄屏时仍自动上下排列。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-meta-and-tag-panels.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：无。
+## 2026-07-30 扩宽客户标签并让客户意向自适应
+- 用户想做什么：将客户标签从约 644px 扩到 800px，同时让左侧客户意向自动适应剩余宽度。
+- 已经完成了什么：桌面双列改为左侧弹性宽度、右侧 `clamp(600px, 62%, 800px)`；当前 1567px 视口右侧达到 800px，较窄桌面平滑收缩，1320px 以下改为单列。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
+- 还有哪些待办或风险：无。
+### 2026-07-28 拉取最新代码并合并 origin/main 到 agent/customer-tag-figma
+- 用户想做什么：拉取最新代码并同步 main。
+- 已经完成了什么：先 `git pull`（当前分支已最新）→ `git merge origin/main --no-edit` 合并到 `agent/customer-tag-figma`（29 个文件，含客户洞察 v1/v2 新模块）→ 新建 `handoff-log.md`。
+- 改动了哪些文件：合并产生的新文件，主要是 `客户洞察/v1`、`客户洞察/v2`、`version-selector.css` 等；新建 `handoff-log.md`。
+- 做过哪些验证：`git log`/`git status` 确认合并成功，无冲突。
+- 还有哪些待办或风险：无。
+## 2026-07-28 把 agent/customer-tag-figma 合并到 main
+- 用户想做什么：把当前工作分支合并到 main 分支。
+- 已经完成了什么：`git stash push -u` 暂存工作区修改 → `git checkout main` → `git pull origin main` 拉取最新 → `git merge agent/customer-tag-figma`（fast-forward）→ 当前 main HEAD 为 `2847af0`，领先 `origin/main` 2 个提交。
+- 改动了哪些文件：26 个文件（合并自 `agent/customer-tag-figma`，主要是 leads 模块的 Figma 资源、HTML/CSS 和测试文件）。
+- 做过哪些验证：`git log`/`git status` 确认合并成功，工作区干净。
+- 还有哪些待办或风险：原工作区修改在 `stash@{0}`，需后续 `git stash pop` 决定去留；本地 main 尚未推送到远程。
+## 2026-07-30 拉取当前工作分支最新代码
+- 用户想做什么：拉取最新代码。
+- 已经完成了什么：更新远端引用并对当前分支执行仅快进拉取；当前分支与 `origin/agent/customer-insight-sales-store-polish` 一致，无新增提交需要下载。
+- 改动了哪些文件：未修改业务代码；保留了 `leads/index.html`、`leads/page.css`、`tests/customer-detail-latest-figma-layout.test.js` 和未跟踪 SVG 的本地改动；更新交接日志。
+- 做过哪些验证：确认当前分支 HEAD 为 `edd8b1b`，与上游分支 ahead/behind 均为 0；确认本地改动仍在。
+- 还有哪些待办或风险：`origin/main` 已更新到 `3a802a8`，尚未合并进当前分支，以免覆盖或冲突本地改动。
+## 2026-07-30 按 Figma 重构门店质检合格率对比
+- 用户想做什么：将门店看板“门店质检合格率 / 大区质检合格率 / 提升”区域严格对齐 Figma 节点 `514:6817`，并将切图保存到本地引用。
+- 已经完成了什么：读取 Figma 结构和节点截图；重构两侧渐变卡片与斜切连接结构；对齐 105px 高度、32px 间距、80px 插图、88px VS、字体字号、颜色和阴影；移除设计稿没有的提升箭头。
+- 改动了哪些文件：`store-dashboard/index.html`、`store-dashboard/page.css`、`tests/store-review-sop-toolbar.test.js`、`tests/store-quality-overview-figma.test.js`；新增 5 个 `assets/*figma-514-6817*` 本地资源；更新交接日志。
+- 做过哪些验证：全量测试 117/117、JavaScript 语法检查、SVG 校验和 `git diff --check` 均通过。
+- 还有哪些待办或风险：本地 `file://` 页面被浏览器安全策略拦截，无法自动刷新截图，需用户手动刷新确认最终像素视觉。
+## 2026-07-30 修正质检卡片斜块描边层级
+- 用户想做什么：保留 `-2px` 自动布局重叠，并让卡片本体盖住斜块内侧描边，使这条描边不可见。
+- 已经完成了什么：纠正上一轮相反理解；将卡片本体固定在第 2 层、斜块固定在第 1 层；门店和大区两侧镜像结构同步处理；更新样式缓存版本。
+- 改动了哪些文件：`store-dashboard/index.html`、`store-dashboard/page.css`、`tests/store-review-sop-toolbar.test.js`、`tests/store-quality-overview-figma.test.js`、交接日志。
+- 做过哪些验证：层级专项测试 5/5、全量测试 118/118、JavaScript 语法检查和 `git diff --check` 均通过。
+- 还有哪些待办或风险：需用户手动刷新本地页面，确认两侧斜块内侧描边均被本体遮住。
+## 2026-07-30 按 Figma 子节点修正质检差值
+- 用户想做什么：将门店看板“提升 9%”按 Figma 节点 `514:6851` 修改。
+- 已经完成了什么：将文案从“提升 9%”改为“+ 9%”；加号和数值统一为 40px、中等字重、绿色、4px 间距并垂直居中；动态正负差值同步显示为 `+/-`。
+- 改动了哪些文件：`store-dashboard/index.html`、`store-dashboard/page.css`、`app-runtime.js`、`tests/store-review-sop-toolbar.test.js`、`tests/store-quality-overview-figma.test.js`、交接日志。
+- 做过哪些验证：差值专项测试 6/6、全量测试 119/119、JavaScript 语法检查和 `git diff --check` 均通过。
+- 还有哪些待办或风险：需用户手动刷新本地页面确认最终视觉。
+## 2026-07-30 按 Figma 重构质检总结卡并修复旧样式冲突
+- 用户想做什么：将“优势发掘 / 短板改善 / 风险管控”三张卡片按 Figma 节点 `514:6865` 修改。
+- 已经完成了什么：三卡改为横向布局并引用完整 48×48 Figma 图标；根据浏览器截图定位到旧 ID 规则将短板、风险图标容器设为 `width:100%`，现已用高优先级规则固定图标 48px、文案占剩余空间。
+- 改动了哪些文件：`store-dashboard/index.html`、`store-dashboard/page.css`、2 个测试文件；新增 3 个完整 PNG 图标，逐个移除 3 个错误的内部 SVG；更新交接日志。
+- 做过哪些验证：总结卡专项测试 8/8、全量测试 121/121、JavaScript 语法检查和 `git diff --check` 均通过。
+- 还有哪些待办或风险：需用户手动刷新本地页面确认最终视觉。
+## 2026-07-30 统一厂端与门店质检概览样式
+- 用户想做什么：将厂端看板的质检概览页面样式调整为与门店看板当前版本一致。
+- 已经完成了什么：厂端复用门店同一套本地切图与结构；统一 105px 斜角对比卡、卡片本体覆盖斜块描边的层级、88px VS、40px 正负差值、44px AI 提示条和三张横向总结卡；保留厂端“质检合格率 / 全国均值”文案及动态数据逻辑。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`factory-dashboard/factory-dashboard.css`、`factory-dashboard/index.html`、`factory-dashboard/page.css`、`factory-dashboard/page.js`；新增 `tests/factory-quality-overview-match.test.js`；更新交接日志。
+- 做过哪些验证：厂端/门店质检概览专项测试 11/11、全量测试 126/126、JavaScript 语法检查和 `git diff --check` 均通过。
+- 还有哪些待办或风险：浏览器安全策略阻止自动刷新 `file://` 页面，需用户手动刷新厂端看板确认最终视觉。
+## 2026-07-30 统一客户旅程会话卡片为纯白底色
+- 用户想做什么：将客户旅程第一张会话卡及下面所有同类卡片的底色改为纯白。
+- 已经完成了什么：增加客户详情页专用高优先级样式，覆盖当前门店、其他门店、额外门店原有渐变；保留边框、圆角、标签和内容样式；更新页面样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：客户详情专项测试 22/22、全量测试 127/127、`git diff --check` 均通过。
+- 还有哪些待办或风险：浏览器安全策略阻止自动刷新 `file://` 页面，需用户手动刷新确认最终视觉。
+## 2026-07-30 将线索旅程信息移入内容卡顶部
+- 用户想做什么：把线索详情旅程左侧的日期、阶段标签和录音 ID 挪到右侧卡片上方。
+- 已经完成了什么：五条记录全部改为卡片顶部元信息行，日期与阶段标签在左、可点击录音 ID 在右；删除原左侧信息列并收窄为时间轴，保留圆点、连线、悬浮效果和录音跳转交互；窄屏允许顶部信息自动换行。
+- 改动了哪些文件：`leads/index.html`、`leads/page.css`、`tests/customer-detail-latest-figma-layout.test.js`；新增 `tests/lead-journey-card-meta.test.js`；更新交接日志。
+- 做过哪些验证：相关专项测试 26/26、全量测试 129/129、`git diff --check` 均通过。
+- 还有哪些待办或风险：该改版已于后续按用户要求全部撤回。
+## 2026-07-31 让客户标签内部蓝色子卡动态等高
+- 用户想做什么：让客户标签内“公域”的蓝色区域撑开，与同一行“对话”蓝色区域等高。
+- 已经完成了什么：将内部双列网格从顶部对齐改为拉伸对齐；“对话 / 公域”先分别计算自然高度，再由同一网格行取较高值并拉伸较矮子卡；没有把内部子卡继续撑满外层白色卡片；更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-meta-and-tag-panels.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：专项测试 37/37、全量测试 129/129、`git diff --check` 通过；真实浏览器在 1567px 下“对话 / 公域”均为 348px，外层客户意向和客户标签均为 429px。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新样式版本。
+## 2026-07-31 将王先生与线索旅程改为上下排列
+- 用户想做什么：王先生客户卡片和线索旅程需要上下排列，不是左右排列。
+- 已经完成了什么：保留顶部客户意向与客户标签的左右布局；将下方网格改为第二行王先生客户卡片横跨整行、第三行线索旅程横跨整行；两块保持 16px 间距并更新样式缓存版本。
+- 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
+- 做过哪些验证：专项测试 37/37、全量测试 129/129、`git diff --check` 通过；真实浏览器在 1567px 下两块左坐标均为 224px、宽度均为 1319px，线索旅程位于客户卡片下方且间距为 16px；顶部双卡继续等高。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新样式版本。
+## 2026-07-31 取消线索旅程一屏高度适配
+- 用户想做什么：线索旅程不需要适配一屏显示，直接根据自身内容自适应高度。
+- 已经完成了什么：删除按浏览器可视高度计算线索旅程 `height` 和内部 `max-height` 的 JavaScript；窗口变化时只刷新客户标签图布局；线索旅程由全部内容自然撑高并随主内容区域整体滚动；更新运行脚本缓存版本。
+- 改动了哪些文件：`app-runtime.js`、`leads/page.js`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、交接日志。
+- 做过哪些验证：专项测试 37/37、全量测试 129/129、JavaScript 语法检查和 `git diff --check` 通过；真实浏览器中线索旅程自然高度为 780px、内部最大高度为 `none`、无内部纵向滚动，主内容容器高度 990px且内容高度 1544px，可正常整体滚动。
+- 还有哪些待办或风险：修改尚未提交；用户打开的是 `file://` 页面，需要手动刷新才能加载新脚本版本。

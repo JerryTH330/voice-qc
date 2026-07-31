@@ -5003,10 +5003,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
         if (nationalDiffLabelEl) {
-          nationalDiffLabelEl.textContent = nationalDiff >= 0 ? '提升' : '落后';
+          nationalDiffLabelEl.textContent = nationalDiff >= 0 ? '+' : '-';
         }
       } else {
-        nationalDiffVal.textContent = `${nationalDiff >= 0 ? '提升' : '落后'} ${diffText}`;
+        nationalDiffVal.textContent = `${nationalDiff >= 0 ? '+' : '-'}${diffText}`;
       }
       nationalDiffVal.classList.toggle('up', nationalDiff >= 0);
       nationalDiffVal.classList.toggle('down', nationalDiff < 0);
@@ -12811,9 +12811,33 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return 'level-low'
       }
 
-      function getLeadDetailAvatarText(value) {
+      function maskLeadDetailCustomerName(value) {
         const text = String(value || '').trim()
-        return text ? text.charAt(0) : '王'
+        if (text.length <= 1) {
+          return text || '王*生'
+        }
+        return `${text.charAt(0)}*${text.charAt(text.length - 1)}`
+      }
+
+      function arrangeLeadDetailFigmaLayout() {
+        const overviewPanel = pageHost.querySelector('.lead-detail-overview-panel')
+        const overviewGrid = overviewPanel?.querySelector('.lead-detail-overview-grid')
+        const legacyLayout = pageHost.querySelector('.lead-detail-layout')
+        const intentionPanel = legacyLayout?.querySelector('.intention-panel')
+        const tagPanel = legacyLayout?.querySelector('.lead-detail-tag-panel')
+        const journeyPanel = legacyLayout?.querySelector('.lead-journey-panel')
+
+        if (overviewGrid && intentionPanel && tagPanel) {
+          overviewGrid.append(intentionPanel, tagPanel)
+        }
+
+        if (overviewPanel && journeyPanel) {
+          overviewPanel.insertAdjacentElement('afterend', journeyPanel)
+        }
+
+        if (legacyLayout) {
+          legacyLayout.hidden = true
+        }
       }
 
       function applyLeadDetailPayload(payload) {
@@ -12836,13 +12860,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         setText('#leadDetailLastTouch', `最后触达时间：${payload.lastTouchTime}`)
-        setText('#leadDetailLeadId', `Lead ID: ${payload.leadId}`)
-        setText('#leadDetailStore', `门店: ${payload.store}`)
+        setText('#leadDetailLeadId', `Lead ID：${payload.leadId}`)
+        setText('#leadDetailStore', `门店：${payload.store}`)
         setText('#leadDetailAdvisor', `顾问姓名：${payload.advisorName}`)
-        setText('#leadDetailStatus', `线索状态: ${payload.leadStatus}`)
-        setText('#leadDetailHeroTitle', payload.customer)
-        setText('#leadDetailHeroAvatar', getLeadDetailAvatarText(payload.customer))
-        setText('#leadDetailHeroSubtitle', payload.subtitle)
+        setText('#leadDetailStatus', `线索状态：${payload.leadStatus}`)
+        setText('#leadDetailHeroTitle', maskLeadDetailCustomerName(payload.customer))
         setHtml('#leadDetailHeroTags', renderLeadDetailHeroTags(payload.heroTags))
         setHtml('#leadDetailHeroEvolutionSteps', renderLeadDetailEvolutionSteps(payload.evolutionSteps))
         setText('#leadDetailIntentLevel', payload.intentLevel)
@@ -12861,7 +12883,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function bindLeadDetailSessionLinks(payload) {
-        const sessionStore = payload?.store || pageHost.querySelector('#leadDetailStore')?.textContent.replace(/^门店:\s*/, '') || '上海浦东门店'
+        const sessionStore = payload?.store || pageHost.querySelector('#leadDetailStore')?.textContent.replace(/^门店[：:]\s*/, '') || '上海浦东门店'
         const sessionCustomer = payload?.customer || pageHost.querySelector('#leadDetailHeroTitle')?.textContent.trim() || '王先生'
 
         pageHost.querySelectorAll('[data-lead-session-link]').forEach((node) => {
@@ -12882,66 +12904,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
-      function syncLeadDetailJourneyHeight() {
-        const layout = pageHost.querySelector('.lead-detail-layout')
-        if (!layout) {
-          return
-        }
-
-        const leftColumn = layout.querySelector('.lead-detail-main-column')
-        const rightColumn = layout.querySelector('.lead-detail-side-column')
-        const heroCard = leftColumn?.querySelector('.hero-card')
-        const journeyPanel = leftColumn?.querySelector('.lead-journey-panel')
-        const journeyScroll = journeyPanel?.querySelector('.lead-journey-scroll')
-        const rightBottomCard = rightColumn?.querySelector('.lead-detail-tag-panel')
-
-        if (!leftColumn || !rightColumn || !heroCard || !journeyPanel || !journeyScroll || !rightBottomCard) {
-          return
-        }
-
-        layout.style.minHeight = ''
-        if (window.matchMedia('(max-width: 1320px)').matches) {
-          journeyPanel.style.height = ''
-          journeyScroll.style.maxHeight = ''
-          rightBottomCard.style.height = ''
-          return
-        }
-
-        journeyPanel.style.height = ''
-        rightBottomCard.style.height = ''
-
-        const viewportBottom = window.innerHeight - 24
-        const layoutTop = layout.getBoundingClientRect().top
-        const layoutAvailableHeight = viewportBottom - layoutTop
-        if (layoutAvailableHeight > 0) {
-          layout.style.minHeight = `${Math.floor(layoutAvailableHeight)}px`
-        }
-
-        const panelStyles = window.getComputedStyle(journeyPanel)
-        const panelPaddingTop = parseFloat(panelStyles.paddingTop || '0') || 0
-        const panelPaddingBottom = parseFloat(panelStyles.paddingBottom || '0') || 0
-        const panelHeader = journeyPanel.querySelector('.panel-header')
-        const panelHeaderHeight = panelHeader?.offsetHeight || 0
-        const journeyPanelTop = journeyPanel.getBoundingClientRect().top
-        const rightBottomTop = rightBottomCard.getBoundingClientRect().top
-        const journeyPanelHeight = viewportBottom - journeyPanelTop
-        const rightBottomHeight = viewportBottom - rightBottomTop
-
-        if (journeyPanelHeight <= 0 || rightBottomHeight <= 0) {
-          journeyScroll.style.maxHeight = ''
-          return
-        }
-
-        journeyPanel.style.height = `${Math.floor(journeyPanelHeight)}px`
-        rightBottomCard.style.height = `${Math.floor(rightBottomHeight)}px`
-
-        const scrollMaxHeight = journeyPanelHeight - panelPaddingTop - panelPaddingBottom - panelHeaderHeight
-        journeyScroll.style.maxHeight = scrollMaxHeight > 0 ? `${Math.floor(scrollMaxHeight)}px` : ''
-      }
-
       function handleLeadDetailResize() {
         window.requestAnimationFrame(() => {
-          syncLeadDetailJourneyHeight()
           syncLeadDetailTagCloudLayout()
         })
       }
@@ -12957,6 +12921,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function initLeadDetailPage() {
         destroyLeadDetailPage()
+        arrangeLeadDetailFigmaLayout()
         const leadSelection = getLeadDetailSelection()
         const selectedLead = getLeadDetailLead(leadSelection.id, leadSelection.source)
         let leadPayload = null
@@ -12973,27 +12938,19 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         handleLeadDetailResize()
 
-        const layout = pageHost.querySelector('.lead-detail-layout')
-        const rightColumn = layout?.querySelector('.lead-detail-side-column')
-        const heroCard = layout?.querySelector('.hero-card')
-        const rightBottomCard = rightColumn?.querySelector('section:last-of-type')
+        const resizeTargets = [
+          pageHost.querySelector('.intention-panel'),
+          pageHost.querySelector('.lead-detail-tag-panel')
+        ].filter(Boolean)
 
         if (window.ResizeObserver) {
           leadDetailResizeObserver = new ResizeObserver(() => {
             handleLeadDetailResize()
           })
 
-          if (rightColumn) {
-            leadDetailResizeObserver.observe(rightColumn)
-          }
-
-          if (heroCard) {
-            leadDetailResizeObserver.observe(heroCard)
-          }
-
-          if (rightBottomCard) {
-            leadDetailResizeObserver.observe(rightBottomCard)
-          }
+          resizeTargets.forEach((node) => {
+            leadDetailResizeObserver.observe(node)
+          })
         }
 
         window.addEventListener('resize', handleLeadDetailResize)
