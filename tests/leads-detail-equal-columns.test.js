@@ -26,6 +26,21 @@ test('lead detail moves both top cards into the overview and keeps journey below
   );
 });
 
+test('evidence section fills the extra height when customer tags are taller', () => {
+  assert.match(
+    css,
+    /\.lead-detail-overview-grid > \.intention-panel\s*{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/
+  );
+  assert.match(
+    css,
+    /\.lead-detail-overview-grid > \.intention-panel \.intention-card,\s*\.lead-detail-overview-grid > \.intention-panel \.intention-body\s*{[\s\S]*?min-height:\s*0;[\s\S]*?flex:\s*1 1 auto;/
+  );
+  assert.match(
+    css,
+    /\.lead-detail-overview-grid > \.intention-panel \.intention-body > \.intention-item:last-child\s*{[\s\S]*?flex:\s*1 1 auto;/
+  );
+});
+
 test('lead detail keeps the new section order in a single column below the desktop breakpoint', () => {
   assert.match(
     css,

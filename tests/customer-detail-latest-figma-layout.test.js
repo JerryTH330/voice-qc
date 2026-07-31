@@ -69,7 +69,7 @@ test('customer detail uses downloaded Figma image and icon assets', () => {
 
 test('AI customer insight title matches Figma node 507:3135', () => {
   assert.ok(template.includes('<img src="../assets/customer-insight-ai-title-figma.svg" alt="" />'));
-  assert.ok(html.includes('page.css?v=20260731lead-tag-sections-fill'));
+  assert.ok(html.includes('page.css?v=20260731lead-evidence-fill'));
   assert.match(css, /\.customer-insight-ai-title\s*{[\s\S]*?align-items:\s*center;[\s\S]*?gap:\s*8px;/);
   assert.match(css, /\.customer-insight-ai-title img\s*{[\s\S]*?width:\s*20px;[\s\S]*?height:\s*20px;[\s\S]*?flex:\s*0 0 20px;/);
 });
@@ -186,7 +186,7 @@ test('customer journey store filter is rendered through shared multi-select util
 });
 
 test('customer journey toolbar matches Figma node 507:3287 with 20px bottom spacing', () => {
-  assert.ok(html.includes('page.css?v=20260731lead-tag-sections-fill'));
+  assert.ok(html.includes('page.css?v=20260731lead-evidence-fill'));
   assert.match(css, /\.customer-journey-panel > \.customer-journey-toolbar\s*{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?gap:\s*24px;[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0 24px 20px;/);
   assert.match(css, /\.customer-journey-toolbar \.customer-journey-control-group\s*{[\s\S]*?min-height:\s*44px;[\s\S]*?gap:\s*12px;[\s\S]*?padding:\s*1px 15px;[\s\S]*?border:\s*1px solid rgba\(201, 210, 224, 0\.88\);[\s\S]*?border-radius:\s*16px;/);
   assert.match(css, /\.customer-journey-toolbar \.customer-journey-sort-btn\.is-active\s*{[\s\S]*?background:\s*rgba\(37, 99, 235, 0\.1\);/);
@@ -206,6 +206,6 @@ test('customer journey store options use one consistent type scale', () => {
 });
 
 test('every customer journey detail card uses a pure white background', () => {
-  assert.ok(html.includes('page.css?v=20260731lead-tag-sections-fill'));
+  assert.ok(html.includes('page.css?v=20260731lead-evidence-fill'));
   assert.match(css, /\.customer-detail-page \.customer-journey-board \.customer-journey-item \.journey-body\s*{[\s\S]*?background:\s*#fff;/);
 });

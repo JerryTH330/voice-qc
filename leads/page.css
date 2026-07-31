@@ -134,8 +134,20 @@
 }
 
 .lead-detail-overview-grid > .intention-panel {
+  display: flex;
+  flex-direction: column;
   padding: 21px;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+.lead-detail-overview-grid > .intention-panel .intention-card,
+.lead-detail-overview-grid > .intention-panel .intention-body {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.lead-detail-overview-grid > .intention-panel .intention-body > .intention-item:last-child {
+  flex: 1 1 auto;
 }
 
 .lead-detail-overview-grid > .lead-detail-tag-panel {
@@ -240,7 +252,10 @@
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-journey-panel {
+  box-sizing: border-box;
   display: flex;
+  width: 100%;
+  min-width: 0;
   flex: 0 0 auto;
   flex-direction: column;
   gap: 20px;
@@ -277,10 +292,28 @@
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-journey-scroll {
+  --journey-header-width: clamp(216px, 20%, 248px);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   flex: 0 0 auto;
   padding: 0;
   overflow: visible;
   scrollbar-gutter: auto;
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-header {
+  padding-inline: clamp(8px, 1vw, 16px);
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-body {
+  min-width: 0;
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-journey-panel .journey-item .journey-body {

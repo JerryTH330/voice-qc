@@ -90,7 +90,26 @@ test('overview and journey shells match Figma sizing and appearance', () => {
 });
 
 test('lead detail Figma 533:8216 cache version is active', () => {
-  assert.ok(html.includes('page.css?v=20260731lead-tag-sections-fill'));
+  assert.ok(html.includes('page.css?v=20260731lead-evidence-fill'));
+});
+
+test('lead journey width follows its available container without horizontal overflow', () => {
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-journey-panel\s*{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-journey-scroll\s*{[\s\S]*?--journey-header-width:\s*clamp\(216px, 20%, 248px\);[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-journey-scroll \.journey-item\s*{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/
+  );
+  assert.match(
+    css,
+    /\.leads-detail-page:not\(\.customer-detail-page\) \.lead-journey-scroll \.journey-body\s*{[\s\S]*?min-width:\s*0;/
+  );
 });
 
 test('every lead journey detail card uses a pure white background', () => {
