@@ -2262,12 +2262,27 @@ function initStoreDashboardPage() {
     green: '16, 185, 129'
   };
 
-  const renderStoreHeroMetricIcon = (tone = 'blue') => `
-    <span class="hm-label-icon tone-${tone}" aria-hidden="true">
-      <span class="hm-label-icon-core"></span>
-      <span class="hm-label-icon-dot"></span>
-    </span>
-  `;
+  const STORE_HERO_METRIC_ICON_MAP = {
+    '平均时长': '../assets/store-core-metrics/metric-duration.png',
+    '话术执行率': '../assets/store-core-metrics/metric-hit-rate.png',
+    '质检合格数': '../assets/store-core-metrics/metric-pass-count.png',
+    '质检合格率': '../assets/store-core-metrics/metric-pass-rate.png',
+    '风险录音数': '../assets/store-core-metrics/metric-risk-count.png',
+    '风险录音率': '../assets/store-core-metrics/metric-risk-rate.png'
+  };
+
+  const renderStoreHeroMetricIcon = (tone = 'blue', label = '') => {
+    const iconSrc = STORE_HERO_METRIC_ICON_MAP[label];
+    if (iconSrc) {
+      return `<img class="hm-label-icon hm-label-icon-image" src="${iconSrc}" alt="" aria-hidden="true">`;
+    }
+    return `
+      <span class="hm-label-icon tone-${tone}" aria-hidden="true">
+        <span class="hm-label-icon-core"></span>
+        <span class="hm-label-icon-dot"></span>
+      </span>
+    `;
+  };
 
   const renderKpiMetricBody = (metric) => {
     const valueClass = metric.isDanger ? 'danger' : metric.isSuccess ? 'success' : metric.isRate ? 'rate' : '';
@@ -2276,7 +2291,7 @@ function initStoreDashboardPage() {
     return `
       ${metricBtn(metric.label)}
       <div class="hm-label-row">
-        ${renderStoreHeroMetricIcon(tone)}
+        ${renderStoreHeroMetricIcon(tone, metric.label)}
         <div class="hm-label">${metric.label}</div>
       </div>
       <div class="hm-val-row">
@@ -2348,7 +2363,10 @@ function initStoreDashboardPage() {
   const renderStoreRecordingSummaryGroup = (group) => `
     <section class="store-recording-summary-group tone-${escapeHtml(group.tone)}" aria-label="${escapeHtml(group.label)}">
       <div class="store-recording-summary-total">
-        <span class="store-recording-summary-level">录音总计</span>
+        <span class="store-recording-summary-ribbon" aria-label="录音总计">
+          <span class="store-recording-summary-level" aria-hidden="true">录音总计</span>
+          <img class="store-recording-summary-ribbon-mask" src="../assets/store-core-metrics/recording-ribbon-mask.svg" alt="" aria-hidden="true">
+        </span>
         ${metricBtn(group.label)}
         <div class="hm-label-row">
           ${renderStoreHeroMetricIcon(group.tone)}
@@ -2844,7 +2862,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       </tr>`;
     };
 
-    advisorList.innerHTML = `<table class="advisor-table data-table">
+    advisorList.innerHTML = `<table class="advisor-table data-table" data-column-count="${headers.length}">
       <thead>
         <tr>${thead}</tr>
       </thead>

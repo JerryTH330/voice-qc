@@ -23,8 +23,11 @@ test('store recording review displays five items per page', () => {
 test('store hero groups recording totals by source and scene like factory hero', () => {
   assert.match(runtime, /label: '云外呼录音数'[\s\S]*?首触跟进[\s\S]*?邀约进店[\s\S]*?排程确认/);
   assert.match(runtime, /label: '门店工牌录音数'[\s\S]*?进店接待[\s\S]*?试乘试驾/);
-  assert.match(runtime, /<span class="store-recording-summary-level">录音总计<\/span>/);
-  assert.match(factoryRuntime, /<span class="factory-recording-level-label">录音总计<\/span>/);
+  assert.match(runtime, /class="store-recording-summary-ribbon" aria-label="录音总计"/);
+  assert.match(runtime, /class="store-recording-summary-level" aria-hidden="true">录音总计<\/span>/);
+  assert.match(runtime, /recording-ribbon-mask\.svg/);
+  assert.match(factoryRuntime, /class="store-recording-summary-ribbon" aria-label="录音总计"/);
+  assert.match(factoryRuntime, /class="store-recording-summary-level" aria-hidden="true">录音总计<\/span>/);
   assert.doesNotMatch(runtime, /来源总计/);
   assert.doesNotMatch(factoryRuntime, /来源总计/);
   assert.doesNotMatch(runtime, /所含业务场景/);

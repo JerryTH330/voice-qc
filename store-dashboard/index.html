@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260731main-local-preserved" />
+        <link rel="stylesheet" href="./page.css?v=20260804-store-layout-responsive" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -183,12 +183,21 @@
              ══════════════════════════════════════ -->
         <section class="hero-panel" aria-label="门店核心指标">
           <div class="hero-identity">
-            <div class="hero-avatar" aria-hidden="true">赵</div>
+            <img class="hero-avatar" src="../assets/store-core-metrics/manager-avatar.png" alt="" aria-hidden="true">
             <div class="hero-meta">
               <div class="hero-name-row">
                 <span class="hero-name">赵总</span>
-                <span class="hero-store">上海中心店 · 店长</span>
               </div>
+            </div>
+            <div class="hero-profile-tags" aria-label="门店与职位">
+              <span class="hero-profile-tag">
+                <img src="../assets/store-core-metrics/store-icon.svg" alt="" aria-hidden="true">
+                <span>门店：上海中心店</span>
+              </span>
+              <span class="hero-profile-tag">
+                <img src="../assets/store-core-metrics/role-icon.svg" alt="" aria-hidden="true">
+                <span>职位：店长</span>
+              </span>
             </div>
           </div>
     
@@ -274,7 +283,10 @@
               <section class="track sop-overview-track" aria-label="质检概览">
                 <div class="track-header">
                   <div class="track-header-main">
-                    <div>
+                    <span class="sop-overview-heading-media" aria-hidden="true">
+                      <img class="sop-overview-heading-image" src="../assets/store-quality-overview/quality-overview-heading-robot.png" alt="" aria-hidden="true">
+                    </span>
+                    <div class="sop-overview-heading-copy">
                       <h2 class="track-title">质检概览</h2>
                       <p class="track-sub">质检合格率 · 质检小结</p>
                     </div>
@@ -282,57 +294,56 @@
                 </div>
                 <div class="track-body">
                   <div class="sop-overview-grid">
-                    <div class="sop-metric-row">
-                      <div class="sop-metric-panel sop-metric-panel-store">
-                        <div class="sop-metric-card sop-metric-card-store">
-                          <img class="sop-metric-card-image" src="../assets/store-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
-                          <div class="sop-metric-card-content">
-                            <div class="sop-metric-label">门店质检合格率</div>
-                            <div class="sop-metric-score-wrap">
-                              <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
-                              <div class="sop-period-change up" id="sop-period-change">
-                                <span class="sop-period-change-value">环比 +3%</span>
+                    <div class="sop-overview-primary-row">
+                      <div id="sop-ai-summary" class="sop-ai-summary">
+                        <span class="hint-text">SOP执行平平稳，竞品对比、试驾邀约仍是需要优先改善的SOP短板项</span>
+                      </div>
+                      <div class="sop-metric-row">
+                        <div class="sop-metric-panel sop-metric-panel-store">
+                          <div class="sop-metric-card sop-metric-card-store">
+                            <div class="sop-metric-card-content">
+                              <div class="sop-metric-label">门店质检合格率</div>
+                              <div class="sop-metric-score-wrap">
+                                <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
+                                <div class="sop-period-change up" id="sop-period-change">
+                                  <span class="sop-period-change-value">环比 +3%</span>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          <span class="sop-metric-tail" aria-hidden="true">
+                            <img src="../assets/store-quality-overview/store-tail.svg" alt="">
+                          </span>
                         </div>
-                        <span class="sop-metric-tail" aria-hidden="true">
-                          <img src="../assets/store-quality-tail-figma-514-6817.svg" alt="">
-                        </span>
-                      </div>
-                      <div class="sop-metric-vs" aria-hidden="true">
-                        <img class="sop-metric-vs-image" src="../assets/quality-rate-vs-figma-514-6817.png" alt="" aria-hidden="true">
-                      </div>
-                      <div class="sop-metric-panel sop-metric-panel-zone">
-                        <span class="sop-metric-tail" aria-hidden="true">
-                          <img src="../assets/zone-quality-tail-figma-514-6817.svg" alt="">
-                        </span>
-                        <div class="sop-metric-card sop-metric-card-zone">
-                          <img class="sop-metric-card-image" src="../assets/zone-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
-                          <div class="sop-metric-card-content">
-                            <div class="sop-metric-label">大区质检合格率</div>
-                            <div class="sop-metric-score-wrap">
-                              <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                        <div class="sop-metric-panel sop-metric-panel-zone">
+                          <div class="sop-metric-card sop-metric-card-zone">
+                            <div class="sop-metric-card-content">
+                              <div class="sop-metric-label">大区质检合格率</div>
+                              <div class="sop-metric-score-wrap">
+                                <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                              </div>
                             </div>
                           </div>
+                          <span class="sop-metric-tail" aria-hidden="true">
+                            <img src="../assets/store-quality-overview/zone-tail.svg" alt="">
+                          </span>
+                        </div>
+                        <div class="sop-metric-vs" aria-hidden="true">
+                          <img class="sop-metric-vs-image" src="../assets/store-quality-overview/comparison-vs.png" alt="" aria-hidden="true">
+                        </div>
+                        <div class="sop-improve up" id="sop-national-diff">
+                          <span class="sop-improve-copy">
+                            <span class="sop-improve-label sop-national-diff-label">+</span>
+                            <span class="sop-improve-value sop-national-diff-value">9%</span>
+                          </span>
                         </div>
                       </div>
-                      <div class="sop-improve up" id="sop-national-diff">
-                        <span class="sop-improve-copy">
-                          <span class="sop-improve-label sop-national-diff-label">+</span>
-                          <span class="sop-improve-value sop-national-diff-value">9%</span>
-                        </span>
-                      </div>
-                    </div>
-                    <div id="sop-ai-summary" class="sop-ai-summary">
-                      <img class="hint-icon" src="../assets/sales-local-complete-icon.svg" alt="" aria-hidden="true">
-                      <span class="hint-text">SOP执行平平稳，竞品对比、试驾邀约仍是需要优先改善的SOP短板项</span>
                     </div>
                   </div>
                   <div class="summary-list">
                     <div class="summary-item success" id="sop-summary-trend">
                       <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-strength-figma-514-6868.png" alt="" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-quality-overview/summary-strength.png" alt="" aria-hidden="true">
                       </span>
                       <div class="summary-item-copy">
                         <strong id="sop-summary-trend-title">优势发掘</strong>
@@ -341,7 +352,7 @@
                     </div>
                     <div class="summary-item warning" id="sop-summary-weakness">
                       <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-weakness-figma-514-6878.png" alt="" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-quality-overview/summary-weakness.png" alt="" aria-hidden="true">
                       </span>
                       <div class="summary-item-copy">
                         <strong>短板改善</strong>
@@ -350,7 +361,7 @@
                     </div>
                     <div class="summary-item danger" id="sop-summary-risk">
                       <span class="summary-item-icon-shell" aria-hidden="true">
-                        <img class="summary-item-icon" src="../assets/store-summary-risk-figma-514-6888.png" alt="" aria-hidden="true">
+                        <img class="summary-item-icon" src="../assets/store-quality-overview/summary-risk.png" alt="" aria-hidden="true">
                       </span>
                       <div class="summary-item-copy">
                         <strong>风险管控</strong>
@@ -852,6 +863,6 @@
         </template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260731131500"></script>
+    <script src="./page.js?v=20260804-store-layout-responsive"></script>
   </body>
 </html>

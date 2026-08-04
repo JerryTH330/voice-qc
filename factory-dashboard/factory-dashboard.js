@@ -193,7 +193,10 @@
             <section class="track sop-overview-track" aria-label="质检概览">
               <div class="track-header">
                 <div class="track-header-main">
-                  <div>
+                  <span class="sop-overview-heading-media" aria-hidden="true">
+                    <img class="sop-overview-heading-image" src="../assets/store-quality-overview/quality-overview-heading-robot.png" alt="" aria-hidden="true">
+                  </span>
+                  <div class="sop-overview-heading-copy">
                     <h2 class="track-title">质检概览</h2>
                     <p class="track-sub">质检合格率 · 质检小结</p>
                   </div>
@@ -201,55 +204,54 @@
               </div>
               <div class="track-body">
                 <div class="sop-overview-grid">
-                  <div class="sop-metric-row">
-                    <div class="sop-metric-panel sop-metric-panel-store">
-                      <div class="sop-metric-card sop-metric-card-store">
-                        <img class="sop-metric-card-image" src="../assets/store-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
-                        <div class="sop-metric-card-content">
-                          <div class="sop-metric-label">质检合格率</div>
-                          <div class="sop-metric-score-wrap">
-                            <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
-                            <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-prefix">环比</span><span class="sop-period-change-value">+3%</span></div>
+                  <div class="sop-overview-primary-row">
+                    <div id="sop-ai-summary" class="sop-ai-summary">
+                      <span class="hint-text">全品牌SOP执行整体平稳，竞品对比话术和试驾邀约环节仍是最大短板。</span>
+                    </div>
+                    <div class="sop-metric-row">
+                      <div class="sop-metric-panel sop-metric-panel-store">
+                        <div class="sop-metric-card sop-metric-card-store">
+                          <div class="sop-metric-card-content">
+                            <div class="sop-metric-label">质检合格率</div>
+                            <div class="sop-metric-score-wrap">
+                              <div class="sop-metric-score" id="sop-score-val">82<span>%</span></div>
+                              <div class="sop-period-change up" id="sop-period-change"><span class="sop-period-change-value">环比 +3%</span></div>
+                            </div>
                           </div>
                         </div>
+                        <span class="sop-metric-tail" aria-hidden="true">
+                          <img src="../assets/store-quality-overview/store-tail.svg" alt="">
+                        </span>
                       </div>
-                      <span class="sop-metric-tail" aria-hidden="true">
-                        <img src="../assets/store-quality-tail-figma-514-6817.svg" alt="">
-                      </span>
-                    </div>
-                    <div class="sop-metric-vs" aria-hidden="true">
-                      <img class="sop-metric-vs-image" src="../assets/quality-rate-vs-figma-514-6817.png" alt="" aria-hidden="true">
-                    </div>
-                    <div class="sop-metric-panel sop-metric-panel-zone">
-                      <span class="sop-metric-tail" aria-hidden="true">
-                        <img src="../assets/zone-quality-tail-figma-514-6817.svg" alt="">
-                      </span>
-                      <div class="sop-metric-card sop-metric-card-zone">
-                        <img class="sop-metric-card-image" src="../assets/zone-quality-rate-figma-514-6817.png" alt="" aria-hidden="true">
-                        <div class="sop-metric-card-content">
-                          <div class="sop-metric-label">全国均值</div>
-                          <div class="sop-metric-score-wrap">
-                            <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                      <div class="sop-metric-panel sop-metric-panel-zone">
+                        <div class="sop-metric-card sop-metric-card-zone">
+                          <div class="sop-metric-card-content">
+                            <div class="sop-metric-label">全国均值</div>
+                            <div class="sop-metric-score-wrap">
+                              <div class="sop-metric-score sop-metric-score-zone"><strong id="sop-national-avg" class="sop-metric-value">73</strong><span>%</span></div>
+                            </div>
                           </div>
                         </div>
+                        <span class="sop-metric-tail" aria-hidden="true">
+                          <img src="../assets/store-quality-overview/zone-tail.svg" alt="">
+                        </span>
+                      </div>
+                      <div class="sop-metric-vs" aria-hidden="true">
+                        <img class="sop-metric-vs-image" src="../assets/store-quality-overview/comparison-vs.png" alt="" aria-hidden="true">
+                      </div>
+                      <div class="sop-improve up" id="sop-national-diff">
+                        <span class="sop-improve-copy">
+                          <span class="sop-improve-label sop-national-diff-label">+</span>
+                          <span class="sop-improve-value sop-national-diff-value">9%</span>
+                        </span>
                       </div>
                     </div>
-                    <div class="sop-improve up" id="sop-national-diff">
-                      <span class="sop-improve-copy">
-                        <span class="sop-improve-label sop-national-diff-label">+</span>
-                        <span class="sop-improve-value sop-national-diff-value">9%</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div id="sop-ai-summary" class="sop-ai-summary">
-                    <img class="hint-icon" src="../assets/sales-local-complete-icon.svg" alt="" aria-hidden="true">
-                    <span class="hint-text">全品牌SOP执行整体平稳，竞品对比话术和试驾邀约环节仍是最大短板。</span>
                   </div>
                 </div>
                 <div class="summary-list">
                   <div class="summary-item success" id="sop-summary-trend">
                     <span class="summary-item-icon-shell" aria-hidden="true">
-                      <img class="summary-item-icon" src="../assets/store-summary-strength-figma-514-6868.png" alt="" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-quality-overview/summary-strength.png" alt="" aria-hidden="true">
                     </span>
                     <div class="summary-item-copy">
                       <strong id="sop-summary-trend-title">优势发掘</strong>
@@ -258,7 +260,7 @@
                   </div>
                   <div class="summary-item warning" id="sop-summary-weakness">
                     <span class="summary-item-icon-shell" aria-hidden="true">
-                      <img class="summary-item-icon" src="../assets/store-summary-weakness-figma-514-6878.png" alt="" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-quality-overview/summary-weakness.png" alt="" aria-hidden="true">
                     </span>
                     <div class="summary-item-copy">
                       <strong>短板改善</strong>
@@ -267,7 +269,7 @@
                   </div>
                   <div class="summary-item danger" id="sop-summary-risk">
                     <span class="summary-item-icon-shell" aria-hidden="true">
-                      <img class="summary-item-icon" src="../assets/store-summary-risk-figma-514-6888.png" alt="" aria-hidden="true">
+                      <img class="summary-item-icon" src="../assets/store-quality-overview/summary-risk.png" alt="" aria-hidden="true">
                     </span>
                     <div class="summary-item-copy">
                       <strong>风险管控</strong>
@@ -2456,12 +2458,27 @@
     green: '16, 185, 129'
   };
 
-  const renderStoreHeroMetricIcon = (tone = 'blue') => `
-    <span class="hm-label-icon tone-${tone}" aria-hidden="true">
-      <span class="hm-label-icon-core"></span>
-      <span class="hm-label-icon-dot"></span>
-    </span>
-  `;
+  const STORE_HERO_METRIC_ICON_MAP = {
+    '平均时长': '../assets/store-core-metrics/metric-duration.png',
+    '话术执行率': '../assets/store-core-metrics/metric-hit-rate.png',
+    '质检合格数': '../assets/store-core-metrics/metric-pass-count.png',
+    '质检合格率': '../assets/store-core-metrics/metric-pass-rate.png',
+    '风险录音数': '../assets/store-core-metrics/metric-risk-count.png',
+    '风险录音率': '../assets/store-core-metrics/metric-risk-rate.png'
+  };
+
+  const renderStoreHeroMetricIcon = (tone = 'blue', label = '') => {
+    const iconSrc = STORE_HERO_METRIC_ICON_MAP[label];
+    if (iconSrc) {
+      return `<img class="hm-label-icon hm-label-icon-image" src="${iconSrc}" alt="" aria-hidden="true">`;
+    }
+    return `
+      <span class="hm-label-icon tone-${tone}" aria-hidden="true">
+        <span class="hm-label-icon-core"></span>
+        <span class="hm-label-icon-dot"></span>
+      </span>
+    `;
+  };
 
   const buildFactoryHeroMetric = (metricKey, metric) => ({
     ...metric,
@@ -2475,7 +2492,7 @@
     return `
       ${metricBtn(metric.label)}
       <div class="hm-label-row">
-        ${renderStoreHeroMetricIcon(tone)}
+        ${renderStoreHeroMetricIcon(tone, metric.label)}
         <div class="hm-label">${metric.label}</div>
       </div>
       <div class="hm-val-row">
@@ -2526,16 +2543,19 @@
   `;
 
   const renderRecordingSummaryScene = (scene) => `
-    <div class="factory-recording-scene" data-recording-scene="${escapeHtml(scene.key)}">
-      <span class="factory-recording-scene-label">${escapeHtml(scene.label)}</span>
-      <strong class="factory-recording-scene-value" ${buildFactoryHeroCounterAttrs(scene.value, '条')}>${renderFactoryHeroCounterValue(scene.value, '条')}</strong>
+    <div class="store-recording-summary-scene" data-recording-scene="${escapeHtml(scene.key)}">
+      <span class="store-recording-summary-scene-label">${escapeHtml(scene.label)}</span>
+      <strong class="store-recording-summary-scene-value" ${buildFactoryHeroCounterAttrs(scene.value, '条')}>${renderFactoryHeroCounterValue(scene.value, '条')}</strong>
     </div>
   `;
 
   const renderRecordingSummaryGroup = (group) => `
-    <section class="factory-recording-summary-group tone-${escapeHtml(group.tone)}" aria-label="${escapeHtml(group.label)}">
-      <div class="factory-recording-summary-total">
-        <span class="factory-recording-level-label">录音总计</span>
+    <section class="store-recording-summary-group tone-${escapeHtml(group.tone)}" aria-label="${escapeHtml(group.label)}">
+      <div class="store-recording-summary-total">
+        <span class="store-recording-summary-ribbon" aria-label="录音总计">
+          <span class="store-recording-summary-level" aria-hidden="true">录音总计</span>
+          <img class="store-recording-summary-ribbon-mask" src="../assets/store-core-metrics/recording-ribbon-mask.svg" alt="" aria-hidden="true">
+        </span>
         ${metricBtn(group.label)}
         <div class="hm-label-row">
           ${renderStoreHeroMetricIcon(group.tone)}
@@ -2546,8 +2566,8 @@
         </div>
       </div>
       ${group.scenes.length
-        ? `<div class="factory-recording-breakdown">
-            <div class="factory-recording-scenes" style="--recording-scene-count:${group.scenes.length}">${group.scenes.map(renderRecordingSummaryScene).join('')}</div>
+        ? `<div class="store-recording-summary-breakdown">
+            <div class="store-recording-summary-scenes" style="--recording-scene-count:${group.scenes.length}">${group.scenes.map(renderRecordingSummaryScene).join('')}</div>
           </div>`
         : ''}
     </section>
@@ -2579,7 +2599,7 @@
   const renderFactoryRecordingSummary = () => {
     const summary = getFactoryRecordingSummaryData();
     return `
-      <div class="factory-recording-summary" aria-label="录音数统计">
+      <div class="store-recording-summary" aria-label="录音数统计">
         ${renderRecordingSummaryGroup(summary.cloud)}
         ${renderRecordingSummaryGroup(summary.badge)}
       </div>
@@ -3214,13 +3234,13 @@
 
     const rankColgroup = `
       <colgroup>
-        <col style="width:87px">
-        <col style="width:116px">
-        <col style="width:156px">
-        <col style="width:156px">
-        <col style="width:156px">
-        <col style="width:156px">
-        <col style="width:156px">
+        <col style="width:8.31%">
+        <col style="width:11.51%">
+        <col style="width:15.76%">
+        <col style="width:16.22%">
+        <col style="width:16.07%">
+        <col style="width:16.07%">
+        <col style="width:16.06%">
       </colgroup>`;
 
     // 表头排序按钮
@@ -6715,7 +6735,7 @@
       const periodDelta = Number(SOP_DIAL.periodDelta || 0);
       const periodText = `${periodDelta >= 0 ? '+' : ''}${periodDelta}%`;
       if (periodValueEl) {
-        periodValueEl.textContent = periodText;
+        periodValueEl.textContent = `环比 ${periodText}`;
       } else {
         periodEl.textContent = `环比 ${periodText}`;
       }

@@ -9,53 +9,77 @@ const source = fs.readFileSync(path.join(root, 'factory-dashboard', 'factory-das
 const css = fs.readFileSync(path.join(root, 'factory-dashboard', 'factory-dashboard.css'), 'utf8');
 const pageCss = fs.readFileSync(path.join(root, 'factory-dashboard', 'page.css'), 'utf8');
 const pageJs = fs.readFileSync(path.join(root, 'factory-dashboard', 'page.js'), 'utf8');
-const assets = [
-  'store-quality-rate-figma-514-6817.png',
-  'store-quality-tail-figma-514-6817.svg',
-  'quality-rate-vs-figma-514-6817.png',
-  'zone-quality-tail-figma-514-6817.svg',
-  'zone-quality-rate-figma-514-6817.png',
-  'store-summary-strength-figma-514-6868.png',
-  'store-summary-weakness-figma-514-6878.png',
-  'store-summary-risk-figma-514-6888.png',
+const parityCss = css.slice(css.lastIndexOf('/* 厂端核心指标：与门店看板的 Figma 卡片样式保持一致。 */'));
+
+const overviewAssets = [
+  'quality-overview-heading-robot.png',
+  'store-tail.svg',
+  'zone-tail.svg',
+  'comparison-vs.png',
+  'summary-strength.png',
+  'summary-weakness.png',
+  'summary-risk.png'
 ];
 
-test('factory overview reuses the complete local assets and structure from store overview', () => {
-  assets.forEach((asset) => {
-    assert.ok(fs.existsSync(path.join(root, 'assets', asset)), `${asset} should exist`);
-    assert.ok(source.includes(`../assets/${asset}`), `${asset} should be referenced`);
+const coreMetricAssets = [
+  'recording-ribbon-mask.svg',
+  'recording-card-background-layer.png',
+  'metric-duration.png',
+  'metric-hit-rate.png',
+  'metric-pass-count.png',
+  'metric-pass-rate.png',
+  'metric-risk-count.png',
+  'metric-risk-rate.png'
+];
+
+test('factory core metrics reuse the store assets and card structure', () => {
+  coreMetricAssets.forEach((asset) => {
+    assert.ok(fs.existsSync(path.join(root, 'assets', 'store-core-metrics', asset)), `${asset} should exist`);
   });
-  assert.ok(source.includes('sop-metric-panel sop-metric-panel-store'));
-  assert.ok(source.includes('sop-metric-panel sop-metric-panel-zone'));
+  assert.ok(source.includes('class="store-recording-summary-ribbon"'));
+  assert.ok(source.includes('../assets/store-core-metrics/recording-ribbon-mask.svg'));
+  assert.equal((source.match(/\.\.\/assets\/store-core-metrics\/metric-[a-z-]+\.png/g) || []).length, 6);
+  assert.match(parityCss, /\.store-recording-summary\s*{[\s\S]*?min-height:\s*166px;[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
+  assert.match(parityCss, /\.store-recording-summary-ribbon\s*{[\s\S]*?width:\s*123px;[\s\S]*?height:\s*61px;/);
+  assert.match(parityCss, /\.hm-layout-bottom\s*{[\s\S]*?grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);/);
+  assert.match(parityCss, /\.hm-layout-bottom \.hm-item\.single-metric\s*{[\s\S]*?min-height:\s*78px;[\s\S]*?border-radius:\s*16px;/);
+});
+
+test('factory overview reuses the current store overview assets and structure', () => {
+  overviewAssets.forEach((asset) => {
+    assert.ok(fs.existsSync(path.join(root, 'assets', 'store-quality-overview', asset)), `${asset} should exist`);
+    assert.ok(source.includes(`../assets/store-quality-overview/${asset}`), `${asset} should be referenced`);
+  });
+  assert.ok(source.indexOf('class="sop-overview-heading-media"') < source.indexOf('<h2 class="track-title">质检概览</h2>'));
+  assert.ok(source.includes('class="sop-overview-primary-row"'));
+  assert.ok(source.indexOf('id="sop-ai-summary"') < source.indexOf('class="sop-metric-row"'));
   assert.equal((source.match(/class="summary-item-copy"/g) || []).length, 3);
-  assert.ok(!source.includes('sop-improve-arrow-image sop-national-diff-arrow'));
 });
 
-test('factory overview follows the store comparison card dimensions and overlap layers', () => {
-  assert.match(css, /\.sop-metric-row\s*{[\s\S]*?gap:\s*32px;/);
-  assert.match(css, /\.sop-metric-panel\s*{[\s\S]*?height:\s*105px;/);
-  assert.match(css, /\.sop-metric-card\s*{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*2;[\s\S]*?gap:\s*20px;[\s\S]*?padding:\s*21\.5px 20px;[\s\S]*?border-width:\s*1\.5px;/);
-  assert.match(css, /\.sop-metric-tail\s*{[\s\S]*?position:\s*relative;[\s\S]*?z-index:\s*1;[\s\S]*?margin-left:\s*-2px;/);
-  assert.match(css, /\.sop-metric-card-image\s*{[\s\S]*?width:\s*80px;[\s\S]*?height:\s*80px;/);
-  assert.match(css, /\.sop-metric-vs-image\s*{[\s\S]*?width:\s*88px;[\s\S]*?height:\s*88px;/);
+test('factory overview follows the current store composition dimensions', () => {
+  assert.match(parityCss, /\.sop-overview-heading-media\s*{[\s\S]*?width:\s*56px;[\s\S]*?height:\s*56px;/);
+  assert.match(parityCss, /\.sop-overview-grid\s*{[\s\S]*?padding:\s*17\.5px;[\s\S]*?border:\s*1\.5px solid #dbeafe;[\s\S]*?border-radius:\s*18px;/);
+  assert.match(parityCss, /\.sop-overview-primary-row\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 32\.04%\) minmax\(0, 1fr\);[\s\S]*?gap:\s*16px;/);
+  assert.match(parityCss, /\.sop-metric-row\s*{[\s\S]*?display:\s*flex;[\s\S]*?height:\s*86px;[\s\S]*?gap:\s*0;/);
+  assert.match(parityCss, /\.sop-metric-vs-image\s*{[\s\S]*?width:\s*28px;[\s\S]*?height:\s*28px;/);
+  assert.match(parityCss, /\.sop-improve\s*{[\s\S]*?flex:\s*0 0 140px;[\s\S]*?padding:\s*17px 17px 17px 65px;/);
 });
 
-test('factory quality difference uses the same plus and minus presentation as store overview', () => {
+test('factory quality difference keeps the same plus and minus presentation', () => {
   assert.ok(source.includes('<span class="sop-improve-label sop-national-diff-label">+</span>'));
   assert.ok(source.includes("nationalDiffLabelEl.textContent = diff >= 0 ? '+' : '-'"));
   assert.ok(source.includes('const diffText = `${Math.abs(diff)}%`;'));
-  assert.match(css, /\.sop-improve-label,[\s\S]*?\.sop-improve-value\s*{[\s\S]*?font-size:\s*40px;/);
+  assert.match(parityCss, /\.sop-improve-label,[\s\S]*?\.sop-improve-value\s*{[\s\S]*?font-size:\s*24px;/);
 });
 
 test('factory summary cards match the current store horizontal card layout', () => {
-  assert.match(css, /\.summary-item\s*{[\s\S]*?min-height:\s*108px;[\s\S]*?flex-direction:\s*row;[\s\S]*?gap:\s*12px;[\s\S]*?padding:\s*17px 15px;[\s\S]*?border:\s*1px solid #e2e8f0;/);
-  assert.match(css, /\.summary-item-icon-shell\s*{[\s\S]*?width:\s*48px;[\s\S]*?height:\s*48px;[\s\S]*?flex:\s*0 0 48px;/);
-  assert.match(css, /\.summary-item-copy strong\s*{[\s\S]*?font-size:\s*15px;[\s\S]*?font-weight:\s*600;[\s\S]*?line-height:\s*22px;/);
-  assert.match(css, /\.summary-item-copy > span\s*{[\s\S]*?font-size:\s*14px;[\s\S]*?font-weight:\s*600;[\s\S]*?line-height:\s*24px;/);
+  assert.match(parityCss, /\.summary-item\s*{[\s\S]*?min-height:\s*108px;[\s\S]*?gap:\s*12px;[\s\S]*?padding:\s*18px 16px;[\s\S]*?border-radius:\s*14px;/);
+  assert.match(parityCss, /\.summary-item-icon-shell\s*{[\s\S]*?width:\s*48px;[\s\S]*?height:\s*48px;[\s\S]*?flex:\s*0 0 48px;/);
+  assert.match(parityCss, /\.summary-list\s*{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\) !important;[\s\S]*?gap:\s*16px;/);
 });
 
 test('factory overview cache versions are updated together', () => {
-  const version = '20260731main-local-preserved';
+  const version = '20260804-factory-rank-store-parity';
   assert.ok(pageHtml.includes(`page.css?v=${version}`));
   assert.ok(pageHtml.includes(`page.js?v=${version}`));
   assert.ok(pageCss.includes(`factory-dashboard.css?v=${version}`));
