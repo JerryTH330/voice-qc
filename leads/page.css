@@ -2,6 +2,115 @@
 @import url("../voice-qc-admin.css?v=20260717identity-full-width");
 @import url("../app-inline.css");
 
+.ai-lead-validity-heading {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-lead-validity-help {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
+.ai-lead-validity-help:hover,
+.ai-lead-validity-help:focus-visible {
+  color: #2563eb;
+  border-color: #93b4f5;
+  outline: none;
+}
+
+.ai-lead-validity-tooltip {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 10px);
+  left: 0;
+  display: none;
+  width: 380px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  color: #475569;
+  border: 1px solid #dbe5f2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  white-space: normal;
+}
+
+.ai-lead-validity-tooltip::before {
+  position: absolute;
+  top: -6px;
+  left: 92px;
+  width: 10px;
+  height: 10px;
+  content: '';
+  border-top: 1px solid #dbe5f2;
+  border-left: 1px solid #dbe5f2;
+  background: #fff;
+  transform: rotate(45deg);
+}
+
+.ai-lead-validity-heading:hover .ai-lead-validity-tooltip,
+.ai-lead-validity-heading:focus-within .ai-lead-validity-tooltip {
+  display: grid;
+  gap: 7px;
+}
+
+.ai-lead-validity-tooltip strong,
+.ai-lead-validity-tooltip b {
+  color: #162033;
+  font-weight: 700;
+}
+
+.ai-lead-validity-pill {
+  display: inline-flex;
+  min-height: 26px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.ai-lead-validity-pill.is-valid {
+  color: #15803d;
+  border-color: rgba(22, 163, 74, 0.2);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.ai-lead-validity-pill.is-no-call {
+  color: #64748b;
+  border-color: rgba(100, 116, 139, 0.2);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.ai-lead-validity-pill.is-no-valid-call {
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.2);
+  background: rgba(249, 115, 22, 0.1);
+}
+
 .leads-detail-page:not(.customer-detail-page) .leads-detail-actions {
   display: flex;
   width: 100%;

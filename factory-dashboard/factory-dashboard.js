@@ -6588,11 +6588,19 @@
 
     const searchInput = root.querySelector('.issue-rule-search-input');
     if (searchInput) {
-      searchInput.addEventListener('input', (event) => {
-        issueRuleAnalysisState.query = event.target.value;
+      const applyIssueRuleSearch = (value) => {
+        const nextQuery = value || '';
+        if (issueRuleAnalysisState.query === nextQuery) return;
+        issueRuleAnalysisState.query = nextQuery;
         issueRuleAnalysisState.page = 1;
         renderIssueRuleAnalysis(true);
+      };
+      searchInput.addEventListener('input', (event) => {
+        if (event.isComposing) return;
+        applyIssueRuleSearch(event.currentTarget.value);
       });
+      searchInput.addEventListener('compositionend', (event) => applyIssueRuleSearch(event.currentTarget.value));
+      searchInput.addEventListener('search', (event) => applyIssueRuleSearch(event.currentTarget.value));
       if (focusSearch) {
         const position = searchInput.value.length;
         requestAnimationFrame(() => {
