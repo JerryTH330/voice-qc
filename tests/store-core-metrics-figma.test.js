@@ -63,7 +63,7 @@ test('the first quality metric tooltip opens inward without being clipped', () =
 });
 
 test('store dashboard cache versions refresh the updated CSS and runtime', () => {
-  const version = '20260804-store-layout-responsive';
+  const version = '20260804-shared-insight-heading-icon';
   assert.ok(html.includes(`page.css?v=${version}`));
   assert.ok(html.includes(`page.js?v=${version}`));
   assert.ok(pageRuntime.includes(`const version = '${version}'`));

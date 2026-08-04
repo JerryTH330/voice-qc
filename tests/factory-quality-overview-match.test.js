@@ -12,7 +12,6 @@ const pageJs = fs.readFileSync(path.join(root, 'factory-dashboard', 'page.js'), 
 const parityCss = css.slice(css.lastIndexOf('/* 厂端核心指标：与门店看板的 Figma 卡片样式保持一致。 */'));
 
 const overviewAssets = [
-  'quality-overview-heading-robot.png',
   'store-tail.svg',
   'zone-tail.svg',
   'comparison-vs.png',
@@ -50,6 +49,7 @@ test('factory overview reuses the current store overview assets and structure', 
     assert.ok(fs.existsSync(path.join(root, 'assets', 'store-quality-overview', asset)), `${asset} should exist`);
     assert.ok(source.includes(`../assets/store-quality-overview/${asset}`), `${asset} should be referenced`);
   });
+  assert.ok(source.includes('../assets/lead-customer-insight-figma-533-8804.png'));
   assert.ok(source.indexOf('class="sop-overview-heading-media"') < source.indexOf('<h2 class="track-title">质检概览</h2>'));
   assert.ok(source.includes('class="sop-overview-primary-row"'));
   assert.ok(source.indexOf('id="sop-ai-summary"') < source.indexOf('class="sop-metric-row"'));
@@ -79,7 +79,7 @@ test('factory summary cards match the current store horizontal card layout', () 
 });
 
 test('factory overview cache versions are updated together', () => {
-  const version = '20260804-factory-rank-store-parity';
+  const version = '20260804-shared-insight-heading-icon';
   assert.ok(pageHtml.includes(`page.css?v=${version}`));
   assert.ok(pageHtml.includes(`page.js?v=${version}`));
   assert.ok(pageCss.includes(`factory-dashboard.css?v=${version}`));

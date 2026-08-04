@@ -90,7 +90,7 @@ test('overview and journey shells match Figma sizing and appearance', () => {
 });
 
 test('lead detail Figma 533:8216 cache version is active', () => {
-  assert.ok(html.includes('page.css?v=20260731lead-evidence-fill'));
+  assert.ok(html.includes('page.css?v=20260804-shared-insight-heading-icon'));
 });
 
 test('lead journey width follows its available container without horizontal overflow', () => {

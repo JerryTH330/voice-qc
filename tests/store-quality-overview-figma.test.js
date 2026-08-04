@@ -8,7 +8,6 @@ const html = fs.readFileSync(path.join(root, 'store-dashboard', 'index.html'), '
 const css = fs.readFileSync(path.join(root, 'store-dashboard', 'page.css'), 'utf8');
 const runtime = fs.readFileSync(path.join(root, 'app-runtime.js'), 'utf8');
 const assets = [
-  'quality-overview-heading-robot.png',
   'comparison-vs.png',
   'store-tail.svg',
   'zone-tail.svg',
@@ -30,13 +29,13 @@ test('store quality overview uses the Figma 553:4383 gradient surface', () => {
   assert.match(css, /\.sop-overview-track\s*{[\s\S]*?background:\s*linear-gradient\(180deg, rgba\(255, 255, 255, 0\.98\), rgba\(243, 247, 253, 0\.94\)\);/);
 });
 
-test('quality overview heading uses the exact static image from Figma 553:4525', () => {
-  assert.match(html, /<span class="sop-overview-heading-media"[^>]*>[\s\S]*?<img class="sop-overview-heading-image" src="\.\.\/assets\/store-quality-overview\/quality-overview-heading-robot\.png"[^>]*>[\s\S]*?<\/span>/);
+test('quality overview heading reuses the lead detail customer insight image', () => {
+  assert.match(html, /<span class="sop-overview-heading-media"[^>]*>[\s\S]*?<img class="sop-overview-heading-image" src="\.\.\/assets\/lead-customer-insight-figma-533-8804\.png"[^>]*>[\s\S]*?<\/span>/);
   assert.ok(html.indexOf('class="sop-overview-heading-media"') < html.indexOf('<h2 class="track-title">质检概览</h2>'));
   assert.ok(!html.includes('ai-robot-loop.mp4'));
   assert.ok(!html.includes('<video class="sop-overview-heading-video"'));
   assert.match(css, /\.sop-overview-heading-media\s*{[\s\S]*?width:\s*56px;[\s\S]*?height:\s*56px;/);
-  assert.match(css, /\.sop-overview-heading-image\s*{[\s\S]*?width:\s*56px;[\s\S]*?height:\s*56px;[\s\S]*?object-fit:\s*contain;/);
+  assert.match(css, /\.sop-overview-heading-image\s*{[\s\S]*?top:\s*-11px;[\s\S]*?left:\s*-11px;[\s\S]*?width:\s*78px;[\s\S]*?height:\s*78px;/);
   assert.ok(!css.includes('.sop-overview-heading-video'));
 });
 
@@ -95,5 +94,5 @@ test('summary cards match Figma 553:4430', () => {
 });
 
 test('store quality overview refreshes the latest CSS', () => {
-  assert.ok(html.includes('page.css?v=20260804-store-layout-responsive'));
+  assert.ok(html.includes('page.css?v=20260804-shared-insight-heading-icon'));
 });

@@ -30,6 +30,6 @@ test('store dashboard responds to available content width instead of viewport wi
 });
 
 test('store dashboard loads the unified spacing and responsive stylesheet version', () => {
-  assert.ok(html.includes('page.css?v=20260804-store-layout-responsive'));
-  assert.ok(html.includes('page.js?v=20260804-store-layout-responsive'));
+  assert.ok(html.includes('page.css?v=20260804-shared-insight-heading-icon'));
+  assert.ok(html.includes('page.js?v=20260804-shared-insight-heading-icon'));
 });

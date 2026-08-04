@@ -194,7 +194,7 @@
               <div class="track-header">
                 <div class="track-header-main">
                   <span class="sop-overview-heading-media" aria-hidden="true">
-                    <img class="sop-overview-heading-image" src="../assets/store-quality-overview/quality-overview-heading-robot.png" alt="" aria-hidden="true">
+                    <img class="sop-overview-heading-image" src="../assets/lead-customer-insight-figma-533-8804.png" alt="" aria-hidden="true">
                   </span>
                   <div class="sop-overview-heading-copy">
                     <h2 class="track-title">质检概览</h2>

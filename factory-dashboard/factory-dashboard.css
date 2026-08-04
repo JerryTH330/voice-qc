@@ -8025,18 +8025,23 @@
 }
 
 .factory-dashboard-page #panel-sop-execution .sop-overview-heading-media {
+  position: relative;
   display: block;
   width: 56px;
   height: 56px;
   flex: 0 0 56px;
+  overflow: hidden;
   pointer-events: none;
 }
 
 .factory-dashboard-page #panel-sop-execution .sop-overview-heading-image {
+  position: absolute;
+  top: -11px;
+  left: -11px;
   display: block;
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
+  width: 78px;
+  height: 78px;
+  max-width: none;
   pointer-events: none;
 }
 
