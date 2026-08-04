@@ -394,10 +394,10 @@
 
 @media (max-width: 760px) {
   .store-dashboard-page .hero-profile-tags {
-    width: 100%;
+    width: auto;
     flex-wrap: wrap;
-    justify-content: flex-start;
-    margin-left: 0;
+    justify-content: flex-end;
+    margin-left: auto;
   }
 
   .store-dashboard-page .hero-identity {
@@ -1678,6 +1678,34 @@
   height: 100%;
 }
 
+.store-dashboard-page #detail-sop .issue-rule-row .scope-badge,
+.store-dashboard-page #detail-sop .issue-scope-popover .scope-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-row .scope-badge {
+  min-width: 112px;
+}
+
+.store-dashboard-page #detail-sop .scope-badge.scope-tone-green {
+  border-color: rgba(22, 163, 74, 0.22);
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.store-dashboard-page #detail-sop .scope-badge.scope-tone-red {
+  border-color: rgba(220, 38, 38, 0.22);
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
 .store-dashboard-page #detail-sop .issue-rule-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
@@ -1814,7 +1842,7 @@
 }
 
 .store-dashboard-page #detail-sop .issue-rule-list-shell {
-  --issue-rule-list-columns: minmax(0, 1fr) 70px 98px 92px;
+  --issue-rule-list-columns: minmax(0, 1fr) 128px 70px 98px 92px;
   --issue-rule-list-inline-pad: 12px;
   display: flex;
   flex-direction: column;
@@ -1827,10 +1855,121 @@
 }
 
 .store-dashboard-page #detail-sop .issue-rule-list-head {
+  position: relative;
   padding: 0 var(--issue-rule-list-inline-pad);
   color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 700;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name-head small {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-head {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-help {
+  position: relative;
+  display: inline-flex;
+  z-index: 12;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-help > summary {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.72);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-help > summary::-webkit-details-marker {
+  display: none;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-help > summary:hover,
+.store-dashboard-page #detail-sop .issue-scope-help > summary:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.store-dashboard-page #detail-sop .issue-scope-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  z-index: 20;
+  display: none;
+  width: min(440px, calc(100vw - 96px));
+  padding: 14px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  color: #475569;
+  transform: translateX(-50%);
+}
+
+.store-dashboard-page #detail-sop .issue-scope-help[open] .issue-scope-popover {
+  display: grid;
+  gap: 10px;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-popover::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid rgba(203, 213, 225, 0.92);
+  border-left: 1px solid rgba(203, 213, 225, 0.92);
+  background: #ffffff;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.store-dashboard-page #detail-sop .issue-scope-popover > strong {
+  color: #162033;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.store-dashboard-page #detail-sop .issue-scope-popover-item {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
 }
 
 .store-dashboard-page #detail-sop .issue-rule-list {
@@ -1841,8 +1980,10 @@
 }
 
 .store-dashboard-page #detail-sop .issue-rule-row {
-  min-height: 50px;
+  position: relative;
+  min-height: 68px;
   width: 100%;
+  min-width: 0;
   padding: 6px var(--issue-rule-list-inline-pad);
   border: 1px solid rgba(217, 226, 239, 0.78);
   border-radius: 8px;
@@ -1862,17 +2003,101 @@
   transform: translateY(-1px);
 }
 
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-scene-more[open]) {
+  z-index: 40;
+}
+
 .store-dashboard-page #detail-sop .issue-rule-name {
   display: flex;
   min-width: 0;
 }
 
+.store-dashboard-page #detail-sop .issue-rule-scope {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
 .store-dashboard-page #detail-sop .issue-rule-name-line {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
   min-width: 0;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scenes,
+.store-dashboard-page #detail-sop .issue-rule-tags,
+.store-dashboard-page #detail-sop .issue-rule-scene-popover-tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scenes {
+  position: relative;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-more {
+  position: relative;
+  z-index: 12;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-more > summary {
+  display: inline-flex;
+  min-width: 28px;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  border-radius: 999px;
+  background: rgba(239, 246, 255, 0.92);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-more > summary:hover,
+.store-dashboard-page #detail-sop .issue-rule-scene-more > summary:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: none;
+  width: min(340px, calc(100vw - 96px));
+  padding: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-more[open] .issue-rule-scene-popover {
+  display: grid;
+  gap: 10px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-scene-popover > strong {
+  color: #162033;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .store-dashboard-page #detail-sop .issue-rule-name strong {
@@ -2208,11 +2433,33 @@
   }
 
   .store-dashboard-page #detail-sop .issue-rule-list-head {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-list-head > :not(.issue-scope-head) {
     display: none;
+  }
+
+  .store-dashboard-page #detail-sop .issue-scope-popover {
+    right: 0;
+    left: auto;
+    width: min(400px, calc(100vw - 80px));
+    transform: none;
+  }
+
+  .store-dashboard-page #detail-sop .issue-scope-popover::before {
+    right: 3px;
+    left: auto;
+    transform: rotate(45deg);
   }
 
   .store-dashboard-page #detail-sop .issue-rule-row {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-scope {
+    justify-self: end;
   }
 
   .store-dashboard-page #detail-sop .issue-rule-rate,

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260804-shared-insight-heading-icon" />
+        <link rel="stylesheet" href="./page.css?v=20260804-rule-scenes" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -208,14 +208,10 @@
                 <span class="hero-name">赵总</span>
               </div>
             </div>
-            <div class="hero-profile-tags" aria-label="门店与职位">
+            <div class="hero-profile-tags" aria-label="所属门店">
               <span class="hero-profile-tag">
                 <img src="../assets/store-core-metrics/store-icon.svg" alt="" aria-hidden="true">
                 <span>门店：上海中心店</span>
-              </span>
-              <span class="hero-profile-tag">
-                <img src="../assets/store-core-metrics/role-icon.svg" alt="" aria-hidden="true">
-                <span>职位：店长</span>
               </span>
             </div>
           </div>
@@ -412,14 +408,14 @@
               <div class="card-header">
                 <div>
                   <div class="card-title">录音复盘</div>
-                  <div class="card-sub">支持规则排序，支持下钻查看门店人员表现</div>
+                  <div class="card-sub">支持规则名称搜索、排序与人员下钻</div>
                 </div>
               </div>
               <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
                 <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势识别</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">短板识别</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险势识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
               </div>
 
               <div class="issue-detail-section">
@@ -427,32 +423,6 @@
                   <div class="store-section-content issue-detail-content">
                     <div class="issue-detail-pad">
                       <div id="store-issue-rule-analysis-root" class="issue-rule-analysis-root"></div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="track issue-detail-card issue-detail-strength" id="detail-strength" role="tabpanel" aria-label="优势发掘" hidden>
-                  <div class="store-section-content issue-detail-content">
-                    <div class="issue-detail-pad">
-                      <div id="strength-chart" class="issue-list"></div>
-                      <div class="session-pagination issue-rule-pagination" id="strength-pagination" aria-label="优势识别分页"></div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="track issue-detail-card issue-detail-weakness" id="detail-weakness" role="tabpanel" aria-label="短板改善" hidden>
-                  <div class="store-section-content issue-detail-content">
-                    <div class="issue-detail-pad">
-                      <div id="weakness-chart" class="issue-list"></div>
-                      <div class="session-pagination issue-rule-pagination" id="weakness-pagination" aria-label="短板识别分页"></div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="track issue-detail-card issue-detail-risk" id="detail-risk" role="tabpanel" aria-label="风险命中" hidden>
-                  <div class="store-section-content issue-detail-content">
-                    <div class="issue-detail-pad">
-                      <div id="risk-chart" class="issue-list"></div>
                     </div>
                   </div>
                 </section>
@@ -858,6 +828,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260804-shared-insight-heading-icon"></script>
+    <script src="./page.js?v=20260804-rule-scenes"></script>
   </body>
 </html>

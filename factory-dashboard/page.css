@@ -1,4 +1,4 @@
 /* 厂端看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260804-shared-insight-heading-icon");
-@import url("../app-inline.css?v=20260804-shared-insight-heading-icon");
-@import url("./factory-dashboard.css?v=20260804-shared-insight-heading-icon");
+@import url("../voice-qc-admin.css?v=20260804-rule-scenes");
+@import url("../app-inline.css?v=20260804-rule-scenes");
+@import url("./factory-dashboard.css?v=20260804-rule-scenes");

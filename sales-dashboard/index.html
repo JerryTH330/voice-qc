@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260804sales-sop-search-v1" />
+        <link rel="stylesheet" href="./page.css?v=20260804sales-rule-scenes" />
 <title>销售看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -228,6 +228,7 @@
                     <button type="button" class="role-switch-link" data-route="sales-advisor">工牌</button>
                   </div>
                   <div class="sales-role-nav-filters">
+                    <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
                     <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
                   </div>
                 </div>
@@ -360,9 +361,9 @@
                         <div class="review-insight-panel">
                           <div class="review-insight-tabs" role="tablist" aria-label="录音复盘类型">
                             <button type="button" class="review-insight-tab active" data-review-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险势识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
                           </div>
                           <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
                           <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
@@ -410,6 +411,7 @@
                     <button type="button" class="role-switch-link active" data-route="sales-advisor">工牌</button>
                   </div>
                   <div class="sales-role-nav-filters">
+                    <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
                     <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
                   </div>
                 </div>
@@ -542,9 +544,9 @@
                         <div class="review-insight-panel">
                           <div class="review-insight-tabs" role="tablist" aria-label="录音复盘类型">
                             <button type="button" class="review-insight-tab active" data-review-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险势识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
                           </div>
                           <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
                           <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
@@ -957,6 +959,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="./page.js?v=20260804sales-sop-search-v1"></script>
+<script src="./page.js?v=20260804sales-rule-scenes"></script>
   </body>
 </html>

@@ -304,7 +304,7 @@
             <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
               <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
               <button type="button" class="issue-insight-tab" data-issue-insight-tab="advantage" role="tab" aria-selected="false">优势项识别</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="defect" role="tab" aria-selected="false">缺陷项识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="defect" role="tab" aria-selected="false">短板项识别</button>
               <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
             </div>
             <div class="issue-detail-section">
@@ -6236,12 +6236,12 @@
       ]
     },
     defect: {
-      label: '缺陷项识别',
-      metricLabel: '缺陷出现率',
-      countLabel: '缺陷/样本',
-      emptyText: '暂无匹配缺陷项规则',
-      topTitle: '缺陷最高 TOP5',
-      bottomTitle: '缺陷最低 BOT5',
+      label: '短板项识别',
+      metricLabel: '短板出现率',
+      countLabel: '短板/样本',
+      emptyText: '暂无匹配短板项规则',
+      topTitle: '短板最高 TOP5',
+      bottomTitle: '短板最低 BOT5',
       rules: [
         makeScopedIssueRule('defect-need', '深度需求挖掘不足', '需求洞察', 68, 980, ALL_ISSUE_SCENES),
         makeScopedIssueRule('defect-product-value', '本品价值塑造偏弱', '产品表达', 63, 960, [SCENE_KEYS.inviteStore, SCENE_KEYS.storeReception, SCENE_KEYS.testDrive]),
@@ -6311,6 +6311,33 @@
     getIssueRulesForCurrentFilter().find(rule => rule.id === issueRuleAnalysisState.selectedRuleId) || null
   );
   const getIssueRuleSortLabel = (value) => ISSUE_RULE_SORT_OPTIONS.find(option => option.value === value)?.label || ISSUE_RULE_SORT_OPTIONS[0].label;
+
+  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 3;
+
+  const renderIssueRuleSceneTags = (sceneLabels = []) => {
+    const labels = [...new Set(sceneLabels.filter(Boolean))];
+    const previewLabels = labels.slice(0, ISSUE_RULE_SCENE_PREVIEW_LIMIT);
+    const hasMore = labels.length > ISSUE_RULE_SCENE_PREVIEW_LIMIT;
+
+    return `
+      <span class="issue-rule-scenes">
+        <span class="issue-rule-tags">
+          ${previewLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+        </span>
+        ${hasMore ? `
+          <details class="issue-rule-scene-more">
+            <summary aria-label="查看全部所属业务场景">...</summary>
+            <span class="issue-rule-scene-popover">
+              <strong>所属业务场景</strong>
+              <span class="issue-rule-scene-popover-tags">
+                ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+              </span>
+            </span>
+          </details>
+        ` : ''}
+      </span>
+    `;
+  };
 
   const getIssueRuleBaseOrg = () => {
     const region = currentRegion !== 'all'
@@ -6390,10 +6417,7 @@
     const availableRules = getIssueRulesForCurrentFilter();
     const query = issueRuleAnalysisState.query.trim();
     const filtered = query
-      ? availableRules.filter(rule => {
-          const sceneText = (rule.applicableScenes || []).map(getSceneLabel).join('');
-          return `${rule.name}${sceneText}`.includes(query);
-        })
+      ? availableRules.filter(rule => rule.name.includes(query))
       : availableRules;
 
     const sorted = filtered.sort((a, b) => {
@@ -6406,35 +6430,95 @@
     return sorted;
   };
 
+  const escapeIssueExportCsvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+
+  const getIssueExportTimeLabel = () => {
+    if (currentTime === 'custom') {
+      return factoryTimeStartDate && factoryTimeEndDate
+        ? `${factoryTimeStartDate} 至 ${factoryTimeEndDate}`
+        : '自定义时间';
+    }
+    return ({ '1': '昨日', '7': '近7天', '15': '近15天', '30': '近30天' })[currentTime] || '昨日';
+  };
+
+  const exportSOPRuleList = () => {
+    const rules = getVisibleIssueRules();
+    if (!rules.length) return 0;
+
+    const organization = formatFactoryOrganizationDisplay(getCurrentFactoryOrgPath());
+    const sceneSelection = getFactorySceneSelection();
+    const selectedScenes = sceneSelection.isAllSelected
+      ? '全部'
+      : sceneSelection.activeScenes.map(getSceneLabel).join('、');
+    const rows = [[
+      '统计组织',
+      '品牌',
+      '车系',
+      '时间范围',
+      '业务场景筛选',
+      'SOP规则',
+      '所属业务场景',
+      '命中率',
+      '命中数',
+      '样本数'
+    ]];
+
+    rules.forEach(rule => {
+      rows.push([
+        organization,
+        currentBrand || '全部品牌',
+        currentModel === 'all' ? '全部车系' : currentModel,
+        getIssueExportTimeLabel(),
+        selectedScenes || '未选择',
+        rule.name,
+        (rule.applicableScenes || []).map(getSceneLabel).join('、'),
+        `${rule.rate}%`,
+        rule.hitCount,
+        rule.sampleCount
+      ]);
+    });
+
+    const csv = `\ufeff${rows.map(row => row.map(escapeIssueExportCsvCell).join(',')).join('\n')}`;
+    const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    const date = new Date();
+    const dateLabel = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    link.href = blobUrl;
+    link.download = `厂端SOP质检分析-${organization}-${dateLabel}.csv`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 0);
+    return rules.length;
+  };
+
   const renderRuleListView = (config, rules) => {
+    const canExport = issueRuleAnalysisState.activeTab === 'sop';
     const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
     const currentPage = Math.min(issueRuleAnalysisState.page, pageCount);
     const start = (currentPage - 1) * ISSUE_RULE_PAGE_SIZE;
     const visibleRules = rules.slice(start, start + ISSUE_RULE_PAGE_SIZE);
     const rows = visibleRules.map(rule => {
       const tagLabels = (rule.applicableScenes || []).map(getSceneLabel);
-      const tagsMarkup = tagLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('');
 
       return `
-        <button type="button" class="issue-rule-row" data-rule-id="${rule.id}">
+        <div class="issue-rule-row" data-rule-id="${rule.id}" role="button" tabindex="0" aria-label="查看${escapeHtml(rule.name)}的组织表现">
           <span class="issue-rule-name">
             <span class="issue-rule-name-line">
               <strong>${escapeHtml(rule.name)}</strong>
-              ${tagsMarkup}
+              ${renderIssueRuleSceneTags(tagLabels)}
             </span>
           </span>
           <span class="issue-rule-rate">${rule.rate}%</span>
           <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
           <span class="issue-rule-action">看组织表现</span>
-        </button>
+        </div>
       `;
     }).join('');
 
     return `
-      <div class="issue-rule-toolbar">
+      <div class="issue-rule-toolbar${canExport ? ' has-export' : ''}">
         <label class="issue-rule-search">
           <span>搜索规则</span>
-          <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称或适用场景" autocomplete="off">
+          <input class="issue-rule-search-input" type="search" value="${escapeHtml(issueRuleAnalysisState.query)}" placeholder="输入规则名称" autocomplete="off">
         </label>
         <div class="issue-rule-sort">
           <span>排序</span>
@@ -6460,10 +6544,18 @@
             </div>
           </div>
         </div>
+        ${canExport ? `
+          <button type="button" class="issue-rule-export-btn" ${rules.length ? '' : 'disabled'}>
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M10 2.5v9m0 0 3.2-3.2M10 11.5 6.8 8.3M4 13.5v2.25c0 .97.78 1.75 1.75 1.75h8.5c.97 0 1.75-.78 1.75-1.75V13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>导出</span>
+          </button>
+        ` : ''}
       </div>
       <div class="issue-rule-list-shell">
         <div class="issue-rule-list-head">
-          <span>规则项</span>
+          <span class="issue-rule-name-head"><span>规则名称</span><small>所属业务场景</small></span>
           <span>${config.metricLabel}</span>
           <span>${config.countLabel}</span>
           <span>操作</span>
@@ -6610,6 +6702,19 @@
       }
     }
 
+    root.querySelector('.issue-rule-export-btn')?.addEventListener('click', (event) => {
+      const button = event.currentTarget;
+      const exportedCount = exportSOPRuleList();
+      if (!exportedCount) return;
+      const label = button.querySelector('span');
+      button.classList.add('is-success');
+      if (label) label.textContent = `已导出 ${exportedCount} 条`;
+      window.setTimeout(() => {
+        button.classList.remove('is-success');
+        if (label) label.textContent = '导出';
+      }, 1600);
+    });
+
     const sortTrigger = root.querySelector('.issue-rule-sort-trigger');
     const sortPanel = root.querySelector('.issue-rule-sort-panel');
     const closeSortPanel = () => {
@@ -6663,10 +6768,17 @@
     }
 
     root.querySelectorAll('.issue-rule-row').forEach(row => {
-      row.addEventListener('click', () => {
+      const openRule = (event) => {
+        if (event?.target?.closest('.issue-rule-scene-more')) return;
         issueRuleAnalysisState.selectedRuleId = row.dataset.ruleId;
         issueRuleAnalysisState.path = [];
         renderIssueRuleAnalysis();
+      };
+      row.addEventListener('click', openRule);
+      row.addEventListener('keydown', (event) => {
+        if (event.target !== row || !['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        openRule(event);
       });
     });
 

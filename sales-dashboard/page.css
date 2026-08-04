@@ -214,7 +214,7 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
-/* SOP 质检分析与门店看板使用同一套规则列表，销售看板直接查看录音。 */
+/* 四个录音复盘页签与门店看板使用同一套规则列表，销售看板直接查看录音。 */
 .sales-role-dashboard-page .review-insight-list .issue-rule-list-head,
 .sales-role-dashboard-page .review-insight-list .issue-rule-row {
   display: grid;
@@ -245,6 +245,20 @@
   font-weight: 700;
 }
 
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-head small {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
 .sales-role-dashboard-page .review-insight-list .issue-rule-list {
   display: flex;
   min-height: 322px;
@@ -253,8 +267,9 @@
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-row {
+  position: relative;
   width: 100%;
-  min-height: 50px;
+  min-height: 68px;
   padding: 6px var(--issue-rule-list-inline-pad);
   border: 1px solid rgba(217, 226, 239, 0.78);
   border-radius: 8px;
@@ -274,6 +289,10 @@
   transform: translateY(-1px);
 }
 
+.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scene-more[open]) {
+  z-index: 40;
+}
+
 .sales-role-dashboard-page .review-insight-list .issue-rule-name,
 .sales-role-dashboard-page .review-insight-list .issue-rule-name-line {
   display: flex;
@@ -281,9 +300,176 @@
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-name-line {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes,
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-popover-tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes {
+  position: relative;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more {
+  position: relative;
+  z-index: 12;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary {
+  display: inline-flex;
+  min-width: 28px;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  border-radius: 999px;
+  background: rgba(239, 246, 255, 0.92);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary:hover,
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: none;
+  width: min(340px, calc(100vw - 96px));
+  padding: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more[open] .issue-rule-scene-popover {
+  display: grid;
+  gap: 10px;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-popover > strong {
+  color: #162033;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.sales-role-dashboard-page .sales-role-scene-host {
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.sales-role-dashboard-page .sales-role-scene-label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sales-role-dashboard-page .sales-role-scene-filter {
+  position: relative;
+  z-index: 30;
+}
+
+.sales-role-dashboard-page .sales-role-scene-filter > summary {
+  display: inline-flex;
+  min-width: 150px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(201, 210, 224, 0.88);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  color: #162033;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.sales-role-dashboard-page .sales-role-scene-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sales-role-dashboard-page .sales-role-scene-filter[open] > summary,
+.sales-role-dashboard-page .sales-role-scene-filter > summary:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.42);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.sales-role-dashboard-page .sales-role-scene-filter[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.sales-role-dashboard-page .sales-role-scene-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  min-width: 190px;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+}
+
+.sales-role-dashboard-page .sales-role-scene-option {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sales-role-dashboard-page .sales-role-scene-option:hover,
+.sales-role-dashboard-page .sales-role-scene-option.active {
+  background: rgba(37, 99, 235, 0.09);
+  color: #2563eb;
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-name strong {
@@ -396,6 +582,10 @@
   color: var(--color-text-muted);
   font-size: 14px;
   text-align: center;
+}
+
+body .issue-recording-library-overlay .recording-library-filter-control {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .sales-role-dashboard-page .sales-inline-review-card {

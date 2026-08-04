@@ -99,16 +99,16 @@
   background: rgba(22, 163, 74, 0.1);
 }
 
-.ai-lead-validity-pill.is-no-call {
+.ai-lead-validity-pill.is-invalid {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ai-lead-validity-pill.is-undetermined {
   color: #64748b;
   border-color: rgba(100, 116, 139, 0.2);
   background: rgba(148, 163, 184, 0.12);
-}
-
-.ai-lead-validity-pill.is-no-valid-call {
-  color: #c2410c;
-  border-color: rgba(234, 88, 12, 0.2);
-  background: rgba(249, 115, 22, 0.1);
 }
 
 .leads-detail-page:not(.customer-detail-page) .leads-detail-actions {
