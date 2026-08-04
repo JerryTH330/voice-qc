@@ -75,6 +75,7 @@ body::before {
   box-shadow: none;
   overflow: hidden;
   display: flex;
+  isolation: isolate;
 }
 
 .sidebar {
@@ -90,6 +91,27 @@ body::before {
   border-right: 1px solid rgba(217, 226, 239, 0.84);
   background: linear-gradient(180deg, var(--sidebar), var(--sidebar-2));
   color: var(--text);
+  position: relative;
+  z-index: 100;
+}
+
+.unified-content-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--surface);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.unified-content-frame.is-loaded.is-visible {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .brand {
@@ -180,14 +202,20 @@ body::before {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+  width: 100%;
   height: 42px;
   margin-bottom: 6px;
   padding: 0 14px;
   border: 0;
   border-radius: 12px;
+  background: transparent;
   color: var(--muted);
+  font: inherit;
   font-size: 14px;
   font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
   transition:
     color 0.2s ease,
     background-color 0.2s ease,
@@ -233,6 +261,13 @@ body::before {
   color: var(--blue);
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(56, 189, 248, 0.08));
   font-weight: 600;
+}
+
+.nav-device-symbol {
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .sidebar-user {

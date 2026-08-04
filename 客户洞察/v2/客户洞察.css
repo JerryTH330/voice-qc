@@ -52,6 +52,16 @@ a:focus-visible {
   background: var(--page-bg);
 }
 
+.embedded-prototype .sidebar {
+  display: none;
+}
+
+.embedded-prototype .main {
+  flex: 0 0 calc(100% - var(--sidebar-width));
+  width: calc(100% - var(--sidebar-width));
+  margin-left: var(--sidebar-width);
+}
+
 .brand {
   text-decoration: none;
 }
@@ -5610,6 +5620,63 @@ a:focus-visible {
   border-left: 3px solid #e2a14b;
   background: #fffaf2;
 }
+
+/* 与厂端看板统一内容区的视觉尺度：正文 14px、主标题 30px、按钮 40px、卡片间距 20px。 */
+.main { font-size: 14px; }
+.page-host, .overview-page, .stage-analysis, .overview-main-grid, .overview-lower-grid { gap: 20px; }
+.topbar { margin-bottom: 20px; }
+.page-desc, .freshness { font-size: 14px; }
+
+.primary-mode-panel, .scope-panel, .comparison-hero, .overview-ai-summary { padding: 20px; }
+.primary-mode-panel { margin-bottom: 20px; }
+.model-matrix, .deep-insight, .attention-panel, .trend-overview, .org-overview,
+.overview-signals, .ai-brief, .action-section, .unified-action-section { padding: 20px; }
+
+.scope-title h2, .panel-title h2, .comparison-heading h2, .topic-nav h2,
+.overview-ai-summary-title-line h2 { font-size: 18px; }
+.signal-head h3, .voice-head h3, .difference-head h3, .deep-column-head h3 { font-size: 16px; }
+.primary-mode-heading strong { font-size: 16px; }
+.primary-mode-heading span, .page-mode-copy small, .scope-title p, .panel-title p,
+.signal-head p, .comparison-heading, .overview-ai-summary-identity p { font-size: 14px; }
+.section-kicker { font-size: 12px; }
+
+.button, .button.compact { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.text-button, .compare-analysis-tabs button, .topic-tabs button,
+.date-tabs button, .window-tabs button, .insight-view-switch button,
+.matrix-category-tabs button, .deep-insight-tabs button, .mini-tabs button { font-size: 14px; }
+
+.scope-fields { gap: 16px; }
+.scope-fields > label, .scope-field { height: 48px; padding-inline: 14px; }
+.scope-fields > label > span, .scope-field > span, .stage-filter-field > span { font-size: 14px; }
+.scope-fields select, .overview-date-trigger { height: 36px; font-size: 14px; }
+.stage-time-controls { gap: 16px; margin-top: 16px; }
+.stage-filter-field { min-height: 56px; padding: 8px 14px; }
+.stage-filter-field .stage-date-trigger { height: 40px; font-size: 14px; }
+.statistics-period-field > span small, .observation-period-inline { font-size: 12px; }
+
+.candidate-table, .hot-distribution-table, .overview-table { font-size: 14px; }
+.candidate-table th, .candidate-table td,
+.hot-distribution-table th, .hot-distribution-table td,
+.overview-table th, .overview-table td { padding: 14px 16px; font-size: 14px; }
+.candidate-name strong, .overview-table td:first-child strong,
+.overview-table .metric-strong { font-size: 14px; }
+.candidate-name small, .overview-table td:first-child small,
+.overview-table .metric-note { font-size: 12px; }
+.candidate-table-wrap, .overview-table-wrap { margin-top: 20px; }
+
+.deep-sentiment-matrix-head, .deep-sentiment-row {
+  grid-template-columns: minmax(150px, 1fr) repeat(3, 68px);
+  gap: 8px;
+}
+.deep-sentiment-matrix-head { min-height: 42px; padding: 0 10px; font-size: 12px; }
+.deep-sentiment-row { min-height: 48px; padding: 6px 10px; }
+.deep-sentiment-name strong, .deep-sentiment-metric b { font-size: 12px; }
+.deep-sentiment-name em { width: 24px; height: 24px; flex-basis: 24px; font-size: 12px; }
+
+.metric-glossary-list { gap: 12px; }
+.metric-glossary-list article { padding: 16px; }
+.metric-glossary-list h4 { font-size: 14px; }
+.metric-glossary-list p, .metric-glossary-list article > span { font-size: 12px; }
 
 @media (max-width: 1280px) {
   .scope-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }

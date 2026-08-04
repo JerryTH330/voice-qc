@@ -1329,17 +1329,63 @@ function initStoreDashboardPage() {
   const TOTAL_ADVISOR_COUNT = 8;
 
   const storeSopRecordingAdvisors = ['李昱', '王萌', '韩宇', '许明', '张华', '林涛', '赵强', '陈亮'];
-  const makeStoreSopRule = (title, category, hitRate, advisorCount, ruleIndex) => ({
-    title,
-    category,
-    hit_ratio: `${hitRate}%`,
-    advisor_count: advisorCount,
-    recordings: storeSopRecordingAdvisors.slice(0, advisorCount).map((advisor, recordingIndex) => ({
-      advisor,
-      time: `3-${25 - ((ruleIndex + recordingIndex) % 4)} ${String(9 + ((ruleIndex + recordingIndex) % 8)).padStart(2, '0')}:${String((ruleIndex * 7 + recordingIndex * 13) % 60).padStart(2, '0')}`,
-      id: `SOP-${String(ruleIndex + 1).padStart(3, '0')}-${recordingIndex + 1}`
-    }))
-  });
+  const storeSopPeople = storeSopRecordingAdvisors.map((name, index) => ({
+    id: advisorData.find(item => item.name === name)?.id || `A${String(index + 1).padStart(3, '0')}`,
+    name,
+    role: advisorData.find(item => item.name === name)?.role || '销售顾问'
+  }));
+  const makeStoreSopRule = (title, category, hitRate, advisorCount, ruleIndex) => {
+    const rateOffsets = [9, 6, 3, 1, -2, -5, -8, -11];
+    const people = storeSopPeople.map((person, personIndex) => {
+      const sampleCount = 7 + ((ruleIndex * 3 + personIndex * 2) % 8);
+      const personRate = Math.max(8, Math.min(98, hitRate + rateOffsets[(personIndex + ruleIndex) % rateOffsets.length]));
+      const hitCount = Math.max(0, Math.min(sampleCount, Math.round(sampleCount * personRate / 100)));
+      return {
+        ...person,
+        sampleCount,
+        hitCount,
+        rate: Math.round(hitCount * 100 / sampleCount)
+      };
+    });
+    const sampleCount = people.reduce((sum, person) => sum + person.sampleCount, 0);
+    const targetHitCount = Math.round(sampleCount * hitRate / 100);
+    let hitDelta = targetHitCount - people.reduce((sum, person) => sum + person.hitCount, 0);
+    let cursor = 0;
+    while (hitDelta !== 0 && cursor < people.length * 4) {
+      const person = people[cursor % people.length];
+      if (hitDelta > 0 && person.hitCount < person.sampleCount) {
+        person.hitCount += 1;
+        hitDelta -= 1;
+      } else if (hitDelta < 0 && person.hitCount > 0) {
+        person.hitCount -= 1;
+        hitDelta += 1;
+      }
+      person.rate = Math.round(person.hitCount * 100 / person.sampleCount);
+      cursor += 1;
+    }
+
+    const resolvedHitCount = people.reduce((sum, person) => sum + person.hitCount, 0);
+    const recordings = people.flatMap((person, personIndex) => (
+      Array.from({ length: person.hitCount }, (_, recordingIndex) => ({
+        advisor: person.name,
+        customer: `${person.name}相关客户${recordingIndex + 1}`,
+        time: `3-${25 - ((ruleIndex + personIndex + recordingIndex) % 4)} ${String(9 + ((ruleIndex + personIndex + recordingIndex) % 8)).padStart(2, '0')}:${String((ruleIndex * 7 + personIndex * 13 + recordingIndex * 9) % 60).padStart(2, '0')}`,
+        id: `SOP-${String(ruleIndex + 1).padStart(3, '0')}-${String(personIndex + 1).padStart(2, '0')}-${String(recordingIndex + 1).padStart(2, '0')}`
+      }))
+    ));
+
+    return {
+      id: `store-sop-${String(ruleIndex + 1).padStart(2, '0')}`,
+      title,
+      category,
+      hit_ratio: `${hitRate}%`,
+      hit_count: resolvedHitCount,
+      sample_count: sampleCount,
+      advisor_count: people.length,
+      people,
+      recordings
+    };
+  };
 
   // 规则名称与厂端看板“质检规则”保持一致，命中率与范围标签按门店口径展示。
   const storeSopRuleData = [
@@ -1367,8 +1413,15 @@ function initStoreDashboardPage() {
   ];
   const storeSopRuleState = {
     query: '',
-    sort: 'rate-desc'
+    sort: 'rate-desc',
+    selectedRuleId: null
   };
+  const STORE_SOP_SORT_OPTIONS = [
+    { value: 'rate-desc', label: '命中率从高到低' },
+    { value: 'rate-asc', label: '命中率从低到高' },
+    { value: 'count-desc', label: '命中数量优先' },
+    { value: 'sample-desc', label: '样本数量优先' }
+  ];
   const STORE_ISSUE_PAGE_SIZE = 5;
   const storeIssuePaginationState = {
     sop: 1,
@@ -4066,92 +4119,252 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const rateA = parseStoreIssuePercent(a.hit_ratio);
       const rateB = parseStoreIssuePercent(b.hit_ratio);
       if (storeSopRuleState.sort === 'rate-asc') return rateA - rateB;
-      if (storeSopRuleState.sort === 'name-asc') return a.title.localeCompare(b.title, 'zh-Hans-CN');
+      if (storeSopRuleState.sort === 'count-desc') return b.hit_count - a.hit_count || rateB - rateA;
+      if (storeSopRuleState.sort === 'sample-desc') return b.sample_count - a.sample_count || rateB - rateA;
       return rateB - rateA;
     });
   };
 
-  const renderStoreSopRuleSection = () => {
-    const sopRuleEl = document.getElementById('sop-rule-chart');
-    if (!sopRuleEl) return;
+  const getStoreSopSortLabel = () => (
+    STORE_SOP_SORT_OPTIONS.find(option => option.value === storeSopRuleState.sort)?.label
+      || STORE_SOP_SORT_OPTIONS[0].label
+  );
 
-    const visibleRules = getVisibleStoreSopRules();
-    const { items: pagedRules, offset } = getStoreIssuePageSlice('sop', visibleRules);
-    sopRuleEl.style.height = 'auto';
-    sopRuleEl.innerHTML = visibleRules.length
-      ? renderSharedInsightTop5Cards(pagedRules, {
-          getRankIndex: (_item, index) => offset + index,
-          getCardClassSuffix: (_item, index) => `sop-rule rank-${offset + index + 1}`,
-          getValue: (item) => parseStoreIssuePercent(item.hit_ratio),
-          getScopeHtml: (item) => scopeText(item.advisor_count),
-          getActionHtml: (_item, index) => `<button type="button" class="issue-rec-more" onclick="openStoreIssueRecordingLibrary('sop', ${offset + index})"><span>查看</span></button>`
-        })
-      : '<div class="store-sop-rule-empty">暂无匹配的质检规则</div>';
-    renderStoreIssuePagination('sop', visibleRules.length);
+  const renderStoreSopMetricIcon = (type) => type === 'count'
+    ? `<svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
+        <circle cx="7" cy="9" r="1.7" fill="#8B5CF6"/><circle cx="7" cy="15.2" r="1.7" fill="#8B5CF6"/><circle cx="7" cy="21.4" r="1.7" fill="#8B5CF6"/>
+        <path d="M11.8 9h11M11.8 15.2h11M11.8 21.4h11" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+      </svg>`
+    : `<svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
+        <path d="M15.2 4.2 24 7.4v6.58c0 4.94-3.28 9.56-8.8 12.22-5.52-2.66-8.8-7.28-8.8-12.22V7.4l8.8-3.2Z" fill="#22C55E"/>
+        <path d="m10.6 15.2 3 3 6.4-7" stroke="#F0FDF4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+  const renderStoreSopRuleList = (visibleRules) => {
+    const { items: pagedRules } = getStoreIssuePageSlice('sop', visibleRules);
+    const totalPages = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
+    const currentPage = Math.max(1, Math.min(totalPages, storeIssuePaginationState.sop || 1));
+    const rows = pagedRules.map(rule => `
+      <button type="button" class="issue-rule-row" data-store-sop-rule-id="${rule.id}">
+        <span class="issue-rule-name">
+          <span class="issue-rule-name-line">
+            <strong>${escapeHtml(rule.title)}</strong>
+            <em>${escapeHtml(rule.category)}</em>
+          </span>
+        </span>
+        <span class="issue-rule-rate">${escapeHtml(rule.hit_ratio)}</span>
+        <span class="issue-rule-count">${rule.hit_count}/${rule.sample_count}</span>
+        <span class="issue-rule-action">看人员表现</span>
+      </button>
+    `).join('');
+
+    return `
+      <div class="issue-rule-toolbar">
+        <label class="issue-rule-search">
+          <span>搜索规则</span>
+          <input class="issue-rule-search-input" type="search" value="${escapeHtml(storeSopRuleState.query)}" placeholder="输入规则名称或适用场景" autocomplete="off" data-store-sop-rule-search>
+        </label>
+        <div class="issue-rule-sort">
+          <span>排序</span>
+          <div class="issue-rule-sort-dropdown">
+            <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-store-sop-rule-sort-trigger>
+              <span class="issue-rule-sort-value">${escapeHtml(getStoreSopSortLabel())}</span>
+              <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式" data-store-sop-rule-sort-panel>
+              <div class="session-menu-option-list">
+                ${STORE_SOP_SORT_OPTIONS.map(option => `
+                  <button type="button" class="issue-rule-sort-option store-model-option session-menu-option${storeSopRuleState.sort === option.value ? ' active' : ''}" data-store-sop-rule-sort="${option.value}" role="option" aria-selected="${storeSopRuleState.sort === option.value ? 'true' : 'false'}"><span>${escapeHtml(option.label)}</span></button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="issue-rule-list-shell">
+        <div class="issue-rule-list-head">
+          <span>规则项</span><span>命中率</span><span>命中/样本</span><span>操作</span>
+        </div>
+        <div class="issue-rule-list">
+          ${rows || '<div class="issue-rule-empty">暂无匹配 SOP 规则</div>'}
+        </div>
+        <div class="issue-rule-footer">
+          <span>共 ${visibleRules.length} 条，当前第 ${currentPage}/${totalPages} 页</span>
+          <div class="issue-rule-pager" aria-label="规则分页">
+            <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+            <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="next" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
+          </div>
+        </div>
+      </div>
+    `;
   };
 
-  const setupStoreSopRuleControls = () => {
-    const searchInput = document.getElementById('store-sop-rule-search');
-    const sortField = document.querySelector('#detail-sop .store-sop-rule-field--sort');
-    const sortTrigger = sortField?.querySelector('[data-store-sop-rule-sort-trigger]');
-    const sortPanel = sortField?.querySelector('[data-store-sop-rule-sort-panel]');
-    const sortValue = sortField?.querySelector('.store-sop-rule-sort-value');
-    let outsideClickHandler = null;
+  const renderStoreSopPeopleDetail = (rule) => {
+    const people = [...rule.people].sort((left, right) => {
+      if (storeSopRuleState.sort === 'rate-asc') return left.rate - right.rate || right.hitCount - left.hitCount;
+      if (storeSopRuleState.sort === 'count-desc') return right.hitCount - left.hitCount || right.rate - left.rate;
+      if (storeSopRuleState.sort === 'sample-desc') return right.sampleCount - left.sampleCount || right.hitCount - left.hitCount;
+      return right.rate - left.rate || right.hitCount - left.hitCount;
+    });
 
+    return `
+      <div class="issue-selected-metrics">
+        <div class="issue-selected-metric-card">
+          <div class="issue-selected-metric-main">
+            <div class="issue-selected-metric-icon tone-green">${renderStoreSopMetricIcon('rate')}</div>
+            <div class="issue-selected-metric-body">
+              <span class="issue-selected-metric-label">命中率</span>
+              <strong class="issue-selected-metric-value">${escapeHtml(rule.hit_ratio)}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="issue-selected-metric-card">
+          <div class="issue-selected-metric-main">
+            <div class="issue-selected-metric-icon tone-violet">${renderStoreSopMetricIcon('count')}</div>
+            <div class="issue-selected-metric-body">
+              <span class="issue-selected-metric-label">命中/样本</span>
+              <strong class="issue-selected-metric-value">${rule.hit_count}/${rule.sample_count}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="issue-drill-actions">
+        <button type="button" class="issue-rule-back" data-store-sop-rule-back>返回规则列表</button>
+      </div>
+      <div class="issue-org-rank-grid">
+        <div class="issue-org-rank-card">
+          <div class="issue-org-list-head">
+            <span>门店人员</span><span>命中率</span><span>命中/样本</span><span>操作</span>
+          </div>
+          <div class="issue-org-rank-list">
+            ${people.map((person, index) => `
+              <button type="button" class="issue-org-row" data-store-sop-person="${escapeHtml(person.name)}">
+                <span class="issue-org-main">
+                  <em>${index + 1}</em>
+                  <span class="store-sop-person-copy"><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.role)}</small></span>
+                </span>
+                <span class="issue-org-rate">${person.rate}%</span>
+                <span class="issue-org-count">${person.hitCount}/${person.sampleCount}</span>
+                <span class="issue-org-drill drill-link">录音明细</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderStoreSopRuleSection = () => {
+    const root = document.getElementById('store-issue-rule-analysis-root');
+    if (!root) return;
+
+    const visibleRules = getVisibleStoreSopRules();
+    const selectedRule = storeSopRuleData.find(rule => rule.id === storeSopRuleState.selectedRuleId);
+    root.innerHTML = selectedRule
+      ? renderStoreSopPeopleDetail(selectedRule)
+      : renderStoreSopRuleList(visibleRules);
+    bindStoreSopRuleEvents();
+  };
+
+  const bindStoreSopRuleEvents = () => {
+    const root = document.getElementById('store-issue-rule-analysis-root');
+    if (!root) return;
+    const searchInput = root.querySelector('[data-store-sop-rule-search]');
+    const sortTrigger = root.querySelector('[data-store-sop-rule-sort-trigger]');
+    const sortPanel = root.querySelector('[data-store-sop-rule-sort-panel]');
     const closeSortPanel = () => {
       sortPanel?.classList.remove('show');
       sortTrigger?.classList.remove('active');
       sortTrigger?.setAttribute('aria-expanded', 'false');
-      if (outsideClickHandler) {
-        document.removeEventListener('click', outsideClickHandler);
-        outsideClickHandler = null;
+    };
+
+    const applyStoreSopRuleSearch = (value) => {
+      const nextQuery = value || '';
+      if (storeSopRuleState.query === nextQuery) return;
+      storeSopRuleState.query = nextQuery;
+      storeIssuePaginationState.sop = 1;
+      renderStoreSopRuleSection();
+      const nextInput = document.querySelector('[data-store-sop-rule-search]');
+      if (nextInput) {
+        const position = nextInput.value.length;
+        nextInput.focus();
+        nextInput.setSelectionRange(position, position);
       }
     };
 
-    const openSortPanel = () => {
-      sortPanel?.classList.add('show');
-      sortTrigger?.classList.add('active');
-      sortTrigger?.setAttribute('aria-expanded', 'true');
-      outsideClickHandler = (event) => {
-        if (!sortField?.contains(event.target)) {
-          closeSortPanel();
-        }
-      };
-      document.addEventListener('click', outsideClickHandler);
-    };
-
     searchInput?.addEventListener('input', (event) => {
-      storeSopRuleState.query = event.target.value || '';
-      storeIssuePaginationState.sop = 1;
-      renderStoreIssueSections();
+      if (event.isComposing) return;
+      applyStoreSopRuleSearch(event.currentTarget.value);
     });
+    searchInput?.addEventListener('compositionend', (event) => applyStoreSopRuleSearch(event.currentTarget.value));
+    searchInput?.addEventListener('search', (event) => applyStoreSopRuleSearch(event.currentTarget.value));
 
     sortTrigger?.addEventListener('click', (event) => {
       event.stopPropagation();
-      if (sortPanel?.classList.contains('show')) {
-        closeSortPanel();
-      } else {
-        openSortPanel();
+      const willOpen = !sortPanel?.classList.contains('show');
+      closeSortPanel();
+      if (willOpen) {
+        sortPanel?.classList.add('show');
+        sortTrigger.classList.add('active');
+        sortTrigger.setAttribute('aria-expanded', 'true');
       }
     });
 
     sortPanel?.addEventListener('click', (event) => {
       const option = event.target.closest('[data-store-sop-rule-sort]');
       if (!option) return;
-
       storeSopRuleState.sort = option.dataset.storeSopRuleSort || 'rate-desc';
       storeIssuePaginationState.sop = 1;
-      if (sortValue) {
-        sortValue.textContent = option.textContent.trim();
-      }
-      sortPanel.querySelectorAll('[data-store-sop-rule-sort]').forEach((node) => {
-        const isActive = node === option;
-        node.classList.toggle('active', isActive);
-        node.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      });
       closeSortPanel();
-      renderStoreIssueSections();
+      renderStoreSopRuleSection();
     });
+
+    root.querySelectorAll('[data-store-sop-page-action]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.disabled) return;
+        const visibleRules = getVisibleStoreSopRules();
+        const pageCount = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
+        const delta = button.dataset.storeSopPageAction === 'next' ? 1 : -1;
+        storeIssuePaginationState.sop = Math.max(1, Math.min(pageCount, storeIssuePaginationState.sop + delta));
+        renderStoreSopRuleSection();
+      });
+    });
+
+    root.querySelectorAll('[data-store-sop-rule-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        storeSopRuleState.selectedRuleId = row.dataset.storeSopRuleId;
+        renderStoreSopRuleSection();
+      });
+    });
+
+    root.querySelector('[data-store-sop-rule-back]')?.addEventListener('click', () => {
+      storeSopRuleState.selectedRuleId = null;
+      renderStoreSopRuleSection();
+    });
+
+    root.querySelectorAll('[data-store-sop-person]').forEach(row => {
+      row.addEventListener('click', () => {
+        const ruleIndex = getVisibleStoreSopRules().findIndex(rule => rule.id === storeSopRuleState.selectedRuleId);
+        if (ruleIndex < 0) return;
+        window.openStoreIssueRecordingLibrary('sop', ruleIndex, row.dataset.storeSopPerson || '');
+      });
+    });
+
+    if (!document.body.dataset.storeSopSortBound) {
+      document.body.dataset.storeSopSortBound = 'true';
+      document.addEventListener('click', (event) => {
+        const activeRoot = document.getElementById('store-issue-rule-analysis-root');
+        const activeTrigger = activeRoot?.querySelector('[data-store-sop-rule-sort-trigger]');
+        const activePanel = activeRoot?.querySelector('[data-store-sop-rule-sort-panel]');
+        if (!activeTrigger || !activePanel) return;
+        if (activeTrigger.contains(event.target) || activePanel.contains(event.target)) return;
+        activePanel.classList.remove('show');
+        activeTrigger.classList.remove('active');
+        activeTrigger.setAttribute('aria-expanded', 'false');
+      });
+    }
   };
 
   const renderStrengthSection = () => {
@@ -4198,7 +4411,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   }
 
   renderStoreIssueSections();
-  setupStoreSopRuleControls();
 
   // 录音库弹窗
   let storeRecordingLibraryState = null;
@@ -4559,7 +4771,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     bindStoreRecordingDateEvents();
   };
 
-  window.openStoreIssueRecordingLibrary = function(type, index) {
+  window.openStoreIssueRecordingLibrary = function(type, index, advisorName = '') {
     const items = type === 'sop' ? getVisibleStoreSopRules()
       : type === 'weakness' ? getFilteredWeaknessData()
       : type === 'strength' ? getFilteredStrengthData()
@@ -4584,13 +4796,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       '陈亮': '西南大区-云贵战区-昆明店-陈亮'
     };
 
-    const records = (issue.recordings || []).map((r, i) => ({
+    const isAdvisorScopedSop = type === 'sop' && Boolean(advisorName);
+    const allRecords = (issue.recordings || []).map((r, i) => ({
       ...r,
       id: String(baseId + BigInt(i)),
       time: r.time || fallbackTimes[i % fallbackTimes.length],
       customer: r.customer || `${r.advisor || '顾问'}相关客户`,
       orgPath: `${r.orgPath || advisorOrgMap[r.advisor] || r.advisor}-${r.customer || `${r.advisor || '顾问'}相关客户`}`
     }));
+    const records = isAdvisorScopedSop
+      ? allRecords.filter(record => record.advisor === advisorName)
+      : allRecords;
 
     const { maxDate } = getStoreRecordingDateLimitRange(records);
     storeRecordingLibraryState = {
@@ -4615,12 +4831,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       <section class="issue-recording-library-page" role="dialog" aria-modal="true" aria-labelledby="issue-recording-library-title">
         <div class="recording-library-head">
           <div>
-            <h2 id="issue-recording-library-title">${type === 'sop' ? 'SOP 质检录音' : type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}·${issue.title}</h2>
-            <p>${type === 'sop' ? '按规则命中样本查看原声证据' : type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。</p>
+            <h2 id="issue-recording-library-title">${type === 'sop' ? 'SOP 质检录音' : type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势发掘录音' : '短板改善录音'}·${issue.title}${advisorName ? `·${escapeHtml(advisorName)}` : ''}</h2>
+            <p>${isAdvisorScopedSop ? `集中展示${escapeHtml(advisorName)}在该规则下的录音证据。` : `${type === 'sop' ? '按规则命中样本查看原声证据' : type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。`}</p>
           </div>
           <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
         </div>
-        <div class="recording-library-summary">
+        ${isAdvisorScopedSop ? '' : `<div class="recording-library-summary">
           ${renderStoreRecordingSummaryCard({
             icon: 'list',
             tone: 'violet',
@@ -4633,15 +4849,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             label: '涉及顾问',
             value: `${issue.advisor_count || 0}/${allAdvisors.length}`
           })}
-        </div>
-        <div class="recording-library-tools">
+        </div>`}
+        ${isAdvisorScopedSop ? '' : `<div class="recording-library-tools">
           <label class="recording-library-search">
             <div class="recording-library-filter-group">
               <div class="recording-library-filter-control" id="issue-recording-library-filter-control"></div>
               <div class="recording-library-date-control" id="issue-recording-library-date-control"></div>
             </div>
           </label>
-        </div>
+        </div>`}
         <div class="recording-library-result-row">
           <span id="issue-recording-library-result"></span>
         </div>
@@ -4661,10 +4877,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     });
     document.body.appendChild(overlay);
 
-    renderStoreRecordingFilterControl();
-    renderStoreRecordingDateControl();
+    if (!isAdvisorScopedSop) {
+      renderStoreRecordingFilterControl();
+      renderStoreRecordingDateControl();
+    }
     renderStoreRecordingLibraryList();
-    setTimeout(() => document.getElementById('issue-recording-library-search')?.focus(), 0);
+    if (!isAdvisorScopedSop) {
+      setTimeout(() => document.getElementById('issue-recording-library-search')?.focus(), 0);
+    }
   };
 
   window.closeStoreIssueRecordingLibrary = function() {
@@ -6300,6 +6520,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       ]
 
       const leadStatusValues = ['未跟进', '跟进中', '已下定', '战败', '有效', '异地']
+      const aiLeadValidityValues = ['有效', '无效-未外呼', '无效-无有效外呼']
       const leadIntentGradeValues = ['H', 'A', 'B', 'C']
       const leadAiIntentLevelMetas = [
         { label: '高', className: 'red' },
@@ -6405,6 +6626,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           aiIntentLevel: aiIntentMeta.label,
           aiIntentLevelClass: record.aiIntentLevelClass || aiIntentMeta.className,
           leadStatus: record.leadStatus || leadStatusValues[fallbackIndex % leadStatusValues.length],
+          aiLeadValidity: aiLeadValidityValues.includes(record.aiLeadValidity)
+            ? record.aiLeadValidity
+            : aiLeadValidityValues[fallbackIndex % aiLeadValidityValues.length],
           sourceType: record.sourceType || leadSourceTypeValues[fallbackIndex % leadSourceTypeValues.length],
           ...leadSourceMeta
         }
@@ -9159,6 +9383,27 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return 0
       }
 
+      function getAiLeadValidityClass(value) {
+        if (value === '有效') return 'is-valid'
+        if (value === '无效-未外呼') return 'is-no-call'
+        return 'is-no-valid-call'
+      }
+
+      function renderAiLeadValidityHeader() {
+        return `
+          <span class="ai-lead-validity-heading">
+            <span>AI线索有效性</span>
+            <button type="button" class="ai-lead-validity-help" aria-label="查看AI线索有效性判别标准">?</button>
+            <span class="ai-lead-validity-tooltip" role="tooltip">
+              <strong>判别标准</strong>
+              <span><b>有效：</b>3天内3呼内，至少存在1通满足“通话时长≥15秒，且客户非拒绝”的外呼。</span>
+              <span><b>无效-未外呼：</b>3天内没有任何外呼记录。</span>
+              <span><b>无效-无有效外呼：</b>3天内存在外呼记录，但没有一通满足“通话时长≥15秒，且客户非拒绝”。</span>
+            </span>
+          </span>
+        `
+      }
+
       function syncLeadsViewTabs() {
         pageHost.querySelectorAll('[data-leads-view]').forEach((node) => {
           node.classList.toggle('active', node.dataset.leadsView === leadsViewState.mode)
@@ -9173,7 +9418,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <th>客户手机</th>
               <th>关联线索数</th>
               <th>涉及门店数</th>
-              <th>线索状态</th>
+              <th>最新线索状态</th>
               <th>最近一次联系时间</th>
               <th>操作</th>
             </tr>
@@ -9191,6 +9436,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <th>客户手机</th>
             <th>意向级别</th>
             <th>线索状态</th>
+            <th>${renderAiLeadValidityHeader()}</th>
             <th>最近一次联系时间</th>
             <th>线索来源</th>
             <th>二级来源</th>
@@ -9376,7 +9622,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
-          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 7 : 15}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
+          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 7 : 16}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
           if (pagination) {
             pagination.innerHTML = ''
           }
@@ -9435,6 +9681,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <td>
                   <span>${escapeHtml(item.leadStatus)}</span>
                 </td>
+                <td><span class="ai-lead-validity-pill ${getAiLeadValidityClass(item.aiLeadValidity)}">${escapeHtml(item.aiLeadValidity)}</span></td>
                 <td>${escapeHtml(item.lastContact)}</td>
                 <td>${escapeHtml(item.leadSource)}</td>
                 <td>${escapeHtml(item.secondSource)}</td>
@@ -14964,6 +15211,30 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         '客户标签补充'
       ]
 
+      const SALES_REVIEW_SOP_CATEGORIES = [
+        '需求确认',
+        '需求确认',
+        '需求确认',
+        '需求确认',
+        '留资承接',
+        '需求确认',
+        '到店邀约',
+        '需求确认',
+        '需求确认',
+        '需求确认',
+        '产品讲解',
+        '产品讲解',
+        '价格沟通',
+        '促单转化',
+        '促单转化',
+        '跟进承接',
+        '到店邀约',
+        '异议处理',
+        '异议处理',
+        '跟进承接',
+        '跟进承接'
+      ]
+
       const SALES_REVIEW_RISK_TYPES = [
         '辱骂/嘲讽客户',
         '明显不耐烦、催促打断客户',
@@ -15052,11 +15323,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               : SALES_REVIEW_INSIGHT_TYPES
         return titles.map((title, index) => {
           const scopeCount = config.counts[index]
-          const recordCount = Math.min(4, Math.max(1, scopeCount))
+          const score = clampSalesMetricValue(config.scores[index] + roleScoreOffset + (index % 2), 12, 96)
+          const sampleCount = safeTab === 'sop' ? 12 + ((index * 3 + (role === 'advisor' ? 2 : 0)) % 9) : 0
+          const hitCount = safeTab === 'sop' ? Math.round(sampleCount * score / 100) : 0
+          const recordCount = safeTab === 'sop' ? hitCount : Math.min(4, Math.max(1, scopeCount))
           return {
             title,
-            score: clampSalesMetricValue(config.scores[index] + roleScoreOffset + (index % 2), 12, 96),
+            score,
             scopeCount,
+            category: safeTab === 'sop' ? SALES_REVIEW_SOP_CATEGORIES[index] : '',
+            sampleCount,
+            hitCount,
             recordings: Array.from({ length: recordCount }, (_, recordIndex) => buildSalesReviewRecording(index, recordIndex, role, safeTab))
           }
         })
@@ -15071,12 +15348,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const state = getSalesRoleState(role)
         const query = String(state.reviewSopQuery || '').trim().toLocaleLowerCase('zh-CN')
         const filtered = query
-          ? items.filter((item) => item.title.toLocaleLowerCase('zh-CN').includes(query))
+          ? items.filter((item) => `${item.title} ${item.category}`.toLocaleLowerCase('zh-CN').includes(query))
           : items
 
         return filtered.sort((left, right) => {
           if (state.reviewSopSort === 'rate-asc') return left.score - right.score
-          if (state.reviewSopSort === 'name-asc') return left.title.localeCompare(right.title, 'zh-Hans-CN')
+          if (state.reviewSopSort === 'count-desc') return right.hitCount - left.hitCount || right.score - left.score
+          if (state.reviewSopSort === 'sample-desc') return right.sampleCount - left.sampleCount || right.score - left.score
           return right.score - left.score
         })
       }
@@ -15156,10 +15434,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               </div>
               <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeSalesReviewRecordingLibrary()">×</button>
             </div>
-            <div class="recording-library-summary">
-              <div><strong>${records.length}</strong><span>全部录音</span></div>
-              <div><strong>${issue.scopeCount || 0}/${SALES_REVIEW_TOTAL_PEOPLE}</strong><span>涉及顾问</span></div>
-            </div>
+            ${type === 'sop' ? '' : `
+              <div class="recording-library-summary">
+                <div><strong>${records.length}</strong><span>全部录音</span></div>
+                <div><strong>${issue.scopeCount || 0}/${SALES_REVIEW_TOTAL_PEOPLE}</strong><span>涉及顾问</span></div>
+              </div>`}
             <div class="recording-library-tools">
               <label class="recording-library-search">
                 <span>搜索</span>
@@ -15326,17 +15605,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const sortOptions = [
           { value: 'rate-desc', label: '命中率从高到低' },
           { value: 'rate-asc', label: '命中率从低到高' },
-          { value: 'name-asc', label: '规则名称' }
+          { value: 'count-desc', label: '命中数量优先' },
+          { value: 'sample-desc', label: '样本数量优先' }
         ]
         const activeSort = sortOptions.find((option) => option.value === state.reviewSopSort) || sortOptions[0]
         toolbar.hidden = false
         toolbar.innerHTML = `
-          <div class="store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
-            <label class="store-sop-rule-field store-sop-rule-field--search">
+          <div class="issue-rule-toolbar store-sop-rule-toolbar" aria-label="SOP 规则搜索与排序">
+            <label class="issue-rule-search store-sop-rule-field store-sop-rule-field--search">
               <span>搜索规则</span>
-              <input class="store-sop-rule-input" type="search" value="${escapeHtml(state.reviewSopQuery || '')}" placeholder="输入规则名称" autocomplete="off" data-sales-review-sop-search>
+              <input class="issue-rule-search-input store-sop-rule-input" type="search" value="${escapeHtml(state.reviewSopQuery || '')}" placeholder="输入规则名称或适用场景" autocomplete="off" data-sales-review-sop-search>
             </label>
-            <div class="store-sop-rule-field store-sop-rule-field--sort">
+            <div class="issue-rule-sort store-sop-rule-field store-sop-rule-field--sort">
               <span>排序</span>
               <div class="sales-review-sop-sort-dropdown">
                 <button type="button" class="sales-review-sop-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-sales-review-sop-sort-trigger>
@@ -15362,11 +15642,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             </div>
           </div>`
 
-        toolbar.querySelector('[data-sales-review-sop-search]')?.addEventListener('input', (event) => {
-          state.reviewSopQuery = event.target.value || ''
+        const searchInput = toolbar.querySelector('[data-sales-review-sop-search]')
+        const applySalesReviewSopSearch = (value) => {
+          const nextQuery = value || ''
+          if (state.reviewSopQuery === nextQuery) return
+          state.reviewSopQuery = nextQuery
           state.reviewInsightPage = 1
           renderSalesReviewInsightContent(role, activeTab)
+        }
+        searchInput?.addEventListener('input', (event) => {
+          if (event.isComposing) return
+          applySalesReviewSopSearch(event.currentTarget.value)
         })
+        searchInput?.addEventListener('compositionend', (event) => applySalesReviewSopSearch(event.currentTarget.value))
+        searchInput?.addEventListener('search', (event) => applySalesReviewSopSearch(event.currentTarget.value))
         const sortField = toolbar.querySelector('.store-sop-rule-field--sort')
         const sortTrigger = toolbar.querySelector('[data-sales-review-sop-sort-trigger]')
         const sortPanel = toolbar.querySelector('[data-sales-review-sop-sort-panel]')
@@ -15461,6 +15750,56 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage || 1))
         const offset = (state.reviewInsightPage - 1) * SALES_REVIEW_PAGE_SIZE
         const pageItems = visibleItems.slice(offset, offset + SALES_REVIEW_PAGE_SIZE)
+
+        if (activeTab === 'sop') {
+          const pagination = document.getElementById('review-insight-pagination')
+          const rows = pageItems.map((item, index) => `
+            <button type="button" class="issue-rule-row" data-sales-review-sop-recording-index="${offset + index}">
+              <span class="issue-rule-name">
+                <span class="issue-rule-name-line">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <em>${escapeHtml(item.category)}</em>
+                </span>
+              </span>
+              <span class="issue-rule-rate">${item.score}%</span>
+              <span class="issue-rule-count">${item.hitCount}/${item.sampleCount}</span>
+              <span class="issue-rule-action">查看录音</span>
+            </button>
+          `).join('')
+
+          list.innerHTML = `
+            <div class="issue-rule-list-shell">
+              <div class="issue-rule-list-head">
+                <span>规则项</span><span>命中率</span><span>命中/样本</span><span>操作</span>
+              </div>
+              <div class="issue-rule-list">
+                ${rows || '<div class="issue-rule-empty">暂无匹配 SOP 规则</div>'}
+              </div>
+              <div class="issue-rule-footer">
+                <span>共 ${visibleItems.length} 条，当前第 ${state.reviewInsightPage}/${totalPages} 页</span>
+                <div class="issue-rule-pager" aria-label="规则分页">
+                  <button type="button" class="issue-rule-page-btn" data-sales-review-sop-page-action="prev" ${state.reviewInsightPage <= 1 ? 'disabled' : ''}>上一页</button>
+                  <button type="button" class="issue-rule-page-btn" data-sales-review-sop-page-action="next" ${state.reviewInsightPage >= totalPages ? 'disabled' : ''}>下一页</button>
+                </div>
+              </div>
+            </div>`
+
+          if (pagination) pagination.innerHTML = ''
+          list.querySelectorAll('[data-sales-review-sop-recording-index]').forEach((row) => {
+            row.addEventListener('click', () => {
+              window.openSalesReviewRecordingLibrary(role, 'sop', Number(row.dataset.salesReviewSopRecordingIndex))
+            })
+          })
+          list.querySelectorAll('[data-sales-review-sop-page-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+              const delta = button.dataset.salesReviewSopPageAction === 'next' ? 1 : -1
+              state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage + delta))
+              renderSalesReviewInsightContent(role, activeTab)
+            })
+          })
+          return
+        }
+
         list.innerHTML = pageItems.length
           ? renderSharedInsightTop5Cards(pageItems, {
               cardTag: 'article',

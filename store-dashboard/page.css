@@ -1668,3 +1668,560 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+/* SOP 质检分析与厂端看板共用同一套规则列表和下钻规范 */
+.store-dashboard-page #detail-sop .issue-rule-analysis-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  height: 100%;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 10px;
+  align-items: stretch;
+  min-height: 44px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-search,
+.store-dashboard-page #detail-sop .issue-rule-sort {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 0;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(217, 226, 239, 0.92);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort {
+  min-width: max-content;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-search > span,
+.store-dashboard-page #detail-sop .issue-rule-sort > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8a96ab;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-search-input {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #162033;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  box-shadow: none;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-dropdown {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 100%;
+  align-items: center;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-trigger.store-model-trigger.session-select-trigger {
+  width: auto;
+  height: 100%;
+  min-height: 0;
+  min-width: max-content;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #162033;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-trigger .issue-rule-sort-value {
+  color: #162033;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-trigger .session-select-caret {
+  color: #94a3b8;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-panel.store-model-panel.session-menu-panel {
+  right: 0;
+  left: auto;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 80px));
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-option.store-model-option.session-menu-option {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-option.store-model-option.session-menu-option span {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-sort-option.store-model-option.session-menu-option.active span {
+  font-weight: 600;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-search:focus-within,
+.store-dashboard-page #detail-sop .issue-rule-sort:focus-within {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-list-head,
+.store-dashboard-page #detail-sop .issue-rule-row {
+  display: grid;
+  grid-template-columns: var(--issue-rule-list-columns);
+  gap: 10px;
+  align-items: center;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-list-shell {
+  --issue-rule-list-columns: minmax(0, 1fr) 70px 98px 92px;
+  --issue-rule-list-inline-pad: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(217, 226, 239, 0.78);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-list-head {
+  padding: 0 var(--issue-rule-list-inline-pad);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 322px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-row {
+  min-height: 50px;
+  width: 100%;
+  padding: 6px var(--issue-rule-list-inline-pad);
+  border: 1px solid rgba(217, 226, 239, 0.78);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.72);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-row:hover,
+.store-dashboard-page #detail-sop .issue-rule-row:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name {
+  display: flex;
+  min-width: 0;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name strong {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-name em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  border-radius: 999px;
+  background: rgba(239, 246, 255, 0.92);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-rate,
+.store-dashboard-page #detail-sop .issue-rule-count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-action,
+.store-dashboard-page #detail-sop .issue-org-drill.drill-link {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--brand-primary);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-action::after,
+.store-dashboard-page #detail-sop .issue-org-drill.drill-link::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-footer,
+.store-dashboard-page #detail-sop .issue-drill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: nowrap;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-page-btn,
+.store-dashboard-page #detail-sop .issue-rule-back {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(217, 226, 239, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-page-btn:hover:not(:disabled),
+.store-dashboard-page #detail-sop .issue-rule-back:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  color: var(--brand-primary);
+}
+
+.store-dashboard-page #detail-sop .issue-rule-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.store-dashboard-page #detail-sop .issue-rule-empty {
+  padding: 24px 12px;
+  border: 1px dashed rgba(217, 226, 239, 0.9);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: 14px;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.94));
+  border: 1px solid rgba(217, 226, 239, 0.88);
+  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.08);
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12.8px;
+  border: 0.8px solid transparent;
+  box-shadow: inset 0 0.8px 0 rgba(255, 255, 255, 0.76), 0 6.4px 14.4px rgba(148, 163, 184, 0.12);
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-icon svg {
+  position: relative;
+  z-index: 1;
+  width: 30.4px;
+  height: 30.4px;
+  display: block;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-icon.tone-green {
+  background: linear-gradient(180deg, rgba(134, 239, 172, 0.24), rgba(34, 197, 94, 0.1));
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-icon.tone-violet {
+  background: linear-gradient(180deg, rgba(196, 181, 253, 0.24), rgba(139, 92, 246, 0.1));
+  border-color: rgba(167, 139, 250, 0.34);
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-label {
+  color: #617088;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.store-dashboard-page #detail-sop .issue-selected-metric-value {
+  display: block;
+  color: var(--color-text);
+  font-family: var(--font-metric);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+.store-dashboard-page #detail-sop .issue-org-rank-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.store-dashboard-page #detail-sop .issue-org-rank-card {
+  --issue-org-list-columns: minmax(0, 1fr) 48px 76px 76px;
+  --issue-org-list-inline-pad: 12px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(217, 226, 239, 0.78);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.store-dashboard-page #detail-sop .issue-org-list-head,
+.store-dashboard-page #detail-sop .issue-org-row {
+  display: grid;
+  grid-template-columns: var(--issue-org-list-columns);
+  gap: 10px;
+  align-items: center;
+}
+
+.store-dashboard-page #detail-sop .issue-org-list-head {
+  padding: 0 var(--issue-org-list-inline-pad);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.store-dashboard-page #detail-sop .issue-org-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.store-dashboard-page #detail-sop .issue-org-row {
+  width: 100%;
+  min-height: 50px;
+  padding: 6px var(--issue-org-list-inline-pad);
+  border: 1px solid rgba(217, 226, 239, 0.78);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.72);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.store-dashboard-page #detail-sop .issue-org-row:hover,
+.store-dashboard-page #detail-sop .issue-org-row:focus-visible {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.store-dashboard-page #detail-sop .issue-org-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.store-dashboard-page #detail-sop .issue-org-main > em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--brand-primary);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.store-dashboard-page #detail-sop .store-sop-person-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.store-dashboard-page #detail-sop .store-sop-person-copy strong {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.store-dashboard-page #detail-sop .store-sop-person-copy small {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.store-dashboard-page #detail-sop .issue-org-rate,
+.store-dashboard-page #detail-sop .issue-org-count {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.store-dashboard-page #detail-sop .issue-org-drill {
+  justify-self: end;
+  color: var(--brand-primary);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+  .store-dashboard-page #detail-sop .issue-rule-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-list-head {
+    display: none;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-rate,
+  .store-dashboard-page #detail-sop .issue-rule-count {
+    justify-self: end;
+  }
+
+  .store-dashboard-page #detail-sop .issue-rule-action {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}

@@ -51,6 +51,14 @@ body {
   background-size: 28px 28px;
 }
 
+.embedded-prototype .sidebar {
+  display: none;
+}
+
+.embedded-prototype .main {
+  width: 100%;
+}
+
 .insight-topbar {
   align-items: center;
   margin-bottom: 18px;

@@ -23,6 +23,13 @@
           <div class="nav-group">
             <div class="nav-label">看板</div>
             <div class="nav-menu">
+              <button class="nav-item nav-button" data-page="customer-insight" data-href="../客户洞察/v2/index.html">
+                <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
+                  <path fill="currentColor" d="M448 128a320 320 0 1 0 0 640 320 320 0 0 0 0-640m0 64a256 256 0 1 1 0 512 256 256 0 0 1 0-512" />
+                  <path fill="currentColor" d="m672 626.752 260.608 260.544a32 32 0 0 1-45.312 45.312L626.752 672zM288 480h64v128h-64zm128-192h64v320h-64zm128 96h64v224h-64z" />
+                </svg>
+                <span class="nav-text">客户洞察</span>
+              </button>
               <button class="nav-item nav-button" data-page="factory-dashboard" data-href="../factory-dashboard/index.html">
                 <svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true">
                   <path fill="currentColor" d="M160 128h704a64 64 0 0 1 64 64v512a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V192a64 64 0 0 1 64-64m0 64v512h704V192z" />
@@ -70,6 +77,18 @@
                 </svg>
                 <span class="nav-text">线索列表</span>
               </button>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-label">设备</div>
+            <div class="nav-menu">
+              <button class="nav-item nav-button" data-page="device-visits" data-href="../device-management/index.html#visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访记录</span></button>
+              <button class="nav-item nav-button" data-page="device-projects" data-href="../device-management/index.html#projects"><span class="nav-icon nav-device-symbol" aria-hidden="true">◇</span><span class="nav-text">设备门店</span></button>
+              <button class="nav-item nav-button" data-page="device-docks" data-href="../device-management/index.html#docks"><span class="nav-icon nav-device-symbol" aria-hidden="true">▱</span><span class="nav-text">充电坞</span></button>
+              <button class="nav-item nav-button" data-page="device-badges" data-href="../device-management/index.html#badges"><span class="nav-icon nav-device-symbol" aria-hidden="true">▣</span><span class="nav-text">工牌状态</span></button>
+              <button class="nav-item nav-button" data-page="device-relations" data-href="../device-management/index.html#relations"><span class="nav-icon nav-device-symbol" aria-hidden="true">⇄</span><span class="nav-text">工牌关系</span></button>
+              <button class="nav-item nav-button" data-page="device-dashboard" data-href="../device-management/index.html#dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">工牌看板</span></button>
             </div>
           </div>
 
@@ -494,6 +513,7 @@
           </div>
         </template>
 
+    <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="./page.js"></script>
   </body>
