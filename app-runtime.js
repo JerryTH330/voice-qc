@@ -7051,6 +7051,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerStatus: '全部',
         customerContactStartDate: '',
         customerContactEndDate: '',
+        customerFirstContactStartDate: '',
+        customerFirstContactEndDate: '',
         startDate: '2026-03-08',
         endDate: '2026-03-12'
       }
@@ -9522,14 +9524,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function getFilteredLeadCustomerRecords() {
         return buildLeadCustomerAggregateRecords(leadRecords).filter((item) => {
           const lastContactDate = getLeadCustomerLastContactDateValue(item)
-          const customerNameMatch = getLeadCustomerSearchMatch(item, 'customerName', leadsFilterState.customerNameQuery)
-          const customerPhoneMatch = getLeadCustomerSearchMatch(item, 'customerPhone', leadsFilterState.customerPhoneQuery)
-          const leadCountMatch = getLeadCustomerSearchMatch(item, 'aggregateLeadCount', leadsFilterState.customerAggregateLeadCountQuery)
-          const storeCountMatch = getLeadCustomerSearchMatch(item, 'aggregateStoreCount', leadsFilterState.customerAggregateStoreCountQuery)
+          const firstContactDate = item.firstContactDisplay ? item.firstContactDisplay.slice(0, 10) : (item.recordStartTime ? item.recordStartTime.slice(0, 10) : '')
+          const brandMatch = leadsFilterState.brand === '全部' || getSessionBrand(item.carSeries) === leadsFilterState.brand
+          const organizationMatch = leadsFilterState.organization === '全部组织' || (item.organizationPath && item.organizationPath.startsWith(leadsFilterState.organization))
           const customerStatusMatch = leadsFilterState.customerStatus === '全部' || item.leadStatus === leadsFilterState.customerStatus
-          const startMatch = !leadsFilterState.customerContactStartDate || lastContactDate >= leadsFilterState.customerContactStartDate
-          const endMatch = !leadsFilterState.customerContactEndDate || lastContactDate <= leadsFilterState.customerContactEndDate
-          return customerNameMatch && customerPhoneMatch && leadCountMatch && storeCountMatch && customerStatusMatch && startMatch && endMatch
+          const coverageMatch = !leadsFilterState.customerRecordCoverage || leadsFilterState.customerRecordCoverage === '全部' || item.recordCoverage === leadsFilterState.customerRecordCoverage
+          const crossStoreMatch = !leadsFilterState.customerCrossStore || leadsFilterState.customerCrossStore === '全部' || (leadsFilterState.customerCrossStore === '是' ? item.crossStore : !item.crossStore)
+
+          const contactStartMatch = !leadsFilterState.customerContactStartDate || lastContactDate >= leadsFilterState.customerContactStartDate
+          const contactEndMatch = !leadsFilterState.customerContactEndDate || lastContactDate <= leadsFilterState.customerContactEndDate
+
+          const firstStartMatch = !leadsFilterState.customerFirstContactStartDate || firstContactDate >= leadsFilterState.customerFirstContactStartDate
+          const firstEndMatch = !leadsFilterState.customerFirstContactEndDate || firstContactDate <= leadsFilterState.customerFirstContactEndDate
+
+          return brandMatch && organizationMatch && customerStatusMatch && coverageMatch && crossStoreMatch && contactStartMatch && contactEndMatch && firstStartMatch && firstEndMatch
         })
       }
 
@@ -9599,17 +9607,36 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
+      function renderCustomerRecordCoverageHeader() {
+        return `
+          <span class="ai-lead-validity-heading">
+            <span>录音覆盖</span>
+            <button type="button" class="ai-lead-validity-help" aria-label="查看录音覆盖判别标准">?</button>
+            <span class="ai-lead-validity-tooltip" role="tooltip">
+              <strong>判别标准</strong>
+              <span><b>全部有录音：</b>该客户所关联的线索中，每条线索，存在至少1通录音</span>
+              <span><b>部分有录音：</b>该客户所关联的线索中，有2条及以上的线索，存在至少1通录音</span>
+              <span><b>全部无录音：</b>该客户所关联的全部线索，任意一条线索，均未关联到任何录音</span>
+            </span>
+          </span>
+        `
+      }
+
       function getLeadsTableHeaderMarkup(viewMode = leadsViewState.mode) {
         if (viewMode === 'customers') {
           return `
             <tr>
-              <th>客户名称</th>
-              <th>客户手机</th>
-              <th>关联线索数</th>
-              <th>涉及门店数</th>
-              <th>最新线索状态</th>
-              <th>最近一次联系时间</th>
-              <th>操作</th>
+              <th style="min-width: 110px; width: 110px;">客户姓名</th>
+              <th style="min-width: 130px; width: 130px;">客户手机号</th>
+              <th style="min-width: 110px; width: 110px;">关联线索数</th>
+              <th style="min-width: 110px; width: 110px;">涉及门店数</th>
+              <th style="min-width: 160px; width: 160px;">首次建联时间</th>
+              <th style="min-width: 160px; width: 160px;">最近联系时间</th>
+              <th style="min-width: 130px; width: 130px;">最新线索状态</th>
+              <th style="min-width: 140px; width: 140px;">${renderCustomerRecordCoverageHeader()}</th>
+              <th style="min-width: 110px; width: 110px;">是否跨门店</th>
+              <th style="min-width: 320px; width: 320px;">轨迹摘要</th>
+              <th style="min-width: 100px; width: 100px;">操作</th>
             </tr>
           `
         }
@@ -9636,6 +9663,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
+      function getCustomerRecordCoverage(leadCount, hasRecordCount) {
+        if (hasRecordCount === 0) return '全部无录音'
+        if (hasRecordCount >= leadCount) return '全部有录音'
+        return '部分有录音'
+      }
+
+      function getCustomerTrackSummary(item) {
+        const storeCount = item.aggregateStoreCount || 1
+        const leadCount = item.aggregateLeadCount || 1
+        const recordStoreCount = item.aggregateRecordStoreSet ? item.aggregateRecordStoreSet.size : (item.aggregateHasRecordCount > 0 ? Math.min(storeCount, item.aggregateHasRecordCount) : 0)
+        const audioCount = item.aggregateAudioCount !== undefined ? item.aggregateAudioCount : (item.aggregateHasRecordCount || 0)
+        return `${leadCount}条线索，${storeCount}家门店，其中${recordStoreCount}家店有录音，共${audioCount}条`
+      }
+
       function buildLeadCustomerAggregateRecords(records) {
         const customerMap = new Map()
         const sortedRecords = [...records].sort((left, right) => parseDateTimeValue(right.recordStartTime) - parseDateTimeValue(left.recordStartTime))
@@ -9643,14 +9684,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         sortedRecords.forEach((item) => {
           const key = item.customerPhone || item.customerName || item.id
           const recordTime = parseDateTimeValue(item.recordStartTime)
+          const hasRecord = item.aiLeadValidity && item.aiLeadValidity !== '无效'
 
           if (!customerMap.has(key)) {
+            const recordStoreSet = new Set()
+            if (hasRecord) recordStoreSet.add(item.store)
+
             customerMap.set(key, {
               ...item,
               aggregateLeadCount: 1,
               aggregateStoreSet: new Set([item.store]),
               aggregateStoreCount: 1,
-              aggregateLatestTime: recordTime
+              aggregateRecordStoreSet: recordStoreSet,
+              aggregateAudioCount: hasRecord ? 1 : 0,
+              aggregateLatestTime: recordTime,
+              aggregateEarliestTime: recordTime,
+              aggregateHasRecordCount: hasRecord ? 1 : 0
             })
             return
           }
@@ -9659,6 +9708,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           aggregated.aggregateLeadCount += 1
           aggregated.aggregateStoreSet.add(item.store)
           aggregated.aggregateStoreCount = aggregated.aggregateStoreSet.size
+          if (hasRecord) {
+            aggregated.aggregateHasRecordCount = (aggregated.aggregateHasRecordCount || 0) + 1
+            aggregated.aggregateRecordStoreSet.add(item.store)
+            aggregated.aggregateAudioCount = (aggregated.aggregateAudioCount || 0) + 1
+          }
 
           if (recordTime > aggregated.aggregateLatestTime) {
             aggregated.customerName = item.customerName || aggregated.customerName
@@ -9667,21 +9721,30 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             aggregated.aggregateLatestTime = recordTime
           }
 
+          if (recordTime < aggregated.aggregateEarliestTime) {
+            aggregated.aggregateEarliestTime = recordTime
+            aggregated.firstContact = item.recordStartTime
+          }
+
           if (getLeadStatusPriority(item.leadStatus) > getLeadStatusPriority(aggregated.leadStatus)) {
             aggregated.leadStatus = item.leadStatus
           }
         })
 
         return Array.from(customerMap.values()).map((item) => {
-          if (item.customerName !== '郑昱辰') {
-            return item
-          }
-
-          return {
+          const base = item.customerName !== '郑昱辰' ? item : {
             ...item,
             aggregateLeadCount: 3,
-            aggregateStoreCount: 3
+            aggregateStoreCount: 3,
+            aggregateRecordStoreSet: new Set(['上海浦东门店', '杭州滨江门店']),
+            aggregateAudioCount: 4
           }
+          const hasRecordCount = base.aggregateHasRecordCount || 0
+          const recordCoverage = getCustomerRecordCoverage(base.aggregateLeadCount, hasRecordCount)
+          const crossStore = base.aggregateStoreCount >= 2
+          const firstContactDisplay = base.firstContact || base.recordStartTime || '–'
+          const trackSummary = getCustomerTrackSummary(base)
+          return { ...base, recordCoverage, crossStore, firstContactDisplay, trackSummary }
         }).sort((left, right) => right.aggregateLatestTime - left.aggregateLatestTime)
       }
 
@@ -9713,14 +9776,42 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         container.className = `session-filter-toolbar leads-filter-toolbar ${leadsViewState.mode === 'customers' ? 'is-customer-view' : 'is-leads-view'}${leadsFilterState.collapsed ? ' is-collapsed' : ''}`
 
         if (leadsViewState.mode === 'customers') {
+          const cvCoverageOpts = ['全部', '全部有录音', '部分有录音', '全部无录音']
+          const cvCrossStoreOpts = ['全部', '是', '否']
+          const cvLeadCountOpts = ['全部', '1条', '2~3条', '4条及以上']
+          const cvStoreCountOpts = ['全部', '1家', '2家', '3家及以上']
+
           container.innerHTML = `
-            ${renderLeadsSimpleSearchControl('customerNameQuery', '客户名称', leadsFilterState.customerNameQuery, '请输入客户名称')}
-            ${renderLeadsSimpleSearchControl('customerPhoneQuery', '客户手机号', leadsFilterState.customerPhoneQuery, '请输入客户手机号')}
-            ${renderLeadsSimpleSearchControl('customerAggregateLeadCountQuery', '线索数', leadsFilterState.customerAggregateLeadCountQuery, '请输入线索数')}
-            ${renderLeadsSimpleSearchControl('customerAggregateStoreCountQuery', '门店数', leadsFilterState.customerAggregateStoreCountQuery, '请输入门店数')}
-            ${renderLeadsMenuControl('customerStatus', '线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
-            ${renderLeadsCustomerContactDateControl()}
-            <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
+            ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', sessionBrandOptions, leadsFilterState.brand))}
+            ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
+            ${renderLeadsMenuControl('customerStatus', '最新线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
+            ${renderLeadsMenuControl('customerRecordCoverage', '录音覆盖情况', leadsFilterState.customerRecordCoverage || '全部', renderLeadsOptionMenu('customerRecordCoverage', cvCoverageOpts, leadsFilterState.customerRecordCoverage || '全部'))}
+            ${renderLeadsMenuControl('customerCrossStore', '是否跨门店', leadsFilterState.customerCrossStore || '全部', renderLeadsOptionMenu('customerCrossStore', cvCrossStoreOpts, leadsFilterState.customerCrossStore || '全部'))}
+            ${renderLeadsMenuControl('customerLeadCountRange', '关联线索数', leadsFilterState.customerLeadCountRange || '全部', renderLeadsOptionMenu('customerLeadCountRange', cvLeadCountOpts, leadsFilterState.customerLeadCountRange || '全部'))}
+            ${renderLeadsMenuControl('customerStoreCountRange', '涉及门店数', leadsFilterState.customerStoreCountRange || '全部', renderLeadsOptionMenu('customerStoreCountRange', cvStoreCountOpts, leadsFilterState.customerStoreCountRange || '全部'))}
+            <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date" data-leads-menu-root="customerFirstContactDate">
+              <span>首次建联时间</span>
+              <button type="button" class="session-date-trigger" data-leads-menu-trigger="customerFirstContactDate" aria-label="首次建联时间筛选" aria-haspopup="dialog" aria-expanded="false">
+                <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.customerFirstContactStartDate) || '开始日期')}</strong>
+                <em>至</em>
+                <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.customerFirstContactEndDate) || '结束日期')}</strong>
+                <span class="session-date-icon" aria-hidden="true"></span>
+              </button>
+              ${leadsMenuState.openMenu === 'customerFirstContactDate' ? renderLeadsCustomerContactDateControl() : ''}
+            </div>
+            <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date" data-leads-menu-root="customerDate">
+              <span>最近联系时间</span>
+              <button type="button" class="session-date-trigger" data-leads-menu-trigger="customerDate" aria-label="最近联系时间筛选" aria-haspopup="dialog" aria-expanded="false">
+                <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.customerContactStartDate) || '开始日期')}</strong>
+                <em>至</em>
+                <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.customerContactEndDate) || '结束日期')}</strong>
+                <span class="session-date-icon" aria-hidden="true"></span>
+              </button>
+              ${leadsMenuState.openMenu === 'customerDate' ? renderLeadsCustomerContactDateControl() : ''}
+            </div>
+            <div class="leads-filter-inline-actions">
+              <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
+            </div>
           `
           return
         }
@@ -9802,6 +9893,28 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         table?.classList.toggle('customer-aggregate-table', viewMode === 'customers')
         tableWrap?.classList.toggle('customer-aggregate-wrap', viewMode === 'customers')
 
+        // Update KPI section visibility
+        const kpiSection = document.getElementById('leadsCustomerKpiSection')
+        const titleEl = document.getElementById('leadsTableHeadTitle')
+        const summaryLabelEl = document.getElementById('leadsFilterSummaryLabel')
+        if (kpiSection) kpiSection.hidden = viewMode !== 'customers'
+        if (titleEl) titleEl.textContent = viewMode === 'customers' ? '聚合客户列表' : '线索总览'
+        if (summaryLabelEl) summaryLabelEl.innerHTML = viewMode === 'customers'
+          ? `当前匹配 <strong id="leadsFilterCount">${displayRecords.length.toLocaleString()}</strong> 位客户`
+          : `当前匹配 <strong id="leadsFilterCount">0</strong> 条线索`
+
+        // Update KPI cards for customer view
+        if (viewMode === 'customers') {
+          const kpiTotal = document.getElementById('customerKpiTotal')
+          const kpiCross = document.getElementById('customerKpiCrossStore')
+          const kpiMulti = document.getElementById('customerKpiMultiLead')
+          const kpiPartial = document.getElementById('customerKpiPartialRecord')
+          if (kpiTotal) kpiTotal.textContent = displayRecords.length.toLocaleString()
+          if (kpiCross) kpiCross.textContent = displayRecords.filter(r => r.crossStore).length.toLocaleString()
+          if (kpiMulti) kpiMulti.textContent = displayRecords.filter(r => r.aggregateLeadCount >= 2).length.toLocaleString()
+          if (kpiPartial) kpiPartial.textContent = displayRecords.filter(r => r.recordCoverage === '部分有录音').length.toLocaleString()
+        }
+
         totalCount.textContent = summaryRecords.length
         if (pendingCount) pendingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '未跟进').length
         if (followingCount) followingCount.textContent = summaryRecords.filter((item) => item.leadStatus === '跟进中').length
@@ -9811,7 +9924,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
-          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 7 : 16}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
+          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 11 : 16}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
           if (pagination) {
             pagination.innerHTML = ''
           }
@@ -9827,16 +9940,23 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (viewMode === 'customers') {
           tbody.innerHTML = pagedRecords
-            .map((item) => `
+            .map((item) => {
+              const statusClass = getLeadStatusClass(item.leadStatus)
+              const crossStoreText = item.crossStore ? '是' : '否'
+              const firstContactDisplay = item.firstContactDisplay || item.recordStartTime || '–'
+              const lastContactDisplay = item.lastContact || '–'
+              return `
               <tr>
-                <td><span class="cell-main">${escapeHtml(maskDisplayName(item.customerName))}</span></td>
-                <td>${escapeHtml(item.customerPhone)}</td>
-                <td>${escapeHtml(item.aggregateLeadCount)}</td>
-                <td>${escapeHtml(item.aggregateStoreCount)}</td>
-                <td>
-                  <span>${escapeHtml(item.leadStatus)}</span>
-                </td>
-                <td>${escapeHtml(item.lastContact)}</td>
+                <td><span class="cell-main cv-customer-name">${escapeHtml(maskDisplayName(item.customerName))}</span></td>
+                <td><span class="cv-customer-phone">${escapeHtml(item.customerPhone)}</span></td>
+                <td>${escapeHtml(String(item.aggregateLeadCount))}</td>
+                <td>${escapeHtml(String(item.aggregateStoreCount))}</td>
+                <td class="cv-time-cell">${escapeHtml(firstContactDisplay)}</td>
+                <td class="cv-time-cell">${escapeHtml(lastContactDisplay)}</td>
+                <td><span class="cv-status-pill cv-status-${escapeHtml(statusClass)}">${escapeHtml(item.leadStatus)}</span></td>
+                <td>${escapeHtml(item.recordCoverage)}</td>
+                <td>${escapeHtml(crossStoreText)}</td>
+                <td class="cv-track-summary-cell">${escapeHtml(item.trackSummary || '–')}</td>
                 <td>
                   <button
                     class="table-link"
@@ -9846,14 +9966,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                     data-customer-status="${escapeHtml(item.leadStatus)}"
                     data-customer-store="${escapeHtml(item.store)}"
                     data-customer-last-contact="${escapeHtml(item.lastContact)}"
-                    data-customer-lead-count="${escapeHtml(item.aggregateLeadCount)}"
-                    data-customer-store-count="${escapeHtml(item.aggregateStoreCount)}"
+                    data-customer-lead-count="${escapeHtml(String(item.aggregateLeadCount))}"
+                    data-customer-store-count="${escapeHtml(String(item.aggregateStoreCount))}"
                   >
-                    客户详情
+                    查看详情
                   </button>
                 </td>
               </tr>
-            `)
+            `})
             .join('')
         } else {
           tbody.innerHTML = pagedRecords
@@ -12895,6 +13015,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         updateToggle()
       }
 
+      function initCustomerDemoModeSwitcher() {
+        const pageContainer = pageHost.querySelector('.customer-detail-page')
+        const buttons = pageHost.querySelectorAll('[data-customer-demo-mode]')
+        const recordedStatValue = pageHost.querySelector('[data-stat-key="recorded_leads"]')
+        if (!pageContainer || !buttons.length) return
+
+        buttons.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const mode = btn.dataset.customerDemoMode
+            buttons.forEach((b) => b.classList.remove('active'))
+            btn.classList.add('active')
+            pageContainer.setAttribute('data-customer-view-state', mode)
+
+            if (recordedStatValue) {
+              recordedStatValue.textContent = mode === 'no-recording' ? '0' : '3'
+            }
+          })
+        })
+      }
+
       function initCustomerDetailPage() {
         applyCustomerDetailPayload(buildCustomerDetailPayload())
         syncCustomerDetailDateDisplays()
@@ -12903,6 +13043,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         initCustomerHeroJourneyToggle()
         renderCustomerAiPortraitGeneration()
         bindCustomerAiPortraitGeneration()
+        initCustomerDemoModeSwitcher()
       }
 
       function destroyCustomerDetailPage() {

@@ -577,7 +577,7 @@
         </template>
 
     <template id="tpl-customer-detail">
-          <div class="page-stack leads-detail-page customer-detail-page">
+          <div class="page-stack leads-detail-page customer-detail-page" data-customer-view-state="full">
             <div class="actions-inline leads-detail-actions">
               <div class="leads-detail-actions-main">
                 <button class="btn" data-route="leads" data-leads-view-target="customers">返回客户聚合视图</button>
@@ -590,24 +590,20 @@
                   <div class="customer-hero-summary-row">
                     <div class="customer-detail-hero-row">
                       <img class="customer-detail-avatar" src="../assets/customer-detail-avatar-figma.png" alt="" />
-                      <div class="hero-title" id="customerDetailHeroTitle">王*生</div>
+                      <div class="hero-title" id="customerDetailHeroTitle">郑*辰</div>
                     </div>
                     <div class="customer-hero-summary-chips" aria-label="客户摘要">
                       <span class="customer-hero-summary-chip">
-                        <img src="../assets/customer-summary-leads-figma.svg" alt="" />
                         <span id="customerDetailLeadCount">关联线索：3条线索</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <img src="../assets/customer-summary-stores-figma.svg" alt="" />
                         <span id="customerDetailStoreCount">涉及门店：3个门店</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <img src="../assets/customer-summary-time-figma.svg" alt="" />
                         <span>首次建联：2026-03-10</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <img src="../assets/customer-summary-time-figma.svg" alt="" />
-                        <span>最后一次跟进时间：2026-03-15报价沟通</span>
+                        <span>最后一次跟进时间：2026-03-15 报价沟通</span>
                       </span>
                     </div>
                   </div>
@@ -626,7 +622,6 @@
                     <div class="customer-insight-main">
                       <div class="customer-insight-summary">
                         <div class="customer-insight-section-title">
-                          <img src="../assets/customer-insight-judgement-figma.svg" alt="" />
                           <span>综合判断</span>
                         </div>
                         <div class="customer-insight-status-row">
@@ -649,7 +644,6 @@
                           ></video>
                         </div>
                         <div class="customer-insight-ai-title">
-                          <img src="../assets/customer-insight-ai-title-figma.svg" alt="" />
                           <span>AI客户洞察</span>
                         </div>
                         <div class="customer-ai-generate-panel" aria-label="AI洞察生成区域">
@@ -688,44 +682,34 @@
                         </div>
                         <div class="customer-insight-tag-list customer-insight-public-tag-list" aria-label="公域标签">
                           <span class="customer-public-tag customer-public-tag-primary tone-blue">
-                            <img src="../assets/customer-public-married-figma.svg" alt="" />
                             <span>已婚已育</span>
                           </span>
                           <span class="customer-public-tag customer-public-tag-primary tone-red">
-                            <img src="../assets/customer-public-consumption-figma.svg" alt="" />
                             <span>2档消费</span>
                           </span>
                           <span class="customer-public-tag customer-public-tag-primary tone-green">
-                            <img src="../assets/customer-public-location-figma.svg" alt="" />
                             <span>上海常驻</span>
                           </span>
                           <span class="customer-public-tag-divider" aria-hidden="true"></span>
                           <span class="customer-public-tag tone-blue">
-                            <img src="../assets/customer-public-gender-figma.svg" alt="" />
                             <span>男</span>
                           </span>
                           <span class="customer-public-tag tone-red">
-                            <img src="../assets/customer-public-age-figma.svg" alt="" />
                             <span>年龄</span>
                           </span>
                           <span class="customer-public-tag tone-green">
-                            <img src="../assets/customer-public-education-figma.svg" alt="" />
                             <span>本科</span>
                           </span>
                           <span class="customer-public-tag tone-violet">
-                            <img src="../assets/customer-public-career-figma.svg" alt="" />
                             <span>资深白领</span>
                           </span>
                           <span class="customer-public-tag tone-amber">
-                            <img src="../assets/customer-public-car-figma.svg" alt="" />
                             <span>有车</span>
                           </span>
                           <span class="customer-public-tag tone-blue">
-                            <img src="../assets/customer-public-energy-figma.svg" alt="" />
                             <span>新能源</span>
                           </span>
                           <span class="customer-public-tag tone-red">
-                            <img src="../assets/customer-public-tech-figma.svg" alt="" />
                             <span>科技爱好者</span>
                           </span>
                         </div>
@@ -733,13 +717,42 @@
                     </div>
                   </section>
 
-                </section>
-
                 <section class="card lead-journey-panel customer-journey-panel">
                   <div class="panel-header">
                     <div class="panel-title">
-                      <h3>客户旅程</h3>
-                      <p>按时间轴展示客户全部关联线索的生命周期旅程</p>
+                      <h3>客户语音轨迹洞察</h3>
+                      <p>按时间轴展示客户在不同门店产生的录音触点及语音洞察，仅展示有录音的互动记录。</p>
+                    </div>
+                    <div class="panel-header-badge">
+                      <span>当前基于有录音触点节点，并显示跟进状态变更历史。</span>
+                    </div>
+                  </div>
+
+                  <!-- 门店状态行 -->
+                  <div class="customer-voice-stores" aria-label="涉及门店与录音状态">
+                    <div class="customer-voice-store-card customer-voice-store-card-current">
+                      <div class="customer-voice-store-name">上海浦东门店</div>
+                      <div class="customer-voice-store-meta">
+                        <span class="customer-voice-store-status status-tracking">当前状态：跟进中</span>
+                        <span class="customer-voice-store-update">最近更新：2026-03-15 13:0</span>
+                      </div>
+                      <div class="customer-voice-store-count">录音 3 条</div>
+                    </div>
+                    <div class="customer-voice-store-card">
+                      <div class="customer-voice-store-name">杭州西湖门店</div>
+                      <div class="customer-voice-store-meta">
+                        <span class="customer-voice-store-status status-none">当前状态：未跟进</span>
+                        <span class="customer-voice-store-update">最近更新：2026-03-10 14:30</span>
+                      </div>
+                      <div class="customer-voice-store-count">录音 1 条</div>
+                    </div>
+                    <div class="customer-voice-store-card customer-voice-store-card-extra">
+                      <div class="customer-voice-store-name">杭州滨江门店</div>
+                      <div class="customer-voice-store-meta">
+                        <span class="customer-voice-store-status status-quote">当前状态：报价沟通</span>
+                        <span class="customer-voice-store-update">最近更新：2026-03-15 10:10</span>
+                      </div>
+                      <div class="customer-voice-store-count">录音 2 条</div>
                     </div>
                   </div>
 
