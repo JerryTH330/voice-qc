@@ -79,7 +79,7 @@ test('factory summary cards match the current store horizontal card layout', () 
 });
 
 test('factory overview cache versions are updated together', () => {
-  const version = '20260804-shared-insight-heading-icon';
+  const version = '20260805-issue-rule-shared';
   assert.ok(pageHtml.includes(`page.css?v=${version}`));
   assert.ok(pageHtml.includes(`page.js?v=${version}`));
   assert.ok(pageCss.includes(`factory-dashboard.css?v=${version}`));

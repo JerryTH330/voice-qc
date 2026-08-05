@@ -1,5 +1,33 @@
 # 交接日志归档
 
+## 2026-08-04 修正质检概览图标与标题间距
+- 用户想做什么：将质检概览标题图标和文字之间的间距设为 12px，并要求直接修改、不做校验。
+- 已经完成了什么：定位到公共样式中的高优先级 `gap: 0` 覆盖；提高该板块专用选择器优先级并明确设置 `gap: 12px`；更新缓存版本。
+- 改动了哪些文件：`store-dashboard/page.css`、`store-dashboard/index.html`、`store-dashboard/page.js` 及 4 个相关测试中的缓存版本。
+- 做过哪些验证：按用户要求未运行测试或浏览器校验。
+- 还有哪些待办或风险：用户需刷新当前 `file://` 页面确认间距；修改尚未提交。
+
+## 2026-08-04 按 Figma 553:4523 将标题机器人改回静态图
+- 用户想做什么：指出质检概览标题区域不应使用视频，要求按 Figma 553:4523 改为静态图片。
+- 已经完成了什么：重新读取节点结构和截图；从 Figma 553:4525 下载最终裁切好的 56×56 PNG 并接入标题；移除视频标签、视频专用样式和项目内 `ai-robot-loop.mp4` 副本，Downloads 原视频保持不变；更新缓存版本和回归测试。
+- 改动了哪些文件：`assets/store-quality-overview/quality-overview-heading-robot.png`、`store-dashboard/index.html`、`store-dashboard/page.css`、`store-dashboard/page.js` 及 4 个相关测试；删除项目内 `assets/store-quality-overview/ai-robot-loop.mp4`。
+- 做过哪些验证：新规则修改前专项测试 3 项失败、修改后专项测试 9/9；全量测试 178/178、2 个 JavaScript 语法检查、PNG 尺寸与哈希、视频引用扫描和 `git diff --check` 通过。
+- 还有哪些待办或风险：内置浏览器安全策略阻止自动刷新 `file://` 页面，用户需手动刷新确认视觉；修改尚未提交。
+
+## 2026-08-04 按 Figma 553:4383 最新稿移动质检概览机器人
+- 用户想做什么：按再次更新的 Figma 553:4383 修改门店"质检概览"。
+- 已经完成了什么：重新读取最新节点结构和截图；确认机器人已从结论卡上方移到标题左侧；结合用户上一条视频要求，将项目内静音循环 MP4 放入 56×56 标题媒体位，并按设计图的 139.13% 比例裁切；移除结论卡旧悬浮媒体与额外伪图层，保留最新实线、填充、组合卡投影、VS 和三张总结卡布局；更新缓存版本与回归测试。
+- 改动了哪些文件：`store-dashboard/index.html`、`store-dashboard/page.css`、`store-dashboard/page.js` 及 4 个相关测试。
+- 做过哪些验证：新规则修改前专项测试 3 项失败、修改后专项测试 9/9；全量测试 178/178、2 个 JavaScript 语法检查、项目视频引用和 `git diff --check` 通过。
+- 还有哪些待办或风险：内置浏览器安全策略不允许自动刷新 `file://` 页面，用户需手动刷新确认视觉；修改尚未提交。
+
+## 2026-08-04 将最新质检概览机器人重新替换为视频
+- 用户想做什么：把 Figma 553:4383 版本中的机器人再次替换为指定 MP4。
+- 已经完成了什么：检查视频为 640×640、约 8 秒、H.264 且无音轨；复制到项目资源目录并保留 Downloads 原文件；将 120px 静态机器人图片改为自动播放、静音、循环、移动端内联播放的视频，保留 `top: -88.5px`、`right: 60.5px` 和最新卡片投影；更新缓存版本和回归测试。
+- 改动了哪些文件：`assets/store-quality-overview/ai-robot-loop.mp4`、`store-dashboard/index.html`、`store-dashboard/page.js` 及 4 个相关测试。
+- 做过哪些验证：源文件与项目副本 SHA-256 一致；专项测试 9/9、全量测试 178/178、2 个 JavaScript 语法检查、视频元数据和 `git diff --check` 通过。
+- 还有哪些待办或风险：内置浏览器安全策略不允许自动刷新 `file://` 页面，用户需手动刷新确认循环播放；修改尚未提交。
+
 ## 2026-07-31 拉取当前工作分支线上代码
 - 用户想做什么：拉取当前工作分支的线上最新代码。
 - 已经完成了什么：检查当前分支、上游、远程和本地未提交修改；执行 `git fetch --prune origin` 更新远程引用，再执行 `git pull --ff-only`；当前工作分支线上没有新提交，因此 HEAD 保持 `edd8b1b`，本地页面修改没有被覆盖。
@@ -104,6 +132,55 @@
 - 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/leads-detail-equal-columns.test.js`、`tests/customer-detail-latest-figma-layout.test.js`、交接日志。
 - 做过哪些验证：相关专项测试 36/36、全量测试 128/128、`git diff --check` 均通过。
 - 还有哪些待办或风险：浏览器安全策略阻止自动刷新 `file://` 页面，需用户手动刷新确认两张卡片实际底边对齐。
+
+## 2026-07-28 场景标签/规则名称自适应
+- 用户想做什么：场景标签位置够就全部显示，不够就只显示 1 个 + "..."；规则名称位置不够时末尾显示 "..."，悬停 title 显示完整。
+- 已经完成了什么：3 处 render 函数（厂端 `factory-dashboard.js:6318`、门店 `app-runtime.js:4303`、销售 `app-runtime.js:15479`）拆成「主渲染 + 共享 HTML 子函数」；新增 `autoCollapseIssueRuleScenes` / `autoCollapseSalesReviewSceneTags` 用 `ResizeObserver` 检测 `scrollWidth > clientWidth` 决定是否折叠成 1 个 + "..."；3 处 list 渲染入口挂载 autoCollapse；3 处 CSS 给 `.issue-rule-name strong` 加 `max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`；3 处 HTML 给 strong 加 `title="完整名称"`。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`app-runtime.js`、`factory-dashboard/factory-dashboard.css`、`store-dashboard/page.css`、`sales-dashboard/page.css`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过。
+- 还有哪些待办或风险：发现 `.issue-rule-scenes` 是 `flex-wrap: wrap`，换行显示不触发 scrollWidth 检测；后续修了 nowrap + overflow hidden，但用户反馈"还是硬塞"。
+
+## 2026-07-28 规则名 + 场景标签自适应（最终版）
+- 用户想做什么：规则名 1 行不换行，优先给规则名展示空间，溢出用 ellipsis + title 悬停；场景标签位置不够完全显示就只显示 1 个 + "..."，挤压的应该是场景标签而不是规则名。
+- 已经完成了什么：3 处 strong CSS（厂端 `factory-dashboard.css:1375`、门店 `store-dashboard/page.css:2111`、销售 `sales-dashboard/page.css:478`）加 `flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere;`（厂端 `flex: 1 1 0` 强占满剩余空间，门店/销售 column 布局用 `flex: 0 1 auto`）；厂端 `.issue-rule-scenes` 和 `.issue-rule-tags` 加 `flex: 0 0 auto;`（按内容宽度，可被挤压）；场景标签保持 nowrap + overflow hidden；JS 折叠逻辑保持（scrollWidth > clientWidth → 折叠成 1 个 + "..."，折叠后检测能否展开）。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.css`、`store-dashboard/page.css`、`sales-dashboard/page.css`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（建议刷新三端问题规则分析页面，规则名太长会 ellipsis + 悬停 title，5 标签硬塞时折叠成 1 个 + "..."）。
+
+## 2026-07-28 规则名优先 + 场景标签按需折叠
+- 用户想做什么：规则名永远优先展示完整（用 ellipsis + title 悬停）；标签次之，5 标签硬塞时折叠成 1 个 + "..."，让位给规则名。
+- 已经完成了什么：3 处 JS measure 函数（厂端 `factory-dashboard.js:6362`、门店 `app-runtime.js:4347`、销售 `app-runtime.js:15533`）增加 `isRuleNameEllipsis` 检测，规则名 scrollWidth > clientWidth（被 ellipsis 截断）时主动折叠 5 标签成 1 个 + "..."；3 处 ResizeObserver 同时监听 scenes 和 strong 元素，强规则名被截断时也触发 measure；collapsed 状态不再自动恢复（避免循环折叠/展开）；CSS 保持 strong `flex: 1 1 0` + scenes `flex: 0 0 auto`（之前已改）。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`app-runtime.js`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（建议刷新三端问题规则分析页面，强规则名场景应折叠 5 标签为 1 个 + "..."，规则名完整 + 悬停 title 看完整）。
+
+## 2026-07-28 规则名 + 标签悬停浮窗
+- 用户想做什么：规则名出现 ...（被 ellipsis 截断）时悬停浮窗显示完整；标签出现 ...（折叠成 1 个 + ...）时悬停浮窗显示完整。
+- 已经完成了什么：3 处 CSS（厂端 `factory-dashboard.css:1368`、门店 `store-dashboard/page.css:2100`、销售 `sales-dashboard/page.css:380`）给 `.issue-rule-scene-more[open] .issue-rule-scene-popover` 加上 `:hover` 和 `:focus-within` 选择器，让悬停和键盘焦点也能触发 popover；3 处 CSS（厂端 `factory-dashboard.css:1295`、门店 `store-dashboard/page.css:2011`、销售 `sales-dashboard/page.css:292`）给 `.issue-rule-row:has(.issue-rule-scene-more[open])` 加上 `:hover` 和 `:focus-within`，hover 标签时提升 row z-index 避免被其他行覆盖；规则名 HTML 已有 `title="完整名称"`（之前加的），浏览器原生 tooltip 显示完整。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.css`、`store-dashboard/page.css`、`sales-dashboard/page.css`。
+- 做过哪些验证：`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（建议刷新三端问题规则分析页面，hover 标签 "..." 看完整标签列表，hover 规则名看完整规则名）。
+
+## 2026-07-28 规则名 + 标签悬停浮窗（自定义样式）
+- 用户想做什么：规则名出现 "..."（被 ellipsis 截断）时悬停浮窗显示完整；标签出现 "..." 时悬停浮窗显示完整；规则名浮窗要和标签浮窗同一视觉风格，不要浏览器原生 tooltip。
+- 已经完成了什么：3 处 HTML（厂端 `factory-dashboard.js:6579`、门店 `app-runtime.js:4398`、销售 `app-runtime.js:16128`）把 strong 改用 `<span class="issue-rule-name-wrap" data-rule-name-popover><strong>...</strong><span class="issue-rule-name-popover">...</span></span>` 包裹，移除 strong 原生 `title` 属性；3 处 CSS（厂端 `factory-dashboard.css:1381`、门店 `store-dashboard/page.css:2115`、销售 `sales-dashboard/page.css:482`）加 `.issue-rule-name-wrap` 样式（position relative + inline-flex + flex 1 1 0）、`.issue-rule-name-wrap > strong` 样式（flex 1 1 0 + ellipsis）、`.issue-rule-name-popover` 样式（absolute 定位 + 复用场景标签 popover 视觉：白底、圆角、阴影、padding）、`[data-rule-name-truncated="true"]:hover .issue-rule-name-popover` 显示规则；3 处 JS measure（厂端 `factory-dashboard.js:6360`、门店 `app-runtime.js:4344`、销售 `app-runtime.js:15538`）检测 strong ellipsis 并设置 strongWrap `data-rule-name-truncated` 属性；门店原本无 title 属性，不需删除。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`factory-dashboard/factory-dashboard.css`、`app-runtime.js`、`store-dashboard/page.css`、`sales-dashboard/page.css`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（建议刷新三端问题规则分析页面，强规则名 hover 浮窗显示完整规则名，短规则名不显示浮窗；标签 "..." hover 浮窗显示完整标签列表）。
+
+## 2026-07-28 规则名 + 标签悬停浮窗 v2（去掉 wrap 嵌套）
+- 用户想做什么：解决 v1 嵌套 wrap 结构导致的 strong scrollWidth/clientWidth 计算异常（短规则名也被误判为截断、场景标签被错误折叠）。
+- 已经完成了什么：3 处 HTML（厂端 `factory-dashboard.js:6587`、门店 `app-runtime.js:4406`、销售 `app-runtime.js:16144`）去掉 wrap 嵌套，strong 直接是 `.issue-rule-name-line` 子项，加 `class="issue-rule-name-text"` + `data-rule-name-ellipsis-target`，popover 作为 strong sibling；3 处 CSS（厂端 `factory-dashboard.css:1387`、门店 `store-dashboard/page.css:2115`、销售 `sales-dashboard/page.css:482`）删除 `.issue-rule-name-wrap` 样式，调整 strong 选择器为 `.issue-rule-name-line > .issue-rule-name-text`（`position: relative` 让 popover 绝对定位相对 strong），hover 触发改用 `.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover`；3 处 JS measure（厂端 `factory-dashboard.js:6360`、门店 `app-runtime.js:4344`、销售 `app-runtime.js:15538`）用 strong 自身做 truncated 标记（设置/删除 `data-rule-name-truncated` 属性）。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`factory-dashboard/factory-dashboard.css`、`app-runtime.js`、`store-dashboard/page.css`、`sales-dashboard/page.css`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（建议刷新三端问题规则分析页面：短规则名 + 5 标签应全部显示，强规则名 + 5 标签应折叠 5 标签为 1 个 + ...，hover 触发浮窗）。
+
+## 2026-07-28 measure 函数 Range API + 双向自动恢复
+- 用户想做什么：上一版去掉 wrap 嵌套后短规则名仍被折叠（measure 函数误判），需要修复 measure 检测准确性。
+- 已经完成了什么：3 处 measure（厂端 `factory-dashboard.js:6360`、门店 `app-runtime.js:4344`、销售 `app-runtime.js:15553`）改用 `document.createRange()` + `getBoundingClientRect()` 测 strong 文本实际宽度（Range API 比 `scrollWidth`/`clientWidth` 在嵌套 flex 容器内更准确）；measure 改成**双向自动恢复**：强规则名或 scenes 溢出时折叠，已折叠状态下若位置够（strong 不截断 + scenes 不溢出）自动恢复 5 标签全显示；之前 collapsed 状态是"只折叠不恢复"（导致刷新前一直折叠）。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`app-runtime.js`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证（**用户必须刷新页面**才能触发新的 measure 逻辑；之前的 collapsed 状态不会自动消失）。
 
 ## 2026-06-04 第一轮落地全局日期筛选组件
 - 用户想做什么：确认按“全局通用日期筛选组件”方案开始实现，并把厂端这块时间筛选也接进来。

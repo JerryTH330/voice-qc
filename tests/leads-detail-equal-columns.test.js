@@ -63,6 +63,6 @@ test('lead journey uses its natural content height instead of fitting the viewpo
   assert.match(runtime, /pageHost\.querySelector\('\.intention-panel'\)/);
   assert.match(runtime, /pageHost\.querySelector\('\.lead-detail-tag-panel'\)/);
   assert.doesNotMatch(runtime, /resizeTargets[\s\S]*?lead-detail-profile-card/);
-  assert.ok(pageJs.includes('app-runtime.js?v=20260731lead-journey-auto-height'));
-  assert.ok(html.includes('page.js?v=20260731lead-journey-auto-height'));
+  assert.ok(pageJs.includes('app-runtime.js?v=20260804-ai-lead-validity'));
+  assert.ok(html.includes('page.js?v=20260804-ai-lead-validity'));
 });

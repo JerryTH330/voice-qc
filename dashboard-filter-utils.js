@@ -75,6 +75,11 @@
     SCENE_KEYS.scheduleConfirm
   ];
 
+  const BADGE_SCENES = [
+    SCENE_KEYS.storeReception,
+    SCENE_KEYS.testDrive
+  ];
+
   function getAllowedScenes(source) {
     return [...(SOURCE_ALLOWED_SCENES[source] || SOURCE_ALLOWED_SCENES[SOURCE_KEYS.all])];
   }
@@ -213,6 +218,16 @@
     return SOURCE_LABELS[sourceKey] || SOURCE_LABELS[SOURCE_KEYS.all];
   }
 
+  function getRecordingSourceVisibility(source, scenes) {
+    const selection = normalizeSceneSelection(source, scenes);
+    const selectedScenes = selection.isAllSelected ? selection.allowedScenes : selection.activeScenes;
+
+    return {
+      cloud: selectedScenes.some((scene) => INVITATION_SCENES.includes(scene)),
+      badge: selectedScenes.some((scene) => BADGE_SCENES.includes(scene))
+    };
+  }
+
   function getBusinessMetricKeysForSelection(source, scenes) {
     const selection = normalizeSceneSelection(source, scenes);
     const selectedScenes = selection.isAllSelected ? selection.allowedScenes : selection.activeScenes;
@@ -246,6 +261,7 @@
     getInvitationSceneCount,
     getSceneVolumeLabel,
     getSourceLabel,
-    getBusinessMetricKeysForSelection
+    getBusinessMetricKeysForSelection,
+    getRecordingSourceVisibility
   };
 });

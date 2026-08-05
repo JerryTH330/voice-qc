@@ -14,7 +14,8 @@
     toggleSceneSelection,
     getInvitationSceneCount,
     getSceneVolumeLabel,
-    getSceneLabel
+    getSceneLabel,
+    getRecordingSourceVisibility
   } = FILTER_UTILS;
   const {
     getFactoryHeroSubtitle = (profile) => String(profile?.organization || profile?.region || '').trim(),
@@ -2575,6 +2576,7 @@
 
   const getFactoryRecordingSummaryData = () => {
     const selection = getFactorySceneSelection();
+    const visibility = getRecordingSourceVisibility(currentSource, currentScenes);
     const selectedScenes = selection.isAllSelected
       ? selection.allowedScenes
       : selection.activeScenes;
@@ -2584,6 +2586,7 @@
 
     return buildFactoryRecordingSummary({
       selectedScenes,
+      visibility,
       cloudTotal,
       badgeTotal: receptionTotal + testDriveTotal,
       sceneCounts: {
@@ -2598,10 +2601,10 @@
 
   const renderFactoryRecordingSummary = () => {
     const summary = getFactoryRecordingSummaryData();
+    const visibleGroups = [summary.cloud, summary.badge].filter((group) => group.visible);
     return `
-      <div class="store-recording-summary" aria-label="录音数统计">
-        ${renderRecordingSummaryGroup(summary.cloud)}
-        ${renderRecordingSummaryGroup(summary.badge)}
+      <div class="store-recording-summary${visibleGroups.length === 1 ? ' is-single-source' : ''}" aria-label="录音数统计">
+        ${visibleGroups.map(renderRecordingSummaryGroup).join('')}
       </div>
     `;
   };
@@ -4413,7 +4416,7 @@
     const paginationHtml = pageCount > 1
       ? `
         <div class="sop-analysis-list-footer">
-          <span>共 ${countText(visibleRows.length)} 条，当前第 ${currentPage}/${pageCount} 页</span>
+          <span>共 ${countText(visibleRows.length)} 条</span>
           <div class="sop-analysis-list-pager" aria-label="SOP规则明细分页">
             <button type="button" class="sop-analysis-list-page-btn" data-sop-list-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
             <button type="button" class="sop-analysis-list-page-btn" data-sop-list-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
@@ -6312,32 +6315,42 @@
   );
   const getIssueRuleSortLabel = (value) => ISSUE_RULE_SORT_OPTIONS.find(option => option.value === value)?.label || ISSUE_RULE_SORT_OPTIONS[0].label;
 
-  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 3;
+  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 99;
+  const ISSUE_RULE_SCENE_COLLAPSED_LIMIT = 1;
+  const getIssueRuleSceneTagLabel = (label) => Array.from(String(label ?? '').trim())[0] || '';
+
+  const renderIssueRuleSceneTagsHtml = (labels, previewLimit) => {
+    const previewLabels = labels.slice(0, previewLimit);
+    const hasMore = labels.length > previewLimit;
+    return `
+      <span class="issue-rule-tags">
+        ${previewLabels.map(label => `<em title="${escapeHtml(label)}" data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+      </span>
+      ${hasMore ? `
+        <details class="issue-rule-scene-more">
+          <summary aria-label="查看全部所属业务场景">...</summary>
+          <span class="issue-rule-scene-popover">
+            <strong>所属业务场景</strong>
+            <span class="issue-rule-scene-popover-tags">
+              ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+            </span>
+          </span>
+        </details>
+      ` : ''}
+    `;
+  };
 
   const renderIssueRuleSceneTags = (sceneLabels = []) => {
     const labels = [...new Set(sceneLabels.filter(Boolean))];
-    const previewLabels = labels.slice(0, ISSUE_RULE_SCENE_PREVIEW_LIMIT);
-    const hasMore = labels.length > ISSUE_RULE_SCENE_PREVIEW_LIMIT;
-
-    return `
-      <span class="issue-rule-scenes">
-        <span class="issue-rule-tags">
-          ${previewLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-        </span>
-        ${hasMore ? `
-          <details class="issue-rule-scene-more">
-            <summary aria-label="查看全部所属业务场景">...</summary>
-            <span class="issue-rule-scene-popover">
-              <strong>所属业务场景</strong>
-              <span class="issue-rule-scene-popover-tags">
-                ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-              </span>
-            </span>
-          </details>
-        ` : ''}
-      </span>
-    `;
+    const dataLabels = escapeHtml(JSON.stringify(labels));
+    return `<span class="issue-rule-scenes" data-issue-rule-scenes data-issue-rule-scenes-labels='${dataLabels}'>${renderIssueRuleSceneTagsHtml(labels, ISSUE_RULE_SCENE_PREVIEW_LIMIT)}</span>`;
   };
+
+  const autoCollapseIssueRuleScenes = IssueRuleList.createAutoCollapser({
+    renderHtml: renderIssueRuleSceneTagsHtml,
+    previewLimit: ISSUE_RULE_SCENE_PREVIEW_LIMIT,
+    collapsedLimit: ISSUE_RULE_SCENE_COLLAPSED_LIMIT,
+  });
 
   const getIssueRuleBaseOrg = () => {
     const region = currentRegion !== 'all'
@@ -6490,6 +6503,31 @@
     return rules.length;
   };
 
+  const renderIssueRulePagination = (totalItems, currentPage, pageCount) => `
+    <div class="issue-rule-footer issue-rule-pagination session-pagination">
+      <div class="dashboard-pagination">
+        <span class="session-pagination-total">共 ${totalItems} 条</span>
+        <div class="dashboard-pagination-controls">
+          <span class="issue-pagination-page-size">${ISSUE_RULE_PAGE_SIZE} 条/页</span>
+          <div class="page-group" aria-label="规则分页">
+            <button type="button" class="issue-rule-page-btn page-arrow" data-page-action="prev" aria-label="上一页" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
+            ${Array.from({ length: pageCount }, (_, index) => index + 1).map(page => `
+              <button type="button" class="issue-rule-page-number page-num${page === currentPage ? ' active' : ''}" data-page-number="${page}" aria-label="第 ${page} 页" ${page === currentPage ? 'aria-current="page"' : ''}>${page}</button>
+            `).join('')}
+            <button type="button" class="issue-rule-page-btn page-arrow" data-page-action="next" aria-label="下一页" ${currentPage >= pageCount ? 'disabled' : ''}>›</button>
+          </div>
+          <label class="page-jump-group">
+            <span class="session-page-jump-label">前往</span>
+            <span class="page-select page-jump-select">
+              <input type="number" min="1" max="${pageCount}" value="${currentPage}" data-issue-page-jump aria-label="前往页码">
+            </span>
+            <span class="session-page-jump-suffix">页</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  `;
+
   const renderRuleListView = (config, rules) => {
     const canExport = issueRuleAnalysisState.activeTab === 'sop';
     const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
@@ -6500,16 +6538,17 @@
       const tagLabels = (rule.applicableScenes || []).map(getSceneLabel);
 
       return `
-        <div class="issue-rule-row" data-rule-id="${rule.id}" role="button" tabindex="0" aria-label="查看${escapeHtml(rule.name)}的组织表现">
+        <div class="issue-rule-row" data-rule-id="${rule.id}">
           <span class="issue-rule-name">
             <span class="issue-rule-name-line">
-              <strong>${escapeHtml(rule.name)}</strong>
+              <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(rule.name)}</strong>
+              <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.name)}</span>
               ${renderIssueRuleSceneTags(tagLabels)}
             </span>
           </span>
           <span class="issue-rule-rate">${rule.rate}%</span>
           <span class="issue-rule-count">${rule.hitCount}/${rule.sampleCount}</span>
-          <span class="issue-rule-action">看组织表现</span>
+          <button type="button" class="issue-rule-action" data-rule-id="${rule.id}" aria-label="查看${escapeHtml(rule.name)}的组织表现">看组织表现</button>
         </div>
       `;
     }).join('');
@@ -6546,16 +6585,14 @@
         </div>
         ${canExport ? `
           <button type="button" class="issue-rule-export-btn" ${rules.length ? '' : 'disabled'}>
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 2.5v9m0 0 3.2-3.2M10 11.5 6.8 8.3M4 13.5v2.25c0 .97.78 1.75 1.75 1.75h8.5c.97 0 1.75-.78 1.75-1.75V13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="../assets/factory-issue-overview/export-icon-565-5396.svg" alt="" aria-hidden="true">
             <span>导出</span>
           </button>
         ` : ''}
       </div>
       <div class="issue-rule-list-shell">
         <div class="issue-rule-list-head">
-          <span class="issue-rule-name-head"><span>规则名称</span><small>所属业务场景</small></span>
+          <span class="issue-rule-name-head">规则名称</span>
           <span>${config.metricLabel}</span>
           <span>${config.countLabel}</span>
           <span>操作</span>
@@ -6563,14 +6600,8 @@
         <div class="issue-rule-list">
           ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
         </div>
-        <div class="issue-rule-footer">
-          <span>共 ${rules.length} 条，当前第 ${currentPage}/${pageCount} 页</span>
-          <div class="issue-rule-pager" aria-label="规则分页">
-            <button type="button" class="issue-rule-page-btn" data-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
-            <button type="button" class="issue-rule-page-btn" data-page-action="next" ${currentPage >= pageCount ? 'disabled' : ''}>下一页</button>
-          </div>
-        </div>
       </div>
+      ${renderIssueRulePagination(rules.length, currentPage, pageCount)}
     `;
   };
 
@@ -6643,8 +6674,8 @@
       <div class="issue-selected-metrics">
         <div class="issue-selected-metric-card">
           <div class="issue-selected-metric-main">
-            <div class="issue-selected-metric-icon tone-green">
-              ${renderIssueSelectedMetricIcon('rate')}
+            <div class="issue-selected-metric-icon">
+              <img src="../assets/factory-issue-overview/metric-rate-icon-566-7059.png" alt="" aria-hidden="true">
             </div>
             <div class="issue-selected-metric-body">
               <span class="issue-selected-metric-label">${config.metricLabel}</span>
@@ -6654,8 +6685,8 @@
         </div>
         <div class="issue-selected-metric-card">
           <div class="issue-selected-metric-main">
-            <div class="issue-selected-metric-icon tone-violet">
-              ${renderIssueSelectedMetricIcon('count')}
+            <div class="issue-selected-metric-icon">
+              <img src="../assets/factory-issue-overview/metric-count-icon-566-7081.png" alt="" aria-hidden="true">
             </div>
             <div class="issue-selected-metric-body">
               <span class="issue-selected-metric-label">${config.countLabel}</span>
@@ -6759,6 +6790,36 @@
       });
     });
 
+    root.querySelectorAll('.issue-rule-page-number').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetPage = Number(btn.dataset.pageNumber);
+        if (!Number.isInteger(targetPage) || targetPage === issueRuleAnalysisState.page) return;
+        issueRuleAnalysisState.page = targetPage;
+        renderIssueRuleAnalysis();
+      });
+    });
+
+    const pageJumpInput = root.querySelector('[data-issue-page-jump]');
+    const applyPageJump = () => {
+      if (!pageJumpInput) return;
+      const rules = getVisibleIssueRules();
+      const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+      const requestedPage = Number(pageJumpInput.value);
+      const targetPage = Math.max(1, Math.min(pageCount, Number.isFinite(requestedPage) ? Math.round(requestedPage) : issueRuleAnalysisState.page));
+      if (targetPage === issueRuleAnalysisState.page) {
+        pageJumpInput.value = String(targetPage);
+        return;
+      }
+      issueRuleAnalysisState.page = targetPage;
+      renderIssueRuleAnalysis();
+    };
+    pageJumpInput?.addEventListener('change', applyPageJump);
+    pageJumpInput?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      applyPageJump();
+    });
+
     const rules = getVisibleIssueRules();
     const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
     if (issueRuleAnalysisState.page > pageCount) {
@@ -6767,18 +6828,14 @@
       return;
     }
 
-    root.querySelectorAll('.issue-rule-row').forEach(row => {
-      const openRule = (event) => {
-        if (event?.target?.closest('.issue-rule-scene-more')) return;
+    root.querySelectorAll('.issue-rule-action').forEach(actionBtn => {
+      actionBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const row = actionBtn.closest('.issue-rule-row');
+        if (!row) return;
         issueRuleAnalysisState.selectedRuleId = row.dataset.ruleId;
         issueRuleAnalysisState.path = [];
         renderIssueRuleAnalysis();
-      };
-      row.addEventListener('click', openRule);
-      row.addEventListener('keydown', (event) => {
-        if (event.target !== row || !['Enter', ' '].includes(event.key)) return;
-        event.preventDefault();
-        openRule(event);
       });
     });
 
@@ -6837,6 +6894,7 @@
       ? renderOrgDrillView(config, selectedRule)
       : renderRuleListView(config, rules);
     bindIssueRuleAnalysisEvents(focusSearch);
+    autoCollapseIssueRuleScenes(root);
   };
 
   // ── renderSOPDial：圆环动画 ─────────────────────────

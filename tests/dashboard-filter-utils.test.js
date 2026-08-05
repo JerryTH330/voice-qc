@@ -12,7 +12,8 @@ const {
   getLegacySceneBucket,
   getInvitationSceneCount,
   getSceneVolumeLabel,
-  getBusinessMetricKeysForSelection
+  getBusinessMetricKeysForSelection,
+  getRecordingSourceVisibility
 } = require('../dashboard-filter-utils.js');
 
 test('cloud source defaults to three cloud scenes', () => {
@@ -196,5 +197,29 @@ test('business metric keys follow source and scene selection rules', () => {
       SCENE_KEYS.testDrive
     ]),
     ['reception', 'test_drive']
+  );
+});
+
+test('recording source cards follow the selected business scenes', () => {
+  assert.deepEqual(
+    getRecordingSourceVisibility(SOURCE_KEYS.all, [
+      SCENE_KEYS.firstFollow,
+      SCENE_KEYS.inviteStore,
+      SCENE_KEYS.scheduleConfirm
+    ]),
+    { cloud: true, badge: false }
+  );
+
+  assert.deepEqual(
+    getRecordingSourceVisibility(SOURCE_KEYS.all, [
+      SCENE_KEYS.storeReception,
+      SCENE_KEYS.testDrive
+    ]),
+    { cloud: false, badge: true }
+  );
+
+  assert.deepEqual(
+    getRecordingSourceVisibility(SOURCE_KEYS.all, [SCENE_KEYS.all]),
+    { cloud: true, badge: true }
   );
 });

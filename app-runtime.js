@@ -86,7 +86,8 @@ function initStoreDashboardPage() {
     getLegacySceneBucket,
     getInvitationSceneCount,
     getSceneVolumeLabel,
-    getBusinessMetricKeysForSelection
+    getBusinessMetricKeysForSelection,
+    getRecordingSourceVisibility
   } = FILTER_UTILS;
 
 // ── 0. 录音数据库 & 播放器 ──────────────────────
@@ -2479,6 +2480,7 @@ function initStoreDashboardPage() {
 
   const getStoreRecordingSummaryData = () => {
     const selection = getStoreSceneSelection();
+    const visibility = getRecordingSourceVisibility(currentSource, currentScenes);
     const selectedScenes = selection.isAllSelected
       ? selection.allowedScenes
       : selection.activeScenes;
@@ -2490,6 +2492,7 @@ function initStoreDashboardPage() {
 
     return {
       cloud: {
+        visible: visibility.cloud,
         label: '云外呼录音数',
         value: cloudTotal,
         tone: 'blue',
@@ -2500,6 +2503,7 @@ function initStoreDashboardPage() {
         ].filter((scene) => selected.has(scene.key))
       },
       badge: {
+        visible: visibility.badge,
         label: '门店工牌录音数',
         value: receptionTotal + testDriveTotal,
         tone: 'green',
@@ -2513,10 +2517,10 @@ function initStoreDashboardPage() {
 
   const renderStoreRecordingSummary = () => {
     const summary = getStoreRecordingSummaryData();
+    const visibleGroups = [summary.cloud, summary.badge].filter((group) => group.visible);
     return `
-      <div class="store-recording-summary" aria-label="录音数统计">
-        ${renderStoreRecordingSummaryGroup(summary.cloud)}
-        ${renderStoreRecordingSummaryGroup(summary.badge)}
+      <div class="store-recording-summary${visibleGroups.length === 1 ? ' is-single-source' : ''}" aria-label="录音数统计">
+        ${visibleGroups.map(renderStoreRecordingSummaryGroup).join('')}
       </div>
     `;
   };
@@ -2758,7 +2762,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     pagination.innerHTML = `
       <div class="dashboard-pagination">
-        <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+        <span class="session-pagination-total">共 ${totalItems} 条</span>
         <div class="dashboard-pagination-controls">
           ${renderAdvisorPageSizeSelect()}
           <div class="page-group">
@@ -4296,32 +4300,41 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     return options.find(option => option.value === storeSopRuleState.sort)?.label || options[0].label;
   };
 
-  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 3;
+  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 99;
+  const ISSUE_RULE_SCENE_COLLAPSED_LIMIT = 1;
+
+  const renderIssueRuleSceneTagsHtml = (labels, previewLimit) => {
+    const previewLabels = labels.slice(0, previewLimit);
+    const hasMore = labels.length > previewLimit;
+    return `
+      <span class="issue-rule-tags">
+        ${previewLabels.map(label => `<em title="${escapeHtml(label)}" data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+      </span>
+      ${hasMore ? `
+        <details class="issue-rule-scene-more">
+          <summary aria-label="查看全部所属业务场景">...</summary>
+          <span class="issue-rule-scene-popover">
+            <strong>所属业务场景</strong>
+            <span class="issue-rule-scene-popover-tags">
+              ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+            </span>
+          </span>
+        </details>
+      ` : ''}
+    `;
+  };
 
   const renderIssueRuleSceneTags = (sceneLabels = []) => {
     const labels = [...new Set(sceneLabels.filter(Boolean))];
-    const previewLabels = labels.slice(0, ISSUE_RULE_SCENE_PREVIEW_LIMIT);
-    const hasMore = labels.length > ISSUE_RULE_SCENE_PREVIEW_LIMIT;
-
-    return `
-      <span class="issue-rule-scenes">
-        <span class="issue-rule-tags">
-          ${previewLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-        </span>
-        ${hasMore ? `
-          <details class="issue-rule-scene-more">
-            <summary aria-label="查看全部所属业务场景">...</summary>
-            <span class="issue-rule-scene-popover">
-              <strong>所属业务场景</strong>
-              <span class="issue-rule-scene-popover-tags">
-                ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-              </span>
-            </span>
-          </details>
-        ` : ''}
-      </span>
-    `;
+    const dataLabels = escapeHtml(JSON.stringify(labels));
+    return `<span class="issue-rule-scenes" data-issue-rule-scenes data-issue-rule-scenes-labels='${dataLabels}'>${renderIssueRuleSceneTagsHtml(labels, ISSUE_RULE_SCENE_PREVIEW_LIMIT)}</span>`;
   };
+
+  const autoCollapseIssueRuleScenes = IssueRuleList.createAutoCollapser({
+    renderHtml: renderIssueRuleSceneTagsHtml,
+    previewLimit: ISSUE_RULE_SCENE_PREVIEW_LIMIT,
+    collapsedLimit: ISSUE_RULE_SCENE_COLLAPSED_LIMIT,
+  });
 
   const renderStoreSopMetricIcon = (type) => type === 'count'
     ? `<svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
@@ -4344,19 +4357,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const offset = (currentPage - 1) * STORE_ISSUE_PAGE_SIZE;
     const pagedRules = visibleRules.slice(offset, offset + STORE_ISSUE_PAGE_SIZE);
     const rows = pagedRules.map(rule => `
-      <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}" role="button" tabindex="0" aria-label="查看${escapeHtml(rule.title)}的人员表现">
+      <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}">
         <span class="issue-rule-name">
           <span class="issue-rule-name-line">
-            <strong>${escapeHtml(rule.title)}</strong>
+            <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(rule.title)}</strong>
+            <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.title)}</span>
             ${(rule.applicableScenes || []).length
               ? renderIssueRuleSceneTags(rule.applicableScenes.map(getSceneLabel))
-              : `<em>${escapeHtml(rule.category)}</em>`}
+              : `<em data-tag-label="${escapeHtml(rule.category)}">${escapeHtml(rule.category)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(rule.category)}</span></em>`}
           </span>
         </span>
         <span class="issue-rule-scope">${scopeBadge(rule.advisor_count, scopeToneClass)}</span>
         <span class="issue-rule-rate">${escapeHtml(rule.hit_ratio)}</span>
         <span class="issue-rule-count">${rule.hit_count}/${rule.sample_count}</span>
-        <span class="issue-rule-action">人员表现</span>
+        <button type="button" class="issue-rule-action" data-store-sop-rule-id="${escapeHtml(rule.id)}" aria-label="查看${escapeHtml(rule.title)}的人员表现">人员表现</button>
       </div>
     `).join('');
 
@@ -4415,7 +4429,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
         </div>
         <div class="issue-rule-footer">
-          <span>共 ${visibleRules.length} 条，当前第 ${currentPage}/${totalPages} 页</span>
+          <span>共 ${visibleRules.length} 条</span>
           <div class="issue-rule-pager" aria-label="规则分页">
             <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
             <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="next" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
@@ -4491,6 +4505,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       ? renderStoreSopPeopleDetail(selectedRule)
       : renderStoreSopRuleList(visibleRules);
     bindStoreSopRuleEvents();
+    autoCollapseIssueRuleScenes(root);
   };
 
   const bindStoreSopRuleEvents = () => {
@@ -4557,17 +4572,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       });
     });
 
-    root.querySelectorAll('[data-store-sop-rule-id]').forEach(row => {
-      const openRule = (event) => {
-        if (event?.target?.closest('.issue-rule-scene-more')) return;
-        storeSopRuleState.selectedRuleId = row.dataset.storeSopRuleId;
+    root.querySelectorAll('.issue-rule-action[data-store-sop-rule-id]').forEach(actionBtn => {
+      actionBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        storeSopRuleState.selectedRuleId = actionBtn.dataset.storeSopRuleId;
         renderStoreSopRuleSection();
-      };
-      row.addEventListener('click', openRule);
-      row.addEventListener('keydown', (event) => {
-        if (event.target !== row || !['Enter', ' '].includes(event.key)) return;
-        event.preventDefault();
-        openRule(event);
       });
     });
 
@@ -6709,7 +6718,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       ]
 
       const leadStatusValues = ['未跟进', '跟进中', '已下定', '战败', '有效', '异地']
-      const aiLeadValidityValues = ['有效', '无效', '无法判断']
+      const aiLeadValidityValues = ['有效', '无效', '暂未分析']
       const leadIntentGradeValues = ['H', 'A', 'B', 'C']
       const leadAiIntentLevelMetas = [
         { label: '高', className: 'red' },
@@ -8551,7 +8560,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               ${renderPaginationPageSizeSelect('session', sessionPaginationState.pageSize)}
               <div class="page-group">
@@ -9595,7 +9604,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <strong>判别标准</strong>
               <span><b>有效：</b>线索下发后3天内，前3次外呼中，至少有1次通话时长不少于15秒，且客户未明确拒绝。</span>
               <span><b>无效：</b>线索下发后3天内未外呼，或前3次外呼中没有任何一次同时满足“通话时长不少于15秒且客户未明确拒绝”。</span>
-              <span><b>无法判断：</b>尚未完成分析，或录音中无有效内容，暂无法判定结果。</span>
+              <span><b>暂未分析：</b>尚未对录音完成分析。</span>
             </span>
           </span>
         `
@@ -10035,7 +10044,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               ${renderPaginationPageSizeSelect('leads', leadsPaginationState.pageSize)}
               <div class="page-group">
@@ -15577,32 +15586,42 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀约进店', '排程确认', '进店接待', '试乘试驾']
       const SALES_REVIEW_PAGE_SIZE = 5
-      const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 3
+      const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 99
+      const SALES_REVIEW_SCENE_COLLAPSED_LIMIT = 1
+
+      function renderSalesReviewSceneTagsHtml(labels, previewLimit) {
+        const previewLabels = labels.slice(0, previewLimit)
+        const hasMore = labels.length > previewLimit
+
+        return `
+          <span class="issue-rule-tags">
+            ${previewLabels.map((label) => `<em data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+          </span>
+          ${hasMore ? `
+            <details class="issue-rule-scene-more">
+              <summary aria-label="查看全部所属业务场景">...</summary>
+              <span class="issue-rule-scene-popover">
+                <strong>所属业务场景</strong>
+                <span class="issue-rule-scene-popover-tags">
+                  ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
+                </span>
+              </span>
+            </details>
+          ` : ''}
+        `
+      }
 
       function renderSalesReviewSceneTags(sceneLabels = []) {
         const labels = [...new Set(sceneLabels.filter(Boolean))]
-        const previewLabels = labels.slice(0, SALES_REVIEW_SCENE_PREVIEW_LIMIT)
-        const hasMore = labels.length > SALES_REVIEW_SCENE_PREVIEW_LIMIT
-
-        return `
-          <span class="issue-rule-scenes">
-            <span class="issue-rule-tags">
-              ${previewLabels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
-            </span>
-            ${hasMore ? `
-              <details class="issue-rule-scene-more">
-                <summary aria-label="查看全部所属业务场景">...</summary>
-                <span class="issue-rule-scene-popover">
-                  <strong>所属业务场景</strong>
-                  <span class="issue-rule-scene-popover-tags">
-                    ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
-                  </span>
-                </span>
-              </details>
-            ` : ''}
-          </span>
-        `
+        const dataLabels = escapeHtml(JSON.stringify(labels))
+        return `<span class="issue-rule-scenes" data-issue-rule-scenes data-issue-rule-scenes-labels='${dataLabels}'>${renderSalesReviewSceneTagsHtml(labels, SALES_REVIEW_SCENE_PREVIEW_LIMIT)}</span>`
       }
+
+      const autoCollapseSalesReviewSceneTags = IssueRuleList.createAutoCollapser({
+        renderHtml: renderSalesReviewSceneTagsHtml,
+        previewLimit: SALES_REVIEW_SCENE_PREVIEW_LIMIT,
+        collapsedLimit: SALES_REVIEW_SCENE_COLLAPSED_LIMIT,
+      })
 
       function getSalesReviewAllowedScenes(role) {
         return role === 'advisor'
@@ -16128,7 +16147,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         host.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               <span class="issue-pagination-page-size">${SALES_REVIEW_PAGE_SIZE} 条/页</span>
               <div class="page-group">
@@ -16169,16 +16188,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const config = SALES_REVIEW_INSIGHT_CONFIG[activeTab] || SALES_REVIEW_INSIGHT_CONFIG.sop
         const pagination = document.getElementById('review-insight-pagination')
         const rows = pageItems.map((item, index) => `
-          <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}" role="button" tabindex="0" aria-label="查看${escapeHtml(item.title)}的录音">
+          <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}">
             <span class="issue-rule-name">
               <span class="issue-rule-name-line">
-                <strong>${escapeHtml(item.title)}</strong>
+                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(item.title)}</strong>
+                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
                 ${renderSalesReviewSceneTags(item.applicableScenes)}
               </span>
             </span>
             <span class="issue-rule-rate">${item.score}%</span>
             <span class="issue-rule-count">${item.hitCount}/${item.sampleCount}</span>
-            <span class="issue-rule-action">查看录音</span>
+            <button type="button" class="issue-rule-action" data-sales-review-recording-index="${offset + index}" aria-label="查看${escapeHtml(item.title)}的录音">查看录音</button>
           </div>
         `).join('')
 
@@ -16191,7 +16211,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
             </div>
             <div class="issue-rule-footer">
-              <span>共 ${visibleItems.length} 条，当前第 ${state.reviewInsightPage}/${totalPages} 页</span>
+              <span>共 ${visibleItems.length} 条</span>
               <div class="issue-rule-pager" aria-label="规则分页">
                 <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="prev" ${state.reviewInsightPage <= 1 ? 'disabled' : ''}>上一页</button>
                 <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="next" ${state.reviewInsightPage >= totalPages ? 'disabled' : ''}>下一页</button>
@@ -16199,17 +16219,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             </div>
           </div>`
 
+        autoCollapseSalesReviewSceneTags(list)
         if (pagination) pagination.innerHTML = ''
-        list.querySelectorAll('[data-sales-review-recording-index]').forEach((row) => {
-          const openRecordings = (event) => {
-            if (event?.target?.closest('.issue-rule-scene-more')) return
-            window.openSalesReviewRecordingLibrary(role, activeTab, Number(row.dataset.salesReviewRecordingIndex))
-          }
-          row.addEventListener('click', openRecordings)
-          row.addEventListener('keydown', (event) => {
-            if (event.target !== row || !['Enter', ' '].includes(event.key)) return
-            event.preventDefault()
-            openRecordings(event)
+        list.querySelectorAll('.issue-rule-action[data-sales-review-recording-index]').forEach((actionBtn) => {
+          actionBtn.addEventListener('click', (event) => {
+            event.stopPropagation()
+            window.openSalesReviewRecordingLibrary(role, activeTab, Number(actionBtn.dataset.salesReviewRecordingIndex))
           })
         })
         list.querySelectorAll('[data-sales-review-rule-page-action]').forEach((button) => {
@@ -16635,7 +16650,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               <label class="page-select">
                 <span>3 条/页</span>

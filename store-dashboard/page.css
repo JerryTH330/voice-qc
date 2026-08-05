@@ -1,6 +1,6 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260731131500");
-@import url("../app-inline.css?v=20260731131500");
+@import url("../voice-qc-admin.css?v=20260805-issue-rule-shared");
+@import url("../app-inline.css?v=20260805-issue-rule-shared");
 
 /* Figma 546:1160 — 门店核心指标 */
 .store-dashboard-page .hero-panel {
@@ -102,6 +102,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   min-height: 166px;
+}
+
+.store-dashboard-page .store-recording-summary.is-single-source {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .store-dashboard-page .store-recording-summary-group,
@@ -279,9 +283,10 @@
   justify-content: center;
   gap: 3px;
   padding: 12px 36px 12px 72px;
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(241, 246, 255, 0.92));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(4px);
   box-shadow: none;
 }
 
@@ -1991,19 +1996,20 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .store-dashboard-page #detail-sop .issue-rule-row:hover,
 .store-dashboard-page #detail-sop .issue-rule-row:focus-visible {
   outline: none;
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
 }
 
-.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-scene-more[open]) {
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-scene-more[open]),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-scene-more:hover),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-scene-more:focus-within),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-name em:hover),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-name em:focus-within),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover),
+.store-dashboard-page #detail-sop .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within) {
   z-index: 40;
 }
 
@@ -2037,8 +2043,11 @@
   flex-wrap: wrap;
 }
 
-.store-dashboard-page #detail-sop .issue-rule-scenes {
-  position: relative;
+.store-dashboard-page #detail-sop .issue-rule-scenes,
+.store-dashboard-page #detail-sop .issue-rule-tags {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .store-dashboard-page #detail-sop .issue-rule-scene-more {
@@ -2089,7 +2098,9 @@
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
 }
 
-.store-dashboard-page #detail-sop .issue-rule-scene-more[open] .issue-rule-scene-popover {
+.store-dashboard-page #detail-sop .issue-rule-scene-more[open] .issue-rule-scene-popover,
+.store-dashboard-page #detail-sop .issue-rule-scene-more:hover .issue-rule-scene-popover,
+.store-dashboard-page #detail-sop .issue-rule-scene-more:focus-within .issue-rule-scene-popover {
   display: grid;
   gap: 10px;
 }
@@ -2100,12 +2111,43 @@
   line-height: 18px;
 }
 
-.store-dashboard-page #detail-sop .issue-rule-name strong {
+.store-dashboard-page #detail-sop .issue-rule-name-line > .issue-rule-name-text {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
   color: var(--color-text);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+}
+.store-dashboard-page #detail-sop .issue-rule-name-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  max-width: 360px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: normal;
+  cursor: text;
+  pointer-events: auto;
+}
+.store-dashboard-page #detail-sop .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
+.store-dashboard-page #detail-sop .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
+  display: block;
 }
 
 .store-dashboard-page #detail-sop .issue-rule-name em {

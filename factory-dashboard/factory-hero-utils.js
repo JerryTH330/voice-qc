@@ -15,6 +15,7 @@
 
   const buildFactoryRecordingSummary = ({
     selectedScenes = [],
+    visibility = { cloud: true, badge: true },
     cloudTotal = 0,
     badgeTotal = 0,
     sceneCounts = {}
@@ -28,6 +29,7 @@
 
     return {
       cloud: {
+        visible: visibility.cloud !== false,
         label: '云外呼录音数',
         value: Number(cloudTotal) || 0,
         unit: '条',
@@ -39,6 +41,7 @@
         ].filter((scene) => selected.has(scene.key))
       },
       badge: {
+        visible: visibility.badge !== false,
         label: '门店工牌录音数',
         value: Number(badgeTotal) || 0,
         unit: '条',
