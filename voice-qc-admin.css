@@ -9582,6 +9582,35 @@ body::before {
   text-align: center;
 }
 
+.lead-detail-journey-evolution:not([data-evolution-overflow]) .lead-detail-hero-evolution {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.lead-detail-journey-evolution:not([data-evolution-overflow]) .lead-detail-hero-steps {
+  grid-column: 1;
+  justify-content: space-between;
+  padding: 0;
+  overflow-x: hidden;
+  scroll-snap-type: none;
+}
+
+.lead-detail-journey-evolution:not([data-evolution-overflow]) .lead-detail-hero-step {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 80px;
+}
+
+.lead-detail-journey-evolution[data-evolution-single] .lead-detail-hero-step {
+  flex: 0 0 80px;
+  width: 80px;
+  margin-inline: auto;
+}
+
+.lead-detail-journey-evolution[data-evolution-overflow] .lead-detail-hero-step {
+  flex: 0 0 80px;
+  width: 80px;
+}
+
 .lead-detail-hero-step-connector {
   position: absolute;
   top: 15px;
@@ -9597,7 +9626,7 @@ body::before {
   top: 12px;
   right: 12px;
   z-index: 2;
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 4px;
   padding: 5px 10px;
@@ -9610,6 +9639,10 @@ body::before {
   line-height: 1.4;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lead-detail-journey-evolution[data-evolution-overflow] .lead-detail-evolution-toggle {
+  display: inline-flex;
 }
 
 .lead-detail-evolution-toggle:hover {
@@ -9626,7 +9659,7 @@ body::before {
 .lead-detail-evolution-arrow {
   position: relative;
   z-index: 2;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 28px;
@@ -9642,6 +9675,10 @@ body::before {
   visibility: visible;
   transition: opacity 0.2s ease, visibility 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.08);
+}
+
+.lead-detail-journey-evolution[data-evolution-overflow] .lead-detail-evolution-arrow {
+  display: inline-flex;
 }
 
 .lead-detail-evolution-arrow:not(:disabled) {

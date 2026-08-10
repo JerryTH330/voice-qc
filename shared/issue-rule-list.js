@@ -1,6 +1,6 @@
 // 共享：问题规则列表（厂端、门店、销售 3 处共用）
 // 暴露：
-// - IssueRuleList.createAutoCollapser({ renderHtml, previewLimit, collapsedLimit, sceneAttrName })
+// - IssueRuleList.createAutoCollapser({ renderHtml, previewLimit, collapsedLimit, progressive, sceneAttrName })
 //   创建 measure 函数 + autoCollapser 函数（挂到根，遍历 [data-issue-rule-scenes]:not([data-issue-rule-scenes-ready])）
 // - IssueRuleList.setupRowDrilldown({ root, dataKey, onRuleClick, containerSelector })
 //   绑定 .issue-rule-action button click → 回调(ruleId)
@@ -30,11 +30,32 @@
     }
   }
 
+  function getRuleNameTextWidth(el) {
+    if (!el) return 0;
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().width;
+    } catch (e) {
+      return el.scrollWidth || 0;
+    }
+  }
+
+  function chooseProgressivePreviewCount(labelCount, fits) {
+    const safeCount = Math.max(0, Number(labelCount) || 0);
+    if (safeCount <= 1) return safeCount;
+    for (let previewCount = safeCount; previewCount >= 0; previewCount -= 1) {
+      if (fits(previewCount)) return previewCount;
+    }
+    return 0;
+  }
+
   function createAutoCollapser(opts) {
     const {
       renderHtml,         // (labels, limit) => string
       previewLimit,
       collapsedLimit,
+      progressive = false,
       sceneSelector = '[data-issue-rule-scenes]:not([data-issue-rule-scenes-ready])',
     } = opts;
 
@@ -47,16 +68,54 @@
         if (!labelsAttr) return;
         let labels = [];
         try { labels = JSON.parse(labelsAttr); } catch (e) { return; }
-        if (!Array.isArray(labels) || labels.length <= 1) return;
+        if (!Array.isArray(labels) || labels.length === 0) return;
 
         const strongEl = cont.parentElement && cont.parentElement.querySelector('[data-rule-name-ellipsis-target]');
+        const lineEl = cont.parentElement;
         let lastMeasureAt = 0;
+        let pendingMeasureTimer = null;
 
         const measure = () => {
           if (!cont.isConnected) return;
           const now = Date.now();
-          if (now - lastMeasureAt < MEASURE_COOLDOWN) return;
+          const elapsed = now - lastMeasureAt;
+          if (elapsed < MEASURE_COOLDOWN) {
+            if (pendingMeasureTimer) clearTimeout(pendingMeasureTimer);
+            pendingMeasureTimer = setTimeout(measure, MEASURE_COOLDOWN - elapsed);
+            return;
+          }
+          pendingMeasureTimer = null;
           lastMeasureAt = now;
+
+          if (progressive) {
+            const lineWidth = lineEl ? lineEl.getBoundingClientRect().width : 0;
+            if (!lineWidth) return;
+            const lineStyle = typeof getComputedStyle === 'function' ? getComputedStyle(lineEl) : null;
+            const lineGap = Number.parseFloat(lineStyle?.columnGap || lineStyle?.gap || 0) || 0;
+            const nameTextWidth = getRuleNameTextWidth(strongEl);
+            const renderPreview = (previewCount) => {
+              cont.innerHTML = renderHtml(labels, previewCount);
+              void cont.offsetHeight;
+              return cont.scrollWidth;
+            };
+            const previewCount = chooseProgressivePreviewCount(labels.length, (count) => (
+              nameTextWidth + lineGap + renderPreview(count) <= lineWidth + 1
+            ));
+            renderPreview(previewCount);
+            cont.dataset.issueRuleScenesState = previewCount === labels.length ? 'expanded' : 'collapsed';
+
+            const isStrongTruncated = isRuleNameEllipsis(strongEl);
+            if (strongEl) {
+              if (isStrongTruncated) {
+                strongEl.dataset.ruleNameTruncated = 'true';
+              } else {
+                delete strongEl.dataset.ruleNameTruncated;
+              }
+            }
+            return;
+          }
+
+          if (labels.length <= 1) return;
 
           const wasCollapsed = cont.dataset.issueRuleScenesState === 'collapsed';
           if (wasCollapsed) {
@@ -85,10 +144,8 @@
 
         if (typeof ResizeObserver !== 'undefined') {
           const ro = new ResizeObserver(() => measure());
-          ro.observe(cont);
-          if (strongEl) {
-            ro.observe(strongEl);
-          }
+          ro.observe(progressive && lineEl ? lineEl : cont);
+          if (!progressive && strongEl) ro.observe(strongEl);
           cont._issueRuleScenesObserver = ro;
         }
       });
@@ -161,6 +218,7 @@
 
   global.IssueRuleList = {
     createAutoCollapser,
+    chooseProgressivePreviewCount,
     setupRowDrilldown,
     renderSceneTagsHtml,
     renderSceneTags,

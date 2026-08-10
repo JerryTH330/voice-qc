@@ -1287,13 +1287,10 @@
 .factory-dashboard-page .issue-rule-row:focus-visible {
   outline: none;
 }
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-scene-more[open]),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-scene-more:hover),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-scene-more:focus-within),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-name em:hover),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-name em:focus-within),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover),
-.factory-dashboard-page .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within) {
+.factory-dashboard-page .issue-rule-row:has(.issue-rule-scenes:hover),
+.factory-dashboard-page .issue-rule-row:has(.issue-rule-scenes:focus-within),
+.factory-dashboard-page .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover),
+.factory-dashboard-page .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within) {
   z-index: 40;
 }
 .factory-dashboard-page .issue-rule-name {
@@ -1304,7 +1301,9 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 10px;
+  width: 100%;
   min-width: 0;
 }
 .factory-dashboard-page .issue-rule-scenes,
@@ -1320,14 +1319,16 @@
 .factory-dashboard-page .issue-rule-tags {
   flex: 0 0 auto;
   flex-wrap: nowrap;
-  overflow: hidden;
   max-width: 100%;
 }
-.factory-dashboard-page .issue-rule-scene-more {
+.factory-dashboard-page .issue-rule-scenes {
   position: relative;
-  z-index: 12;
+  overflow: visible;
 }
-.factory-dashboard-page .issue-rule-scene-more > summary {
+.factory-dashboard-page .issue-rule-tags {
+  overflow: hidden;
+}
+.factory-dashboard-page .issue-rule-scene-more {
   display: inline-flex;
   min-width: 28px;
   min-height: 22px;
@@ -1341,14 +1342,13 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
-  list-style: none;
+  cursor: default;
+  position: relative;
+  z-index: 12;
 }
-.factory-dashboard-page .issue-rule-scene-more > summary::-webkit-details-marker {
-  display: none;
-}
-.factory-dashboard-page .issue-rule-scene-more > summary:hover,
-.factory-dashboard-page .issue-rule-scene-more > summary:focus-visible {
+.factory-dashboard-page .issue-rule-scene-more:hover,
+.factory-dashboard-page .issue-rule-scene-more:focus-visible,
+.factory-dashboard-page .issue-rule-tags > em:focus-visible {
   outline: none;
   border-color: rgba(37, 99, 235, 0.55);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
@@ -1365,10 +1365,11 @@
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  pointer-events: none;
 }
-.factory-dashboard-page .issue-rule-scene-more[open] .issue-rule-scene-popover,
-.factory-dashboard-page .issue-rule-scene-more:hover .issue-rule-scene-popover,
-.factory-dashboard-page .issue-rule-scene-more:focus-within .issue-rule-scene-popover {
+.factory-dashboard-page .issue-rule-scenes:has(.issue-rule-tags > em:hover) > .issue-rule-scene-popover,
+.factory-dashboard-page .issue-rule-scenes:has(.issue-rule-scene-more:hover) > .issue-rule-scene-popover,
+.factory-dashboard-page .issue-rule-scenes:focus-within > .issue-rule-scene-popover {
   display: grid;
   gap: 10px;
 }
@@ -1377,15 +1378,15 @@
   font-size: 13px;
   line-height: 18px;
 }
-.factory-dashboard-page .issue-rule-name-line {
+.factory-dashboard-page .issue-rule-name-copy {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex: 0 1 auto;
   min-width: 0;
 }
-.factory-dashboard-page .issue-rule-name-line > .issue-rule-name-text {
-  position: relative;
-  flex: 1 1 0;
+.factory-dashboard-page .issue-rule-name-copy > .issue-rule-name-text {
+  display: block;
+  width: 100%;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1417,8 +1418,8 @@
   cursor: text;
   pointer-events: auto;
 }
-.factory-dashboard-page .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
-.factory-dashboard-page .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
+.factory-dashboard-page .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
+.factory-dashboard-page .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
   display: block;
 }
 .factory-dashboard-page .issue-rule-name em {
@@ -1437,31 +1438,6 @@
   white-space: nowrap;
   flex: 0 0 auto;
   position: relative;
-}
-.factory-dashboard-page .issue-rule-tag-popover {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  max-width: 240px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
-  color: #162033;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-  word-break: break-word;
-  pointer-events: none;
-}
-.factory-dashboard-page .issue-rule-name em:hover .issue-rule-tag-popover,
-.factory-dashboard-page .issue-rule-name em:focus-within .issue-rule-tag-popover {
-  display: block;
 }
 .factory-dashboard-page .issue-rule-tags > em {
   width: 30px;

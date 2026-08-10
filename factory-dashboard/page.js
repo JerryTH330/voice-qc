@@ -1,7 +1,7 @@
 /* 厂端看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
 (function loadPageRuntime() {
-  const assetVersion = '20260810-sticky-24px-v5';
+  const assetVersion = '20260810-responsive-rule-tags-v2';
   const scripts = ["../dashboard-filter-utils.js","../date-filter-component-utils.js","../factory-multi-select-filter-utils.js","./factory-hero-utils.js","./issue-rule-analysis-utils.js","../shared/issue-rule-list.js","./factory-dashboard.js","../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
