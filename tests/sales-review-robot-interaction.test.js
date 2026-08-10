@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, 'sales-dashboard', 'page.css'), 'utf
 const runtime = fs.readFileSync(path.join(root, 'app-runtime.js'), 'utf8');
 
 test('sales review cards use the Figma robot placement and existing customer insight media', () => {
-  assert.ok(html.includes('page.css?v=20260729sales-review-robot'));
+  assert.ok(html.includes('page.css?v=20260810-sticky-24px-v5'));
   assert.equal((html.match(/data-sales-review-robot-media/g) || []).length, 2);
   assert.equal((html.match(/customer-insight-robot-222\.png/g) || []).length, 2);
   assert.equal((html.match(/customer-insight-robot-generating\.mp4/g) || []).length, 2);

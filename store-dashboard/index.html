@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260804-rule-scenes" />
+        <link rel="stylesheet" href="./page.css?v=20260810-sticky-24px-v5" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -293,7 +293,7 @@
              ══════════════════════════════════════ -->
         <div class="main-panel active" id="main-panel-advisors" role="tabpanel" aria-labelledby="main-tab-advisors">
           <div class="tab-dual-grid">
-            <!-- 左列：团队效能 / 顾问排行 / 趋势 -->
+            <!-- 左列：团队效能 / SOP执行排行 / 趋势 -->
             <div class="tab-left-stack" aria-label="顾问管理概览">
               <section class="track sop-overview-track" aria-label="质检概览">
                 <div class="track-header">
@@ -387,60 +387,78 @@
                 </div>
               </section>
     
-              <!-- 顾问排行榜 -->
-              <section class="track advisor-section advisor-rank-card" aria-label="顾问排行">
+              <!-- SOP执行排行榜 -->
+              <section class="track advisor-section advisor-rank-card" aria-label="SOP执行排行">
                 <div class="store-section-content advisor-rank-content">
                 <div class="section-title-bar">
                   <div>
-                    <h2 class="section-title">顾问排行</h2>
+                    <h2 class="section-title">SOP执行排行</h2>
                     <p class="section-sub">按邀约、接待与质检表现查看顾问排名</p>
                   </div>
                 </div>
-                <div class="advisor-list" id="advisor-list" aria-label="顾问排行"></div>
-                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="顾问排行分页"></div>
+                <div class="advisor-list" id="advisor-list" aria-label="SOP执行排行"></div>
+                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="SOP执行排行分页"></div>
                 </div>
               </section>
     
             </div>
     
-            <!-- 右列：短板 + 优势 + 风险 + 趋势图 -->
-            <div class="tab-right-stack issue-overview-wrapper" aria-label="问题概览与明细">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">录音复盘</div>
-                  <div class="card-sub">支持规则名称搜索、排序与人员下钻</div>
-                </div>
+            <!-- 中列：SOP执行分析 -->
+          <div class="tab-right-stack issue-sop-analysis-wrapper" aria-label="SOP执行分析">
+            <div class="card-header">
+              <div>
+                <div class="card-title">SOP执行分析</div>
+                <div class="card-sub">从规则维度查看各组织、各场景的 SOP 命中表现。</div>
               </div>
-              <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
-                <button type="button" class="issue-insight-tab active" data-issue-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
-                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
-              </div>
-
-              <div class="issue-detail-section">
-                <section class="track issue-detail-card issue-detail-sop active" id="detail-sop" role="tabpanel" aria-label="SOP 质检分析">
-                  <div class="store-section-content issue-detail-content">
-                    <div class="issue-detail-pad">
-                      <div id="store-issue-rule-analysis-root" class="issue-rule-analysis-root"></div>
-                    </div>
+            </div>
+            <div class="issue-detail-section">
+              <section class="track issue-detail-card active" id="detail-sop-analysis" role="tabpanel" aria-label="SOP执行分析">
+                <div class="store-section-content issue-detail-content">
+                  <div class="issue-detail-pad">
+                    <div id="store-issue-sop-analysis-root" class="issue-rule-analysis-root"></div>
                   </div>
-                </section>
-              </div>
+                </div>
+              </section>
             </div>
           </div>
-          <!-- 质检趋势分布图 -->
-          <section class="track trend-section store-trend-card" aria-label="质检趋势分布图">
-            <div class="store-section-content store-trend-content">
-            <div class="trend-header">
+
+          <!-- 右列：优势 + 短板 + 风险 -->
+          <div class="tab-right-stack issue-overview-wrapper" aria-label="问题概览与明细">
+            <div class="card-header">
               <div>
-                <h2 class="section-title">质检趋势分布图</h2>
-                <p class="section-sub">门店质检合格率vs大区质检合格率</p>
+                <div class="card-title">顾问行为洞察</div>
+                <div class="card-sub">从录音中识别顾问的优势、短板与风险行为。</div>
               </div>
             </div>
-            <div class="trend-chart-wrap">
-              <canvas id="storeTrendChart" aria-label="质检趋势分布图" role="img"></canvas>
+            <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
+              <button type="button" class="issue-insight-tab active" data-issue-insight-tab="strength" role="tab" aria-selected="true">优势项识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+              <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
             </div>
+
+            <div class="issue-detail-section">
+              <section class="track issue-detail-card active" id="detail-sop" role="tabpanel" aria-label="规则命中分析">
+                <div class="store-section-content issue-detail-content">
+                  <div class="issue-detail-pad">
+                    <div id="store-issue-rule-analysis-root" class="issue-rule-analysis-root"></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+          <!-- SOP执行趋势分布图 -->
+          <section class="track trend-section store-trend-card" aria-label="SOP执行趋势分布图">
+            <div class="store-section-content store-trend-content">
+              <div class="trend-header">
+                <div>
+                  <h2 class="section-title">SOP执行趋势分布图</h2>
+                  <p class="section-sub">门店合格率vs大区合格率</p>
+                </div>
+              </div>
+              <div class="trend-chart-wrap">
+                <canvas id="storeTrendChart" aria-label="SOP执行趋势分布图" role="img"></canvas>
+              </div>
             <div class="sales-trend-footer store-trend-footer">
               <div class="trend-legend chart-legend" id="chart-legend"></div>
             </div>
@@ -828,6 +846,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260804-rule-scenes"></script>
+    <script src="./page.js?v=20260810-sticky-24px-v5"></script>
   </body>
 </html>

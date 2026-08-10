@@ -73,6 +73,33 @@ function renderSharedInsightTop5Cards(items, options = {}) {
   }).join('');
 }
 
+function initStickyFilterBars() {
+  const bars = document.querySelectorAll('.global-filter-bar.session-filter-card, .sales-role-nav');
+  bars.forEach((bar) => {
+    if (bar.dataset.stickyInit === 'true') return;
+    bar.dataset.stickyInit = 'true';
+
+    const host = bar.parentNode;
+    host.classList.add('sticky-sentinel-host');
+    const sentinelTop = bar.offsetTop;
+    const sentinel = document.createElement('div');
+    sentinel.className = 'sticky-sentinel';
+    sentinel.setAttribute('aria-hidden', 'true');
+    sentinel.style.cssText = 'position:absolute;height:1px;width:1px;left:0;visibility:hidden;pointer-events:none;';
+    sentinel.style.top = `${sentinelTop}px`;
+    host.insertBefore(sentinel, bar);
+
+    const root = bar.closest('.main');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        bar.classList.toggle('is-stuck', !entry.isIntersecting);
+      });
+    }, { root, threshold: 0, rootMargin: '-24px 0px 0px 0px' });
+
+    observer.observe(sentinel);
+  });
+}
+
 function initStoreDashboardPage() {
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const {
@@ -86,7 +113,8 @@ function initStoreDashboardPage() {
     getLegacySceneBucket,
     getInvitationSceneCount,
     getSceneVolumeLabel,
-    getBusinessMetricKeysForSelection
+    getBusinessMetricKeysForSelection,
+    getRecordingSourceVisibility
   } = FILTER_UTILS;
 
 // ── 0. 录音数据库 & 播放器 ──────────────────────
@@ -1452,6 +1480,13 @@ function initStoreDashboardPage() {
     page: 1,
     selectedRuleId: null
   };
+  const storeInsightRuleState = {
+    activeTab: 'strength',
+    query: '',
+    sort: 'rate-desc',
+    page: 1,
+    selectedRuleId: null
+  };
   const STORE_SOP_SORT_OPTIONS = [
     { value: 'rate-desc', label: '命中率从高到低' },
     { value: 'rate-asc', label: '命中率从低到高' },
@@ -2007,7 +2042,7 @@ function initStoreDashboardPage() {
     <div class="team-ai-summary-content team-ai-summary-content-obscured team-ai-summary-content-placeholder">
       <div class="team-ai-placeholder-line">系统将基于当前筛选条件下的顾问接待、录音质检、客户反馈和转化节点，自动生成团队效能总评。</div>
       <div class="team-ai-placeholder-line">内容会覆盖质检合格率变化、关键话术薄弱项、风险录音分布以及影响门店转化的核心原因。</div>
-      <div class="team-ai-placeholder-line">生成后可结合短板改善项和顾问排行，快速定位本周需要专项辅导的动作。</div>
+      <div class="team-ai-placeholder-line">生成后可结合短板改善项和SOP执行排行，快速定位本周需要专项辅导的动作。</div>
     </div>
     <div class="team-ai-summary-overlay" aria-hidden="true"></div>
   `;
@@ -2479,6 +2514,7 @@ function initStoreDashboardPage() {
 
   const getStoreRecordingSummaryData = () => {
     const selection = getStoreSceneSelection();
+    const visibility = getRecordingSourceVisibility(currentSource, currentScenes);
     const selectedScenes = selection.isAllSelected
       ? selection.allowedScenes
       : selection.activeScenes;
@@ -2490,6 +2526,7 @@ function initStoreDashboardPage() {
 
     return {
       cloud: {
+        visible: visibility.cloud,
         label: '云外呼录音数',
         value: cloudTotal,
         tone: 'blue',
@@ -2500,6 +2537,7 @@ function initStoreDashboardPage() {
         ].filter((scene) => selected.has(scene.key))
       },
       badge: {
+        visible: visibility.badge,
         label: '门店工牌录音数',
         value: receptionTotal + testDriveTotal,
         tone: 'green',
@@ -2513,10 +2551,10 @@ function initStoreDashboardPage() {
 
   const renderStoreRecordingSummary = () => {
     const summary = getStoreRecordingSummaryData();
+    const visibleGroups = [summary.cloud, summary.badge].filter((group) => group.visible);
     return `
-      <div class="store-recording-summary" aria-label="录音数统计">
-        ${renderStoreRecordingSummaryGroup(summary.cloud)}
-        ${renderStoreRecordingSummaryGroup(summary.badge)}
+      <div class="store-recording-summary${visibleGroups.length === 1 ? ' is-single-source' : ''}" aria-label="录音数统计">
+        ${visibleGroups.map(renderStoreRecordingSummaryGroup).join('')}
       </div>
     `;
   };
@@ -2698,7 +2736,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   // ══════════════════════════════════════════════
-  // 6. 顾问排行榜（动态列，v2 逻辑保留）
+  // 6. SOP执行排行榜（动态列，v2 逻辑保留）
   // ══════════════════════════════════════════════
   window.sortAdvisor = function(key) {
     if (currentSort.key === key) {
@@ -2758,7 +2796,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     pagination.innerHTML = `
       <div class="dashboard-pagination">
-        <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+        <span class="session-pagination-total">共 ${totalItems} 条</span>
         <div class="dashboard-pagination-controls">
           ${renderAdvisorPageSizeSelect()}
           <div class="page-group">
@@ -4227,7 +4265,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   const STORE_ISSUE_RULE_CONFIG = {
     sop: {
-      label: 'SOP 质检分析',
+      label: 'SOP执行分析',
       metricLabel: '命中率',
       countLabel: '命中/样本',
       countSortLabel: '命中数量',
@@ -4274,8 +4312,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     return option;
   });
 
-  const getVisibleStoreSopRules = (type = storeSopRuleState.activeTab) => {
-    const query = storeSopRuleState.query.trim().toLocaleLowerCase('zh-CN');
+  const getVisibleStoreSopRules = (type = storeSopRuleState.activeTab, state = storeSopRuleState) => {
+    const query = state.query.trim().toLocaleLowerCase('zh-CN');
     const visibleRules = getStoreIssueRules(type).filter(item => {
       if (!query) return true;
       return String(item.title || '').toLocaleLowerCase('zh-CN').includes(query);
@@ -4284,44 +4322,53 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     return visibleRules.sort((a, b) => {
       const rateA = parseStoreIssuePercent(a.hit_ratio);
       const rateB = parseStoreIssuePercent(b.hit_ratio);
-      if (storeSopRuleState.sort === 'rate-asc') return rateA - rateB;
-      if (storeSopRuleState.sort === 'count-desc') return b.hit_count - a.hit_count || rateB - rateA;
-      if (storeSopRuleState.sort === 'sample-desc') return b.sample_count - a.sample_count || rateB - rateA;
+      if (state.sort === 'rate-asc') return rateA - rateB;
+      if (state.sort === 'count-desc') return b.hit_count - a.hit_count || rateB - rateA;
+      if (state.sort === 'sample-desc') return b.sample_count - a.sample_count || rateB - rateA;
       return rateB - rateA;
     });
   };
 
-  const getStoreSopSortLabel = () => {
+  const getStoreSopSortLabel = (state = storeSopRuleState) => {
     const options = getStoreIssueSortOptions();
-    return options.find(option => option.value === storeSopRuleState.sort)?.label || options[0].label;
+    return options.find(option => option.value === state.sort)?.label || options[0].label;
   };
 
-  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 3;
+  const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 99;
+  const ISSUE_RULE_SCENE_COLLAPSED_LIMIT = 1;
+
+  const renderIssueRuleSceneTagsHtml = (labels, previewLimit) => {
+    const previewLabels = labels.slice(0, previewLimit);
+    const hasMore = labels.length > previewLimit;
+    return `
+      <span class="issue-rule-tags">
+        ${previewLabels.map(label => `<em title="${escapeHtml(label)}" data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+      </span>
+      ${hasMore ? `
+        <details class="issue-rule-scene-more">
+          <summary aria-label="查看全部所属业务场景">...</summary>
+          <span class="issue-rule-scene-popover">
+            <strong>所属业务场景</strong>
+            <span class="issue-rule-scene-popover-tags">
+              ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+            </span>
+          </span>
+        </details>
+      ` : ''}
+    `;
+  };
 
   const renderIssueRuleSceneTags = (sceneLabels = []) => {
     const labels = [...new Set(sceneLabels.filter(Boolean))];
-    const previewLabels = labels.slice(0, ISSUE_RULE_SCENE_PREVIEW_LIMIT);
-    const hasMore = labels.length > ISSUE_RULE_SCENE_PREVIEW_LIMIT;
-
-    return `
-      <span class="issue-rule-scenes">
-        <span class="issue-rule-tags">
-          ${previewLabels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-        </span>
-        ${hasMore ? `
-          <details class="issue-rule-scene-more">
-            <summary aria-label="查看全部所属业务场景">...</summary>
-            <span class="issue-rule-scene-popover">
-              <strong>所属业务场景</strong>
-              <span class="issue-rule-scene-popover-tags">
-                ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-              </span>
-            </span>
-          </details>
-        ` : ''}
-      </span>
-    `;
+    const dataLabels = escapeHtml(JSON.stringify(labels));
+    return `<span class="issue-rule-scenes" data-issue-rule-scenes data-issue-rule-scenes-labels='${dataLabels}'>${renderIssueRuleSceneTagsHtml(labels, ISSUE_RULE_SCENE_PREVIEW_LIMIT)}</span>`;
   };
+
+  const autoCollapseIssueRuleScenes = IssueRuleList.createAutoCollapser({
+    renderHtml: renderIssueRuleSceneTagsHtml,
+    previewLimit: ISSUE_RULE_SCENE_PREVIEW_LIMIT,
+    collapsedLimit: ISSUE_RULE_SCENE_COLLAPSED_LIMIT,
+  });
 
   const renderStoreSopMetricIcon = (type) => type === 'count'
     ? `<svg viewBox="0 0 30.4 30.4" fill="none" aria-hidden="true">
@@ -4333,30 +4380,31 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         <path d="m10.6 15.2 3 3 6.4-7" stroke="#F0FDF4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>`;
 
-  const renderStoreSopRuleList = (visibleRules) => {
-    const config = getStoreIssueRuleConfig();
-    const scopeToneClass = ['sop', 'strength'].includes(storeSopRuleState.activeTab)
+  const renderStoreSopRuleList = (visibleRules, state = storeSopRuleState) => {
+    const config = getStoreIssueRuleConfig(state.activeTab);
+    const scopeToneClass = ['sop', 'strength'].includes(state.activeTab)
       ? 'scope-tone-green'
       : 'scope-tone-red';
     const totalPages = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
-    const currentPage = Math.max(1, Math.min(totalPages, storeSopRuleState.page || 1));
-    storeSopRuleState.page = currentPage;
+    const currentPage = Math.max(1, Math.min(totalPages, state.page || 1));
+    state.page = currentPage;
     const offset = (currentPage - 1) * STORE_ISSUE_PAGE_SIZE;
     const pagedRules = visibleRules.slice(offset, offset + STORE_ISSUE_PAGE_SIZE);
     const rows = pagedRules.map(rule => `
-      <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}" role="button" tabindex="0" aria-label="查看${escapeHtml(rule.title)}的人员表现">
+      <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}">
         <span class="issue-rule-name">
           <span class="issue-rule-name-line">
-            <strong>${escapeHtml(rule.title)}</strong>
+            <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(rule.title)}</strong>
+            <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.title)}</span>
             ${(rule.applicableScenes || []).length
               ? renderIssueRuleSceneTags(rule.applicableScenes.map(getSceneLabel))
-              : `<em>${escapeHtml(rule.category)}</em>`}
+              : `<em data-tag-label="${escapeHtml(rule.category)}">${escapeHtml(rule.category)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(rule.category)}</span></em>`}
           </span>
         </span>
         <span class="issue-rule-scope">${scopeBadge(rule.advisor_count, scopeToneClass)}</span>
         <span class="issue-rule-rate">${escapeHtml(rule.hit_ratio)}</span>
         <span class="issue-rule-count">${rule.hit_count}/${rule.sample_count}</span>
-        <span class="issue-rule-action">人员表现</span>
+        <button type="button" class="issue-rule-action" data-store-sop-rule-id="${escapeHtml(rule.id)}" aria-label="查看${escapeHtml(rule.title)}的人员表现">人员表现</button>
       </div>
     `).join('');
 
@@ -4364,13 +4412,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       <div class="issue-rule-toolbar">
         <label class="issue-rule-search">
           <span>搜索规则</span>
-          <input class="issue-rule-search-input" type="search" value="${escapeHtml(storeSopRuleState.query)}" placeholder="输入规则名称" autocomplete="off" data-store-sop-rule-search>
+          <input class="issue-rule-search-input" type="search" value="${escapeHtml(state.query)}" placeholder="输入规则名称" autocomplete="off" data-store-sop-rule-search>
         </label>
         <div class="issue-rule-sort">
           <span>排序</span>
           <div class="issue-rule-sort-dropdown">
             <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-store-sop-rule-sort-trigger>
-              <span class="issue-rule-sort-value">${escapeHtml(getStoreSopSortLabel())}</span>
+              <span class="issue-rule-sort-value">${escapeHtml(getStoreSopSortLabel(state))}</span>
               <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
@@ -4378,7 +4426,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式" data-store-sop-rule-sort-panel>
               <div class="session-menu-option-list">
                 ${getStoreIssueSortOptions(config).map(option => `
-                  <button type="button" class="issue-rule-sort-option store-model-option session-menu-option${storeSopRuleState.sort === option.value ? ' active' : ''}" data-store-sop-rule-sort="${option.value}" role="option" aria-selected="${storeSopRuleState.sort === option.value ? 'true' : 'false'}"><span>${escapeHtml(option.label)}</span></button>
+                  <button type="button" class="issue-rule-sort-option store-model-option session-menu-option${state.sort === option.value ? ' active' : ''}" data-store-sop-rule-sort="${option.value}" role="option" aria-selected="${state.sort === option.value ? 'true' : 'false'}"><span>${escapeHtml(option.label)}</span></button>
                 `).join('')}
               </div>
             </div>
@@ -4415,7 +4463,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
         </div>
         <div class="issue-rule-footer">
-          <span>共 ${visibleRules.length} 条，当前第 ${currentPage}/${totalPages} 页</span>
+          <span>共 ${visibleRules.length} 条</span>
           <div class="issue-rule-pager" aria-label="规则分页">
             <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
             <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="next" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
@@ -4425,12 +4473,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     `;
   };
 
-  const renderStoreSopPeopleDetail = (rule) => {
-    const config = getStoreIssueRuleConfig();
+  const renderStoreSopPeopleDetail = (rule, state = storeSopRuleState) => {
+    const config = getStoreIssueRuleConfig(state.activeTab);
     const people = [...rule.people].sort((left, right) => {
-      if (storeSopRuleState.sort === 'rate-asc') return left.rate - right.rate || right.hitCount - left.hitCount;
-      if (storeSopRuleState.sort === 'count-desc') return right.hitCount - left.hitCount || right.rate - left.rate;
-      if (storeSopRuleState.sort === 'sample-desc') return right.sampleCount - left.sampleCount || right.hitCount - left.hitCount;
+      if (state.sort === 'rate-asc') return left.rate - right.rate || right.hitCount - left.hitCount;
+      if (state.sort === 'count-desc') return right.hitCount - left.hitCount || right.rate - left.rate;
+      if (state.sort === 'sample-desc') return right.sampleCount - left.sampleCount || right.hitCount - left.hitCount;
       return right.rate - left.rate || right.hitCount - left.hitCount;
     });
 
@@ -4481,20 +4529,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     `;
   };
 
-  const renderStoreSopRuleSection = () => {
-    const root = document.getElementById('store-issue-rule-analysis-root');
+  const renderStoreSopRuleSection = (rootId = 'store-issue-rule-analysis-root', state = storeSopRuleState) => {
+    const root = document.getElementById(rootId);
     if (!root) return;
 
-    const visibleRules = getVisibleStoreSopRules();
-    const selectedRule = getStoreIssueRules().find(rule => rule.id === storeSopRuleState.selectedRuleId);
+    const visibleRules = getVisibleStoreSopRules(state.activeTab, state);
+    const selectedRule = getStoreIssueRules(state.activeTab).find(rule => rule.id === state.selectedRuleId);
     root.innerHTML = selectedRule
-      ? renderStoreSopPeopleDetail(selectedRule)
-      : renderStoreSopRuleList(visibleRules);
-    bindStoreSopRuleEvents();
+      ? renderStoreSopPeopleDetail(selectedRule, state)
+      : renderStoreSopRuleList(visibleRules, state);
+    bindStoreSopRuleEvents(rootId, state);
+    autoCollapseIssueRuleScenes(root);
   };
 
-  const bindStoreSopRuleEvents = () => {
-    const root = document.getElementById('store-issue-rule-analysis-root');
+  const bindStoreSopRuleEvents = (rootId = 'store-issue-rule-analysis-root', state = storeSopRuleState) => {
+    const root = document.getElementById(rootId);
     if (!root) return;
     const searchInput = root.querySelector('[data-store-sop-rule-search]');
     const sortTrigger = root.querySelector('[data-store-sop-rule-sort-trigger]');
@@ -4507,11 +4556,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     const applyStoreSopRuleSearch = (value) => {
       const nextQuery = value || '';
-      if (storeSopRuleState.query === nextQuery) return;
-      storeSopRuleState.query = nextQuery;
-      storeSopRuleState.page = 1;
-      renderStoreSopRuleSection();
-      const nextInput = document.querySelector('[data-store-sop-rule-search]');
+      if (state.query === nextQuery) return;
+      state.query = nextQuery;
+      state.page = 1;
+      renderStoreSopRuleSection(rootId, state);
+      const nextInput = root.querySelector('[data-store-sop-rule-search]');
       if (nextInput) {
         const position = nextInput.value.length;
         nextInput.focus();
@@ -4540,69 +4589,67 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     sortPanel?.addEventListener('click', (event) => {
       const option = event.target.closest('[data-store-sop-rule-sort]');
       if (!option) return;
-      storeSopRuleState.sort = option.dataset.storeSopRuleSort || 'rate-desc';
-      storeSopRuleState.page = 1;
+      state.sort = option.dataset.storeSopRuleSort || 'rate-desc';
+      state.page = 1;
       closeSortPanel();
-      renderStoreSopRuleSection();
+      renderStoreSopRuleSection(rootId, state);
     });
 
     root.querySelectorAll('[data-store-sop-page-action]').forEach(button => {
       button.addEventListener('click', () => {
         if (button.disabled) return;
-        const visibleRules = getVisibleStoreSopRules();
+        const visibleRules = getVisibleStoreSopRules(state.activeTab, state);
         const pageCount = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
         const delta = button.dataset.storeSopPageAction === 'next' ? 1 : -1;
-        storeSopRuleState.page = Math.max(1, Math.min(pageCount, storeSopRuleState.page + delta));
-        renderStoreSopRuleSection();
+        state.page = Math.max(1, Math.min(pageCount, state.page + delta));
+        renderStoreSopRuleSection(rootId, state);
       });
     });
 
-    root.querySelectorAll('[data-store-sop-rule-id]').forEach(row => {
-      const openRule = (event) => {
-        if (event?.target?.closest('.issue-rule-scene-more')) return;
-        storeSopRuleState.selectedRuleId = row.dataset.storeSopRuleId;
-        renderStoreSopRuleSection();
-      };
-      row.addEventListener('click', openRule);
-      row.addEventListener('keydown', (event) => {
-        if (event.target !== row || !['Enter', ' '].includes(event.key)) return;
-        event.preventDefault();
-        openRule(event);
+    root.querySelectorAll('.issue-rule-action[data-store-sop-rule-id]').forEach(actionBtn => {
+      actionBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        state.selectedRuleId = actionBtn.dataset.storeSopRuleId;
+        renderStoreSopRuleSection(rootId, state);
       });
     });
 
     root.querySelector('[data-store-sop-rule-back]')?.addEventListener('click', () => {
-      storeSopRuleState.selectedRuleId = null;
-      renderStoreSopRuleSection();
+      state.selectedRuleId = null;
+      renderStoreSopRuleSection(rootId, state);
     });
 
     root.querySelectorAll('[data-store-sop-person]').forEach(row => {
       row.addEventListener('click', () => {
-        if (!storeSopRuleState.selectedRuleId) return;
-        window.openStoreIssueRecordingLibrary(storeSopRuleState.activeTab, storeSopRuleState.selectedRuleId, row.dataset.storeSopPerson || '');
+        if (!state.selectedRuleId) return;
+        window.openStoreIssueRecordingLibrary(state.activeTab, state.selectedRuleId, row.dataset.storeSopPerson || '');
       });
     });
 
     if (!document.body.dataset.storeSopSortBound) {
       document.body.dataset.storeSopSortBound = 'true';
       document.addEventListener('click', (event) => {
-        const activeRoot = document.getElementById('store-issue-rule-analysis-root');
-        const activeTrigger = activeRoot?.querySelector('[data-store-sop-rule-sort-trigger]');
-        const activePanel = activeRoot?.querySelector('[data-store-sop-rule-sort-panel]');
-        if (!activeTrigger || !activePanel) return;
-        if (activeTrigger.contains(event.target) || activePanel.contains(event.target)) return;
-        activePanel.classList.remove('show');
-        activeTrigger.classList.remove('active');
-        activeTrigger.setAttribute('aria-expanded', 'false');
+        ['store-issue-rule-analysis-root', 'store-issue-sop-analysis-root'].forEach(id => {
+          const activeRoot = document.getElementById(id);
+          const activeTrigger = activeRoot?.querySelector('[data-store-sop-rule-sort-trigger]');
+          const activePanel = activeRoot?.querySelector('[data-store-sop-rule-sort-panel]');
+          if (!activeTrigger || !activePanel) return;
+          if (activeTrigger.contains(event.target) || activePanel.contains(event.target)) return;
+          activePanel.classList.remove('show');
+          activeTrigger.classList.remove('active');
+          activeTrigger.setAttribute('aria-expanded', 'false');
+        });
       });
     }
   };
 
   function renderStoreIssueSections() {
-    renderStoreSopRuleSection();
+    renderStoreSopRuleSection('store-issue-sop-analysis-root', storeSopRuleState);
+    renderStoreSopRuleSection('store-issue-rule-analysis-root', storeInsightRuleState);
   }
 
   renderStoreIssueSections();
+  initStickyFilterBars();
 
   // 录音库弹窗
   let storeRecordingLibraryState = null;
@@ -5685,22 +5732,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   });
 
   // ── 11. 质检复盘标签页切换 ───────────────────────────────
-  const issueInsightTabs = document.querySelectorAll('[data-issue-insight-tab]');
+  const issueInsightTabs = document.querySelectorAll('.issue-overview-wrapper [data-issue-insight-tab]');
   const detailSop = document.getElementById('detail-sop');
   if (issueInsightTabs.length && detailSop) {
-    const switchIssueInsightTab = (target = 'sop') => {
+    const switchIssueInsightTab = (target = 'strength') => {
       issueInsightTabs.forEach(tab => {
         const active = tab.dataset.issueInsightTab === target;
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', String(active));
       });
-      storeSopRuleState.activeTab = STORE_ISSUE_RULE_CONFIG[target] ? target : 'sop';
-      storeSopRuleState.query = '';
-      storeSopRuleState.sort = 'rate-desc';
-      storeSopRuleState.page = 1;
-      storeSopRuleState.selectedRuleId = null;
-      detailSop.setAttribute('aria-label', getStoreIssueRuleConfig().label);
-      renderStoreIssueSections();
+      storeInsightRuleState.activeTab = STORE_ISSUE_RULE_CONFIG[target] ? target : 'strength';
+      detailSop.setAttribute('aria-label', getStoreIssueRuleConfig(storeInsightRuleState.activeTab).label);
+      renderStoreSopRuleSection('store-issue-rule-analysis-root', storeInsightRuleState);
     };
 
     issueInsightTabs.forEach(tab => {
@@ -5752,7 +5795,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           label: '厂端看板',
           eyebrow: '00 / Factory Dashboard',
           title: '厂端看板',
-          desc: '同步厂端管理视角，集中查看全国组织、SOP执行质检与策略洞察，适合厂端运营进行巡检和下钻分析。',
+          desc: '同步厂端管理视角，集中查看全国组织与 SOP 执行质检，适合厂端运营进行巡检和下钻分析。',
           noteTitle: '',
           noteText: '',
           userName: '厂端运营',
@@ -6709,8 +6752,31 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       ]
 
       const leadStatusValues = ['未跟进', '跟进中', '已下定', '战败', '有效', '异地']
-      const aiLeadValidityValues = ['有效', '无效', '无法判断']
+      const aiLeadValidityValues = ['有效', '无效', '暂未分析']
       const leadIntentGradeValues = ['H', 'A', 'B', 'C']
+      const leadSourceValues = ['400官网', '汽车之家', '懂车帝', '易车', '抖音直播', '老客户转介绍', '门店自然进店', '企微私域']
+      const leadQcSceneValues = ['邀约', '试驾PDC', '到店接待', '试驾']
+      const leadTagValues = ['价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动', '新能源关注', '置换需求', '首次购车']
+      const leadSummaryTemplates = [
+        '客户对传祺 E9 表现出较高兴趣，重点询问了空间和续航表现。客户提到周末会带家人到店试驾，希望提前了解金融方案。',
+        '客户关注埃安 Y Plus 的智能化配置，对比了竞品车型。顾问已邀请客户下周到店体验，并发送了相关资料。',
+        '客户在意车辆静谧性和乘坐舒适性，对传祺 GS8 的座椅布局比较满意。需持续跟进试驾安排。',
+        '客户对价格较为敏感，询问是否有置换补贴和购车优惠。顾问承诺反馈最新政策后二次联系。',
+        '客户首次接触，了解了埃安 Hyper HT 的基本参数，意向中等，需要进一步培育。',
+        '客户对传祺 M8 的商务用途比较关注，询问了后备箱空间和油耗表现，约定本周到店看车。',
+        '客户了解传祺 ES9 的越野性能，希望安排户外试驾体验。顾问已记录需求并预约时间。',
+        '客户对传祺向往 S7 的外观设计印象深刻，询问了交付周期和颜色可选情况。'
+      ]
+      const leadActionTemplates = [
+        '发送试驾邀请，确认周末到店时间',
+        '跟进金融方案，推送置换补贴政策',
+        '预约到店体验，准备竞品对比资料',
+        '二次电话回访，确认购车决策时间',
+        '持续培育意向，定期推送车型资讯',
+        '确认试驾安排，提前准备展车',
+        '反馈最新优惠，推动下定决策',
+        '邀请参加门店活动，增强客户粘性'
+      ]
       const leadAiIntentLevelMetas = [
         { label: '高', className: 'red' },
         { label: '中', className: 'amber' },
@@ -6801,6 +6867,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const leadSourceMeta = getLeadSourceHierarchyMeta(record, fallbackIndex)
         const recordStartTime = record.recordStartTime || ''
         const lastContact = formatLeadLastContactValue(record.lastContact, recordStartTime)
+        const intent = record.intent || record.intentGrade || leadIntentGradeValues[fallbackIndex % leadIntentGradeValues.length]
+        const qcScene = record.qcScene || leadQcSceneValues[fallbackIndex % leadQcSceneValues.length]
+        const source = record.source || leadSourceValues[fallbackIndex % leadSourceValues.length]
+        const summary = record.summary || leadSummaryTemplates[fallbackIndex % leadSummaryTemplates.length]
+        const action = record.action || leadActionTemplates[fallbackIndex % leadActionTemplates.length]
+        const tags = Array.isArray(record.tags) && record.tags.length
+          ? record.tags
+          : [leadTagValues[fallbackIndex % leadTagValues.length], leadTagValues[(fallbackIndex + 3) % leadTagValues.length]]
+        const followUpTime = record.followUpTime || `2026-03-${13 + (fallbackIndex % 7)} ${String(14 + (fallbackIndex % 3)).padStart(2, '0')}:${String(10 + (fallbackIndex % 49)).padStart(2, '0')}`
 
         return {
           ...record,
@@ -6811,7 +6886,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           owner: advisorName,
           recordStartTime,
           lastContact,
-          intentGrade: record.intentGrade || leadIntentGradeValues[fallbackIndex % leadIntentGradeValues.length],
+          intent,
+          qcScene,
+          source,
+          summary,
+          action,
+          tags,
+          followUpTime,
+          intentGrade: record.intentGrade || intent,
           aiIntentLevel: aiIntentMeta.label,
           aiIntentLevelClass: record.aiIntentLevelClass || aiIntentMeta.className,
           leadStatus: record.leadStatus || leadStatusValues[fallbackIndex % leadStatusValues.length],
@@ -6858,7 +6940,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
         })
 
-        return generated.sort((a, b) => parseDateTimeValue(b.recordStartTime) - parseDateTimeValue(a.recordStartTime))
+        const sorted = generated.sort((a, b) => parseDateTimeValue(b.recordStartTime) - parseDateTimeValue(a.recordStartTime))
+        if (sorted.length > 0) {
+          sorted[0].isFirstLeadRecord = true
+        }
+        return sorted
       }
 
       const leadRecords = buildLeadRecords()
@@ -8551,7 +8637,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               ${renderPaginationPageSizeSelect('session', sessionPaginationState.pageSize)}
               <div class="page-group">
@@ -9595,7 +9681,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <strong>判别标准</strong>
               <span><b>有效：</b>线索下发后3天内，前3次外呼中，至少有1次通话时长不少于15秒，且客户未明确拒绝。</span>
               <span><b>无效：</b>线索下发后3天内未外呼，或前3次外呼中没有任何一次同时满足“通话时长不少于15秒且客户未明确拒绝”。</span>
-              <span><b>无法判断：</b>尚未完成分析，或录音中无有效内容，暂无法判定结果。</span>
+              <span><b>暂未分析：</b>尚未对录音完成分析。</span>
             </span>
           </span>
         `
@@ -9996,7 +10082,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <td>${escapeHtml(item.secondSource)}</td>
                 <td>${escapeHtml(item.thirdSource)}</td>
                 <td>${escapeHtml(item.fourthSource)}</td>
-                <td><button class="table-link" data-route="leads-detail">线索详情</button></td>
+                <td><button class="table-link" data-route="leads-detail" data-lead-id="${escapeHtml(item.id)}" data-lead-source="leads">线索详情</button></td>
               </tr>
             `)
             .join('')
@@ -10035,7 +10121,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               ${renderPaginationPageSizeSelect('leads', leadsPaginationState.pageSize)}
               <div class="page-group">
@@ -13059,6 +13145,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return advisorDashboard.leads
         }
 
+        if (role === 'leads') {
+          return leadRecords
+        }
+
         return []
       }
 
@@ -13141,6 +13231,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildLeadDetailEvolutionSteps(lead, role) {
         const baseDate = getLeadDetailEvolutionBaseDate(lead.updatedAt)
+
+        if (lead.isFirstLeadRecord) {
+          const steps = []
+          for (let i = 0; i < 21; i += 1) {
+            const date = new Date(baseDate)
+            date.setDate(date.getDate() - (20 - i))
+            const level = i % 3 === 0 ? '高' : i % 3 === 1 ? '中' : '低'
+            steps.push({
+              label: `节点${i + 1}`,
+              meta: `${formatLeadDetailEvolutionDate(date)}`,
+              level
+            })
+          }
+          return steps
+        }
+
         const inviteDate = new Date(baseDate)
         inviteDate.setDate(inviteDate.getDate() - 3)
 
@@ -13390,10 +13496,140 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="lead-detail-hero-step${index < list.length - 1 ? ' is-complete' : ''}${index === list.length - 1 ? ' is-current' : ''}">
             ${index < list.length - 1 ? '<div class="lead-detail-hero-step-connector" aria-hidden="true"></div>' : ''}
             <div class="lead-detail-hero-step-marker tone-${getLevelTone(getLevelText(step))}">${escapeHtml(getLevelText(step))}</div>
-            <div class="lead-detail-hero-step-label">${escapeHtml(step.label || '-')}</div>
+            <div class="lead-detail-hero-step-label" tabindex="0" title="${escapeHtml(step.label || '-')}" aria-label="${escapeHtml(step.label || '-')}">${escapeHtml(step.label || '-')}</div>
             <div class="lead-detail-hero-step-meta">${escapeHtml(step.meta || '')}</div>
           </div>
         `).join('')
+      }
+
+      function bindLeadDetailEvolutionUI() {
+        const container = pageHost.querySelector('.lead-detail-journey-evolution')
+        const track = pageHost.querySelector('#leadDetailHeroEvolutionSteps')
+        if (!container || !track) return
+
+        const steps = track.querySelectorAll('.lead-detail-hero-step')
+        track.style.setProperty('--lead-evolution-step-count', String(steps.length || 1))
+
+        const prevBtn = container.querySelector('.lead-detail-evolution-arrow-prev')
+        const nextBtn = container.querySelector('.lead-detail-evolution-arrow-next')
+        const toggleBtn = container.querySelector('.lead-detail-evolution-toggle')
+        const stepWidth = 80
+        const trackEndPadding = 25
+
+        function getMaxAlignedScrollLeft() {
+          const contentWidth = Math.max(0, track.scrollWidth - trackEndPadding)
+          const requiredScroll = Math.max(0, contentWidth - track.clientWidth)
+          const alignedScroll = Math.ceil(requiredScroll / stepWidth) * stepWidth
+          return Math.min(alignedScroll, Math.max(0, track.scrollWidth - track.clientWidth))
+        }
+
+        function alignTrackToNearestStep(behavior = 'smooth') {
+          if (container.hasAttribute('data-evolution-expanded')) return
+          const maxScrollLeft = getMaxAlignedScrollLeft()
+          const alignedScrollLeft = Math.round(track.scrollLeft / stepWidth) * stepWidth
+          const targetScrollLeft = Math.max(0, Math.min(maxScrollLeft, alignedScrollLeft))
+          if (Math.abs(track.scrollLeft - targetScrollLeft) <= 1) return
+          track.scrollTo({ left: targetScrollLeft, behavior })
+        }
+
+        function syncExpandedRowEnds() {
+          steps.forEach((step) => step.classList.remove('is-row-end'))
+          if (!container.hasAttribute('data-evolution-expanded')) return
+
+          steps.forEach((step, index) => {
+            const nextStep = steps[index + 1]
+            if (!nextStep || nextStep.offsetTop !== step.offsetTop) {
+              step.classList.add('is-row-end')
+            }
+          })
+        }
+
+        function updateArrows() {
+          if (!prevBtn || !nextBtn) return
+          const isExpanded = container.hasAttribute('data-evolution-expanded')
+          const scrollable = !isExpanded && track.scrollWidth > track.clientWidth + 1
+          prevBtn.disabled = !scrollable || track.scrollLeft <= 1
+          nextBtn.disabled = !scrollable || track.scrollLeft >= getMaxAlignedScrollLeft() - 1
+        }
+
+        function scrollByPage(direction) {
+          const visibleStepCount = Math.max(1, Math.floor(track.clientWidth / stepWidth))
+          const pageStepCount = Math.max(1, visibleStepCount - 1)
+          const currentStepIndex = Math.round(track.scrollLeft / stepWidth)
+          const targetScrollLeft = (currentStepIndex + direction * pageStepCount) * stepWidth
+          track.scrollTo({
+            left: Math.max(0, Math.min(getMaxAlignedScrollLeft(), targetScrollLeft)),
+            behavior: 'smooth'
+          })
+        }
+
+        if (prevBtn && !prevBtn._evolutionBound) {
+          prevBtn._evolutionBound = true
+          prevBtn.addEventListener('click', () => scrollByPage(-1))
+        }
+        if (nextBtn && !nextBtn._evolutionBound) {
+          nextBtn._evolutionBound = true
+          nextBtn.addEventListener('click', () => scrollByPage(1))
+        }
+
+        if (!track._evolutionScrollBound) {
+          track._evolutionScrollBound = true
+          track.addEventListener('scroll', () => {
+            updateArrows()
+            window.clearTimeout(track._evolutionAlignTimer)
+            track._evolutionAlignTimer = window.setTimeout(() => alignTrackToNearestStep(), 140)
+          }, { passive: true })
+          track.addEventListener('wheel', (event) => {
+            if (container.hasAttribute('data-evolution-expanded')) return
+            if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+              event.preventDefault()
+              track.scrollBy({ left: event.deltaY, behavior: 'smooth' })
+            }
+          }, { passive: false })
+        }
+
+        if (toggleBtn && !toggleBtn._evolutionBound) {
+          toggleBtn._evolutionBound = true
+          toggleBtn.addEventListener('click', () => {
+            const isExpanded = container.hasAttribute('data-evolution-expanded')
+            if (isExpanded) {
+              container.removeAttribute('data-evolution-expanded')
+              toggleBtn.setAttribute('aria-expanded', 'false')
+              toggleBtn.textContent = '展开'
+              window.requestAnimationFrame(() => {
+                const savedScrollLeft = Number(container._leadEvolutionCollapsedScrollLeft || 0)
+                track.scrollLeft = Math.min(getMaxAlignedScrollLeft(), savedScrollLeft)
+                syncExpandedRowEnds()
+                updateArrows()
+              })
+            } else {
+              container._leadEvolutionCollapsedScrollLeft = track.scrollLeft
+              container.setAttribute('data-evolution-expanded', '')
+              toggleBtn.setAttribute('aria-expanded', 'true')
+              toggleBtn.textContent = '收起'
+              track.scrollLeft = 0
+              window.requestAnimationFrame(syncExpandedRowEnds)
+            }
+            updateArrows()
+          })
+        }
+
+        if (!container._leadEvolutionResizeObserver) {
+          let previousTrackWidth = track.clientWidth
+          container._leadEvolutionResizeObserver = new ResizeObserver(() => {
+            const currentTrackWidth = track.clientWidth
+            if (currentTrackWidth !== previousTrackWidth) {
+              previousTrackWidth = currentTrackWidth
+              alignTrackToNearestStep('auto')
+            }
+            syncExpandedRowEnds()
+            updateArrows()
+          })
+          container._leadEvolutionResizeObserver.observe(track)
+        }
+
+        syncExpandedRowEnds()
+        updateArrows()
       }
 
       function getLeadDetailIntentLevelClass(level) {
@@ -13524,6 +13760,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (selectedLead) {
           leadPayload = buildLeadDetailPayload(selectedLead, leadSelection.source)
           applyLeadDetailPayload(leadPayload)
+          bindLeadDetailEvolutionUI()
           syncLeadDetailModelRow(leadPayload.models)
         } else {
           window.requestAnimationFrame(syncLeadDetailTagCloudLayout)
@@ -14099,72 +14336,100 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function formatSalesTrendValue(value, suffix = '', decimals = 0) {
         const absolute = Math.abs(value)
         const display = decimals > 0 ? absolute.toFixed(decimals) : Math.round(absolute)
-        return `${value >= 0 ? '↑' : '↓'}${display}${suffix}`
+        const cleanSuffix = suffix === '条' ? '' : suffix
+        return `${value >= 0 ? '↑' : '↓'}${display}${cleanSuffix}`
+      }
+
+      function renderSalesHeroValue(rawValue, unit) {
+        const meta = parseCounterMetaFromValue(rawValue)
+        if (!meta) {
+          return escapeHtml(rawValue)
+        }
+
+        const displayValue = formatCounterDisplayValue(meta.target, meta.decimals)
+
+        if (unit === '条') {
+          const num = Number(meta.target)
+          if (num === 0 || num >= 2) {
+            return `${escapeHtml(displayValue)}<small>条</small>`
+          }
+          return escapeHtml(displayValue)
+        }
+
+        if (unit || meta.suffix === '%') {
+          return buildCounterDisplayMarkup(displayValue, {
+            prefix: meta.prefix,
+            suffix: meta.suffix,
+            unit
+          })
+        }
+
+        return escapeHtml(displayValue)
       }
 
       const dccMetricsByRange = {
         yesterday: [
-          buildSalesMetric('邀约录音数', '3', '条', '↓2条', 'down', 'blue'),
-          buildSalesMetric('话术命中率', '74%', '', '↓4%', 'down', 'violet'),
-          buildSalesMetric('平均时长', '10', 'min', '↓1min', 'down', 'indigo'),
-          buildSalesMetric('风险录音', '1', '', '↑1条', 'up', 'red')
+          buildSalesMetric('邀约录音数', '3', '条', '↓2', 'down', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '74%', '', '↓4%', 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '10', 'min', '↓1min', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '1', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last7: [
-          buildSalesMetric('邀约录音数', '6', '条', '↑1条', 'up', 'blue'),
-          buildSalesMetric('话术命中率', '78%', '', '↑3%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '12', 'min', '↑2min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '0', '', '↓1条', 'down', 'red')
+          buildSalesMetric('邀约录音数', '6', '条', '↑1', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '78%', '', '↑3%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '12', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '0', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last15: [
-          buildSalesMetric('邀约录音数', '14', '条', '↑3条', 'up', 'blue'),
-          buildSalesMetric('话术命中率', '81%', '', '↑2%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '11', 'min', '↑1min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '2', '', '↓1条', 'down', 'red')
+          buildSalesMetric('邀约录音数', '14', '条', '↑3', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '81%', '', '↑2%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '11', 'min', '↑1min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last30: [
-          buildSalesMetric('邀约录音数', '27', '条', '↑5条', 'up', 'blue'),
-          buildSalesMetric('话术命中率', '84%', '', '↑4%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '13', 'min', '↑2min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '3', '', '↑1条', 'up', 'red')
+          buildSalesMetric('邀约录音数', '27', '条', '↑5', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '84%', '', '↑4%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '13', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '3', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
       const advisorMetricsByRange = {
         yesterday: [
-          buildSalesMetric('接待数', '5', '条', '↓1条', 'down', 'blue', { variant: 'summary' }),
-          buildSalesMetric('试驾数', '4', '条', '↓1条', 'down', 'green', { variant: 'summary' }),
-          buildSalesMetric('接待录音数', '4', '条', '↓2条', 'down', 'cyan'),
-          buildSalesMetric('试驾录音数', '3', '条', '↓1条', 'down', 'amber'),
-          buildSalesMetric('话术命中率', '88%', '', '↓3%', 'down', 'violet'),
-          buildSalesMetric('平均时长', '15', 'min', '↓2min', 'down', 'indigo'),
-          buildSalesMetric('风险录音', '2', '', '↑1条', 'up', 'red')
+          buildSalesMetric('接待数', '5', '条', '↓1', 'down', 'blue', { variant: 'summary' }),
+          buildSalesMetric('试驾数', '4', '条', '↓1', 'down', 'green', { variant: 'summary', iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('接待录音数', '4', '条', '↓2', 'down', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('试驾录音数', '3', '条', '↓1', 'down', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '88%', '', '↓3%', 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '15', 'min', '↓2min', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last7: [
-          buildSalesMetric('接待数', '11', '条', '↑2条', 'up', 'blue', { variant: 'summary' }),
-          buildSalesMetric('试驾数', '9', '条', '↑2条', 'up', 'green', { variant: 'summary' }),
-          buildSalesMetric('接待录音数', '8', '条', '↑2条', 'up', 'cyan'),
-          buildSalesMetric('试驾录音数', '7', '条', '↑1条', 'up', 'amber'),
-          buildSalesMetric('话术命中率', '92%', '', '↑4%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '18', 'min', '↑3min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '1', '', '↓1条', 'down', 'red')
+          buildSalesMetric('接待数', '11', '条', '↑2', 'up', 'blue', { variant: 'summary' }),
+          buildSalesMetric('试驾数', '9', '条', '↑2', 'up', 'green', { variant: 'summary', iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('接待录音数', '8', '条', '↑2', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('试驾录音数', '7', '条', '↑1', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '92%', '', '↑4%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '18', 'min', '↑3min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '1', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last15: [
-          buildSalesMetric('接待数', '23', '条', '↑4条', 'up', 'blue', { variant: 'summary' }),
-          buildSalesMetric('试驾数', '18', '条', '↑3条', 'up', 'green', { variant: 'summary' }),
-          buildSalesMetric('接待录音数', '17', '条', '↑4条', 'up', 'cyan'),
-          buildSalesMetric('试驾录音数', '15', '条', '↑3条', 'up', 'amber'),
-          buildSalesMetric('话术命中率', '90%', '', '↑2%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '17', 'min', '↑1min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '2', '', '↓1条', 'down', 'red')
+          buildSalesMetric('接待数', '23', '条', '↑4', 'up', 'blue', { variant: 'summary' }),
+          buildSalesMetric('试驾数', '18', '条', '↑3', 'up', 'green', { variant: 'summary', iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('接待录音数', '17', '条', '↑4', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('试驾录音数', '15', '条', '↑3', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '90%', '', '↑2%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '17', 'min', '↑1min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last30: [
-          buildSalesMetric('接待数', '42', '条', '↑6条', 'up', 'blue', { variant: 'summary' }),
-          buildSalesMetric('试驾数', '33', '条', '↑5条', 'up', 'green', { variant: 'summary' }),
-          buildSalesMetric('接待录音数', '31', '条', '↑7条', 'up', 'cyan'),
-          buildSalesMetric('试驾录音数', '28', '条', '↑5条', 'up', 'amber'),
-          buildSalesMetric('话术命中率', '91%', '', '↑3%', 'up', 'violet'),
-          buildSalesMetric('平均时长', '19', 'min', '↑2min', 'up', 'indigo'),
-          buildSalesMetric('风险录音', '4', '', '↑2条', 'up', 'red')
+          buildSalesMetric('接待数', '42', '条', '↑6', 'up', 'blue', { variant: 'summary' }),
+          buildSalesMetric('试驾数', '33', '条', '↑5', 'up', 'green', { variant: 'summary', iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('接待录音数', '31', '条', '↑7', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('试驾录音数', '28', '条', '↑5', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', '91%', '', '↑3%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', '19', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '4', '', '↑2', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14177,10 +14442,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const riskCount = Math.max(0, Math.min(4, Math.round(days / 8) + (seed % 2)))
 
         return [
-          buildSalesMetric('邀约录音数', String(inviteCount), '条', formatSalesTrendValue((seed % 5) - 1, '条'), (seed % 5) >= 1 ? 'up' : 'down', 'blue'),
-          buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 5) - 1, '%'), (seed % 5) >= 1 ? 'up' : 'down', 'violet'),
-          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 4) - 1, 'min'), (seed % 4) >= 1 ? 'up' : 'down', 'indigo'),
-          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 3) - 1, '条'), (seed % 3) >= 1 ? 'up' : 'down', 'red')
+          buildSalesMetric('邀约录音数', String(inviteCount), '条', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 5) - 1, '%'), (seed % 5) >= 1 ? 'up' : 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 4) - 1, 'min'), (seed % 4) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 3) - 1, ''), (seed % 3) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14196,13 +14461,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const riskCount = Math.max(0, Math.min(5, Math.round(days / 7) + (seed % 3)))
 
         return [
-          buildSalesMetric('接待数', String(receptionCount), '条', formatSalesTrendValue((seed % 6) - 1, '条'), (seed % 6) >= 1 ? 'up' : 'down', 'blue', { variant: 'summary' }),
-          buildSalesMetric('试驾数', String(testDriveCount), '条', formatSalesTrendValue((seed % 5) - 1, '条'), (seed % 5) >= 1 ? 'up' : 'down', 'green', { variant: 'summary' }),
-          buildSalesMetric('接待录音数', String(receptionRecordings), '条', formatSalesTrendValue((seed % 6) - 1, '条'), (seed % 6) >= 1 ? 'up' : 'down', 'cyan'),
-          buildSalesMetric('试驾录音数', String(testDriveRecordings), '条', formatSalesTrendValue((seed % 5) - 1, '条'), (seed % 5) >= 1 ? 'up' : 'down', 'amber'),
-          buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 6) - 1, '%'), (seed % 6) >= 1 ? 'up' : 'down', 'violet'),
-          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 5) - 1, 'min'), (seed % 5) >= 1 ? 'up' : 'down', 'indigo'),
-          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 4) - 1, '条'), (seed % 4) >= 1 ? 'up' : 'down', 'red')
+          buildSalesMetric('接待数', String(receptionCount), '条', formatSalesTrendValue((seed % 6) - 1, ''), (seed % 6) >= 1 ? 'up' : 'down', 'blue', { variant: 'summary' }),
+          buildSalesMetric('试驾数', String(testDriveCount), '条', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'green', { variant: 'summary', iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('接待录音数', String(receptionRecordings), '条', formatSalesTrendValue((seed % 6) - 1, ''), (seed % 6) >= 1 ? 'up' : 'down', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('试驾录音数', String(testDriveRecordings), '条', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
+          buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 6) - 1, '%'), (seed % 6) >= 1 ? 'up' : 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
+          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 5) - 1, 'min'), (seed % 5) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 4) - 1, ''), (seed % 4) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14221,10 +14486,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewSummaryTypingTimer: null,
           reviewSummaryTypingDone: false,
           reviewSummaryLastText: '',
-          reviewInsightTab: 'sop',
+          reviewInsightTab: 'strength',
           reviewInsightPage: 1,
           reviewRuleQuery: '',
           reviewRuleSort: 'rate-desc',
+          sopReviewPage: 1,
+          sopReviewRuleQuery: '',
+          sopReviewRuleSort: 'rate-desc',
           reviewScenes: [],
           reviewSceneOpen: false,
           recommendRangeTab: 'last7',
@@ -15251,11 +15519,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function renderDccProfile() {
         const avatar = document.getElementById('profile-avatar')
         const name = document.getElementById('profile-name')
-        const meta = document.getElementById('profile-meta')
+        const store = document.getElementById('profile-store')
+        const title = document.getElementById('profile-title')
 
         if (avatar) avatar.textContent = currentDcc.avatar
         if (name) name.textContent = currentDcc.name
-        if (meta) meta.textContent = `${currentDcc.store} · ${currentDcc.title}`
+        if (store) store.textContent = currentDcc.store
+        if (title) title.textContent = currentDcc.title
       }
 
       const salesDashboardCounterFrames = new Set()
@@ -15577,32 +15847,42 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀约进店', '排程确认', '进店接待', '试乘试驾']
       const SALES_REVIEW_PAGE_SIZE = 5
-      const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 3
+      const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 99
+      const SALES_REVIEW_SCENE_COLLAPSED_LIMIT = 1
+
+      function renderSalesReviewSceneTagsHtml(labels, previewLimit) {
+        const previewLabels = labels.slice(0, previewLimit)
+        const hasMore = labels.length > previewLimit
+
+        return `
+          <span class="issue-rule-tags">
+            ${previewLabels.map((label) => `<em data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+          </span>
+          ${hasMore ? `
+            <details class="issue-rule-scene-more">
+              <summary aria-label="查看全部所属业务场景">...</summary>
+              <span class="issue-rule-scene-popover">
+                <strong>所属业务场景</strong>
+                <span class="issue-rule-scene-popover-tags">
+                  ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
+                </span>
+              </span>
+            </details>
+          ` : ''}
+        `
+      }
 
       function renderSalesReviewSceneTags(sceneLabels = []) {
         const labels = [...new Set(sceneLabels.filter(Boolean))]
-        const previewLabels = labels.slice(0, SALES_REVIEW_SCENE_PREVIEW_LIMIT)
-        const hasMore = labels.length > SALES_REVIEW_SCENE_PREVIEW_LIMIT
-
-        return `
-          <span class="issue-rule-scenes">
-            <span class="issue-rule-tags">
-              ${previewLabels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
-            </span>
-            ${hasMore ? `
-              <details class="issue-rule-scene-more">
-                <summary aria-label="查看全部所属业务场景">...</summary>
-                <span class="issue-rule-scene-popover">
-                  <strong>所属业务场景</strong>
-                  <span class="issue-rule-scene-popover-tags">
-                    ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
-                  </span>
-                </span>
-              </details>
-            ` : ''}
-          </span>
-        `
+        const dataLabels = escapeHtml(JSON.stringify(labels))
+        return `<span class="issue-rule-scenes" data-issue-rule-scenes data-issue-rule-scenes-labels='${dataLabels}'>${renderSalesReviewSceneTagsHtml(labels, SALES_REVIEW_SCENE_PREVIEW_LIMIT)}</span>`
       }
+
+      const autoCollapseSalesReviewSceneTags = IssueRuleList.createAutoCollapser({
+        renderHtml: renderSalesReviewSceneTagsHtml,
+        previewLimit: SALES_REVIEW_SCENE_PREVIEW_LIMIT,
+        collapsedLimit: SALES_REVIEW_SCENE_COLLAPSED_LIMIT,
+      })
 
       function getSalesReviewAllowedScenes(role) {
         return role === 'advisor'
@@ -15627,33 +15907,24 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const allowedScenes = getSalesReviewAllowedScenes(role)
         const selectedScenes = getSalesReviewSelectedScenes(role)
         const isAllSelected = selectedScenes.length === allowedScenes.length
-        const displayText = isAllSelected ? '全部业务场景' : selectedScenes.join('、')
 
         host.innerHTML = `
-          <span class="sales-role-scene-label">业务场景</span>
-          <details class="sales-role-scene-filter" ${state.reviewSceneOpen ? 'open' : ''}>
-            <summary>
-              <span>${escapeHtml(displayText)}</span>
-              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </summary>
-            <div class="sales-role-scene-panel" role="group" aria-label="选择业务场景">
-              <button type="button" class="sales-role-scene-option${isAllSelected ? ' active' : ''}" data-sales-review-scene="all">全部</button>
-              ${allowedScenes.map((scene) => `
-                <button type="button" class="sales-role-scene-option${selectedScenes.includes(scene) ? ' active' : ''}" data-sales-review-scene="${escapeHtml(scene)}">${escapeHtml(scene)}</button>
-              `).join('')}
+          <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-intent">
+            <span class="gf-label">业务场景</span>
+            <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
+              <button type="button" class="gf-tab todo-filter-tab${isAllSelected ? ' active' : ''} is-hidden" data-scene="all" aria-pressed="${isAllSelected ? 'true' : 'false'}" aria-hidden="true" tabindex="-1">全部</button>
+              ${allowedScenes.map((scene) => {
+                const active = selectedScenes.includes(scene)
+                return `<button type="button" class="gf-tab todo-filter-tab${active ? ' active' : ''}" data-scene="${escapeHtml(scene)}" aria-pressed="${active ? 'true' : 'false'}" aria-checked="${active ? 'true' : 'false'}" aria-hidden="false" tabindex="0">${escapeHtml(scene)}</button>`
+              }).join('')}
             </div>
-          </details>
+          </div>
         `
 
-        const details = host.querySelector('.sales-role-scene-filter')
-        details?.addEventListener('toggle', () => {
-          state.reviewSceneOpen = details.open
-        })
-
-        host.querySelectorAll('[data-sales-review-scene]').forEach((button) => {
+        host.querySelectorAll('[data-scene]').forEach((button) => {
           button.addEventListener('click', (event) => {
             event.stopPropagation()
-            const scene = button.dataset.salesReviewScene
+            const scene = button.dataset.scene
             if (scene === 'all') {
               state.reviewScenes = [...allowedScenes]
             } else if (selectedScenes.includes(scene)) {
@@ -15663,9 +15934,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             } else {
               state.reviewScenes = allowedScenes.filter((item) => selectedScenes.includes(item) || item === scene)
             }
-            state.reviewSceneOpen = true
             state.reviewInsightPage = 1
+            state.sopReviewPage = 1
             renderSalesReviewSceneControl(role)
+            renderSalesSopReview(role)
             renderSalesReviewInsights(role)
           })
         })
@@ -15673,7 +15945,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const SALES_REVIEW_INSIGHT_CONFIG = {
         sop: {
-          label: 'SOP 质检分析',
+          label: 'SOP执行分析',
           metricLabel: '命中率',
           countLabel: '命中/样本',
           countSortLabel: '命中数量',
@@ -16128,7 +16400,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         host.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               <span class="issue-pagination-page-size">${SALES_REVIEW_PAGE_SIZE} 条/页</span>
               <div class="page-group">
@@ -16169,16 +16441,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const config = SALES_REVIEW_INSIGHT_CONFIG[activeTab] || SALES_REVIEW_INSIGHT_CONFIG.sop
         const pagination = document.getElementById('review-insight-pagination')
         const rows = pageItems.map((item, index) => `
-          <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}" role="button" tabindex="0" aria-label="查看${escapeHtml(item.title)}的录音">
+          <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}">
             <span class="issue-rule-name">
               <span class="issue-rule-name-line">
-                <strong>${escapeHtml(item.title)}</strong>
+                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(item.title)}</strong>
+                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
                 ${renderSalesReviewSceneTags(item.applicableScenes)}
               </span>
             </span>
             <span class="issue-rule-rate">${item.score}%</span>
             <span class="issue-rule-count">${item.hitCount}/${item.sampleCount}</span>
-            <span class="issue-rule-action">查看录音</span>
+            <button type="button" class="issue-rule-action" data-sales-review-recording-index="${offset + index}" aria-label="查看${escapeHtml(item.title)}的录音">查看录音</button>
           </div>
         `).join('')
 
@@ -16191,7 +16464,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
             </div>
             <div class="issue-rule-footer">
-              <span>共 ${visibleItems.length} 条，当前第 ${state.reviewInsightPage}/${totalPages} 页</span>
+              <span>共 ${visibleItems.length} 条</span>
               <div class="issue-rule-pager" aria-label="规则分页">
                 <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="prev" ${state.reviewInsightPage <= 1 ? 'disabled' : ''}>上一页</button>
                 <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="next" ${state.reviewInsightPage >= totalPages ? 'disabled' : ''}>下一页</button>
@@ -16199,17 +16472,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             </div>
           </div>`
 
+        autoCollapseSalesReviewSceneTags(list)
         if (pagination) pagination.innerHTML = ''
-        list.querySelectorAll('[data-sales-review-recording-index]').forEach((row) => {
-          const openRecordings = (event) => {
-            if (event?.target?.closest('.issue-rule-scene-more')) return
-            window.openSalesReviewRecordingLibrary(role, activeTab, Number(row.dataset.salesReviewRecordingIndex))
-          }
-          row.addEventListener('click', openRecordings)
-          row.addEventListener('keydown', (event) => {
-            if (event.target !== row || !['Enter', ' '].includes(event.key)) return
-            event.preventDefault()
-            openRecordings(event)
+        list.querySelectorAll('.issue-rule-action[data-sales-review-recording-index]').forEach((actionBtn) => {
+          actionBtn.addEventListener('click', (event) => {
+            event.stopPropagation()
+            window.openSalesReviewRecordingLibrary(role, activeTab, Number(actionBtn.dataset.salesReviewRecordingIndex))
           })
         })
         list.querySelectorAll('[data-sales-review-rule-page-action]').forEach((button) => {
@@ -16221,9 +16489,191 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
+      function renderSalesSopReviewToolbar(role) {
+        const toolbar = document.getElementById('sales-sop-review-toolbar')
+        if (!toolbar) return
+
+        const state = getSalesRoleState(role)
+        const config = SALES_REVIEW_INSIGHT_CONFIG.sop
+        const sortOptions = [
+          { value: 'rate-desc', label: `${config.metricLabel}从高到低` },
+          { value: 'rate-asc', label: `${config.metricLabel}从低到高` },
+          { value: 'count-desc', label: `${config.countSortLabel}优先` },
+          { value: 'sample-desc', label: '样本数量优先' }
+        ]
+        const activeSort = sortOptions.find((option) => option.value === state.sopReviewRuleSort) || sortOptions[0]
+        toolbar.hidden = false
+        toolbar.innerHTML = `
+          <div class="issue-rule-toolbar store-sop-rule-toolbar" aria-label="${escapeHtml(config.label)}规则搜索与排序">
+            <label class="issue-rule-search store-sop-rule-field store-sop-rule-field--search">
+              <span>搜索规则</span>
+              <input class="issue-rule-search-input store-sop-rule-input" type="search" value="${escapeHtml(state.sopReviewRuleQuery || '')}" placeholder="输入规则名称" autocomplete="off" data-sales-review-rule-search>
+            </label>
+            <div class="issue-rule-sort store-sop-rule-field store-sop-rule-field--sort">
+              <span>排序</span>
+              <div class="sales-review-sop-sort-dropdown">
+                <button type="button" class="sales-review-sop-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false" data-sales-review-rule-sort-trigger>
+                  <span class="sales-review-sop-sort-value">${escapeHtml(activeSort.label)}</span>
+                  <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </button>
+                <div class="sales-review-sop-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式" data-sales-review-rule-sort-panel>
+                  <div class="session-menu-option-list">
+                    ${sortOptions.map((option) => `
+                      <button
+                        type="button"
+                        class="sales-review-sop-sort-option store-model-option session-menu-option${activeSort.value === option.value ? ' active' : ''}"
+                        data-sales-review-rule-sort="${option.value}"
+                        role="option"
+                        aria-selected="${activeSort.value === option.value ? 'true' : 'false'}"
+                      ><span>${escapeHtml(option.label)}</span></button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>`
+
+        const searchInput = toolbar.querySelector('[data-sales-review-rule-search]')
+        const applySalesReviewRuleSearch = (value) => {
+          const nextQuery = value || ''
+          if (state.sopReviewRuleQuery === nextQuery) return
+          state.sopReviewRuleQuery = nextQuery
+          state.sopReviewPage = 1
+          renderSalesSopReviewContent(role)
+        }
+        searchInput?.addEventListener('input', (event) => {
+          if (event.isComposing) return
+          applySalesReviewRuleSearch(event.currentTarget.value)
+        })
+        searchInput?.addEventListener('compositionend', (event) => applySalesReviewRuleSearch(event.currentTarget.value))
+        searchInput?.addEventListener('search', (event) => applySalesReviewRuleSearch(event.currentTarget.value))
+        const sortField = toolbar.querySelector('.store-sop-rule-field--sort')
+        const sortTrigger = toolbar.querySelector('[data-sales-review-rule-sort-trigger]')
+        const sortPanel = toolbar.querySelector('[data-sales-review-rule-sort-panel]')
+        let outsideClickHandler = null
+        const closeSortPanel = () => {
+          sortPanel?.classList.remove('show')
+          sortTrigger?.classList.remove('active')
+          sortTrigger?.setAttribute('aria-expanded', 'false')
+          if (outsideClickHandler) {
+            document.removeEventListener('click', outsideClickHandler)
+            outsideClickHandler = null
+          }
+        }
+        const openSortPanel = () => {
+          sortPanel?.classList.add('show')
+          sortTrigger?.classList.add('active')
+          sortTrigger?.setAttribute('aria-expanded', 'true')
+          outsideClickHandler = (event) => {
+            if (!sortField?.contains(event.target)) {
+              closeSortPanel()
+            }
+          }
+          document.addEventListener('click', outsideClickHandler)
+        }
+
+        sortTrigger?.addEventListener('click', (event) => {
+          event.stopPropagation()
+          if (sortPanel?.classList.contains('show')) {
+            closeSortPanel()
+          } else {
+            openSortPanel()
+          }
+        })
+
+        sortPanel?.addEventListener('click', (event) => {
+          const option = event.target.closest('[data-sales-review-rule-sort]')
+          if (!option) return
+          state.sopReviewRuleSort = option.dataset.salesReviewRuleSort || 'rate-desc'
+          state.sopReviewPage = 1
+          closeSortPanel()
+          renderSalesSopReviewToolbar(role)
+          renderSalesSopReviewContent(role)
+        })
+      }
+
+      function renderSalesSopReviewContent(role) {
+        const list = document.getElementById('sales-sop-review-list')
+        if (!list) return
+
+        const state = getSalesRoleState(role)
+        const activeTab = 'sop'
+
+        const previousQuery = state.reviewRuleQuery
+        const previousSort = state.reviewRuleSort
+        state.reviewRuleQuery = state.sopReviewRuleQuery
+        state.reviewRuleSort = state.sopReviewRuleSort
+        const visibleItems = getSalesReviewVisibleItems(role, activeTab)
+        state.reviewRuleQuery = previousQuery
+        state.reviewRuleSort = previousSort
+
+        const totalPages = Math.max(1, Math.ceil(visibleItems.length / SALES_REVIEW_PAGE_SIZE))
+        state.sopReviewPage = Math.max(1, Math.min(totalPages, state.sopReviewPage || 1))
+        const offset = (state.sopReviewPage - 1) * SALES_REVIEW_PAGE_SIZE
+        const pageItems = visibleItems.slice(offset, offset + SALES_REVIEW_PAGE_SIZE)
+
+        const config = SALES_REVIEW_INSIGHT_CONFIG.sop
+        const rows = pageItems.map((item, index) => `
+          <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}">
+            <span class="issue-rule-name">
+              <span class="issue-rule-name-line">
+                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(item.title)}</strong>
+                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
+                ${renderSalesReviewSceneTags(item.applicableScenes)}
+              </span>
+            </span>
+            <span class="issue-rule-rate">${item.score}%</span>
+            <span class="issue-rule-count">${item.hitCount}/${item.sampleCount}</span>
+            <button type="button" class="issue-rule-action" data-sales-review-recording-index="${offset + index}" aria-label="查看${escapeHtml(item.title)}的录音">查看录音</button>
+          </div>
+        `).join('')
+
+        list.innerHTML = `
+          <div class="issue-rule-list-shell">
+            <div class="issue-rule-list-head">
+              <span class="issue-rule-name-head"><span>规则名称</span><small>所属业务场景</small></span><span>${config.metricLabel}</span><span>${config.countLabel}</span><span>操作</span>
+            </div>
+            <div class="issue-rule-list">
+              ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
+            </div>
+            <div class="issue-rule-footer">
+              <span>共 ${visibleItems.length} 条</span>
+              <div class="issue-rule-pager" aria-label="规则分页">
+                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="prev" ${state.sopReviewPage <= 1 ? 'disabled' : ''}>上一页</button>
+                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="next" ${state.sopReviewPage >= totalPages ? 'disabled' : ''}>下一页</button>
+              </div>
+            </div>
+          </div>`
+
+        autoCollapseSalesReviewSceneTags(list)
+        list.querySelectorAll('.issue-rule-action[data-sales-review-recording-index]').forEach((actionBtn) => {
+          actionBtn.addEventListener('click', (event) => {
+            event.stopPropagation()
+            window.openSalesReviewRecordingLibrary(role, activeTab, Number(actionBtn.dataset.salesReviewRecordingIndex))
+          })
+        })
+        list.querySelectorAll('[data-sales-review-rule-page-action]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const delta = button.dataset.salesReviewRulePageAction === 'next' ? 1 : -1
+            state.sopReviewPage = Math.max(1, Math.min(totalPages, state.sopReviewPage + delta))
+            renderSalesSopReviewContent(role)
+          })
+        })
+      }
+
+      function renderSalesSopReview(role) {
+        renderSalesSopReviewToolbar(role)
+        renderSalesSopReviewContent(role)
+      }
+
       function renderSalesReviewInsights(role) {
         const state = getSalesRoleState(role)
-        const activeTab = ['sop', 'strength', 'weakness', 'risk'].includes(state.reviewInsightTab) ? state.reviewInsightTab : 'sop'
+        if (state.reviewInsightTab === 'sop') {
+          state.reviewInsightTab = 'strength'
+        }
+        const activeTab = ['strength', 'weakness', 'risk'].includes(state.reviewInsightTab) ? state.reviewInsightTab : 'strength'
         const list = document.getElementById('review-insight-list')
         if (!list) return
 
@@ -16322,20 +16772,24 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const metrics = getSalesHeroMetricsData('dcc')
         container.innerHTML = metrics.map((metric, index) => `
           <div class="hm-item">
-            <div class="hm-label-row">
-              ${renderSalesHeroMetricIcon(metric.iconTone || 'blue')}
+            ${renderSalesHeroMetricIcon(metric)}
+            <div class="hm-body">
               <div class="hm-label">${metric.label}</div>
-            </div>
-            <div class="hm-val-row">
-              <span class="hm-value" ${buildCounterDataAttrs(metric.value, metric.unit)}>${renderCounterValueMarkup(metric.value, metric.unit)}</span>
-              ${showTrend ? `<span class="hm-trend ${metric.trendClass}">${metric.trend}</span>` : ''}
+              <div class="hm-val-row">
+                <span class="hm-value">${renderSalesHeroValue(metric.value, metric.unit)}</span>
+                ${showTrend ? `<span class="hm-trend ${metric.trendClass}">${metric.trend}</span>` : ''}
+              </div>
             </div>
           </div>
           ${index < metrics.length - 1 ? `<div class="hm-sep${index === 1 ? ' hm-sep-divider' : ''}"></div>` : ''}
         `).join('')
       }
 
-      function renderSalesHeroMetricIcon(tone = 'blue') {
+      function renderSalesHeroMetricIcon(metric) {
+        if (metric && metric.iconUrl) {
+          return `<img class="hm-metric-icon" src="${escapeHtml(metric.iconUrl)}" alt="" aria-hidden="true">`
+        }
+        const tone = (metric && metric.iconTone) || 'blue'
         return `
           <span class="hm-label-icon tone-${tone}" aria-hidden="true">
             <span class="hm-label-icon-core"></span>
@@ -16635,7 +17089,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pagination.innerHTML = `
           <div class="dashboard-pagination">
-            <span class="session-pagination-total">共 ${totalItems} 项数据</span>
+            <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
               <label class="page-select">
                 <span>3 条/页</span>
@@ -17014,6 +17468,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
         setSalesReviewRobotPlayback('dcc', isSalesReviewSummaryInProgress('dcc'))
         renderSalesReviewInsights('dcc')
+        renderSalesSopReview('dcc')
       }
 
       function renderDccFilterCounts() {
@@ -17107,7 +17562,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return
           }
 
-          dccState.reviewInsightTab = button.dataset.reviewInsightTab
+          const tab = button.dataset.reviewInsightTab
+          if (!['strength', 'weakness', 'risk'].includes(tab)) return
+          dccState.reviewInsightTab = tab
           dccState.reviewInsightPage = 1
           dccState.reviewRuleQuery = ''
           dccState.reviewRuleSort = 'rate-desc'
@@ -17208,6 +17665,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         bindDccEvents()
         window.requestAnimationFrame(initDccTrendChart)
         window.requestAnimationFrame(() => animateSalesDashboardCounters(document.querySelector('.sales-dcc-page')))
+        initStickyFilterBars()
       }
 
       function toggleDccLeadComplete(leadId, options = {}) {
@@ -17245,10 +17703,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewSummaryTypingTimer: null,
           reviewSummaryTypingDone: false,
           reviewSummaryLastText: '',
-          reviewInsightTab: 'sop',
+          reviewInsightTab: 'strength',
           reviewInsightPage: 1,
           reviewRuleQuery: '',
           reviewRuleSort: 'rate-desc',
+          sopReviewPage: 1,
+          sopReviewRuleQuery: '',
+          sopReviewRuleSort: 'rate-desc',
           reviewScenes: [],
           reviewSceneOpen: false,
           recommendRangeTab: 'last7',
@@ -17592,11 +18053,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function renderAdvisorProfile() {
         const avatar = document.getElementById('profile-avatar')
         const name = document.getElementById('profile-name')
-        const meta = document.getElementById('profile-meta')
+        const store = document.getElementById('profile-store')
+        const title = document.getElementById('profile-title')
 
         if (avatar) avatar.textContent = currentAdvisor.avatar
         if (name) name.textContent = currentAdvisor.name
-        if (meta) meta.textContent = `${currentAdvisor.store} · ${currentAdvisor.title}`
+        if (store) store.textContent = currentAdvisor.store
+        if (title) title.textContent = currentAdvisor.title
       }
 
       function renderAdvisorHeroMetrics() {
@@ -17608,13 +18071,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const metrics = getSalesHeroMetricsData('advisor')
         container.innerHTML = metrics.map((metric, index) => `
           <div class="hm-item${metric.variant === 'summary' ? ' hm-item-summary' : ''}">
-            <div class="hm-label-row">
-              ${renderSalesHeroMetricIcon(metric.iconTone || 'blue')}
+            ${renderSalesHeroMetricIcon(metric)}
+            <div class="hm-body">
               <div class="hm-label">${metric.label}</div>
-            </div>
-            <div class="hm-val-row">
-              <span class="hm-value" ${buildCounterDataAttrs(metric.value, metric.unit)}>${renderCounterValueMarkup(metric.value, metric.unit)}</span>
-              <span class="hm-trend ${metric.trendClass}">${metric.trend}</span>
+              <div class="hm-val-row">
+                <span class="hm-value">${renderSalesHeroValue(metric.value, metric.unit)}</span>
+                <span class="hm-trend ${metric.trendClass}">${metric.trend}</span>
+              </div>
             </div>
           </div>
           ${index === 0 && metrics[0]?.variant === 'summary' && metrics[1]?.variant === 'summary' ? `
@@ -17965,6 +18428,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
         setSalesReviewRobotPlayback('advisor', isSalesReviewSummaryInProgress('advisor'))
         renderSalesReviewInsights('advisor')
+        renderSalesSopReview('advisor')
       }
 
       function renderAdvisorFilterCounts() {
@@ -18058,7 +18522,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return
           }
 
-          advisorState.reviewInsightTab = button.dataset.reviewInsightTab
+          const tab = button.dataset.reviewInsightTab
+          if (!['strength', 'weakness', 'risk'].includes(tab)) return
+          advisorState.reviewInsightTab = tab
           advisorState.reviewInsightPage = 1
           advisorState.reviewRuleQuery = ''
           advisorState.reviewRuleSort = 'rate-desc'
@@ -18159,6 +18625,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         bindAdvisorEvents()
         window.requestAnimationFrame(initAdvisorTrendChart)
         window.requestAnimationFrame(() => animateSalesDashboardCounters(document.querySelector('.sales-advisor-page')))
+        initStickyFilterBars()
       }
 
       function toggleAdvisorLeadComplete(leadId, options = {}) {
@@ -18420,7 +18887,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             if (node.dataset.route === 'leads' && (node.dataset.leadsViewTarget === 'leads' || node.dataset.leadsViewTarget === 'customers')) {
               leadsViewState.mode = node.dataset.leadsViewTarget
             }
-            navigateToRoute(node.dataset.route)
+            const extraParams = {}
+            if (node.dataset.route === 'leads-detail') {
+              if (node.dataset.leadId) extraParams.leadId = node.dataset.leadId
+              if (node.dataset.leadSource) extraParams.leadSource = node.dataset.leadSource
+            }
+            navigateToRoute(node.dataset.route, extraParams)
           })
         })
       }
@@ -18472,6 +18944,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         const target = new URL(getRouteUrl(routeId, extraParams), window.location.href)
         if (target.pathname === window.location.pathname && document.getElementById(pages[routeId].templateId)) {
+          history.replaceState(null, '', `${target.pathname}${target.search}${target.hash}`)
           renderPage(routeId)
           return
         }

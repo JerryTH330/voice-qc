@@ -998,7 +998,8 @@
 .store-dashboard-page #main-panel-advisors .tab-right-stack,
 .store-dashboard-page #main-panel-advisors .issue-cloud-pair,
 .store-dashboard-page #main-panel-advisors .issue-detail-section{gap:16px}
-.store-dashboard-page #main-panel-advisors .issue-overview-wrapper{
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper,
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper{
   gap:18px;
   padding:22px;
   border:1px solid rgba(217,226,239,0.88);
@@ -1036,14 +1037,16 @@
   display:flex;
   flex-direction:column;
 }
-.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-card{
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-card,
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper .issue-detail-card{
   border:0 !important;
   border-radius:0 !important;
   background:transparent !important;
   box-shadow:none !important;
   overflow:visible;
 }
-.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-card .store-section-content{
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-card .store-section-content,
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper .issue-detail-card .store-section-content{
   background:transparent !important;
   padding:0 !important;
 }
@@ -2997,7 +3000,7 @@
 .store-dashboard-page #gf-scene .gf-tab.todo-filter-tab.active{
   background:transparent;
   box-shadow:none;
-  color:#1E3A8A;
+  color:#2563EB;
 }
 .store-dashboard-page #gf-scene .gf-tab.todo-filter-tab.active::before{
   border-color:#2563EB;
@@ -4451,8 +4454,8 @@
   color:#1d4ed8;
 }
 .store-dashboard-page .store-hero-metrics .hm-trend{
-  font-size:12px;
-  font-weight:600;
+  font-size:14px;
+  font-weight:500;
 }
 .store-dashboard-page .store-hero-metrics .hm-trend.up{
   color:#16A34A;
@@ -5704,7 +5707,7 @@
   grid-column:1 / -1;
   grid-row:1;
 }
-.store-dashboard-page #main-panel-advisors .advisor-rank-card{
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper{
   grid-column:1;
   grid-row:2;
   height:100%;
@@ -5718,13 +5721,21 @@
   min-width:0;
   align-self:stretch;
 }
+.store-dashboard-page #main-panel-advisors .advisor-rank-card{
+  grid-column:1 / -1;
+  grid-row:3;
+  height:100%;
+  min-width:0;
+  align-self:stretch;
+}
 @media(max-width:1100px){
   .store-dashboard-page #main-panel-advisors > .tab-dual-grid{
     grid-template-columns:minmax(0,1fr);
   }
   .store-dashboard-page #main-panel-advisors .sop-overview-track,
-  .store-dashboard-page #main-panel-advisors .advisor-rank-card,
-  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper{
+  .store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper,
+  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper,
+  .store-dashboard-page #main-panel-advisors .advisor-rank-card{
     grid-column:1;
     grid-row:auto;
     height:auto;

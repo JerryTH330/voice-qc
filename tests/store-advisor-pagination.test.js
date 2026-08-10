@@ -10,8 +10,8 @@ const runtime = fs.readFileSync(path.join(root, 'app-runtime.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'store-dashboard', 'page.css'), 'utf8');
 
 test('store advisor ranking defaults to ten rows and does not offer five rows per page', () => {
-  assert.ok(html.includes('page.js?v=20260804-shared-insight-heading-icon'));
-  assert.ok(bootstrap.includes("const version = '20260804-shared-insight-heading-icon'"));
+  assert.ok(html.includes('page.js?v=20260810-sticky-24px-v5'));
+  assert.ok(bootstrap.includes("const version = '20260810-sticky-24px-v5'"));
   assert.ok(runtime.includes('let advisorPaginationState = { page: 1, pageSize: 10 }'));
   assert.ok(runtime.includes('${[10, 20, 50].map(size => `'));
   assert.ok(!runtime.includes('${[5, 10, 20, 50].map(size => `'));

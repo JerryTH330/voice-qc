@@ -94,5 +94,5 @@ test('summary cards match Figma 553:4430', () => {
 });
 
 test('store quality overview refreshes the latest CSS', () => {
-  assert.ok(html.includes('page.css?v=20260804-shared-insight-heading-icon'));
+  assert.ok(html.includes('page.css?v=20260810-sticky-24px-v5'));
 });

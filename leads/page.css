@@ -383,20 +383,25 @@
 
 .lead-detail-journey-evolution {
   box-sizing: border-box;
+  position: relative;
   display: flex;
   width: 100%;
   min-height: 124px;
   align-items: center;
   justify-content: center;
-  padding: 23px 17px 15px;
+  padding: 20px;
   overflow: hidden;
   border: 1px solid #cdddf3;
   border-radius: 18px;
   background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
 }
 
+.lead-detail-journey-evolution[data-evolution-expanded] {
+  min-height: auto;
+}
+
 .lead-detail-journey-evolution .lead-detail-hero-evolution {
-  width: min(100%, 1110px);
+  width: 100%;
   margin: 0 auto;
 }
 

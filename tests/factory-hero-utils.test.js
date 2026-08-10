@@ -28,9 +28,10 @@ test('factory hero subtitle falls back to region when organization is missing', 
   assert.equal(subtitle, '广州');
 });
 
-test('recording summary always keeps both source totals and only shows selected scene counts', () => {
+test('recording summary exposes source visibility and only shows selected scene counts', () => {
   const summary = buildFactoryRecordingSummary({
     selectedScenes: ['first_follow'],
+    visibility: { cloud: true, badge: false },
     cloudTotal: 6,
     badgeTotal: 26,
     sceneCounts: {
@@ -43,11 +44,13 @@ test('recording summary always keeps both source totals and only shows selected 
   });
 
   assert.equal(summary.cloud.label, '云外呼录音数');
+  assert.equal(summary.cloud.visible, true);
   assert.equal(summary.cloud.value, 6);
   assert.deepEqual(summary.cloud.scenes, [
     { key: 'first_follow', label: '首触跟进', value: 3 }
   ]);
   assert.equal(summary.badge.label, '门店工牌录音数');
+  assert.equal(summary.badge.visible, false);
   assert.equal(summary.badge.value, 26);
   assert.deepEqual(summary.badge.scenes, []);
 });

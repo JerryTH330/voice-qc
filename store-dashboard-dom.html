@@ -688,7 +688,7 @@
              ══════════════════════════════════════ -->
         <div class="main-panel active" id="main-panel-advisors" role="tabpanel" aria-labelledby="main-tab-advisors">
           <div class="tab-dual-grid">
-            <!-- 左列：团队效能 / 顾问排行 / 趋势 -->
+            <!-- 左列：团队效能 / SOP执行排行 / 趋势 -->
             <div class="tab-left-stack" aria-label="顾问管理概览">
               <section class="track sop-overview-track" aria-label="质检概览">
                 <div class="track-header">
@@ -740,16 +740,16 @@
                 </div>
               </section>
     
-              <!-- 顾问排行榜 -->
-              <section class="track advisor-section advisor-rank-card" aria-label="顾问排行">
+              <!-- SOP执行排行榜 -->
+              <section class="track advisor-section advisor-rank-card" aria-label="SOP执行排行">
                 <div class="store-section-content advisor-rank-content">
                 <div class="section-title-bar">
                   <div>
-                    <h2 class="section-title">顾问排行</h2>
+                    <h2 class="section-title">SOP执行排行</h2>
                     <p class="section-sub">按邀约、接待与质检表现查看顾问排名</p>
                   </div>
                 </div>
-                <div class="advisor-list" id="advisor-list" aria-label="顾问排行"><table class="advisor-table data-table">
+                <div class="advisor-list" id="advisor-list" aria-label="SOP执行排行"><table class="advisor-table data-table">
       <thead>
         <tr><th>排名</th><th>姓名</th><th class="sortable-th" onclick="window.sortAdvisor('invitation')" aria-sort="none" style="cursor:pointer; user-select:none;">
         <span class="advisor-th-sort-content">邀约录音数<span class="advisor-sort-indicator" aria-hidden="true"></span></span>
@@ -827,9 +827,9 @@
       </tr>
       </tbody>
     </table></div>
-                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="顾问排行分页">
+                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="SOP执行排行分页">
       <div class="dashboard-pagination">
-        <span class="session-pagination-total">共 16 项数据</span>
+        <span class="session-pagination-total">共 16 条</span>
         <div class="dashboard-pagination-controls">
           
     <div class="custom-select-container page-select page-size-select">
@@ -877,11 +877,11 @@
             <div class="tab-right-stack issue-overview-wrapper" aria-label="问题概览与明细">
               <div class="card-header">
                 <div>
-                  <div class="card-title">录音复盘</div>
+                  <div class="card-title">顾问行为洞察</div>
                   <div class="card-sub">邀约结果总评与关键转折分析</div>
                 </div>
               </div>
-              <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
+              <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
                 <button type="button" class="issue-insight-tab active" data-issue-insight-tab="weakness" role="tab" aria-selected="true">待改善短板TOP5</button>
                 <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势发掘TOP5</button>
                 <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
@@ -1169,17 +1169,17 @@
               </div>
             </div>
           </div>
-          <!-- 质检趋势分布图 -->
-          <section class="track trend-section store-trend-card" aria-label="质检趋势分布图">
+          <!-- SOP执行趋势分布图 -->
+          <section class="track trend-section store-trend-card" aria-label="SOP执行趋势分布图">
             <div class="store-section-content store-trend-content">
             <div class="trend-header">
               <div>
-                <h2 class="section-title">质检趋势分布图</h2>
+                <h2 class="section-title">SOP执行趋势分布图</h2>
                 <p class="section-sub">门店合格率vs大区合格率</p>
               </div>
             </div>
             <div class="trend-chart-wrap">
-              <canvas id="storeTrendChart" aria-label="质检趋势分布图" role="img" width="669" height="220" data-tooltip-bound="true"></canvas>
+              <canvas id="storeTrendChart" aria-label="SOP执行趋势分布图" role="img" width="669" height="220" data-tooltip-bound="true"></canvas>
             <div class="sales-trend-tooltip"></div></div>
             <div class="sales-trend-footer store-trend-footer">
               <div class="trend-legend chart-legend" id="chart-legend">
@@ -1354,7 +1354,7 @@
              ══════════════════════════════════════ -->
         <div class="main-panel active" id="main-panel-advisors" role="tabpanel" aria-labelledby="main-tab-advisors">
           <div class="tab-dual-grid">
-            <!-- 左列：团队效能 / 顾问排行 / 趋势 -->
+            <!-- 左列：团队效能 / SOP执行排行 / 趋势 -->
             <div class="tab-left-stack" aria-label="顾问管理概览">
               <section class="track sop-overview-track" aria-label="质检概览">
                 <div class="track-header">
@@ -1406,17 +1406,17 @@
                 </div>
               </section>
     
-              <!-- 顾问排行榜 -->
-              <section class="track advisor-section advisor-rank-card" aria-label="顾问排行">
+              <!-- SOP执行排行榜 -->
+              <section class="track advisor-section advisor-rank-card" aria-label="SOP执行排行">
                 <div class="store-section-content advisor-rank-content">
                 <div class="section-title-bar">
                   <div>
-                    <h2 class="section-title">顾问排行</h2>
+                    <h2 class="section-title">SOP执行排行</h2>
                     <p class="section-sub">按邀约、接待与质检表现查看顾问排名</p>
                   </div>
                 </div>
-                <div class="advisor-list" id="advisor-list" aria-label="顾问排行"></div>
-                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="顾问排行分页"></div>
+                <div class="advisor-list" id="advisor-list" aria-label="SOP执行排行"></div>
+                <div class="session-pagination advisor-pagination" id="advisorPagination" aria-label="SOP执行排行分页"></div>
                 </div>
               </section>
     
@@ -1426,11 +1426,11 @@
             <div class="tab-right-stack issue-overview-wrapper" aria-label="问题概览与明细">
               <div class="card-header">
                 <div>
-                  <div class="card-title">录音复盘</div>
+                  <div class="card-title">顾问行为洞察</div>
                   <div class="card-sub">邀约结果总评与关键转折分析</div>
                 </div>
               </div>
-              <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
+              <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
                 <button type="button" class="issue-insight-tab active" data-issue-insight-tab="weakness" role="tab" aria-selected="true">待改善短板TOP5</button>
                 <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势发掘TOP5</button>
                 <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
@@ -1463,17 +1463,17 @@
               </div>
             </div>
           </div>
-          <!-- 质检趋势分布图 -->
-          <section class="track trend-section store-trend-card" aria-label="质检趋势分布图">
+          <!-- SOP执行趋势分布图 -->
+          <section class="track trend-section store-trend-card" aria-label="SOP执行趋势分布图">
             <div class="store-section-content store-trend-content">
             <div class="trend-header">
               <div>
-                <h2 class="section-title">质检趋势分布图</h2>
+                <h2 class="section-title">SOP执行趋势分布图</h2>
                 <p class="section-sub">门店合格率vs大区合格率</p>
               </div>
             </div>
             <div class="trend-chart-wrap">
-              <canvas id="storeTrendChart" aria-label="质检趋势分布图" role="img"></canvas>
+              <canvas id="storeTrendChart" aria-label="SOP执行趋势分布图" role="img"></canvas>
             </div>
             <div class="sales-trend-footer store-trend-footer">
               <div class="trend-legend chart-legend" id="chart-legend"></div>

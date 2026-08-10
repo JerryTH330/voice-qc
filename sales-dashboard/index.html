@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260804sales-rule-scenes" />
+        <link rel="stylesheet" href="./page.css?v=20260810-sticky-24px-v5" />
 <title>销售看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -153,7 +153,7 @@
                   </div>
                 </div>
               </div>
-    
+
               <div class="hero-metrics">
                 <div class="hm-item">
                   <div class="hm-label">页面数量</div>
@@ -177,7 +177,7 @@
                 </div>
               </div>
             </section>
-    
+
             <section class="card sales-role-entry-card">
               <div class="panel-header">
                 <div class="panel-title">
@@ -186,7 +186,7 @@
                 </div>
                 <div class="mini-pill">数据截止 2026-03-23</div>
               </div>
-    
+
               <div class="role-link-grid">
                 <button type="button" class="role-link-card role-link-button" data-route="sales-dcc">
                   <span class="role-link-kicker">邀约专员页面</span>
@@ -200,7 +200,7 @@
                     <span class="todo-tag-chip">上游同步提醒</span>
                   </div>
                 </button>
-    
+
                 <button type="button" class="role-link-card role-link-button" data-route="sales-advisor">
                   <span class="role-link-kicker">接待专员页面</span>
                   <div class="role-link-title">展厅接待专员个人看板</div>
@@ -227,12 +227,13 @@
                     <button type="button" class="role-switch-link active" data-route="sales-dcc">云外呼</button>
                     <button type="button" class="role-switch-link" data-route="sales-advisor">工牌</button>
                   </div>
+                  <div class="sales-role-nav-divider" aria-hidden="true"></div>
                   <div class="sales-role-nav-filters">
                     <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
                     <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
                   </div>
                 </div>
-    
+
                 <section class="sales-role-hero role-hero-bar sales-role-hero-with-review">
                   <div class="sales-role-hero-main">
                     <div class="hero-profile">
@@ -240,17 +241,94 @@
                       <div class="hero-info">
                         <div class="hero-name-row">
                           <span class="hero-name" id="profile-name">张琳</span>
-                          <span class="hero-store" id="profile-meta">上海中心店 · 邀约专员</span>
                         </div>
                       </div>
+                      <div class="hero-profile-tags" id="profile-tags" aria-label="所属信息">
+                        <span class="hero-profile-tag">
+                          <img src="../assets/store-core-metrics/store-icon.svg" alt="" aria-hidden="true">
+                          <span>门店：<span id="profile-store">上海中心店</span></span>
+                        </span>
+                        <span class="hero-profile-tag">
+                          <img src="../assets/store-core-metrics/role-icon.svg" alt="" aria-hidden="true">
+                          <span>职位：<span id="profile-title">邀约专员</span></span>
+                        </span>
+                      </div>
                     </div>
-    
+
                     <div class="hero-metrics" id="hero-metrics"></div>
                   </div>
                 </section>
-    
+
                 <div class="main-content">
-                  <div class="col-left">
+                  <div class="sales-insight-row">
+                    <section class="card sales-sop-review-card" aria-label="SOP执行分析">
+                      <div class="card-header">
+                        <div>
+                          <div class="card-title">SOP执行分析</div>
+                          <div class="card-sub">从规则维度查看 SOP 命中表现。</div>
+                        </div>
+                      </div>
+                      <div class="sales-sop-review-body">
+                        <div class="sales-sop-review-toolbar review-insight-toolbar" id="sales-sop-review-toolbar"></div>
+                        <div class="sales-sop-review-list review-insight-list" id="sales-sop-review-list"></div>
+                      </div>
+                    </section>
+                    <section class="review-card sales-inline-review-card sales-embedded-review-card" aria-label="顾问行为洞察">
+                      <div class="sales-review-robot-media" data-sales-review-robot-media>
+                        <img class="sales-review-robot-image" src="../assets/customer-insight-robot-222.png" alt="" />
+                        <video
+                          class="sales-review-robot-video"
+                          src="../assets/customer-insight-robot-generating.mp4"
+                          muted
+                          playsinline
+                          preload="metadata"
+                          hidden
+                        ></video>
+                      </div>
+                      <div class="card-header">
+                        <div>
+                          <div class="card-title">顾问行为洞察</div>
+                          <div class="card-sub" id="review-sub">邀约结果总评与关键转折分析</div>
+                        </div>
+                      </div>
+
+                      <div class="review-scroll-area">
+                        <div class="review-score-area">
+                          <div class="review-score-circle" id="review-score-circle">
+                            <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
+                              <defs>
+                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                                  <stop offset="0%" stop-color="#67bfff"></stop>
+                                  <stop offset="52%" stop-color="#38bdf8"></stop>
+                                  <stop offset="100%" stop-color="#2563eb"></stop>
+                                </linearGradient>
+                              </defs>
+                              <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
+                              <path class="review-score-progress" d=""></path>
+                            </svg>
+                            <div class="review-score-inner">
+                              <span class="score" id="review-score-val">41<small>%</small></span>
+                              <span class="lbl" id="review-score-label">质检通过率</span>
+                            </div>
+                          </div>
+                          <div class="review-ai-summary" id="review-ai-summary"></div>
+                        </div>
+
+                        <div class="review-insight-panel">
+                          <div class="review-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
+                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+                          </div>
+                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
+                          <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
+                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="顾问行为洞察规则分页"></div>
+                        </div>
+
+                      </div>
+                    </section>
+                  </div>
+                  <div class="sales-recommend-row">
                     <section class="card todo-card">
                       <div class="lead-view-bar">
                         <div class="lead-view-row lead-view-row-top">
@@ -296,7 +374,7 @@
                           <div class="session-pagination sales-todo-pagination" id="salesTodoPagination"></div>
                         </div>
                       </div>
-    
+
                       <div class="lead-view-panel" id="lead-view-arrival">
                         <div class="history-toolbar">
                           <div class="history-summary" id="arrival-summary"></div>
@@ -304,7 +382,7 @@
                         <div class="pipeline-grid" id="arrival-pipeline"></div>
                         <div class="history-board" id="arrival-board" style="margin-top:16px;"></div>
                       </div>
-    
+
                       <div class="lead-view-panel" id="lead-view-all">
                         <div class="customer-table-wrap">
                           <table class="data-table" id="all-leads-table">
@@ -315,68 +393,11 @@
                       </div>
                     </section>
                   </div>
-    
-                  <div class="col-right">
-                    <section class="review-card sales-inline-review-card sales-embedded-review-card">
-                      <div class="sales-review-robot-media" data-sales-review-robot-media>
-                        <img class="sales-review-robot-image" src="../assets/customer-insight-robot-222.png" alt="" />
-                        <video
-                          class="sales-review-robot-video"
-                          src="../assets/customer-insight-robot-generating.mp4"
-                          muted
-                          playsinline
-                          preload="metadata"
-                          hidden
-                        ></video>
-                      </div>
-                      <div class="card-header">
-                        <div>
-                          <div class="card-title">录音复盘</div>
-                          <div class="card-sub" id="review-sub">邀约结果总评与关键转折分析</div>
-                        </div>
-                      </div>
-    
-                      <div class="review-scroll-area">
-                        <div class="review-score-area">
-                          <div class="review-score-circle" id="review-score-circle">
-                            <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
-                              <defs>
-                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                                  <stop offset="0%" stop-color="#67bfff"></stop>
-                                  <stop offset="52%" stop-color="#38bdf8"></stop>
-                                  <stop offset="100%" stop-color="#2563eb"></stop>
-                                </linearGradient>
-                              </defs>
-                              <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
-                              <path class="review-score-progress" d=""></path>
-                            </svg>
-                            <div class="review-score-inner">
-                              <span class="score" id="review-score-val">41<small>%</small></span>
-                              <span class="lbl" id="review-score-label">质检通过率</span>
-                            </div>
-                          </div>
-                          <div class="review-ai-summary" id="review-ai-summary"></div>
-                        </div>
-    
-                        <div class="review-insight-panel">
-                          <div class="review-insight-tabs" role="tablist" aria-label="录音复盘类型">
-                            <button type="button" class="review-insight-tab active" data-review-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
-                          </div>
-                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
-                          <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
-                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="录音复盘规则分页"></div>
-                        </div>
-    
-                      </div>
-                    </section>
-    
+                  <div class="sales-trend-row">
                     <section class="card sales-role-trend-card">
                       <div class="card-header">
                         <div>
-                          <div class="card-title">质检趋势</div>
+                          <div class="card-title">SOP执行趋势分布图</div>
                           <div class="card-sub">个人表现 vs 门店合格率，掌握自身进步节奏</div>
                         </div>
                         <div class="sales-trend-head">
@@ -410,12 +431,13 @@
                     <button type="button" class="role-switch-link" data-route="sales-dcc">云外呼</button>
                     <button type="button" class="role-switch-link active" data-route="sales-advisor">工牌</button>
                   </div>
+                  <div class="sales-role-nav-divider" aria-hidden="true"></div>
                   <div class="sales-role-nav-filters">
                     <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
                     <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
                   </div>
                 </div>
-    
+
                 <section class="sales-role-hero role-hero-bar sales-role-hero-with-review">
                   <div class="sales-role-hero-main">
                     <div class="hero-profile">
@@ -423,17 +445,93 @@
                       <div class="hero-info">
                         <div class="hero-name-row">
                           <span class="hero-name" id="profile-name">李昱</span>
-                          <span class="hero-store" id="profile-meta">上海中心店 · 接待专员</span>
                         </div>
                       </div>
+                      <div class="hero-profile-tags" id="profile-tags" aria-label="所属信息">
+                        <span class="hero-profile-tag">
+                          <img src="../assets/store-core-metrics/store-icon.svg" alt="" aria-hidden="true">
+                          <span>门店：<span id="profile-store">上海中心店</span></span>
+                        </span>
+                        <span class="hero-profile-tag">
+                          <img src="../assets/store-core-metrics/role-icon.svg" alt="" aria-hidden="true">
+                          <span>职位：<span id="profile-title">接待专员</span></span>
+                        </span>
+                      </div>
                     </div>
-    
+
                     <div class="hero-metrics" id="hero-metrics"></div>
                   </div>
                 </section>
-    
+
                 <div class="main-content">
-                  <div class="col-left">
+                  <div class="sales-insight-row">
+                    <section class="card sales-sop-review-card" aria-label="SOP执行分析">
+                      <div class="card-header">
+                        <div>
+                          <div class="card-title">SOP执行分析</div>
+                          <div class="card-sub">从规则维度查看 SOP 命中表现。</div>
+                        </div>
+                      </div>
+                      <div class="sales-sop-review-body">
+                        <div class="sales-sop-review-toolbar review-insight-toolbar" id="sales-sop-review-toolbar"></div>
+                        <div class="sales-sop-review-list review-insight-list" id="sales-sop-review-list"></div>
+                      </div>
+                    </section>
+                    <section class="review-card sales-inline-review-card sales-embedded-review-card" aria-label="顾问行为洞察">
+                      <div class="sales-review-robot-media" data-sales-review-robot-media>
+                        <img class="sales-review-robot-image" src="../assets/customer-insight-robot-222.png" alt="" />
+                        <video
+                          class="sales-review-robot-video"
+                          src="../assets/customer-insight-robot-generating.mp4"
+                          muted
+                          playsinline
+                          preload="metadata"
+                          hidden
+                        ></video>
+                      </div>
+                      <div class="card-header">
+                        <div>
+                          <div class="card-title">顾问行为洞察</div>
+                          <div class="card-sub" id="review-sub">接待专员表现总评与关键时刻分析</div>
+                        </div>
+                      </div>
+
+                      <div class="review-scroll-area">
+                        <div class="review-score-area">
+                          <div class="review-score-circle" id="review-score-circle">
+                            <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
+                              <defs>
+                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                                  <stop offset="0%" stop-color="#67bfff"></stop>
+                                  <stop offset="52%" stop-color="#38bdf8"></stop>
+                                  <stop offset="100%" stop-color="#2563eb"></stop>
+                                </linearGradient>
+                              </defs>
+                              <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
+                              <path class="review-score-progress" d=""></path>
+                            </svg>
+                            <div class="review-score-inner">
+                              <span class="score" id="review-score-val">57<small>%</small></span>
+                              <span class="lbl" id="review-score-label">质检通过率</span>
+                            </div>
+                          </div>
+                          <div class="review-ai-summary" id="review-ai-summary"></div>
+                        </div>
+
+                        <div class="review-insight-panel">
+                          <div class="review-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
+                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+                          </div>
+                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
+                          <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
+                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="顾问行为洞察规则分页"></div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                  <div class="sales-recommend-row">
                     <section class="card todo-card">
                       <div class="lead-view-bar">
                         <div class="lead-view-row lead-view-row-top">
@@ -479,7 +577,7 @@
                           <div class="session-pagination sales-todo-pagination" id="salesTodoPagination"></div>
                         </div>
                       </div>
-    
+
                       <div class="lead-view-panel" id="lead-view-chain">
                         <div class="history-toolbar">
                           <div class="history-summary" id="chain-summary"></div>
@@ -487,7 +585,7 @@
                         <div class="pipeline-grid" id="chain-pipeline"></div>
                         <div class="history-board" id="chain-board" style="margin-top:16px;"></div>
                       </div>
-    
+
                       <div class="lead-view-panel" id="lead-view-all">
                         <div class="customer-table-wrap">
                           <table class="data-table" id="all-leads-table">
@@ -498,67 +596,11 @@
                       </div>
                     </section>
                   </div>
-    
-                  <div class="col-right">
-                    <section class="review-card sales-inline-review-card sales-embedded-review-card">
-                      <div class="sales-review-robot-media" data-sales-review-robot-media>
-                        <img class="sales-review-robot-image" src="../assets/customer-insight-robot-222.png" alt="" />
-                        <video
-                          class="sales-review-robot-video"
-                          src="../assets/customer-insight-robot-generating.mp4"
-                          muted
-                          playsinline
-                          preload="metadata"
-                          hidden
-                        ></video>
-                      </div>
-                      <div class="card-header">
-                        <div>
-                          <div class="card-title">录音复盘</div>
-                          <div class="card-sub" id="review-sub">接待专员表现总评与关键时刻分析</div>
-                        </div>
-                      </div>
-    
-                      <div class="review-scroll-area">
-                        <div class="review-score-area">
-                          <div class="review-score-circle" id="review-score-circle">
-                            <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
-                              <defs>
-                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                                  <stop offset="0%" stop-color="#67bfff"></stop>
-                                  <stop offset="52%" stop-color="#38bdf8"></stop>
-                                  <stop offset="100%" stop-color="#2563eb"></stop>
-                                </linearGradient>
-                              </defs>
-                              <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
-                              <path class="review-score-progress" d=""></path>
-                            </svg>
-                            <div class="review-score-inner">
-                              <span class="score" id="review-score-val">57<small>%</small></span>
-                              <span class="lbl" id="review-score-label">质检通过率</span>
-                            </div>
-                          </div>
-                          <div class="review-ai-summary" id="review-ai-summary"></div>
-                        </div>
-    
-                        <div class="review-insight-panel">
-                          <div class="review-insight-tabs" role="tablist" aria-label="录音复盘类型">
-                            <button type="button" class="review-insight-tab active" data-review-insight-tab="sop" role="tab" aria-selected="true">SOP 质检分析</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="strength" role="tab" aria-selected="false">优势项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
-                          </div>
-                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
-                          <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
-                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="录音复盘规则分页"></div>
-                        </div>
-                      </div>
-                    </section>
-    
+                  <div class="sales-trend-row">
                     <section class="card sales-role-trend-card">
                       <div class="card-header">
                         <div>
-                          <div class="card-title">质检趋势</div>
+                          <div class="card-title">SOP执行趋势分布图</div>
                           <div class="card-sub">个人表现 vs 门店合格率，掌握自身进步节奏</div>
                         </div>
                         <div class="sales-trend-head">
@@ -578,7 +620,7 @@
                     </section>
                   </div>
                 </div>
-    
+
               </div>
             </div>
           </div>
@@ -595,7 +637,7 @@
                 <div class="mini-pill" id="sessionDetailDate">日期: 2026/03/13</div>
               </div>
             </div>
-    
+
             <div class="detail-layout">
               <div class="session-detail-main">
                 <div class="session-detail-main-left">
@@ -633,7 +675,7 @@
                       </div>
                     </div>
                   </section>
-    
+
                   <section class="card session-detail-ai">
                     <div class="panel-header session-ai-header">
                       <div class="panel-title">
@@ -645,7 +687,7 @@
                         <button type="button" class="session-ai-tab" data-session-ai-view="transcript" aria-selected="false">转写文本</button>
                       </div>
                     </div>
-    
+
                     <div class="session-ai-panel session-ai-panel-insight is-active" id="sessionAiInsightPanel">
                       <div class="session-ai-overview-grid">
                         <div class="session-ai-subcard session-ai-sketch-card">
@@ -669,7 +711,7 @@
                             <span class="lead-cloud-term violet md"><span class="lead-cloud-term-copy">20-30万</span></span>
                           </div>
                         </div>
-    
+
                         <div class="session-ai-subcard session-ai-intention-card">
                           <div class="session-ai-intention-head">
                             <h4 class="session-ai-subtitle">客户意向</h4>
@@ -703,7 +745,7 @@
                           </div>
                         </div>
                       </div>
-    
+
                       <div class="session-ai-subcard session-ai-portrait-card">
                         <h4 class="session-ai-subtitle">客户画像</h4>
                         <div class="session-ai-portrait-grid">
@@ -802,7 +844,7 @@
                         </div>
                       </div>
                     </div>
-    
+
                     <div class="session-ai-panel session-ai-panel-transcript" id="sessionAiTranscriptPanel" hidden>
                       <div class="session-ai-transcript-wrap">
                         <div class="transcript-list">
@@ -851,7 +893,7 @@
                     </div>
                   </section>
                 </div>
-    
+
                 <div class="session-detail-main-right">
                   <section class="card session-metrics-card">
                     <div class="panel-header">
@@ -890,7 +932,7 @@
                       </div>
                     </div>
                   </section>
-    
+
                   <section class="card session-detail-sop">
                     <div class="panel-header">
                       <div class="panel-title">
@@ -898,7 +940,7 @@
                       </div>
                       <div class="mini-pill">6/7</div>
                     </div>
-    
+
                     <div class="sop-result-list">
                       <div class="sop-item done">
                         <div class="sop-head">
@@ -959,6 +1001,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="./page.js?v=20260804sales-rule-scenes"></script>
+<script src="./page.js?v=20260810-sticky-24px-v5"></script>
   </body>
 </html>
