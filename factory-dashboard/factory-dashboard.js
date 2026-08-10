@@ -4592,7 +4592,6 @@
   const getIssueRuleSortLabel = (value) => ISSUE_RULE_SORT_OPTIONS.find(option => option.value === value)?.label || ISSUE_RULE_SORT_OPTIONS[0].label;
 
   const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 99;
-  const ISSUE_RULE_SCENE_COLLAPSED_LIMIT = 1;
   const getIssueRuleSceneTagLabel = (label) => Array.from(String(label ?? '').trim())[0] || '';
 
   const renderIssueRuleSceneTagsHtml = (labels, previewLimit) => {
@@ -4600,19 +4599,17 @@
     const hasMore = labels.length > previewLimit;
     return `
       <span class="issue-rule-tags">
-        ${previewLabels.map(label => `<em title="${escapeHtml(label)}" data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+        ${previewLabels.map(label => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}</em>`).join('')}
       </span>
       ${hasMore ? `
-        <details class="issue-rule-scene-more">
-          <summary aria-label="查看全部所属业务场景">...</summary>
-          <span class="issue-rule-scene-popover">
-            <strong>所属业务场景</strong>
-            <span class="issue-rule-scene-popover-tags">
-              ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-            </span>
-          </span>
-        </details>
+        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
       ` : ''}
+      <span class="issue-rule-scene-popover" role="tooltip">
+        <strong>所属业务场景</strong>
+        <span class="issue-rule-scene-popover-tags">
+          ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+        </span>
+      </span>
     `;
   };
 
@@ -4625,7 +4622,7 @@
   const autoCollapseIssueRuleScenes = IssueRuleList.createAutoCollapser({
     renderHtml: renderIssueRuleSceneTagsHtml,
     previewLimit: ISSUE_RULE_SCENE_PREVIEW_LIMIT,
-    collapsedLimit: ISSUE_RULE_SCENE_COLLAPSED_LIMIT,
+    progressive: true,
   });
 
   const getIssueRuleBaseOrg = () => {
@@ -4817,8 +4814,10 @@
         <div class="issue-rule-row" data-rule-id="${rule.id}">
           <span class="issue-rule-name">
             <span class="issue-rule-name-line">
-              <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(rule.name)}</strong>
-              <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.name)}</span>
+              <span class="issue-rule-name-copy">
+                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target tabindex="0">${escapeHtml(rule.name)}</strong>
+                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.name)}</span>
+              </span>
               ${renderIssueRuleSceneTags(tagLabels)}
             </span>
           </span>
@@ -4830,42 +4829,42 @@
     }).join('');
 
     return `
-      <div class="issue-rule-toolbar${canExport ? ' has-export' : ''}">
-        <label class="issue-rule-search">
-          <span>搜索规则</span>
-          <input class="issue-rule-search-input" type="search" value="${escapeHtml(state.query)}" placeholder="输入规则名称" autocomplete="off">
-        </label>
-        <div class="issue-rule-sort">
-          <span>排序</span>
-          <div class="issue-rule-sort-dropdown">
-            <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-              <span class="issue-rule-sort-value">${escapeHtml(getIssueRuleSortLabel(state.sort))}</span>
-              <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式">
-              <div class="session-menu-option-list">
-                ${ISSUE_RULE_SORT_OPTIONS.map(option => `
-                  <button
-                    type="button"
-                    class="issue-rule-sort-option store-model-option session-menu-option${state.sort === option.value ? ' active' : ''}"
-                    data-sort-value="${option.value}"
-                    role="option"
-                    aria-selected="${state.sort === option.value ? 'true' : 'false'}"
-                  ><span>${escapeHtml(option.label)}</span></button>
-                `).join('')}
+      ${canExport ? `
+        <div class="issue-rule-toolbar has-export">
+          <label class="issue-rule-search">
+            <span>搜索规则</span>
+            <input class="issue-rule-search-input" type="search" value="${escapeHtml(state.query)}" placeholder="输入规则名称" autocomplete="off">
+          </label>
+          <div class="issue-rule-sort">
+            <span>排序</span>
+            <div class="issue-rule-sort-dropdown">
+              <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="issue-rule-sort-value">${escapeHtml(getIssueRuleSortLabel(state.sort))}</span>
+                <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+              <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式">
+                <div class="session-menu-option-list">
+                  ${ISSUE_RULE_SORT_OPTIONS.map(option => `
+                    <button
+                      type="button"
+                      class="issue-rule-sort-option store-model-option session-menu-option${state.sort === option.value ? ' active' : ''}"
+                      data-sort-value="${option.value}"
+                      role="option"
+                      aria-selected="${state.sort === option.value ? 'true' : 'false'}"
+                    ><span>${escapeHtml(option.label)}</span></button>
+                  `).join('')}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        ${canExport ? `
           <button type="button" class="issue-rule-export-btn" ${rules.length ? '' : 'disabled'}>
             <img src="../assets/factory-issue-overview/export-icon-565-5396.svg" alt="" aria-hidden="true">
             <span>导出</span>
           </button>
-        ` : ''}
-      </div>
+        </div>
+      ` : ''}
       <div class="issue-rule-list-shell">
         <div class="issue-rule-list-head">
           <span class="issue-rule-name-head">规则名称</span>

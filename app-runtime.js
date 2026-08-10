@@ -13508,6 +13508,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (!container || !track) return
 
         const steps = track.querySelectorAll('.lead-detail-hero-step')
+        const evolution = container.querySelector('.lead-detail-hero-evolution')
+        if (!evolution) return
         track.style.setProperty('--lead-evolution-step-count', String(steps.length || 1))
 
         const prevBtn = container.querySelector('.lead-detail-evolution-arrow-prev')
@@ -13515,6 +13517,31 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const toggleBtn = container.querySelector('.lead-detail-evolution-toggle')
         const stepWidth = 80
         const trackEndPadding = 25
+
+        function hasOverflowAtMinimumWidth() {
+          return steps.length > 1 && steps.length * stepWidth > evolution.clientWidth + 1
+        }
+
+        function collapseEvolution() {
+          if (!container.hasAttribute('data-evolution-expanded')) return
+          container.removeAttribute('data-evolution-expanded')
+          if (toggleBtn) {
+            toggleBtn.setAttribute('aria-expanded', 'false')
+            toggleBtn.textContent = '展开'
+          }
+          track.scrollLeft = 0
+        }
+
+        function syncLayoutMode() {
+          const overflow = hasOverflowAtMinimumWidth()
+          container.toggleAttribute('data-evolution-single', steps.length === 1)
+          container.toggleAttribute('data-evolution-overflow', overflow)
+          if (!overflow) {
+            collapseEvolution()
+            track.scrollLeft = 0
+          }
+          return overflow
+        }
 
         function getMaxAlignedScrollLeft() {
           const contentWidth = Math.max(0, track.scrollWidth - trackEndPadding)
@@ -13547,7 +13574,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         function updateArrows() {
           if (!prevBtn || !nextBtn) return
           const isExpanded = container.hasAttribute('data-evolution-expanded')
-          const scrollable = !isExpanded && track.scrollWidth > track.clientWidth + 1
+          const scrollable = container.hasAttribute('data-evolution-overflow')
+            && !isExpanded
+            && track.scrollWidth > track.clientWidth + 1
           prevBtn.disabled = !scrollable || track.scrollLeft <= 1
           nextBtn.disabled = !scrollable || track.scrollLeft >= getMaxAlignedScrollLeft() - 1
         }
@@ -13580,7 +13609,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             track._evolutionAlignTimer = window.setTimeout(() => alignTrackToNearestStep(), 140)
           }, { passive: true })
           track.addEventListener('wheel', (event) => {
-            if (container.hasAttribute('data-evolution-expanded')) return
+            if (container.hasAttribute('data-evolution-expanded') || !container.hasAttribute('data-evolution-overflow')) return
             if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
               event.preventDefault()
               track.scrollBy({ left: event.deltaY, behavior: 'smooth' })
@@ -13591,6 +13620,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (toggleBtn && !toggleBtn._evolutionBound) {
           toggleBtn._evolutionBound = true
           toggleBtn.addEventListener('click', () => {
+            if (!container.hasAttribute('data-evolution-overflow')) return
             const isExpanded = container.hasAttribute('data-evolution-expanded')
             if (isExpanded) {
               container.removeAttribute('data-evolution-expanded')
@@ -13615,19 +13645,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         if (!container._leadEvolutionResizeObserver) {
-          let previousTrackWidth = track.clientWidth
+          let previousEvolutionWidth = evolution.clientWidth
           container._leadEvolutionResizeObserver = new ResizeObserver(() => {
-            const currentTrackWidth = track.clientWidth
-            if (currentTrackWidth !== previousTrackWidth) {
-              previousTrackWidth = currentTrackWidth
+            const currentEvolutionWidth = evolution.clientWidth
+            const overflow = syncLayoutMode()
+            if (overflow && currentEvolutionWidth !== previousEvolutionWidth) {
+              previousEvolutionWidth = currentEvolutionWidth
               alignTrackToNearestStep('auto')
             }
             syncExpandedRowEnds()
             updateArrows()
           })
-          container._leadEvolutionResizeObserver.observe(track)
+          container._leadEvolutionResizeObserver.observe(container)
         }
 
+        syncLayoutMode()
         syncExpandedRowEnds()
         updateArrows()
       }

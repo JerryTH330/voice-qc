@@ -1,7 +1,7 @@
 /* 线索列表 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'leads';
 (function loadPageRuntime() {
-  const scripts = ["../factory-multi-select-filter-utils.js?v=20260612customer-journey-filter","../shared/issue-rule-list.js?v=20260805-issue-rule-shared","../app-runtime.js?v=20260810-lead-evolution-spec-v2"];
+  const scripts = ["../factory-multi-select-filter-utils.js?v=20260612customer-journey-filter","../shared/issue-rule-list.js?v=20260805-issue-rule-shared","../app-runtime.js?v=20260810-lead-evolution-adaptive-v3"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');
