@@ -5,3 +5,7 @@ node_modules/
 handoff-log.md
 .claude/settings.local.json
 script-library/__pycache__/
+.scratch/
+docs/concepts/
+docs/factory-dashboard-ui-change-summary.md
+tests/
