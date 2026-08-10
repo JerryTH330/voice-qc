@@ -81,7 +81,7 @@ test('overview and journey shells match Figma sizing and appearance', () => {
   );
   assert.match(
     css,
-    /\.lead-detail-journey-evolution\s*{[\s\S]*?min-height:\s*124px;[\s\S]*?padding:\s*23px 17px 15px;[\s\S]*?border:\s*1px solid #cdddf3;[\s\S]*?border-radius:\s*18px;[\s\S]*?linear-gradient\(180deg, #fff 0%, #f8fbff 100%\);/
+    /\.lead-detail-journey-evolution\s*{[\s\S]*?min-height:\s*124px;[\s\S]*?padding:\s*20px;[\s\S]*?border:\s*1px solid #cdddf3;[\s\S]*?border-radius:\s*18px;[\s\S]*?linear-gradient\(180deg, #fff 0%, #f8fbff 100%\);/
   );
   assert.match(
     css,
@@ -90,7 +90,7 @@ test('overview and journey shells match Figma sizing and appearance', () => {
 });
 
 test('lead detail Figma 533:8216 cache version is active', () => {
-  assert.ok(html.includes('page.css?v=20260804-shared-insight-heading-icon'));
+  assert.ok(html.includes('page.css?v=20260810-lead-evolution-spec-v2'));
 });
 
 test('lead journey width follows its available container without horizontal overflow', () => {

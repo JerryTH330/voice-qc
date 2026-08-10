@@ -67,7 +67,7 @@ test('导出按钮使用 Figma 原始图标资源', () => {
 });
 
 test('厂端页面刷新 Figma 565:5348 版本资源', () => {
-  const version = '20260805-issue-rule-shared';
+  const version = '20260810-sticky-24px-v5';
 
   assert.ok(html.includes(`page.css?v=${version}`));
   assert.ok(html.includes(`page.js?v=${version}`));

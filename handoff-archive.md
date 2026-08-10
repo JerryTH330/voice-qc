@@ -1,5 +1,40 @@
 # 交接日志归档
 
+### 2026-08-05 厂端问题规则列表容器宽度自适应
+- 用户想做什么：选中的 `issue-rule-list-shell` 要做宽度自适应；宽度足够时由规则名称列撑开剩余空间。
+- 已经完成了什么：检查后发现厂端 `.issue-rule-list-shell` 被写死了 `max-width: 654px` 和 `align-self: center`，导致列表容器不能撑满父容器。已移除这两个属性，让容器 `width: 100%` 自适应父容器宽度；并把 grid 第一列从 `minmax(0, 312px)` 改为 `minmax(0, 1fr)`，让规则名称列在宽度足够时撑开剩余空间，标签跟随其后；同步把厂端 `page.js` / `index.html` 的缓存版本从 `20260805-issue-rule-shared` 更新为 `20260805-issue-rule-adaptive` 以便浏览器重新加载 CSS；运行 `scripts/sync-versions.js` 和 `scripts/check-version-sync.js` 确认测试文件版本无需改动、全部一致。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.css`、`factory-dashboard/page.js`、`factory-dashboard/index.html`。
+- 做过哪些验证：`node scripts/sync-versions.js` 输出 "0 test file(s) updated, 0 replacement(s)"；`node scripts/check-version-sync.js` 输出 "All test file versions are in sync"。
+- 还有哪些待办或风险：门店和销售看板已经使用 `width: 100%` 且规则名称列为 `1fr`，无需改动；用户需要硬刷新（Cmd+Shift+R）才能看到效果。
+
+### 2026-08-05 修复非看板页面未加载 shared/issue-rule-list.js 导致空白
+- 用户想做什么：切到线索列表页面后页面空白，控制台报错 `IssueRuleList is not defined`。
+- 已经完成了什么：检查后发现 `app-runtime.js` 在模块加载时就调用了 `IssueRuleList.createAutoCollapser`，但线索、录音、质检配置、优秀话术库、系统管理这 5 个非看板 page.js 只加载了 `app-runtime.js`，没有加载 `shared/issue-rule-list.js`。已在这 5 个 page.js 的 scripts 数组里，把 `../shared/issue-rule-list.js` 放在 `../app-runtime.js` 之前按顺序加载。
+- 改动了哪些文件：`leads/page.js`、`session/page.js`、`config/page.js`、`script-library/page.js`、`system/page.js`。
+- 做过哪些验证：`node --check` 检查 5 个文件全部通过；语法无误，加载顺序正确。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后验证线索列表、录音列表、质检配置、话术库、系统管理页面是否正常加载；未跑全量测试。
+
+### 2026-07-28 200ms 冷却 + 折叠自动恢复
+- 用户想做什么：用户选 2（grill-me 问题 1）——加 200ms 冷却时间，让拖大窗口时已折叠的 scenes 自动恢复成 5 标签，同时不闪烁。
+- 已经完成了什么：3 处 measure（厂端 `factory-dashboard.js:6375-6404`、门店 `app-runtime.js:4359-4388`、销售 `app-runtime.js:15570-15599`）加 `let lastMeasureAt = 0; const MEASURE_COOLDOWN = 200;` 冷却；measure 函数每次先检查 `cont.dataset.issueRuleScenesState === 'collapsed'`，是的话**临时恢复 5 标签** + `cont.offsetHeight` 强制 reflow，再检测，位置够就保持 5 标签，否则再折叠回 1 个 + "..."；不用 closure 变量 `isCollapsed`（避免 stale），每次从 DOM 读最新状态。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`app-runtime.js`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：未在浏览器实际验证"拖大窗口自动恢复"行为（**用户必须刷新页面**）。
+
+### 2026-07-28 标签全名 hover 浮窗 + 下钻只按钮触发
+- 用户想做什么：标签在任何时候悬停都显示完整标签名（自定义浮窗，不用原生 title）；规则名出现 ... 时悬停显示完整规则名；下钻只在"看组织表现"按钮触发，点击 row 其他地方不要下钻。
+- 已经完成了什么：3 处 HTML（厂端 `factory-dashboard.js:6327`+6595、门店 `app-runtime.js:4311`+4414、销售 `app-runtime.js:15517`+16164）标签 em 改为 `<em title data-tag-label aria-label>${tagLabel}<span class="issue-rule-tag-popover" role="tooltip">${fullLabel}</span></em>`；row 去掉 `role="button" tabindex="0" aria-label`；"看组织表现"按钮从 `<span class="issue-rule-action">` 改为 `<button type="button" class="issue-rule-action" data-* aria-label>`；3 处 JS（厂端 `factory-dashboard.js:6885`、门店 `app-runtime.js:4629`、销售 `app-runtime.js:16191`）下钻从 row click/keydown 改为 `.issue-rule-action` button click（`event.stopPropagation`）；3 处 CSS（厂端 `factory-dashboard.css:1273-1297` + `1421-1462` + `1482-1499`，门店 `store-dashboard/page.css:1987-2013` + `2154-2194`，销售 `sales-dashboard/page.css:269-294` + `520-559`）row 去掉 `cursor: pointer` + transition + hover 视觉变化；em 加 `position: relative`；加 `.issue-rule-tag-popover` 浮窗样式（白底圆角阴影 z-index 100）；popover z-index 60 → 100；row `:has(em:hover/:focus-within)` 临时 z-index 40 让 popover 浮在所有 row 之上；测试 `factory-issue-overview-figma-565-5348.test.js:32` 同步更新匹配新 em 结构。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`factory-dashboard/factory-dashboard.css`、`app-runtime.js`、`store-dashboard/page.css`、`sales-dashboard/page.css`、`tests/factory-issue-overview-figma-565-5348.test.js`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关（之前就存在的 Figma 文件未到位、toolbar 未来功能等）。
+- 还有哪些待办或风险：未在浏览器实际验证渲染效果（**用户必须刷新页面**才能看到新结构）。
+
+## 2026-07-28 修复 measure 双向恢复循环闪烁
+- 用户想做什么：之前 measure 函数"双向自动恢复"导致 collapse → expand → collapse 无限循环（折叠后 strong 不截断就恢复，恢复后又截断又折叠），视觉上一直在闪。
+- 已经完成了什么：3 处 measure（厂端 `factory-dashboard.js:6375`、门店 `app-runtime.js:4359`、销售 `app-runtime.js:15565`）回到"单向折叠不恢复"——`if (cont.dataset.issueRuleScenesState === 'collapsed') return;`，已折叠后不再检测，避免循环闪烁；保留 Range API 检测 strong 截断。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.js`、`app-runtime.js`。
+- 做过哪些验证：`node --check` 语法通过；`node --test tests/*.test.js` 208/216 通过，8 个失败和本次改动无关。
+- 还有哪些待办或风险：调大窗口已折叠的 scenes 不会自动恢复（需要刷新页面）；之前的 collapsed 状态不会自动消失，**用户必须刷新页面**才能看到稳定效果。
+
 ## 2026-08-04 修正质检概览图标与标题间距
 - 用户想做什么：将质检概览标题图标和文字之间的间距设为 12px，并要求直接修改、不做校验。
 - 已经完成了什么：定位到公共样式中的高优先级 `gap: 0` 覆盖；提高该板块专用选择器优先级并明确设置 `gap: 12px`；更新缓存版本。
@@ -361,6 +396,13 @@
 ## 2026-07-30 统一线索旅程卡片为纯白底色
 - 用户想做什么：将线索详情中所有旅程内容卡片的底色改为白色。
 - 已经完成了什么：为线索详情旅程卡增加页面级纯白背景覆盖，五张卡片全部生效；保留卡片顶部日期、阶段标签、录音 ID、边框、圆角和时间轴样式；更新页面样式缓存版本。
+
+### 2026-07-28 抽公共文件 + 200ms 冷却 + 折叠自动恢复
+- 用户想做什么：用户选 2（grill-me 问题）——把厂端、门店、销售 3 处完全重复的 measure/autoCollapse 代码抽到共享文件。
+- 已经完成了什么：① 新建 `shared/issue-rule-list.js`（164 行，UMD 兼容，Node `module.exports` + 浏览器 `window.IssueRuleList`），暴露 `createAutoCollapser({ renderHtml, previewLimit, collapsedLimit })` / `setupRowDrilldown` / `renderSceneTagsHtml` / `renderSceneTags` / `escapeHtml` / `MEASURE_COOLDOWN`；② 删 3 处 measure 函数（厂端 `factory-dashboard.js:6349-6417`、门店 `app-runtime.js:4333-4402`、销售 `app-runtime.js:15544-15612`，各 ~100 行），call site 缩为 1 行；③ 3 处 page.js 加 shared 加载：厂端 `factory-dashboard/page.js:5`、门店 `store-dashboard/page.js:5`、销售 `sales-dashboard/page.js:5`；④ 3 处 index.html page.css + page.js version 同步更新为 `20260805-issue-rule-shared`；⑤ 10 个测试文件 12 处硬编码 version 同步更新（`tests/factory-issue-overview-figma-565-5348.test.js:70`、`tests/factory-recording-summary-visibility.test.js:22`、`tests/factory-quality-overview-match.test.js:83`、`tests/factory-dashboard-panel-spacing.test.js:25`、`tests/store-advisor-pagination.test.js:13-14`、`tests/store-core-metrics-figma.test.js:67`、`tests/store-review-sop-toolbar.test.js:13`、`tests/store-quality-overview-figma.test.js:97`、`tests/store-dashboard-layout-consistency.test.js:33-34`、`tests/store-recording-summary-visibility.test.js:21`）；⑥ 3 处 page.css 内部 @import version 同步更新（厂端 `factory-dashboard/page.css:2-4`、门店 `store-dashboard/page.css:2-3`、销售 `sales-dashboard/page.css:2-3`）。
+- 改动了哪些文件：`shared/issue-rule-list.js`（新建，164 行）；`factory-dashboard/factory-dashboard.js`（-90 行）；`app-runtime.js`（-180 行）；3 个 `page.js`（+3 行）；3 个 `index.html`（version 同步）；3 个 `page.css`（version 同步）；10 个 `tests/*.test.js`（version 同步）。
+- 做过哪些验证：`node --check` 全部通过；`node --test tests/*.test.js` 208/216 通过（重构前 208/216，重构后**完全相同**），剩 8 个失败都是 store-review-sop-toolbar / store-recording-review 等待未来功能，**和重构无关**。
+- 还有哪些待办或风险：未在浏览器实际验证（**必须硬刷新 Cmd+Shift+R** 加载新 shared 文件）；重构**未做**门点 renderHtml 函数补全（之前发现门店 em 缺 title/tag-label/popover，但用户未明确要求改 renderHtml）；若浏览器用旧 version 缓存会找不到 `IssueRuleList` 全局，报错"IssueRuleList is not defined"。
 - 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
 - 做过哪些验证：相关专项测试 25/25、全量测试 130/130、`git diff --check` 均通过。
 - 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
@@ -369,6 +411,13 @@
 - 已经完成了什么：五张旅程卡顶部统一增加铺满宽度的浅蓝信息栏 `#f5f8ff`，设置 12px×16px 内边距、顶部圆角和底部分隔线；正文卡片继续保持纯白，阶段标签原色和录音跳转不变。
 - 改动了哪些文件：`leads/page.css`、`leads/index.html`、`tests/customer-detail-latest-figma-layout.test.js`、`tests/lead-journey-card-meta.test.js`、交接日志。
 - 做过哪些验证：相关专项测试 26/26、全量测试 131/131、`git diff --check` 均通过。
+
+### 2026-08-05 运行 sync-versions.js 同步剩余测试版本
+- 用户想做什么：用户选 3（grill-me 最后一题）—— 用脚本自动同步 page.js / index.html / 测试文件中的版本串，避免手动改漏。
+- 已经完成了什么：① `node scripts/sync-versions.js` 自动识别 page.js / index.html 暴露的 6 个 `allowedVersions`（`20260805-issue-rule-shared`、`20260804-shared-insight-heading-icon`、`20260804-ai-lead-validity`、`20260612customer-journey-filter`、`20260716133000`、`20260804-pagination-total-copy`），用改进后的正则 `/(['"])((?:[^'"]{0,200}?)?(20\d{6,}[\w-]*))\1/g` 扫描 6 个测试文件并把残留的 `20260729sales-review-robot` 全部替换为 `20260805-issue-rule-shared`，共 2 个文件 2 处替换（`tests/sales-review-robot-interaction.test.js:12`、`tests/store-review-sop-toolbar.test.js:12`）；② `node scripts/check-version-sync.js` 校验结果："All test file versions are in sync with page.js"，无遗漏。
+- 改动了哪些文件：`tests/sales-review-robot-interaction.test.js`（version 同步）、`tests/store-review-sop-toolbar.test.js`（version 同步）。
+- 做过哪些验证：`node scripts/sync-versions.js` 退出 0，输出 "2 test file(s) updated, 2 replacement(s)"；`node scripts/check-version-sync.js` 输出 "All test file versions are in sync"；`git diff` 确认仅 2 个文件各 1 行变更（替换为正确 version 字符串）；`node --test` 单跑这 2 个文件除 1 个原本就失败的断言（`data-sales-review-sop-search` 未来功能）外其余通过，**失败数和重构前完全一致**。
+- 还有哪些待办或风险：未在浏览器实际验证加载新 shared 文件（**用户必须硬刷新 Cmd+Shift+R**）；脚本在新增 page.js / index.html version 时会自动收录，无须手改；`stash@{0}`（合并 main 之前的 .gitignore/spec/handoff-archive.md 备份）仍可恢复。
 - 还有哪些待办或风险：该改动已于后续按用户要求随线索旅程改版一并撤回。
 ## 2026-07-30 修复线索旅程滚动后连线中断
 - 用户想做什么：解决线索旅程时间轴在列表中段断开的现象。

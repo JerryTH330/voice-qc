@@ -10,7 +10,7 @@ const runtime = fs.readFileSync(path.join(root, 'app-runtime.js'), 'utf8');
 const reviewCss = css.slice(css.lastIndexOf('/* Figma 538:10543 — 录音复盘 */'));
 
 test('store review SOP toolbar matches the sales dashboard shell and custom options', () => {
-  assert.ok(html.includes('page.css?v=20260805-issue-rule-shared'));
+  assert.ok(html.includes('page.css?v=20260810-sticky-24px-v5'));
   assert.ok(html.includes('<span>搜索规则</span>'));
   assert.ok(html.includes('<span>排序</span>'));
   assert.ok(html.includes('data-store-sop-rule-sort-trigger'));

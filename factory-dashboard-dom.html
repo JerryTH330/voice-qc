@@ -105,7 +105,7 @@
           <div>
             <div class="eyebrow" id="pageEyebrow"></div>
             <h1 class="page-title" id="pageTitle">厂端看板</h1>
-            <p class="page-desc" id="pageDesc">同步厂端管理视角，集中查看全国组织、SOP执行质检与策略洞察，适合厂端运营进行巡检和下钻分析。</p>
+            <p class="page-desc" id="pageDesc">同步厂端管理视角，集中查看全国组织与 SOP 执行质检，适合厂端运营进行巡检和下钻分析。</p>
           </div>
 
           <div class="toolbar" hidden="">
@@ -116,18 +116,7 @@
 
         <div class="page-host" id="pageHost">
           <div class="page-stack factory-dashboard-page" id="factoryDashboardPage" data-initial-tab="sop-execution">
-            <div id="factoryDashboardMount"><div class="main-tabs-bar sales-role-nav">
-    <div class="main-tabs role-page-switch" role="tablist">
-      <button class="main-tab role-switch-link active" role="tab" data-tab="sop-execution" id="tab-sop-execution" aria-selected="true" aria-controls="panel-sop-execution">
-        SOP执行质检
-      </button>
-      <button class="main-tab role-switch-link" role="tab" data-tab="sop-improvement" id="tab-sop-improvement" aria-selected="false" aria-controls="panel-sop-improvement">
-        SOP策略洞察
-      </button>
-    </div>
-  </div>
-
-  <div class="store-filter-shell">
+            <div id="factoryDashboardMount"><div class="store-filter-shell">
     <!-- 全局筛选栏 -->
     <section class="global-filter-bar" aria-label="SOP执行质检筛选">
       <div class="gf-group store-filter-box">
@@ -493,7 +482,7 @@
   </div>
     </section>
     <main>
-      <section class="main-panel active" id="panel-sop-execution" role="tabpanel" aria-labelledby="tab-sop-execution">
+      <section class="main-panel active" id="panel-sop-execution" aria-label="SOP执行质检">
         <div class="tab-dual-grid">
           <div class="tab-left-stack">
             <section class="track sop-overview-track" aria-label="质检概览">
@@ -546,14 +535,14 @@
               </div>
             </section>
 
-            <section class="track sop-rank-track" aria-label="质检排行">
+            <section class="track sop-rank-track" aria-label="SOP执行排行">
               <div class="track-header">
                 <div style="display:flex;align-items:center;gap:10px">
                   <div class="track-icon compete">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
                   </div>
                   <div>
-                    <h2 class="track-title" id="rank-title">质检排行</h2>
+                    <h2 class="track-title" id="rank-title">SOP执行排行</h2>
                     <p class="track-sub" id="rank-sub">支持下钻：大区-省份-城市-门店，按质检合格率排序</p>
                   </div>
                 </div>
@@ -1812,11 +1801,11 @@
           <div class="tab-right-stack issue-overview-wrapper" aria-label="问题概览与明细">
             <div class="card-header">
               <div>
-                <div class="card-title">录音复盘</div>
+                <div class="card-title">顾问行为洞察</div>
                 <div class="card-sub">邀约结果总评与关键转折分析</div>
               </div>
             </div>
-            <div class="issue-insight-tabs" role="tablist" aria-label="质检复盘类型">
+            <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
               <button type="button" class="issue-insight-tab active" data-issue-insight-tab="weakness" role="tab" aria-selected="true">待改善短板TOP5</button>
               <button type="button" class="issue-insight-tab" data-issue-insight-tab="strength" role="tab" aria-selected="false">优势发掘TOP5</button>
               <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
@@ -2104,16 +2093,16 @@
           </div>
         </div>
 
-        <section class="track trend-section store-trend-card" aria-label="质检趋势分布图">
+        <section class="track trend-section store-trend-card" aria-label="SOP执行趋势分布图">
           <div class="store-section-content store-trend-content">
             <div class="trend-header">
               <div>
-                <h2 class="section-title">质检趋势分布图</h2>
+                <h2 class="section-title">SOP执行趋势分布图</h2>
                 <p class="section-sub">质检合格率vs城市平均</p>
               </div>
             </div>
             <div class="trend-chart-wrap">
-              <canvas id="factory-trendChart" aria-label="质检趋势分布图" role="img" width="637" height="204" style="display: block; box-sizing: border-box; height: 204px; width: 637px;"></canvas>
+              <canvas id="factory-trendChart" aria-label="SOP执行趋势分布图" role="img" width="637" height="204" style="display: block; box-sizing: border-box; height: 204px; width: 637px;"></canvas>
             </div>
             <div class="sales-trend-footer store-trend-footer">
               <div class="trend-legend chart-legend" id="chart-legend">
@@ -2125,38 +2114,6 @@
         </section>
       </section>
 
-      <section class="main-panel" id="panel-sop-improvement" role="tabpanel" aria-labelledby="tab-sop-improvement">
-        <section class="sop-column sop-strategy-column" aria-label="SOP策略洞察">
-          <section class="track contribution-summary-track" aria-label="SOP策略洞察小结">
-            <div class="track-body">
-              <div class="sop-summary-card-grid" role="tablist" aria-label="SOP策略洞察明细切换">
-                <button class="sop-module-summary deal active" id="sop-hit-summary" type="button" data-sop-summary="hit" role="tab" aria-selected="true" aria-controls="sop-active-detail-panel"></button>
-                <button class="sop-module-summary loss" id="sop-loss-summary" type="button" data-sop-summary="loss" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel"></button>
-                <button class="sop-module-summary risk" id="sop-risk-summary" type="button" data-sop-summary="risk" role="tab" aria-selected="false" aria-controls="sop-active-detail-panel"></button>
-              </div>
-            </div>
-          </section>
-
-          <section class="track contribution-track" id="sop-active-detail-panel" role="tabpanel" aria-labelledby="sop-hit-summary" aria-label="SOP策略洞察明细">
-            <div class="track-header">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div class="track-icon deal" id="sop-active-detail-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
-                </div>
-                <div>
-                  <h2 class="track-title" id="sop-active-detail-title">下订用户话术命中率分析明细</h2>
-                  <p class="track-sub" id="sop-active-detail-sub">选择对比维度，查看同一质检规则的话术命中差异</p>
-                </div>
-              </div>
-              <div id="sop-active-detail-controls"></div>
-            </div>
-            <div class="track-body">
-              <div class="sop-analysis-table-wrap" id="sop-active-detail-table"></div>
-            </div>
-          </section>
-
-        </section>
-      </section>
     </main>
   </div></div>
           </div>

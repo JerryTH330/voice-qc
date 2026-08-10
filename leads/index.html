@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260804-shared-insight-heading-icon" />
+        <link rel="stylesheet" href="./page.css?v=20260810-lead-evolution-spec-v2" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -246,7 +246,25 @@
                     </div>
                   </div>
                   <div class="lead-detail-journey-evolution">
+                    <button
+                      type="button"
+                      class="lead-detail-evolution-toggle"
+                      aria-expanded="false"
+                      aria-controls="leadDetailHeroEvolutionSteps"
+                    >
+                      展开
+                    </button>
                     <div class="lead-detail-hero-evolution" aria-label="客户意向演变">
+                      <button
+                        type="button"
+                        class="lead-detail-evolution-arrow lead-detail-evolution-arrow-prev"
+                        aria-label="向左滚动"
+                        disabled
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
                       <div class="lead-detail-hero-steps" id="leadDetailHeroEvolutionSteps">
                         <div class="lead-detail-hero-step is-complete">
                           <div class="lead-detail-hero-step-connector" aria-hidden="true"></div>
@@ -266,6 +284,16 @@
                           <div class="lead-detail-hero-step-meta">03/13</div>
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        class="lead-detail-evolution-arrow lead-detail-evolution-arrow-next"
+                        aria-label="向右滚动"
+                        disabled
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   <div class="journey-timeline lead-journey-scroll">
@@ -1000,6 +1028,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260804-ai-lead-validity"></script>
+    <script src="./page.js?v=20260810-lead-evolution-spec-v2"></script>
   </body>
 </html>

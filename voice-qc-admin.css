@@ -482,6 +482,10 @@ body::before {
   display: block;
 }
 
+.sticky-sentinel-host {
+  position: relative;
+}
+
 .store-dashboard-embed-shell {
   width: 100%;
   min-height: calc(100vh - 48px);
@@ -2066,6 +2070,15 @@ body::before {
   border: 1px solid rgba(217, 226, 239, 0.76);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 253, 0.95));
   box-shadow: 0 18px 32px rgba(15, 23, 42, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.sales-role-dashboard-page .sales-role-nav.is-stuck {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(217, 226, 239, 0.92);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .sales-role-dashboard-page .role-back-link,
@@ -2164,11 +2177,12 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 18px;
   padding: 20px;
-  border: 1px solid rgba(220, 228, 240, 0.98);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 253, 0.94));
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(217, 226, 239, 0.88);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 247, 253, 0.94) 100%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   color: var(--text);
 }
 
@@ -2184,8 +2198,9 @@ body::before {
 
 .sales-role-dashboard-page .sales-role-hero-main {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 18px;
   width: 100%;
 }
 
@@ -2193,23 +2208,23 @@ body::before {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1 1 auto;
+  align-self: stretch;
   width: auto;
   min-width: 0;
 }
 
 .sales-role-dashboard-page .hero-avatar {
-  width: 58px;
-  height: 58px;
-  flex: 0 0 58px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(56, 189, 248, 0.1));
   border: 1px solid rgba(37, 99, 235, 0.12);
   color: var(--blue);
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .sales-role-dashboard-page .hero-info {
@@ -2222,29 +2237,51 @@ body::before {
 
 .sales-role-dashboard-page .hero-name-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
 }
 
 .sales-role-dashboard-page .hero-name {
-  color: var(--text);
+  color: #162033;
   font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.04em;
 }
 
-.sales-role-dashboard-page .hero-store {
-  display: inline-flex;
-  align-self: flex-start;
+.sales-role-dashboard-page .hero-profile-tags {
+  display: flex;
+  min-width: 0;
   align-items: center;
-  padding: 6px 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.sales-role-dashboard-page .hero-profile-tag {
+  box-sizing: border-box;
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card-soft);
-  color: var(--muted);
-  font-size: 12px;
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0.98) 0%, rgba(241, 246, 255, 0.92) 100%);
+  color: #334155;
+  font-size: 14px;
   font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.sales-role-dashboard-page .hero-profile-tag img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 
 .sales-role-dashboard-page .hero-rank-row {
@@ -2297,24 +2334,25 @@ body::before {
   align-items: stretch;
   gap: 12px;
   flex-wrap: nowrap;
-  width: auto;
-  margin-left: auto;
+  width: 100%;
+  margin-left: 0;
   padding: 0;
 }
 
 .sales-role-dashboard-page .hm-item {
-  flex: 0 0 auto;
-  padding: 12px 16px 12px;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 16px 12px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(217, 226, 239, 0.84);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+  backdrop-filter: blur(4px);
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   text-align: left;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
-  transform: translateY(0);
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .sales-advisor-page .hm-item.hm-item-summary {
@@ -2325,8 +2363,8 @@ body::before {
 
 @media (hover: hover) {
   .sales-role-dashboard-page .hm-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.1);
+    border-color: rgba(37, 99, 235, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.92) 100%);
   }
 
   .sales-advisor-page .hm-item.hm-item-summary:hover {
@@ -2435,10 +2473,28 @@ body::before {
   }
 }
 
+.sales-role-dashboard-page .hm-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sales-role-dashboard-page .hm-metric-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
 .sales-role-dashboard-page .hm-label-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 0;
 }
 
@@ -2447,27 +2503,27 @@ body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 12px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
   overflow: hidden;
 }
 
 .sales-role-dashboard-page .hm-label-icon-core {
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.95);
 }
 
 .sales-role-dashboard-page .hm-label-icon-dot {
   position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 4px;
-  height: 4px;
+  right: 8px;
+  bottom: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
 }
@@ -2502,7 +2558,7 @@ body::before {
 
 .sales-role-dashboard-page .hm-label {
   font-size: 14px;
-  color: #8a96ab;
+  color: #52627a;
   font-weight: 500;
   margin-bottom: 0;
 }
@@ -2511,22 +2567,22 @@ body::before {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 4px;
 }
 
 .sales-role-dashboard-page .hm-value {
-  color: var(--text);
-  font-size: 22px;
-  font-weight: 700;
+  color: #243047;
+  font-size: 24px;
+  font-weight: 600;
   line-height: 1;
 }
 
 .sales-role-dashboard-page .hm-value small {
   display: inline-block;
-  margin-left: 4px;
+  margin-left: 2px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--muted);
+  color: #64748b;
 }
 
 .sales-role-dashboard-page .hm-highlight {
@@ -2534,12 +2590,12 @@ body::before {
 }
 
 .sales-role-dashboard-page .hm-trend {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .sales-role-dashboard-page .hm-trend.up {
-  color: var(--green);
+  color: #16a34a;
 }
 
 .sales-role-dashboard-page .hm-trend.down {
@@ -2547,7 +2603,12 @@ body::before {
 }
 
 .sales-role-dashboard-page .hm-sep {
-  display: none;
+  display: block;
+  flex: 0 0 1px;
+  align-self: stretch;
+  width: 1px;
+  margin: 6px 0;
+  background: rgba(226, 232, 240, 0.9);
 }
 
 .sales-advisor-page .hm-sep.hm-sep-divider {
@@ -2618,13 +2679,47 @@ body::before {
 }
 
 .sales-role-dashboard-page .main-content {
-  display: grid;
-  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
-  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
+}
+
+.sales-role-dashboard-page .sales-insight-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
   align-items: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
+.sales-role-dashboard-page .sales-recommend-row,
+.sales-role-dashboard-page .sales-trend-row {
+  display: block;
+  min-height: 0;
+  min-width: 0;
+}
+
+.sales-role-dashboard-page .sales-sop-review-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(217, 226, 239, 0.88);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.05);
+}
+
+.sales-role-dashboard-page .sales-sop-review-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .sales-role-dashboard-page .sales-role-main-column {
@@ -4901,7 +4996,7 @@ body::before {
     grid-template-columns: 1fr;
   }
 
-  .sales-role-dashboard-page .main-content,
+  .sales-role-dashboard-page .sales-insight-row,
   .sales-role-dashboard-page .sales-role-top-grid,
   .sales-role-dashboard-page .execution-focus,
   .sales-role-dashboard-page .role-compact-grid,
@@ -4919,6 +5014,12 @@ body::before {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+
+  .sales-role-dashboard-page .hero-profile-tags {
+    justify-content: flex-start;
+    width: 100%;
+    margin-left: 0;
   }
 
   .sales-role-dashboard-page .sales-embedded-review-card .review-section-stack {
@@ -9426,9 +9527,12 @@ body::before {
 .lead-detail-hero-evolution {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 0;
   min-width: 0;
   width: 100%;
-  justify-self: end;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -9444,12 +9548,25 @@ body::before {
 }
 
 .lead-detail-hero-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  align-items: flex-start;
   gap: 0;
-  align-items: start;
   width: 100%;
-  justify-content: end;
+  min-width: 0;
+  padding: 0 25px 0 0;
+  scroll-behavior: smooth;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.lead-detail-hero-steps::-webkit-scrollbar {
+  display: none;
 }
 
 .lead-detail-hero-step {
@@ -9458,8 +9575,10 @@ body::before {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  flex: 0 0 80px;
+  width: 80px;
   padding: 0;
+  scroll-snap-align: start;
   text-align: center;
 }
 
@@ -9471,6 +9590,115 @@ body::before {
   height: 2px;
   background: #cbd5e1;
   z-index: 0;
+}
+
+.lead-detail-evolution-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lead-detail-evolution-toggle:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.lead-detail-evolution-toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.lead-detail-evolution-arrow {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease, visibility 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.08);
+}
+
+.lead-detail-evolution-arrow:not(:disabled) {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lead-detail-evolution-arrow:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.lead-detail-evolution-arrow:disabled {
+  opacity: 0.35;
+  visibility: visible;
+  cursor: not-allowed;
+}
+
+.lead-detail-evolution-arrow:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.lead-detail-evolution-arrow-prev {
+  left: auto;
+}
+
+.lead-detail-evolution-arrow-next {
+  right: auto;
+}
+
+.lead-detail-journey-evolution[data-evolution-expanded] .lead-detail-hero-evolution {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.lead-detail-journey-evolution[data-evolution-expanded] .lead-detail-hero-steps {
+  grid-column: 1;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 20px;
+  overflow-x: visible;
+  padding: 0;
+  scroll-snap-type: none;
+}
+
+.lead-detail-journey-evolution[data-evolution-expanded] .lead-detail-hero-step {
+  flex: 0 0 80px;
+  width: 80px;
+}
+
+.lead-detail-journey-evolution[data-evolution-expanded] .lead-detail-hero-step.is-row-end .lead-detail-hero-step-connector {
+  display: none;
+}
+
+.lead-detail-journey-evolution[data-evolution-expanded] .lead-detail-evolution-arrow {
+  display: none;
 }
 
 .lead-detail-hero-step.is-complete .lead-detail-hero-step-connector,
@@ -9492,7 +9720,7 @@ body::before {
   flex: 0 0 auto;
   color: #64748b;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -9524,6 +9752,10 @@ body::before {
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
+  width: 100%;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -9597,43 +9829,7 @@ body::before {
     width: 100%;
     justify-self: stretch;
     margin-right: 0;
-    padding-top: 12px;
-  }
-
-  .lead-detail-hero-steps {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    justify-content: stretch;
-  }
-
-  .lead-detail-hero-step {
-    align-items: flex-start;
-    text-align: left;
-    padding-left: 42px;
-    gap: 6px;
-  }
-
-  .lead-detail-hero-step-connector {
-    top: 14px;
-    left: 14px;
-    width: 2px;
-    height: calc(100% + 12px);
-    background: #cbd5e1;
-  }
-
-  .lead-detail-hero-step:last-child .lead-detail-hero-step-connector {
-    height: calc(100% - 10px);
-  }
-
-  .lead-detail-hero-step.is-complete .lead-detail-hero-step-connector,
-  .lead-detail-hero-step.is-current .lead-detail-hero-step-connector {
-    background: #4fc56e;
-  }
-
-  .lead-detail-hero-step-marker {
-    position: absolute;
-    top: 22px;
-    left: 0;
+    padding-top: 0;
   }
 }
 

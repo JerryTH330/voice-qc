@@ -14,11 +14,17 @@
     if (!el) return false;
     try {
       void el.offsetWidth;
+      // 优先用原生滚动宽度判断，text-overflow: ellipsis 激活时 scrollWidth > clientWidth
+      const scrollW = el.scrollWidth;
+      const clientW = el.clientWidth;
+      if (scrollW && clientW && scrollW > clientW + 1) return true;
+      if (scrollW && clientW && scrollW <= clientW) return false;
+      // flex 容器内部分浏览器 scrollWidth 不准，再用 Range API 兜底
       const range = document.createRange();
       range.selectNodeContents(el);
       const textWidth = range.getBoundingClientRect().width;
       const elWidth = el.getBoundingClientRect().width;
-      return textWidth > elWidth + 1;
+      return textWidth > elWidth + 4;
     } catch (e) {
       return false;
     }

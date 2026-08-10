@@ -18,8 +18,13 @@ test('厂端录音统计按业务场景隐藏未选来源并让单卡满宽', ()
   assert.match(css, /\.factory-dashboard-page \.store-recording-summary\.is-single-source\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/);
 });
 
+test('厂端核心指标保留执行页依赖并继续渲染下方内容', () => {
+  assert.match(runtime, /const SUMMARY_GROUP_METRIC_KEYS = new Set\(\[\s*'invitation',\s*'reception',\s*'test_drive'\s*\]\);/);
+  assert.match(runtime, /renderHeroKPI\(\);\s*renderSOPExecutionTab\(\);\s*renderRankTable\(\);/);
+});
+
 test('厂端页面统一刷新录音来源联动资源', () => {
-  const version = '20260805-issue-rule-shared';
+  const version = '20260810-sticky-24px-v5';
 
   assert.ok(html.includes(`page.css?v=${version}`));
   assert.ok(html.includes(`page.js?v=${version}`));

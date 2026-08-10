@@ -23,13 +23,13 @@ test('store dashboard responds to available content width instead of viewport wi
   assert.match(layoutCss, /\.store-dashboard-page \.dashboard\s*{[\s\S]*?container-type:\s*inline-size;/);
   assert.match(layoutCss, /@container \(max-width:\s*1180px\)[\s\S]*?#main-panel-advisors > \.tab-dual-grid\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\);/);
   assert.match(layoutCss, /@container \(max-width:\s*1180px\)[\s\S]*?\.sop-overview-track,[\s\S]*?\.advisor-rank-card,[\s\S]*?\.issue-overview-wrapper\s*{[\s\S]*?grid-column:\s*1;[\s\S]*?grid-row:\s*auto;[\s\S]*?height:\s*auto;/);
-  assert.match(layoutCss, /@container \(max-width:\s*1180px\)[\s\S]*?\.store-hero-metrics \.hm-layout-bottom\s*{[\s\S]*?grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/);
-  assert.match(layoutCss, /#detail-sop \.store-sop-rule-toolbar\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\) minmax\(150px,\s*194px\);/);
-  assert.match(layoutCss, /#detail-sop \.store-sop-rule-field--sort\s*{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/);
+  assert.match(layoutCss, /@container \(max-width:\s*1180px\)[\s\S]*?\.store-hero-metrics \.hm-layout-bottom\s*{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/);
+  assert.match(layoutCss, /:is\(#detail-sop,\s*#detail-sop-analysis\) \.store-sop-rule-toolbar\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\) minmax\(150px,\s*194px\);/);
+  assert.match(layoutCss, /:is\(#detail-sop,\s*#detail-sop-analysis\) \.store-sop-rule-field--sort\s*{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/);
   assert.match(layoutCss, /\.issue-rule-pagination \.dashboard-pagination-controls,[\s\S]*?\.advisor-pagination \.dashboard-pagination-controls\s*{[\s\S]*?flex-wrap:\s*wrap;/);
 });
 
 test('store dashboard loads the unified spacing and responsive stylesheet version', () => {
-  assert.ok(html.includes('page.css?v=20260805-issue-rule-shared'));
-  assert.ok(html.includes('page.js?v=20260805-issue-rule-shared'));
+  assert.ok(html.includes('page.css?v=20260810-sticky-24px-v5'));
+  assert.ok(html.includes('page.js?v=20260810-sticky-24px-v5'));
 });

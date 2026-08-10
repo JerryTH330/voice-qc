@@ -18,7 +18,7 @@ test('store recording summary hides unselected sources and expands the remaining
 });
 
 test('store dashboard refreshes the recording visibility assets together', () => {
-  const version = '20260805-issue-rule-shared';
+  const version = '20260810-sticky-24px-v5';
 
   assert.ok(html.includes(`page.css?v=${version}`));
   assert.ok(html.includes(`page.js?v=${version}`));

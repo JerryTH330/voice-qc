@@ -1,7 +1,7 @@
 /* 质检配置 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'config';
 (function loadPageRuntime() {
-  const scripts = ["../app-runtime.js"];
+  const scripts = ["../shared/issue-rule-list.js?v=20260805-issue-rule-shared","../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');
