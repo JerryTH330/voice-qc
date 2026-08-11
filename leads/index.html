@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260810-lead-evolution-adaptive-v3" />
+        <link rel="stylesheet" href="./page.css?v=20260811-customer-multi-lead" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -153,9 +153,9 @@
               <div class="table-shell">
                 <div class="table-headbar leads-table-headbar">
                   <div class="panel-title">
-                    <h3>线索总览</h3>
+                    <h3 id="leadsTableHeadTitle">线索总览</h3>
                   </div>
-                  <div class="session-filter-summary">
+                  <div class="session-filter-summary" id="leadsFilterSummaryLabel">
                     <span>当前匹配 <strong id="leadsFilterCount">0</strong> 条线索</span>
                   </div>
                 </div>
@@ -200,7 +200,7 @@
           <div class="page-stack leads-detail-page">
             <div class="actions-inline leads-detail-actions">
               <div class="leads-detail-actions-main">
-                <button class="btn lead-detail-back-button" data-route="leads" data-leads-view-target="leads">返回线索视图</button>
+                <button class="btn lead-detail-back-button" data-route="leads" data-leads-view-target="leads">返回线索列表</button>
               </div>
             </div>
 
@@ -625,13 +625,16 @@
                         <span id="customerDetailLeadCount">关联线索：3条线索</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <span id="customerDetailStoreCount">涉及门店：3个门店</span>
+                        <span id="customerDetailStoreCount">关联门店：3个门店</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <span>首次建联：2026-03-10</span>
+                        <span id="customerDetailRecordingSummary">录音总数：4条</span>
                       </span>
                       <span class="customer-hero-summary-chip">
-                        <span>最后一次跟进时间：2026-03-15 报价沟通</span>
+                        <span id="customerDetailLeadRecordingCoverage">线索录音覆盖：部分有录音（2/3）</span>
+                      </span>
+                      <span class="customer-hero-summary-chip">
+                        <span id="customerDetailStoreRecordingCoverage">门店录音覆盖：部分有录音（2/3）</span>
                       </span>
                     </div>
                   </div>
@@ -643,20 +646,40 @@
                       </span>
                       <div class="customer-insight-heading">
                         <h3 id="customerInsightTitle">客户洞察</h3>
-                        <p data-customer-insight-scope>基于3条线索 · 3个门店的会话、意向和标签综合分析</p>
+                        <p data-customer-insight-scope>左侧展示最近一通录音，右侧综合全部关联录音</p>
                       </div>
                     </div>
 
                     <div class="customer-insight-main">
                       <div class="customer-insight-summary">
-                        <div class="customer-insight-section-title">
-                          <span>综合判断</span>
+                        <div class="customer-insight-current-header">
+                          <div class="customer-insight-section-title">
+                            <span>最近一次录音摘要</span>
+                          </div>
+                          <div class="customer-insight-status-row" aria-label="客户意向与车型">
+                            <span class="customer-insight-status customer-insight-status-high">AI意向等级：高</span>
+                            <span class="customer-insight-status customer-insight-status-model">AI意向车系：传祺M8</span>
+                          </div>
                         </div>
-                        <div class="customer-insight-status-row">
-                          <span class="customer-insight-status customer-insight-status-high">高意向</span>
-                          <span class="customer-insight-status customer-insight-status-model">传祺M8</span>
+                        <div class="customer-insight-current-body intention-body">
+                          <div class="intention-item">
+                            <div class="intention-item-head">
+                              <img class="intention-item-icon" src="../assets/intention-intent.svg" alt="" />
+                              <div class="intention-item-label">本次意图</div>
+                            </div>
+                            <div class="intention-item-content" data-customer-current-intent>客户已完成到店和试驾，目前进入报价比较阶段。主要关注空间、静谧性、金融方案和置换补贴，价格敏感。</div>
+                          </div>
+                          <div class="intention-item">
+                            <div class="intention-item-head">
+                              <img class="intention-item-icon" src="../assets/intention-evidence.svg" alt="" />
+                              <div class="intention-item-label">关键证据</div>
+                            </div>
+                            <div class="intention-item-content" data-customer-current-evidence>客户持续询问总价、金融免息和置换补贴，并认可试驾后的空间与静谧性表现。</div>
+                          </div>
                         </div>
-                        <div class="customer-insight-summary-copy">客户已完成到店和试驾，目前进入报价比较阶段。主要关注空间、静谧性、金融方案和置换补贴，价格敏感。</div>
+                        <div class="customer-latest-recording-meta">
+                          <span data-customer-latest-recording-source>杭州滨江门店 · 2026-03-15 10:10 · 报价沟通</span>
+                        </div>
                       </div>
 
                       <div class="customer-insight-ai">
@@ -672,20 +695,22 @@
                           ></video>
                         </div>
                         <div class="customer-insight-ai-title">
-                          <span>AI客户洞察</span>
+                          <span>AI 综合语音洞察</span>
+                          <span class="customer-insight-mode-tag customer-insight-mode-tag-ai">综合分析</span>
                         </div>
-                        <div class="customer-ai-generate-panel" aria-label="AI洞察生成区域">
-                          <span class="customer-insight-ai-description">客户在多家门店/单门店多旅程的共性与差异分析</span>
+                        <div class="customer-ai-generate-panel" aria-label="AI语音洞察生成区域">
+                          <span class="customer-ai-analysis-scope" data-customer-ai-analysis-scope>关联3条线索（其中2条有可分析录音）· 2家有录音门店 · 4条可分析录音</span>
+                          <span class="customer-insight-ai-description">当前关联3家店，4条录音，支持AI跨店差异与共性分析</span>
                           <button class="customer-ai-generate-primary" type="button" data-customer-ai-generate>立即生成</button>
                         </div>
                       </div>
                     </div>
 
                     <div class="customer-insight-tags">
-                      <div class="customer-insight-tag-group">
+                      <div class="customer-insight-tag-group" data-customer-dialogue-tags>
                         <div class="customer-insight-tag-title">
                           <span>对话标签聚合</span>
-                          <small>来自全部关联会话</small>
+                          <small>来自全部可分析录音 · 同一标签去重</small>
                         </div>
                         <div class="customer-insight-tag-list" aria-label="对话标签聚合">
                           <span class="customer-insight-tag tone-blue">传祺M8</span>
@@ -751,71 +776,64 @@
                       <h3>客户语音轨迹洞察</h3>
                       <p>按时间轴展示客户在不同门店产生的录音触点及语音洞察，仅展示有录音的互动记录。</p>
                     </div>
-                    <div class="panel-header-badge">
-                      <span>当前基于有录音触点节点，并显示跟进状态变更历史。</span>
-                    </div>
                   </div>
 
                   <!-- 门店状态行 -->
-                  <div class="customer-voice-stores" aria-label="涉及门店与录音状态">
-                    <div class="customer-voice-store-card customer-voice-store-card-current">
+                  <div class="customer-voice-stores" aria-label="关联门店与录音状态" data-customer-detail-store-cards>
+                    <button class="customer-voice-store-card customer-voice-store-card-all is-active" type="button" data-customer-journey-scope="all" aria-pressed="true">
+                      <div class="customer-voice-store-name">全部门店</div>
+                      <div class="customer-voice-store-count">录音 4 条</div>
+                      <div class="customer-voice-store-meta">
+                        <span class="customer-voice-store-status status-all">2/3 家有录音</span>
+                        <span class="customer-voice-store-update">查看完整跨店轨迹</span>
+                      </div>
+                    </button>
+                    <button class="customer-voice-store-card customer-voice-store-card-current" type="button" data-customer-journey-scope="current" data-customer-journey-store-name="上海浦东门店" data-customer-journey-audio-count="3" aria-pressed="false">
                       <div class="customer-voice-store-name">上海浦东门店</div>
+                      <div class="customer-voice-store-count">录音 3 条</div>
                       <div class="customer-voice-store-meta">
                         <span class="customer-voice-store-status status-tracking">当前状态：跟进中</span>
-                        <span class="customer-voice-store-update">最近更新：2026-03-15 13:0</span>
+                        <span class="customer-voice-store-update">最近更新：2026-03-15 13:00</span>
                       </div>
-                      <div class="customer-voice-store-count">录音 3 条</div>
-                    </div>
-                    <div class="customer-voice-store-card">
-                      <div class="customer-voice-store-name">杭州西湖门店</div>
-                      <div class="customer-voice-store-meta">
-                        <span class="customer-voice-store-status status-none">当前状态：未跟进</span>
-                        <span class="customer-voice-store-update">最近更新：2026-03-10 14:30</span>
-                      </div>
-                      <div class="customer-voice-store-count">录音 1 条</div>
-                    </div>
-                    <div class="customer-voice-store-card customer-voice-store-card-extra">
+                    </button>
+                    <button class="customer-voice-store-card customer-voice-store-card-extra" type="button" data-customer-journey-scope="extra" data-customer-journey-store-name="杭州滨江门店" data-customer-journey-audio-count="1" aria-pressed="false">
                       <div class="customer-voice-store-name">杭州滨江门店</div>
+                      <div class="customer-voice-store-count">录音 1 条</div>
                       <div class="customer-voice-store-meta">
                         <span class="customer-voice-store-status status-quote">当前状态：报价沟通</span>
                         <span class="customer-voice-store-update">最近更新：2026-03-15 10:10</span>
                       </div>
-                      <div class="customer-voice-store-count">录音 2 条</div>
-                    </div>
+                    </button>
+                    <button class="customer-voice-store-card" type="button" data-customer-journey-scope="other" data-customer-journey-store-name="杭州西湖门店" data-customer-journey-audio-count="0" aria-pressed="false">
+                      <div class="customer-voice-store-name">杭州西湖门店</div>
+                      <div class="customer-voice-store-count">录音 0 条</div>
+                      <div class="customer-voice-store-meta">
+                        <span class="customer-voice-store-status status-none">当前状态：未跟进</span>
+                        <span class="customer-voice-store-update">最近更新：2026-03-10 14:30</span>
+                      </div>
+                    </button>
                   </div>
 
                   <div class="customer-hero-flat-timeline" aria-label="客户旅程概览">
-                    <div class="customer-hero-flat-step is-none" data-hero-timeline-step="杭州西湖门店-首触跟进">
-                      <div class="customer-hero-flat-marker">无</div>
-                      <div class="customer-hero-flat-stage">首触跟进</div>
-                      <div class="customer-hero-flat-store customer-hero-flat-store-other">杭州西湖门店</div>
-                      <div class="customer-hero-flat-date">2026-03-10</div>
-                    </div>
-                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-首触跟进">
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-首触跟进" data-customer-journey-store="current">
                       <div class="customer-hero-flat-marker">高</div>
                       <div class="customer-hero-flat-stage">首触跟进</div>
                       <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
                       <div class="customer-hero-flat-date">2026-03-10</div>
                     </div>
-                    <div class="customer-hero-flat-step is-medium" data-hero-timeline-step="上海浦东门店-到店接待">
+                    <div class="customer-hero-flat-step is-medium" data-hero-timeline-step="上海浦东门店-到店接待" data-customer-journey-store="current">
                       <div class="customer-hero-flat-marker">中</div>
                       <div class="customer-hero-flat-stage">到店接待</div>
                       <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
                       <div class="customer-hero-flat-date">2026-03-13</div>
                     </div>
-                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-试乘试驾">
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="上海浦东门店-试乘试驾" data-customer-journey-store="current">
                       <div class="customer-hero-flat-marker">高</div>
                       <div class="customer-hero-flat-stage">试乘试驾</div>
                       <div class="customer-hero-flat-store customer-hero-flat-store-current">上海浦东门店</div>
                       <div class="customer-hero-flat-date">2026-03-13</div>
                     </div>
-                    <div class="customer-hero-flat-step is-medium" data-hero-timeline-step="杭州滨江门店-电话跟进">
-                      <div class="customer-hero-flat-marker">中</div>
-                      <div class="customer-hero-flat-stage">电话跟进</div>
-                      <div class="customer-hero-flat-store customer-hero-flat-store-extra">杭州滨江门店</div>
-                      <div class="customer-hero-flat-date">2026-03-14</div>
-                    </div>
-                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="杭州滨江门店-报价沟通">
+                    <div class="customer-hero-flat-step is-high" data-hero-timeline-step="杭州滨江门店-报价沟通" data-customer-journey-store="extra">
                       <div class="customer-hero-flat-marker">高</div>
                       <div class="customer-hero-flat-stage">报价沟通</div>
                       <div class="customer-hero-flat-store customer-hero-flat-store-extra">杭州滨江门店</div>
@@ -823,18 +841,10 @@
                     </div>
                   </div>
 
-                  <div class="customer-journey-toolbar">
-                    <div class="customer-journey-control-group">
-                      <span class="customer-journey-control-label">查看方式</span>
-                      <div class="customer-journey-sort" role="group" aria-label="客户旅程查看方式">
-                        <button class="customer-journey-sort-btn is-active" type="button" data-customer-journey-sort="store" aria-pressed="true">按门店分组</button>
-                        <button class="customer-journey-sort-btn" type="button" data-customer-journey-sort="time" aria-pressed="false">按时间排序</button>
-                      </div>
-                    </div>
-                    <div class="customer-journey-control-group">
-                      <span class="customer-journey-control-label">查看门店</span>
-                      <div class="customer-journey-filter factory-multi-select-tabs" role="group" aria-label="客户旅程查看门店" data-customer-journey-filter-slot></div>
-                    </div>
+                  <div class="customer-journey-scope-summary" aria-live="polite">
+                    <span class="customer-journey-scope-label">当前查看</span>
+                    <strong data-customer-journey-scope-label>全部门店</strong>
+                    <span class="customer-journey-scope-meta" data-customer-journey-scope-meta>2 家门店有录音 · 共 4 条</span>
                   </div>
 
                   <div class="customer-journey-board">
@@ -931,40 +941,11 @@
                         </div>
                       </article>
 
-                      <article class="journey-item journey-item-invalid customer-journey-item customer-journey-item-other" data-customer-journey-store="other">
-                        <div class="journey-header">
-                          <div class="customer-journey-store-name">杭州西湖门店 · 顾问：李娜</div>
-                          <div class="journey-headline">
-                            <div class="journey-time">2026-03-10 09:13</div>
-                            <div class="journey-level level-invalid">首触跟进·无</div>
-                          </div>
-                          <div class="journey-call-id">话术命中率 30%</div>
-                        </div>
-                        <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
-                        <div class="journey-body">
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                            <div class="journey-section-content">客户在杭州西湖门店完成早期首触跟进，主要比较竞品空间与价格，对试驾接受度较高。</div>
-                          </div>
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow-muted.svg" alt="" />策略跟进</div>
-                            <div class="journey-section-content">建议继续确认试驾意愿，围绕空间、静谧性和金融方案做基础铺垫。</div>
-                          </div>
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-tags-muted.svg" alt="" />客户标签</div>
-                            <div class="journey-tags">
-                              <span class="tag blue">价格敏感</span>
-                              <span class="tag green">试驾意向</span>
-                            </div>
-                          </div>
-                        </div>
-                      </article>
-
-                      <article class="journey-item customer-journey-item customer-journey-item-extra" data-customer-journey-store="extra">
+                      <article id="customerLatestRecording" class="journey-item customer-journey-item customer-journey-item-extra" data-customer-journey-store="extra">
                         <div class="journey-header">
                           <div class="customer-journey-store-name">杭州滨江门店 · 顾问：周明</div>
                           <div class="journey-headline">
-                            <div class="journey-time">2026-03-15 10:20</div>
+                            <div class="journey-time">2026-03-15 10:10</div>
                             <div class="journey-level level-high">报价沟通·高</div>
                           </div>
                           <div class="journey-call-id">话术命中率 60%</div>
@@ -990,34 +971,10 @@
                         </div>
                       </article>
 
-                      <article class="journey-item customer-journey-item customer-journey-item-extra" data-customer-journey-store="extra">
-                        <div class="journey-header">
-                          <div class="customer-journey-store-name">杭州滨江门店 · 顾问：周明</div>
-                          <div class="journey-headline">
-                            <div class="journey-time">2026-03-14 18:40</div>
-                            <div class="journey-level level-high">首触跟进·高</div>
-                          </div>
-                          <div class="journey-call-id">话术命中率 40%</div>
-                        </div>
-                        <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
-                        <div class="journey-body">
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                            <div class="journey-section-content">客户从杭州滨江门店再次咨询传祺M8，重点确认第三排空间和家庭出行舒适度。</div>
-                          </div>
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
-                            <div class="journey-section-content">建议同步客户已试驾信息，围绕第三排空间、静谧性和家庭出行场景继续培育。</div>
-                          </div>
-                          <div class="journey-section">
-                            <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-tags.svg" alt="" />客户标签</div>
-                            <div class="journey-tags">
-                              <span class="tag blue">第三排空间</span>
-                              <span class="tag green">家庭出行</span>
-                            </div>
-                          </div>
-                        </div>
-                      </article>
+                    </div>
+                    <div class="customer-empty-state customer-journey-empty-state" data-customer-journey-empty hidden>
+                      <span data-customer-journey-empty-title>该门店暂无录音</span>
+                      <small data-customer-journey-empty-copy>仍可通过上方门店卡查看该门店的线索状态与最近更新时间。</small>
                     </div>
                   </div>
                 </section>
@@ -1028,6 +985,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260810-lead-evolution-adaptive-v3"></script>
+    <script src="./page.js?v=20260811-customer-multi-lead"></script>
   </body>
 </html>

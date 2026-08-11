@@ -8463,7 +8463,7 @@ body::before {
 }
 
 .table-wrap.customer-aggregate-wrap {
-  overflow-x: visible;
+  overflow-x: auto !important;
 }
 
 .leads-view-tabs {
@@ -8782,6 +8782,13 @@ body::before {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.table-link.table-link-disabled,
+.table-link.table-link-disabled:disabled {
+  color: var(--soft);
+  cursor: not-allowed;
+  font-weight: 400;
 }
 
 .pill-inline {
