@@ -1,6 +1,6 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260811-unified-metric-tooltip-v6");
-@import url("../app-inline.css?v=20260811-unified-metric-tooltip-v6");
+@import url("../voice-qc-admin.css?v=20260811-figma-panels-v13");
+@import url("../app-inline.css?v=20260811-figma-panels-v13");
 
 /* Figma 546:1160 — 门店核心指标 */
 .store-dashboard-page .hero-panel {
@@ -2707,5 +2707,824 @@
   .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-action {
     grid-column: 1 / -1;
     justify-self: stretch;
+  }
+}
+
+/* UAT 门店看板 — 顾问行为洞察 TOP5 */
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper {
+  gap: 16px;
+  padding: 20px 24px 24px;
+  overflow: hidden;
+  border: 1px solid rgba(217, 226, 239, 0.72);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .card-header {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .card-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .card-sub {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tabs {
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab {
+  min-height: 38px;
+  padding: 0 18px;
+  border-color: rgba(217, 226, 239, 0.76);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 34px;
+  letter-spacing: 0;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab.active {
+  border-color: rgba(37, 99, 235, 0.1);
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: none;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-section,
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-card,
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-content,
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-detail-pad {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-rule-analysis-root {
+  gap: 16px;
+}
+
+.store-dashboard-page .store-insight-top-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.store-dashboard-page .store-insight-top-card {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 24px minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(217, 226, 239, 0.72);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.72);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .store-dashboard-page .store-insight-top-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  }
+}
+
+.store-dashboard-page .store-insight-top-card:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.34);
+  outline-offset: 2px;
+}
+
+.store-dashboard-page .store-insight-rank {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+}
+
+.store-dashboard-page .store-insight-rank-image {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.store-dashboard-page .store-insight-rank-number {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.store-dashboard-page .store-insight-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.store-dashboard-page .store-insight-title {
+  display: block;
+  min-width: 0;
+  color: #162033;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.store-dashboard-page .store-insight-progress-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.store-dashboard-page .store-insight-progress {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 8px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6edf7;
+}
+
+.store-dashboard-page .store-insight-progress > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  max-width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+}
+
+.store-dashboard-page .store-insight-rate {
+  color: #162033;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.store-dashboard-page .store-insight-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding-left: 4px;
+  margin-left: auto;
+}
+
+.store-dashboard-page .store-insight-scope,
+.store-dashboard-page .store-insight-view {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.store-dashboard-page .store-insight-scope.scope-shared {
+  color: #dc2626;
+}
+
+.store-dashboard-page .store-insight-scope.scope-multi {
+  color: #d97706;
+}
+
+.store-dashboard-page .store-insight-scope.scope-single {
+  color: #16a34a;
+}
+
+.store-dashboard-page .store-insight-view {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.store-dashboard-page .store-insight-view:hover,
+.store-dashboard-page .store-insight-view:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+/* 门店 SOP 执行分析按厂端规则列表规范展示，不包含导出按钮。 */
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-analysis-root {
+  gap: 16px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .store-sop-standard-list {
+  --issue-rule-list-columns: minmax(0, 1fr) 70px 98px 92px;
+  --issue-rule-list-inline-pad: 13px;
+  width: 100%;
+  gap: 12px;
+  padding: 13px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list-head {
+  display: grid;
+  grid-template-columns: var(--issue-rule-list-columns);
+  justify-content: initial;
+  gap: 10px;
+  padding: 0 14px;
+  color: #8a96ab;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list-head > * {
+  display: inline-flex;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list {
+  min-height: 0;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-row {
+  min-height: 40px;
+  height: 40px;
+  grid-template-columns: var(--issue-rule-list-columns);
+  padding: 8px var(--issue-rule-list-inline-pad);
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-name-text {
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action {
+  grid-column: auto;
+  justify-self: start;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-pagination {
+  margin-top: 4px;
+  padding: 0;
+}
+
+@media (max-width: 960px) {
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list-head {
+    display: none;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-row {
+    height: auto;
+    min-height: 68px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper {
+    padding: 20px 16px;
+  }
+
+  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tabs {
+    gap: 8px;
+  }
+
+  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab {
+    flex: 1 1 auto;
+    padding: 0 12px;
+  }
+
+  .store-dashboard-page .store-insight-top-card {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .store-dashboard-page .store-insight-actions {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* UAT 顾问行为洞察录音弹窗；仅覆盖洞察入口，不影响 SOP 与人员录音弹窗。 */
+body .uat-review-recording-overlay {
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+body .uat-review-recording-overlay .uat-review-recording-dialog {
+  box-sizing: border-box;
+  width: min(960px, 100%);
+  max-height: min(92dvh, 860px);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.82);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+}
+
+body .uat-review-recording-overlay .recording-library-head {
+  flex: 0 0 auto;
+  gap: 18px;
+  padding: 20px 24px;
+  overflow: visible;
+  border-bottom: 1px solid rgba(217, 226, 239, 0.84);
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 253, 0.92));
+}
+
+body .uat-review-recording-overlay .recording-library-head h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+body .uat-review-recording-overlay .recording-library-head p {
+  max-width: 720px;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+body .uat-review-recording-overlay .recording-library-close {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 22px;
+  line-height: 1;
+  transform: none;
+}
+
+body .uat-review-recording-overlay .recording-library-close:hover,
+body .uat-review-recording-overlay .recording-library-close:focus-visible {
+  outline: none;
+  border: 0;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
+  transform: none;
+}
+
+body .uat-review-recording-overlay .uat-review-dialog-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+body .uat-review-recording-overlay .uat-review-dialog-filter-card {
+  flex: 0 0 auto;
+  padding: 16px 20px;
+  border: 1px solid rgba(217, 226, 239, 0.72);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 253, 0.95));
+  box-shadow: 0 14px 36px rgba(22, 32, 51, 0.08);
+}
+
+body .uat-review-recording-overlay .uat-review-dialog-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-item {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border: 1px solid rgba(201, 210, 224, 0.88);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-item:focus-within {
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+body .uat-review-recording-overlay .uat-review-filter-label {
+  flex: 0 0 auto;
+  color: #8a96ab;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field,
+body .uat-review-recording-overlay .uat-review-date-range {
+  box-sizing: border-box;
+  display: flex;
+  width: auto;
+  min-width: 0;
+  min-height: 42px;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field:focus-within,
+body .uat-review-recording-overlay .uat-review-date-range:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field input,
+body .uat-review-recording-overlay .uat-review-date-range input {
+  min-width: 0;
+  min-height: 42px;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #162033;
+  font: inherit;
+  font-size: 13px;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field input::placeholder {
+  color: #94a3b8;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field i {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+
+body .uat-review-recording-overlay .uat-review-filter-field i svg,
+body .uat-review-recording-overlay .uat-review-date-range > svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+body .uat-review-recording-overlay .uat-review-date-range {
+  gap: 10px;
+}
+
+body .uat-review-recording-overlay .uat-review-date-range > svg {
+  flex: 0 0 18px;
+  color: #909399;
+}
+
+body .uat-review-recording-overlay .uat-review-date-range input {
+  color-scheme: light;
+  text-align: center;
+}
+
+body .uat-review-recording-overlay .uat-review-date-range input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+body .uat-review-recording-overlay .uat-review-date-range em {
+  flex: 0 0 auto;
+  color: #909399;
+  font-size: 13px;
+  font-style: normal;
+}
+
+body .uat-review-recording-overlay .recording-library-result-row {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body .uat-review-recording-overlay .recording-library-list {
+  display: flex;
+  min-height: 120px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  overflow: visible;
+}
+
+body .uat-review-recording-overlay .recording-library-row {
+  min-height: 58px;
+  grid-template-columns: 36px minmax(0, 1fr) 32px;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+body .uat-review-recording-overlay .recording-library-row:hover {
+  border-color: rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.1);
+  transform: translateY(-4px);
+}
+
+body .uat-review-recording-overlay .recording-library-play {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: #eff6ff;
+  box-shadow: none;
+}
+
+body .uat-review-recording-overlay .recording-library-main {
+  gap: 5px;
+}
+
+body .uat-review-recording-overlay .recording-library-main strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body .uat-review-recording-overlay .recording-library-main span {
+  color: #617088;
+  font-size: 13px;
+}
+
+body .uat-review-recording-overlay .recording-library-detail {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+body .uat-review-recording-overlay .recording-library-detail:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+body .uat-review-recording-overlay .recording-library-empty {
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+body .uat-review-recording-overlay .recording-library-footer {
+  padding: 0 4px 4px;
+}
+
+body .uat-review-recording-overlay .recording-library-more {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  body .uat-review-recording-overlay {
+    padding: 12px;
+  }
+
+  body .uat-review-recording-overlay .uat-review-dialog-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body .uat-review-recording-overlay .recording-library-head,
+  body .uat-review-recording-overlay .uat-review-dialog-body {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}
+
+/* Figma 611:2666 / 611:2922 — 门店 SOP 与顾问行为洞察最终规范 */
+.store-dashboard-page #main-panel-advisors :is(.issue-sop-analysis-wrapper, .issue-overview-wrapper) {
+  gap: 16px;
+  padding: 20px;
+}
+
+.store-dashboard-page #main-panel-advisors :is(.issue-sop-analysis-wrapper, .issue-overview-wrapper) > .card-header {
+  box-sizing: border-box;
+  min-height: 50px;
+  padding: 0;
+  margin: 0;
+}
+
+.store-dashboard-page #main-panel-advisors :is(.issue-sop-analysis-wrapper, .issue-overview-wrapper) .card-title {
+  color: #162033;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 25px;
+  letter-spacing: -0.36px;
+}
+
+.store-dashboard-page #main-panel-advisors :is(.issue-sop-analysis-wrapper, .issue-overview-wrapper) .card-sub {
+  margin-top: 4px;
+  color: #617088;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-analysis-root {
+  gap: 16px;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .store-sop-standard-list {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-pagination {
+  margin-top: 0;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab {
+  color: #606266;
+  font-weight: 500;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab.active {
+  color: #2563eb;
+}
+
+.store-dashboard-page .store-insight-top-card {
+  min-height: 68px;
+}
+
+.store-dashboard-page .store-insight-main {
+  gap: 8px;
+}
+
+.store-dashboard-page .store-insight-title {
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-dashboard-page .store-insight-rate {
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.store-dashboard-page .store-insight-actions {
+  align-self: stretch;
+  justify-content: space-between;
+  gap: 0;
+}
+
+.store-dashboard-page :is(.store-insight-scope, .store-insight-view) {
+  font-weight: 500;
+}
+
+@media (min-width: 961px) {
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-toolbar {
+    grid-template-columns: minmax(0, 1fr) 192px;
+    gap: 12px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-sort {
+    width: 192px;
+    min-width: 192px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-sort-trigger .session-select-caret {
+    width: 16px;
+    height: 16px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list-head > :last-child {
+    justify-content: flex-end;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action {
+    justify-self: end;
+    font-weight: 500;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action::after {
+    display: none;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis :is(.issue-rule-rate, .issue-rule-count) {
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  .store-dashboard-page .store-insight-top-card {
+    grid-template-columns: 24px minmax(0, 1fr) max-content;
+    height: 68px;
+  }
+
+  .store-dashboard-page .store-insight-actions {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .store-dashboard-page #main-panel-advisors :is(.issue-sop-analysis-wrapper, .issue-overview-wrapper) {
+    padding: 20px 16px;
+  }
+
+  .store-dashboard-page .store-insight-top-card {
+    height: auto;
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .store-dashboard-page .store-insight-actions {
+    grid-column: 2;
+    align-self: auto;
+    justify-content: flex-start;
+    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-pagination .dashboard-pagination {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-pagination .dashboard-pagination-controls {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }

@@ -244,6 +244,8 @@
 
 .lead-detail-overview-grid > .intention-panel {
   display: flex;
+  container-type: inline-size;
+  container-name: lead-intention;
   flex-direction: column;
   padding: 21px;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
@@ -330,6 +332,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 22.4px;
+  white-space: nowrap;
 }
 
 .lead-intention-insight-header .intention-top-tags {
@@ -358,6 +361,29 @@
   padding: 0 8px;
   border-radius: 4px;
   line-height: 12px;
+}
+
+@container lead-intention (max-width: 520px) {
+  .lead-intention-insight-header .intention-top-tags {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .lead-intention-insight-header #leadDetailIntentLevel {
+    align-self: flex-end;
+  }
+
+  .lead-intention-insight-header .intention-model-row {
+    justify-content: flex-end;
+  }
+}
+
+@container lead-intention (max-width: 420px) {
+  .lead-intention-insight-copy .intention-ai-copy {
+    white-space: normal;
+  }
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-journey-panel {
