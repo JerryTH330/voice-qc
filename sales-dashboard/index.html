@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260811-unified-metric-tooltip-v15" />
+        <link rel="stylesheet" href="./page.css?v=20260811-figma-panels-v19" />
 <title>销售看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -265,7 +265,7 @@
                       <div class="card-header">
                         <div>
                           <div class="card-title">SOP执行分析</div>
-                          <div class="card-sub">从规则维度查看 SOP 命中表现。</div>
+                          <div class="card-sub">从规则维度查看各组织、各场景的 SOP 命中表现。</div>
                         </div>
                       </div>
                       <div class="sales-sop-review-body">
@@ -316,13 +316,11 @@
 
                         <div class="review-insight-panel">
                           <div class="review-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
-                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势发掘TOP5</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">待改善短板TOP5</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
                           </div>
-                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
                           <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
-                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="顾问行为洞察规则分页"></div>
                         </div>
 
                       </div>
@@ -469,7 +467,7 @@
                       <div class="card-header">
                         <div>
                           <div class="card-title">SOP执行分析</div>
-                          <div class="card-sub">从规则维度查看 SOP 命中表现。</div>
+                          <div class="card-sub">从规则维度查看各组织、各场景的 SOP 命中表现。</div>
                         </div>
                       </div>
                       <div class="sales-sop-review-body">
@@ -520,13 +518,11 @@
 
                         <div class="review-insight-panel">
                           <div class="review-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
-                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">短板项识别</button>
-                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+                            <button type="button" class="review-insight-tab active" data-review-insight-tab="strength" role="tab" aria-selected="true">优势发掘TOP5</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="weakness" role="tab" aria-selected="false">待改善短板TOP5</button>
+                            <button type="button" class="review-insight-tab" data-review-insight-tab="risk" role="tab" aria-selected="false">风险命中TOP5</button>
                           </div>
-                          <div class="review-insight-toolbar" id="review-insight-toolbar"></div>
                           <div class="review-insight-list" id="review-insight-list" aria-live="polite"></div>
-                          <div class="session-pagination sales-review-pagination" id="review-insight-pagination" aria-label="顾问行为洞察规则分页"></div>
                         </div>
                       </div>
                     </section>
@@ -1001,6 +997,6 @@
 
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="./page.js?v=20260811-unified-metric-tooltip-v15"></script>
+<script src="./page.js?v=20260811-figma-panels-v19"></script>
   </body>
 </html>

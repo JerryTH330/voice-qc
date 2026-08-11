@@ -10,7 +10,8 @@
     { key: 'advisorName', label: '顾问姓名' },
     { key: 'advisorPhone', label: '顾问号码' },
     { key: 'customerName', label: '客户姓名' },
-    { key: 'customerPhone', label: '客户号码' }
+    { key: 'customerPhone', label: '客户号码' },
+    { key: 'leadId', label: '线索ID' }
   ];
   const SESSION_SOURCE_OPTIONS = ['全部', '云外呼', '工牌'];
 
@@ -30,7 +31,7 @@
       return normalizedValue.replace(/\D/g, '');
     }
 
-    if (target === 'advisorId') {
+    if (target === 'advisorId' || target === 'leadId') {
       return normalizedValue.replace(/[^a-z0-9]/g, '');
     }
 
@@ -61,7 +62,8 @@
       advisorName: normalizeSessionSearchValue(record && record.advisorName, 'advisorName'),
       advisorPhone: normalizeSessionSearchValue(record && record.advisorPhone, 'advisorPhone'),
       customerName: normalizeSessionSearchValue(record && record.customerName, 'customerName'),
-      customerPhone: normalizeSessionSearchValue(record && record.customerPhone, 'customerPhone')
+      customerPhone: normalizeSessionSearchValue(record && record.customerPhone, 'customerPhone'),
+      leadId: normalizeSessionSearchValue(record && record.leadId, 'leadId')
     };
 
     return activeKeys.every((key) => normalizedRecord[key].includes(activeQueries[key]));
