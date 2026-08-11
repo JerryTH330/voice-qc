@@ -100,6 +100,181 @@ function initStickyFilterBars() {
   });
 }
 
+function initUnifiedMetricTooltips() {
+  const root = document.documentElement;
+  if (root.dataset.metricTooltipInit === 'true') return;
+  root.dataset.metricTooltipInit = 'true';
+  root.classList.add('dashboard-metric-tooltip-ready');
+
+  const tooltip = document.createElement('div');
+  tooltip.id = 'dashboard-metric-tooltip';
+  tooltip.className = 'dashboard-metric-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(tooltip);
+
+  let activeButton = null;
+
+  const getTooltipButton = (target) => {
+    if (!(target instanceof Element)) return null;
+    const button = target.closest('.metric-def-btn, .hm-help');
+    if (!button) return null;
+    const source = button.querySelector('.metric-def-tooltip');
+    return source?.textContent?.trim() ? button : null;
+  };
+
+  const hideTooltip = () => {
+    if (activeButton?.getAttribute('aria-describedby') === tooltip.id) {
+      activeButton.removeAttribute('aria-describedby');
+    }
+    activeButton = null;
+    tooltip.classList.remove('show');
+    tooltip.setAttribute('aria-hidden', 'true');
+    tooltip.style.visibility = 'hidden';
+  };
+
+  const showTooltip = (button) => {
+    const source = button.querySelector('.metric-def-tooltip');
+    const description = source?.textContent?.trim();
+    if (!description) return;
+
+    activeButton = button;
+    tooltip.textContent = description;
+    tooltip.classList.remove('show');
+    tooltip.style.visibility = 'hidden';
+    tooltip.setAttribute('aria-hidden', 'false');
+    tooltip.dataset.placement = 'bottom';
+
+    const rect = button.getBoundingClientRect();
+    const gap = 8;
+    const edge = 8;
+    const tooltipWidth = tooltip.offsetWidth;
+    const tooltipHeight = tooltip.offsetHeight;
+    const maxLeft = Math.max(edge, window.innerWidth - tooltipWidth - edge);
+    const left = Math.min(Math.max(rect.left + rect.width / 2 - tooltipWidth / 2, edge), maxLeft);
+    const fitsBelow = rect.bottom + gap + tooltipHeight <= window.innerHeight - edge;
+    const placement = fitsBelow ? 'bottom' : 'top';
+    const preferredTop = placement === 'bottom'
+      ? rect.bottom + gap
+      : rect.top - gap - tooltipHeight;
+    const top = Math.min(
+      Math.max(preferredTop, edge),
+      Math.max(edge, window.innerHeight - tooltipHeight - edge)
+    );
+    const arrowLeft = Math.min(
+      Math.max(rect.left + rect.width / 2 - left - 4, 8),
+      Math.max(8, tooltipWidth - 16)
+    );
+
+    tooltip.dataset.placement = placement;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    tooltip.style.setProperty('--metric-tooltip-arrow-left', `${arrowLeft}px`);
+    tooltip.style.visibility = 'visible';
+    button.setAttribute('aria-describedby', tooltip.id);
+    tooltip.getBoundingClientRect();
+    tooltip.classList.add('show');
+  };
+
+  document.addEventListener('pointerover', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || (event.relatedTarget && button.contains(event.relatedTarget))) return;
+    showTooltip(button);
+  });
+
+  document.addEventListener('pointerout', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || button !== activeButton) return;
+    if (event.relatedTarget && button.contains(event.relatedTarget)) return;
+    hideTooltip();
+  });
+
+  document.addEventListener('focusin', (event) => {
+    const button = getTooltipButton(event.target);
+    if (button) showTooltip(button);
+  });
+
+  document.addEventListener('focusout', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || button !== activeButton) return;
+    if (event.relatedTarget && button.contains(event.relatedTarget)) return;
+    hideTooltip();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') hideTooltip();
+  });
+  window.addEventListener('scroll', hideTooltip, true);
+  window.addEventListener('resize', hideTooltip);
+}
+
+initUnifiedMetricTooltips();
+
+function getCompactIssueRulePaginationPages(pageCount, currentPage) {
+  if (pageCount <= 3) return new Set(Array.from({ length: pageCount }, (_, index) => index + 1));
+  const startPage = Math.min(Math.max(currentPage - 1, 1), pageCount - 2);
+  return new Set([startPage, startPage + 1, startPage + 2]);
+}
+
+function renderUnifiedIssueRulePagination({ totalItems, currentPage, pageCount, pageSize }) {
+  const compactPages = getCompactIssueRulePaginationPages(pageCount, currentPage);
+  return `
+    <div class="issue-rule-footer issue-rule-pagination session-pagination">
+      <div class="dashboard-pagination">
+        <span class="session-pagination-total">共 ${totalItems} 条</span>
+        <div class="dashboard-pagination-controls">
+          <span class="issue-pagination-page-size">${pageSize} 条/页</span>
+          <div class="page-group" aria-label="规则分页">
+            <button type="button" class="issue-rule-page-btn page-arrow" data-unified-rule-page-action="prev" aria-label="上一页" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
+            ${Array.from({ length: pageCount }, (_, index) => index + 1).map(page => `
+              <button type="button" class="issue-rule-page-number page-num${page === currentPage ? ' active' : ''}${compactPages.has(page) ? ' is-compact-visible' : ''}" data-unified-rule-page-number="${page}" aria-label="第 ${page} 页" ${page === currentPage ? 'aria-current="page"' : ''}>${page}</button>
+            `).join('')}
+            <button type="button" class="issue-rule-page-btn page-arrow" data-unified-rule-page-action="next" aria-label="下一页" ${currentPage >= pageCount ? 'disabled' : ''}>›</button>
+          </div>
+          <label class="page-jump-group">
+            <span class="session-page-jump-label">前往</span>
+            <span class="page-select page-jump-select">
+              <input type="number" min="1" max="${pageCount}" value="${currentPage}" data-unified-rule-page-jump aria-label="前往页码">
+            </span>
+            <span class="session-page-jump-suffix">页</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindUnifiedIssueRulePagination(root, { currentPage, pageCount, onPageChange }) {
+  if (!root) return;
+  const changePage = (requestedPage) => {
+    const parsedPage = Number(requestedPage);
+    const targetPage = Math.max(1, Math.min(pageCount, Number.isFinite(parsedPage) ? Math.round(parsedPage) : currentPage));
+    if (targetPage === currentPage) {
+      const jumpInput = root.querySelector('[data-unified-rule-page-jump]');
+      if (jumpInput) jumpInput.value = String(targetPage);
+      return;
+    }
+    onPageChange(targetPage);
+  };
+
+  root.querySelectorAll('[data-unified-rule-page-action]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.disabled) return;
+      changePage(currentPage + (button.dataset.unifiedRulePageAction === 'next' ? 1 : -1));
+    });
+  });
+  root.querySelectorAll('[data-unified-rule-page-number]').forEach(button => {
+    button.addEventListener('click', () => changePage(button.dataset.unifiedRulePageNumber));
+  });
+  const jumpInput = root.querySelector('[data-unified-rule-page-jump]');
+  jumpInput?.addEventListener('change', () => changePage(jumpInput.value));
+  jumpInput?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    changePage(jumpInput.value);
+  });
+}
+
 function initStoreDashboardPage() {
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const {
@@ -2171,34 +2346,6 @@ function initStoreDashboardPage() {
   const metricBtn = (label) => {
     if (!METRIC_DEFS[label]) return '';
     return `<button type="button" class="metric-def-btn" onclick="event.stopPropagation()" aria-label="${label}指标说明">?<span class="metric-def-tooltip" role="tooltip">${METRIC_DEFS[label]}</span></button>`;
-  };
-
-  window.showMetricDef = function(btn, label) {
-    const desc = METRIC_DEFS[label];
-    if (!desc) return;
-    // 关闭已有提示
-    const existing = document.getElementById('metric-def-tip');
-    if (existing) {
-      if (existing.dataset.label === label) { existing.remove(); return; }
-      existing.remove();
-    }
-    const tip = document.createElement('div');
-    tip.id = 'metric-def-tip';
-    tip.className = 'metric-def-tip';
-    tip.dataset.label = label;
-    tip.textContent = desc;
-    document.body.appendChild(tip);
-    // 定位：紧贴按钮下方
-    const rect = btn.getBoundingClientRect();
-    const tipW = 280;
-    let left = rect.left + rect.width / 2 - tipW / 2;
-    if (left < 8) left = 8;
-    if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
-    tip.style.cssText = `left:${left}px;top:${rect.bottom + 6}px;width:${tipW}px`;
-    requestAnimationFrame(() => tip.classList.add('show'));
-    // 点击任意处关闭
-    const close = (e) => { if (!tip.contains(e.target)) { tip.remove(); document.removeEventListener('click', close, true); } };
-    setTimeout(() => document.addEventListener('click', close, true), 0);
   };
 
   // ══════════════════════════════════════════════
@@ -4335,26 +4482,24 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   const ISSUE_RULE_SCENE_PREVIEW_LIMIT = 99;
-  const ISSUE_RULE_SCENE_COLLAPSED_LIMIT = 1;
+  const getIssueRuleSceneTagLabel = (label) => Array.from(String(label ?? '').trim())[0] || '';
 
   const renderIssueRuleSceneTagsHtml = (labels, previewLimit) => {
     const previewLabels = labels.slice(0, previewLimit);
     const hasMore = labels.length > previewLimit;
     return `
       <span class="issue-rule-tags">
-        ${previewLabels.map(label => `<em title="${escapeHtml(label)}" data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+        ${previewLabels.map(label => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}</em>`).join('')}
       </span>
       ${hasMore ? `
-        <details class="issue-rule-scene-more">
-          <summary aria-label="查看全部所属业务场景">...</summary>
-          <span class="issue-rule-scene-popover">
-            <strong>所属业务场景</strong>
-            <span class="issue-rule-scene-popover-tags">
-              ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
-            </span>
-          </span>
-        </details>
+        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
       ` : ''}
+      <span class="issue-rule-scene-popover" role="tooltip">
+        <strong>所属业务场景</strong>
+        <span class="issue-rule-scene-popover-tags">
+          ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
+        </span>
+      </span>
     `;
   };
 
@@ -4367,7 +4512,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const autoCollapseIssueRuleScenes = IssueRuleList.createAutoCollapser({
     renderHtml: renderIssueRuleSceneTagsHtml,
     previewLimit: ISSUE_RULE_SCENE_PREVIEW_LIMIT,
-    collapsedLimit: ISSUE_RULE_SCENE_COLLAPSED_LIMIT,
+    progressive: true,
   });
 
   const renderStoreSopMetricIcon = (type) => type === 'count'
@@ -4394,11 +4539,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}">
         <span class="issue-rule-name">
           <span class="issue-rule-name-line">
-            <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(rule.title)}</strong>
-            <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.title)}</span>
-            ${(rule.applicableScenes || []).length
-              ? renderIssueRuleSceneTags(rule.applicableScenes.map(getSceneLabel))
-              : `<em data-tag-label="${escapeHtml(rule.category)}">${escapeHtml(rule.category)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(rule.category)}</span></em>`}
+            <span class="issue-rule-name-copy">
+              <strong class="issue-rule-name-text" data-rule-name-ellipsis-target tabindex="0">${escapeHtml(rule.title)}</strong>
+              <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(rule.title)}</span>
+            </span>
+            ${renderIssueRuleSceneTags((rule.applicableScenes || []).length
+              ? rule.applicableScenes.map(getSceneLabel)
+              : [rule.category])}
           </span>
         </span>
         <span class="issue-rule-scope">${scopeBadge(rule.advisor_count, scopeToneClass)}</span>
@@ -4462,13 +4609,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         <div class="issue-rule-list">
           ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
         </div>
-        <div class="issue-rule-footer">
-          <span>共 ${visibleRules.length} 条</span>
-          <div class="issue-rule-pager" aria-label="规则分页">
-            <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="prev" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
-            <button type="button" class="issue-rule-page-btn" data-store-sop-page-action="next" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
-          </div>
-        </div>
+        ${renderUnifiedIssueRulePagination({
+          totalItems: visibleRules.length,
+          currentPage,
+          pageCount: totalPages,
+          pageSize: STORE_ISSUE_PAGE_SIZE,
+        })}
       </div>
     `;
   };
@@ -4595,15 +4741,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       renderStoreSopRuleSection(rootId, state);
     });
 
-    root.querySelectorAll('[data-store-sop-page-action]').forEach(button => {
-      button.addEventListener('click', () => {
-        if (button.disabled) return;
-        const visibleRules = getVisibleStoreSopRules(state.activeTab, state);
-        const pageCount = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
-        const delta = button.dataset.storeSopPageAction === 'next' ? 1 : -1;
-        state.page = Math.max(1, Math.min(pageCount, state.page + delta));
+    const visibleRules = getVisibleStoreSopRules(state.activeTab, state);
+    bindUnifiedIssueRulePagination(root, {
+      currentPage: state.page,
+      pageCount: Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE)),
+      onPageChange: (targetPage) => {
+        state.page = targetPage;
         renderStoreSopRuleSection(rootId, state);
-      });
+      },
     });
 
     root.querySelectorAll('.issue-rule-action[data-store-sop-rule-id]').forEach(actionBtn => {
@@ -14365,6 +14510,24 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return { label, value, unit, trend, trendClass, iconTone, ...options }
       }
 
+      const SALES_METRIC_DEFS = {
+        '接待数': '当期完成门店接待的客户数量',
+        '试驾数': '当期完成试乘试驾的客户数量',
+        '邀约录音数': '当期邀约场景下进入质检分析的录音条数',
+        '接待录音数': '当期门店接待场景下进入质检分析的录音条数',
+        '试驾录音数': '当期试乘试驾场景下进入质检分析的录音条数',
+        '话术命中率': '样本录音中关键话术被命中的比例',
+        '平均时长': '有效录音的平均通话或面谈时长（分钟）',
+        '风险录音': '含违规或风险话术的录音条数'
+      }
+
+      function renderSalesMetricHelp(label) {
+        const description = SALES_METRIC_DEFS[label]
+        if (!description) return ''
+        const safeLabel = escapeHtml(label)
+        return `<button class="hm-help metric-def-btn" type="button" aria-label="${safeLabel}指标说明">?<span class="metric-def-tooltip" role="tooltip">${escapeHtml(description)}</span></button>`
+      }
+
       function formatSalesTrendValue(value, suffix = '', decimals = 0) {
         const absolute = Math.abs(value)
         const display = decimals > 0 ? absolute.toFixed(decimals) : Math.round(absolute)
@@ -14403,26 +14566,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         yesterday: [
           buildSalesMetric('邀约录音数', '3', '条', '↓2', 'down', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '74%', '', '↓4%', 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '10', 'min', '↓1min', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '1', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '10', 'min', '↓1', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '1', '条', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last7: [
           buildSalesMetric('邀约录音数', '6', '条', '↑1', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '78%', '', '↑3%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '12', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '0', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '18', 'min', '↑3', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '0', '条', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last15: [
           buildSalesMetric('邀约录音数', '14', '条', '↑3', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '81%', '', '↑2%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '11', 'min', '↑1min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '2', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '11', 'min', '↑1', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '条', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last30: [
           buildSalesMetric('邀约录音数', '27', '条', '↑5', 'up', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '84%', '', '↑4%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '13', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '3', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '13', 'min', '↑2', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '3', '条', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14433,8 +14596,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           buildSalesMetric('接待录音数', '4', '条', '↓2', 'down', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('试驾录音数', '3', '条', '↓1', 'down', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '88%', '', '↓3%', 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '15', 'min', '↓2min', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '2', '', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '15', 'min', '↓2', 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '条', '↑1', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last7: [
           buildSalesMetric('接待数', '11', '条', '↑2', 'up', 'blue', { variant: 'summary' }),
@@ -14442,8 +14605,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           buildSalesMetric('接待录音数', '8', '条', '↑2', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('试驾录音数', '7', '条', '↑1', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '92%', '', '↑4%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '18', 'min', '↑3min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '1', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '18', 'min', '↑3', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '1', '条', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last15: [
           buildSalesMetric('接待数', '23', '条', '↑4', 'up', 'blue', { variant: 'summary' }),
@@ -14451,8 +14614,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           buildSalesMetric('接待录音数', '17', '条', '↑4', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('试驾录音数', '15', '条', '↑3', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '90%', '', '↑2%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '17', 'min', '↑1min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '2', '', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '17', 'min', '↑1', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '2', '条', '↓1', 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ],
         last30: [
           buildSalesMetric('接待数', '42', '条', '↑6', 'up', 'blue', { variant: 'summary' }),
@@ -14460,8 +14623,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           buildSalesMetric('接待录音数', '31', '条', '↑7', 'up', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('试驾录音数', '28', '条', '↑5', 'up', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', '91%', '', '↑3%', 'up', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', '19', 'min', '↑2min', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', '4', '', '↑2', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', '19', 'min', '↑2', 'up', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', '4', '条', '↑2', 'up', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14476,8 +14639,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return [
           buildSalesMetric('邀约录音数', String(inviteCount), '条', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'blue', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 5) - 1, '%'), (seed % 5) >= 1 ? 'up' : 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 4) - 1, 'min'), (seed % 4) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 3) - 1, ''), (seed % 3) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 4) - 1, ''), (seed % 4) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', String(riskCount), '条', formatSalesTrendValue((seed % 3) - 1, ''), (seed % 3) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -14498,8 +14661,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           buildSalesMetric('接待录音数', String(receptionRecordings), '条', formatSalesTrendValue((seed % 6) - 1, ''), (seed % 6) >= 1 ? 'up' : 'down', 'cyan', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('试驾录音数', String(testDriveRecordings), '条', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'amber', { iconUrl: '../assets/sales-role-metrics/metric-call-count.png' }),
           buildSalesMetric('话术命中率', `${Math.round(scriptRate)}%`, '', formatSalesTrendValue((seed % 6) - 1, '%'), (seed % 6) >= 1 ? 'up' : 'down', 'violet', { iconUrl: '../assets/sales-role-metrics/metric-hit-rate.png' }),
-          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 5) - 1, 'min'), (seed % 5) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
-          buildSalesMetric('风险录音', String(riskCount), '', formatSalesTrendValue((seed % 4) - 1, ''), (seed % 4) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
+          buildSalesMetric('平均时长', String(avgDuration), 'min', formatSalesTrendValue((seed % 5) - 1, ''), (seed % 5) >= 1 ? 'up' : 'down', 'indigo', { iconUrl: '../assets/sales-role-metrics/metric-duration.png' }),
+          buildSalesMetric('风险录音', String(riskCount), '条', formatSalesTrendValue((seed % 4) - 1, ''), (seed % 4) >= 1 ? 'up' : 'down', 'red', { iconUrl: '../assets/sales-role-metrics/metric-risk-count.png' })
         ]
       }
 
@@ -15880,7 +16043,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀约进店', '排程确认', '进店接待', '试乘试驾']
       const SALES_REVIEW_PAGE_SIZE = 5
       const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 99
-      const SALES_REVIEW_SCENE_COLLAPSED_LIMIT = 1
+      const getSalesReviewSceneTagLabel = (label) => Array.from(String(label ?? '').trim())[0] || ''
 
       function renderSalesReviewSceneTagsHtml(labels, previewLimit) {
         const previewLabels = labels.slice(0, previewLimit)
@@ -15888,19 +16051,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         return `
           <span class="issue-rule-tags">
-            ${previewLabels.map((label) => `<em data-tag-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${escapeHtml(label)}<span class="issue-rule-tag-popover" role="tooltip">${escapeHtml(label)}</span></em>`).join('')}
+            ${previewLabels.map((label) => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getSalesReviewSceneTagLabel(label))}</em>`).join('')}
           </span>
           ${hasMore ? `
-            <details class="issue-rule-scene-more">
-              <summary aria-label="查看全部所属业务场景">...</summary>
-              <span class="issue-rule-scene-popover">
-                <strong>所属业务场景</strong>
-                <span class="issue-rule-scene-popover-tags">
-                  ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
-                </span>
-              </span>
-            </details>
+            <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
           ` : ''}
+          <span class="issue-rule-scene-popover" role="tooltip">
+            <strong>所属业务场景</strong>
+            <span class="issue-rule-scene-popover-tags">
+              ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
+            </span>
+          </span>
         `
       }
 
@@ -15913,7 +16074,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const autoCollapseSalesReviewSceneTags = IssueRuleList.createAutoCollapser({
         renderHtml: renderSalesReviewSceneTagsHtml,
         previewLimit: SALES_REVIEW_SCENE_PREVIEW_LIMIT,
-        collapsedLimit: SALES_REVIEW_SCENE_COLLAPSED_LIMIT,
+        progressive: true,
       })
 
       function getSalesReviewAllowedScenes(role) {
@@ -16476,8 +16637,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}">
             <span class="issue-rule-name">
               <span class="issue-rule-name-line">
-                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(item.title)}</strong>
-                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
+                <span class="issue-rule-name-copy">
+                  <strong class="issue-rule-name-text" data-rule-name-ellipsis-target tabindex="0">${escapeHtml(item.title)}</strong>
+                  <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
+                </span>
                 ${renderSalesReviewSceneTags(item.applicableScenes)}
               </span>
             </span>
@@ -16495,13 +16658,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <div class="issue-rule-list">
               ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
             </div>
-            <div class="issue-rule-footer">
-              <span>共 ${visibleItems.length} 条</span>
-              <div class="issue-rule-pager" aria-label="规则分页">
-                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="prev" ${state.reviewInsightPage <= 1 ? 'disabled' : ''}>上一页</button>
-                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="next" ${state.reviewInsightPage >= totalPages ? 'disabled' : ''}>下一页</button>
-              </div>
-            </div>
+            ${renderUnifiedIssueRulePagination({
+              totalItems: visibleItems.length,
+              currentPage: state.reviewInsightPage,
+              pageCount: totalPages,
+              pageSize: SALES_REVIEW_PAGE_SIZE,
+            })}
           </div>`
 
         autoCollapseSalesReviewSceneTags(list)
@@ -16512,12 +16674,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             window.openSalesReviewRecordingLibrary(role, activeTab, Number(actionBtn.dataset.salesReviewRecordingIndex))
           })
         })
-        list.querySelectorAll('[data-sales-review-rule-page-action]').forEach((button) => {
-          button.addEventListener('click', () => {
-            const delta = button.dataset.salesReviewRulePageAction === 'next' ? 1 : -1
-            state.reviewInsightPage = Math.max(1, Math.min(totalPages, state.reviewInsightPage + delta))
+        bindUnifiedIssueRulePagination(list, {
+          currentPage: state.reviewInsightPage,
+          pageCount: totalPages,
+          onPageChange: (targetPage) => {
+            state.reviewInsightPage = targetPage
             renderSalesReviewInsightContent(role, activeTab)
-          })
+          },
         })
       }
 
@@ -16651,8 +16814,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="issue-rule-row" data-sales-review-recording-index="${offset + index}">
             <span class="issue-rule-name">
               <span class="issue-rule-name-line">
-                <strong class="issue-rule-name-text" data-rule-name-ellipsis-target>${escapeHtml(item.title)}</strong>
-                <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
+                <span class="issue-rule-name-copy">
+                  <strong class="issue-rule-name-text" data-rule-name-ellipsis-target tabindex="0">${escapeHtml(item.title)}</strong>
+                  <span class="issue-rule-name-popover" role="tooltip">${escapeHtml(item.title)}</span>
+                </span>
                 ${renderSalesReviewSceneTags(item.applicableScenes)}
               </span>
             </span>
@@ -16670,13 +16835,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <div class="issue-rule-list">
               ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
             </div>
-            <div class="issue-rule-footer">
-              <span>共 ${visibleItems.length} 条</span>
-              <div class="issue-rule-pager" aria-label="规则分页">
-                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="prev" ${state.sopReviewPage <= 1 ? 'disabled' : ''}>上一页</button>
-                <button type="button" class="issue-rule-page-btn" data-sales-review-rule-page-action="next" ${state.sopReviewPage >= totalPages ? 'disabled' : ''}>下一页</button>
-              </div>
-            </div>
+            ${renderUnifiedIssueRulePagination({
+              totalItems: visibleItems.length,
+              currentPage: state.sopReviewPage,
+              pageCount: totalPages,
+              pageSize: SALES_REVIEW_PAGE_SIZE,
+            })}
           </div>`
 
         autoCollapseSalesReviewSceneTags(list)
@@ -16686,12 +16850,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             window.openSalesReviewRecordingLibrary(role, activeTab, Number(actionBtn.dataset.salesReviewRecordingIndex))
           })
         })
-        list.querySelectorAll('[data-sales-review-rule-page-action]').forEach((button) => {
-          button.addEventListener('click', () => {
-            const delta = button.dataset.salesReviewRulePageAction === 'next' ? 1 : -1
-            state.sopReviewPage = Math.max(1, Math.min(totalPages, state.sopReviewPage + delta))
+        bindUnifiedIssueRulePagination(list, {
+          currentPage: state.sopReviewPage,
+          pageCount: totalPages,
+          onPageChange: (targetPage) => {
+            state.sopReviewPage = targetPage
             renderSalesSopReviewContent(role)
-          })
+          },
         })
       }
 
@@ -16800,21 +16965,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        const dccMetricIconUrls = {
+          '邀约录音数': '../assets/sales-role-metrics/metric-invite-recording.png',
+          '话术命中率': '../assets/sales-role-metrics/metric-hit-rate.png',
+          '平均时长': '../assets/sales-role-metrics/metric-duration.png',
+          '风险录音': '../assets/sales-role-metrics/metric-risk-count.png'
+        }
         const showTrend = dccState.recommendRangeMode !== 'custom'
         const metrics = getSalesHeroMetricsData('dcc')
-        container.innerHTML = metrics.map((metric, index) => `
+        container.innerHTML = metrics.map((metric) => {
+          const iconMetric = {
+            ...metric,
+            iconUrl: dccMetricIconUrls[metric.label] || metric.iconUrl
+          }
+          const metricLabel = escapeHtml(metric.label)
+          return `
           <div class="hm-item">
-            ${renderSalesHeroMetricIcon(metric)}
+            ${renderSalesHeroMetricIcon(iconMetric)}
             <div class="hm-body">
-              <div class="hm-label">${metric.label}</div>
+              <div class="hm-label hm-label--ellipsis" title="${metricLabel}">${metricLabel}</div>
               <div class="hm-val-row">
-                <span class="hm-value">${renderSalesHeroValue(metric.value, metric.unit)}</span>
-                ${showTrend ? `<span class="hm-trend ${metric.trendClass}">${metric.trend}</span>` : ''}
+                <span class="hm-value" ${buildCounterDataAttrs(metric.value, metric.unit)}>${renderSalesHeroValue(metric.value, metric.unit)}</span>
+                ${showTrend ? `<span class="hm-trend ${metric.trendClass}${metric.label === '风险录音' ? ' hm-trend-risk' : ''}">${escapeHtml(metric.trend)}</span>` : ''}
               </div>
             </div>
+            ${renderSalesMetricHelp(metric.label)}
           </div>
-          ${index < metrics.length - 1 ? `<div class="hm-sep${index === 1 ? ' hm-sep-divider' : ''}"></div>` : ''}
-        `).join('')
+        `
+        }).join('')
       }
 
       function renderSalesHeroMetricIcon(metric) {
@@ -18100,28 +18278,37 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        const advisorMetricIconUrls = {
+          '接待数': '../assets/sales-role-metrics/metric-reception-count.png',
+          '试驾数': '../assets/sales-role-metrics/metric-test-drive-count.png',
+          '接待录音数': '../assets/sales-role-metrics/metric-reception-recording.png',
+          '试驾录音数': '../assets/sales-role-metrics/metric-test-drive-recording.png',
+          '话术命中率': '../assets/sales-role-metrics/metric-hit-rate.png',
+          '平均时长': '../assets/sales-role-metrics/metric-duration.png',
+          '风险录音': '../assets/sales-role-metrics/metric-risk-count.png'
+        }
         const metrics = getSalesHeroMetricsData('advisor')
-        container.innerHTML = metrics.map((metric, index) => `
+        container.innerHTML = metrics.map((metric, index) => {
+          const iconMetric = {
+            ...metric,
+            iconUrl: advisorMetricIconUrls[metric.label] || metric.iconUrl
+          }
+          const metricLabel = escapeHtml(metric.label)
+          return `
           <div class="hm-item${metric.variant === 'summary' ? ' hm-item-summary' : ''}">
-            ${renderSalesHeroMetricIcon(metric)}
+            ${renderSalesHeroMetricIcon(iconMetric)}
             <div class="hm-body">
-              <div class="hm-label">${metric.label}</div>
+              <div class="hm-label hm-label--ellipsis" title="${metricLabel}">${metricLabel}</div>
               <div class="hm-val-row">
-                <span class="hm-value">${renderSalesHeroValue(metric.value, metric.unit)}</span>
-                <span class="hm-trend ${metric.trendClass}">${metric.trend}</span>
+                <span class="hm-value" ${buildCounterDataAttrs(metric.value, metric.unit)}>${renderSalesHeroValue(metric.value, metric.unit)}</span>
+                <span class="hm-trend ${metric.trendClass}${metric.label === '风险录音' ? ' hm-trend-risk' : ''}">${escapeHtml(metric.trend)}</span>
               </div>
             </div>
+            ${renderSalesMetricHelp(metric.label)}
           </div>
-          ${index === 0 && metrics[0]?.variant === 'summary' && metrics[1]?.variant === 'summary' ? `
-            <div class="hm-flow-link" aria-hidden="true">
-              <span class="hm-flow-track"></span>
-              <span class="hm-flow-pulse hm-flow-pulse-a"></span>
-              <span class="hm-flow-pulse hm-flow-pulse-b"></span>
-              <span class="hm-flow-arrow"></span>
-            </div>
-          ` : ''}
-          ${index < metrics.length - 1 ? `<div class="hm-sep${index === 1 ? ' hm-sep-divider' : ''}"></div>` : ''}
-        `).join('')
+          ${index === 1 ? '<div class="hm-sep hm-sep-divider" aria-hidden="true"></div>' : ''}
+        `
+        }).join('')
       }
 
       function renderAdvisorFocus() {

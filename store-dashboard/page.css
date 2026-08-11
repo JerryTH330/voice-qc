@@ -1,6 +1,6 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260810-sticky-24px-v5");
-@import url("../app-inline.css?v=20260810-sticky-24px-v5");
+@import url("../voice-qc-admin.css?v=20260811-unified-metric-tooltip-v6");
+@import url("../app-inline.css?v=20260811-unified-metric-tooltip-v6");
 
 /* Figma 546:1160 — 门店核心指标 */
 .store-dashboard-page .hero-panel {
@@ -2045,13 +2045,10 @@
   outline: none;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-scene-more[open]),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-scene-more:hover),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-scene-more:focus-within),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name em:hover),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name em:focus-within),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover),
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within) {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-scenes:hover),
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-scenes:focus-within),
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover),
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within) {
   z-index: 40;
 }
 
@@ -2069,9 +2066,11 @@
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-line {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  width: 100%;
   min-width: 0;
 }
 
@@ -2087,17 +2086,21 @@
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scenes,
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-tags {
+  flex: 0 0 auto;
   flex-wrap: nowrap;
-  overflow: hidden;
   max-width: 100%;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scenes {
   position: relative;
-  z-index: 12;
+  overflow: visible;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more > summary {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-tags {
+  overflow: hidden;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more {
   display: inline-flex;
   min-width: 28px;
   min-height: 22px;
@@ -2111,16 +2114,14 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
-  list-style: none;
+  cursor: default;
+  position: relative;
+  z-index: 12;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more > summary::-webkit-details-marker {
-  display: none;
-}
-
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more > summary:hover,
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more > summary:focus-visible {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more:hover,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more:focus-visible,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-tags > em:focus-visible {
   outline: none;
   border-color: rgba(37, 99, 235, 0.55);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
@@ -2138,11 +2139,12 @@
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  pointer-events: none;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more[open] .issue-rule-scene-popover,
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more:hover .issue-rule-scene-popover,
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scene-more:focus-within .issue-rule-scene-popover {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scenes:has(.issue-rule-tags > em:hover) > .issue-rule-scene-popover,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scenes:has(.issue-rule-scene-more:hover) > .issue-rule-scene-popover,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-scenes:focus-within > .issue-rule-scene-popover {
   display: grid;
   gap: 10px;
 }
@@ -2153,9 +2155,16 @@
   line-height: 18px;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-line > .issue-rule-name-text {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-copy {
   position: relative;
-  flex: 1 1 auto;
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-copy > .issue-rule-name-text {
+  display: block;
+  width: 100%;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -2187,8 +2196,8 @@
   cursor: text;
   pointer-events: auto;
 }
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
   display: block;
 }
 
@@ -2210,31 +2219,16 @@
   position: relative;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-tag-popover {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  max-width: 240px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
-  color: var(--color-text);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-  word-break: break-word;
-  pointer-events: none;
-}
-
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name em:hover .issue-rule-tag-popover,
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-name em:focus-within .issue-rule-tag-popover {
-  display: block;
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-tags > em {
+  width: 30px;
+  min-width: 30px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid #d3dff6;
+  background: rgba(33, 95, 208, 0.1);
+  color: #215fd0;
+  line-height: 12px;
 }
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-rate,
@@ -2286,33 +2280,113 @@
   font-size: 14px;
 }
 
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pager {
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-footer {
+  width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-num:not(.is-compact-visible) {
+    display: none;
+  }
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .dashboard-pagination {
+  width: 100%;
+  min-height: 38px;
+  padding: 0;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .dashboard-pagination-controls {
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-pagination-page-size {
+  position: relative;
+  display: inline-flex;
+  min-width: 116px;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 37px 0 15px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+  color: #617088;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-pagination-page-size::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid #94a3b8;
+  border-bottom: 1.5px solid #94a3b8;
+  transform: translateY(-70%) rotate(45deg);
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-group,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-group {
   display: inline-flex;
   align-items: center;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-group {
+  gap: 10px;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-group {
   gap: 8px;
 }
 
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .session-pagination-total,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .session-page-jump-label,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .session-page-jump-suffix {
+  color: #617088;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 22.4px;
+  white-space: nowrap;
+}
+
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-btn,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-number,
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-back {
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1px solid rgba(217, 226, 239, 0.9);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--color-text);
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #617088;
   font: inherit;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex: 0 0 auto;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
 }
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-btn:hover:not(:disabled),
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-number:hover:not(.active),
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-back:hover {
   border-color: rgba(37, 99, 235, 0.35);
   color: var(--brand-primary);
@@ -2321,6 +2395,57 @@
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-page-number.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-select {
+  display: inline-flex;
+  width: 52px;
+  min-width: 52px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-select input {
+  width: 24px;
+  border: 0;
+  background: transparent;
+  color: #162033;
+  font: inherit;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  appearance: textfield;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-select input::-webkit-outer-spin-button,
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-jump-select input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-back {
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(217, 226, 239, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-text);
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-empty {

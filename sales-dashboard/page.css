@@ -1,6 +1,285 @@
 /* 销售看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260810-sticky-24px-v5");
-@import url("../app-inline.css?v=20260810-sticky-24px-v5");
+@import url("../voice-qc-admin.css?v=20260811-unified-metric-tooltip-v15");
+@import url("../app-inline.css?v=20260811-unified-metric-tooltip-v15");
+
+.sales-role-dashboard-page .hm-label--ellipsis {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  padding-right: 16px;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sales-role-dashboard-page .hm-help:hover,
+.sales-role-dashboard-page .hm-help:focus-visible {
+  border-color: rgba(147, 197, 253, 0.95);
+  background: rgba(239, 246, 255, 0.98);
+  color: #2563eb;
+  outline: 0;
+}
+
+.sales-role-dashboard-page .metric-def-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  padding: 10px 12px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.65;
+  text-align: left;
+  white-space: normal;
+  word-break: normal;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.sales-role-dashboard-page .metric-def-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid rgba(203, 213, 225, 0.9);
+  border-left: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(255, 255, 255, 0.98);
+  transform: rotate(45deg);
+}
+
+.sales-role-dashboard-page .hm-help:hover .metric-def-tooltip,
+.sales-role-dashboard-page .hm-help:focus-visible .metric-def-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sales-role-dashboard-page .hero-metrics .hm-item:first-child .metric-def-tooltip {
+  right: auto;
+  left: 0;
+}
+
+.sales-role-dashboard-page .hero-metrics .hm-item:first-child .metric-def-tooltip::before {
+  right: auto;
+  left: 6px;
+}
+
+.sales-role-dashboard-page .hm-item:hover,
+.sales-role-dashboard-page .hm-item:focus-within {
+  z-index: 40;
+  overflow: visible;
+}
+
+/* 销售顾问顶部信息与指标区，对齐 Figma 592:3280。 */
+.sales-advisor-page .sales-role-hero {
+  padding: 21px;
+}
+
+.sales-advisor-page .hero-profile {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.sales-advisor-page .hero-avatar {
+  overflow: hidden;
+  border: 0;
+  background: transparent url("../assets/store-core-metrics/manager-avatar.png") center / cover no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+
+.sales-advisor-page .hero-profile-tags {
+  flex-wrap: nowrap;
+}
+
+.sales-advisor-page .hero-profile-tag {
+  padding-right: 17px;
+  padding-left: 17px;
+}
+
+.sales-advisor-page .hm-item {
+  overflow: hidden;
+  padding: 13px 17px 13px 13px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+}
+
+.sales-advisor-page .hm-item.hm-item-summary {
+  border-color: rgba(37, 99, 235, 0.14);
+  background: linear-gradient(180deg, rgba(233, 242, 253, 0.4) 0%, rgba(233, 242, 253, 0.8) 100%);
+  box-shadow: none;
+}
+
+.sales-advisor-page .hm-item.hm-item-summary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("../assets/store-core-metrics/recording-card-background-layer.png") left center / cover no-repeat;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.sales-advisor-page .hm-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sales-advisor-page .hm-label,
+.sales-advisor-page .hm-val-row {
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.sales-advisor-page .hm-item.hm-item-summary .hm-label {
+  color: #52627a;
+  font-weight: 500;
+}
+
+.sales-advisor-page .hm-item.hm-item-summary .hm-value,
+.sales-advisor-page .hm-item.hm-item-summary .hm-value small {
+  color: #243047;
+}
+
+.sales-advisor-page .hm-help {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.95);
+  color: #94a3b8;
+  font: 600 12px/12px "PingFang SC", sans-serif;
+  cursor: help;
+}
+
+.sales-advisor-page .hm-trend.hm-trend-risk.up {
+  color: #dc2626;
+}
+
+.sales-advisor-page .hm-trend.hm-trend-risk.down {
+  color: #16a34a;
+}
+
+.sales-advisor-page .hm-sep.hm-sep-divider {
+  margin: 0;
+  background: rgba(226, 232, 240, 0.9);
+}
+
+@media (hover: hover) {
+  .sales-advisor-page .hm-item:hover {
+    border-color: rgba(37, 99, 235, 0.14);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+  }
+
+  .sales-advisor-page .hm-item.hm-item-summary:hover {
+    background: linear-gradient(180deg, rgba(233, 242, 253, 0.4) 0%, rgba(233, 242, 253, 0.8) 100%);
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .sales-advisor-page .hero-profile,
+  .sales-advisor-page .hero-profile-tags {
+    flex-wrap: wrap;
+  }
+
+  .sales-advisor-page .hm-sep.hm-sep-divider {
+    display: none;
+  }
+}
+
+/* 云外呼顶部信息与指标区，对齐 Figma 593:3706。 */
+.sales-dcc-page .sales-role-hero {
+  padding: 21px;
+}
+
+.sales-dcc-page .hero-profile {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.sales-dcc-page .hero-avatar {
+  overflow: hidden;
+  border: 0;
+  background: transparent url("../assets/store-core-metrics/manager-avatar.png") center / cover no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+
+.sales-dcc-page .hero-profile-tags {
+  flex-wrap: nowrap;
+}
+
+.sales-dcc-page .hero-profile-tag {
+  padding-right: 17px;
+  padding-left: 17px;
+}
+
+.sales-dcc-page .hm-item {
+  overflow: hidden;
+  padding: 13px 17px 13px 13px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+}
+
+.sales-dcc-page .hm-label,
+.sales-dcc-page .hm-val-row {
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.sales-dcc-page .hm-help {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.95);
+  color: #94a3b8;
+  font: 600 12px/12px "PingFang SC", sans-serif;
+  cursor: help;
+}
+
+.sales-dcc-page .hm-trend.hm-trend-risk.up {
+  color: #dc2626;
+}
+
+.sales-dcc-page .hm-trend.hm-trend-risk.down {
+  color: #16a34a;
+}
+
+@media (hover: hover) {
+  .sales-dcc-page .hm-item:hover {
+    border-color: rgba(37, 99, 235, 0.14);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+  }
+}
+
+@media (max-width: 1200px) {
+  .sales-dcc-page .hero-profile,
+  .sales-dcc-page .hero-profile-tags {
+    flex-wrap: wrap;
+  }
+}
 
 /* 与厂端看板一致：Tab 在上，分割线居中，筛选区在下。 */
 .sales-role-dashboard-page .sales-role-nav {
@@ -358,13 +637,10 @@
   outline: none;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scene-more[open]),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scene-more:hover),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scene-more:focus-within),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name em:hover),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name em:focus-within),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover),
-.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within) {
+.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scenes:hover),
+.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-scenes:focus-within),
+.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover),
+.sales-role-dashboard-page .review-insight-list .issue-rule-row:has(.issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within) {
   z-index: 40;
 }
 
@@ -375,9 +651,11 @@
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-name-line {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  width: 100%;
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-tags {
@@ -399,17 +677,21 @@
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-scenes,
 .sales-role-dashboard-page .review-insight-list .issue-rule-tags {
+  flex: 0 0 auto;
   flex-wrap: nowrap;
-  overflow: hidden;
   max-width: 100%;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more {
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes {
   position: relative;
-  z-index: 12;
+  overflow: visible;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary {
+.sales-role-dashboard-page .review-insight-list .issue-rule-tags {
+  overflow: hidden;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more {
   display: inline-flex;
   min-width: 28px;
   min-height: 22px;
@@ -423,16 +705,14 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
-  list-style: none;
+  cursor: default;
+  position: relative;
+  z-index: 12;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary::-webkit-details-marker {
-  display: none;
-}
-
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary:hover,
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more > summary:focus-visible {
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more:hover,
+.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more:focus-visible,
+.sales-role-dashboard-page .review-insight-list .issue-rule-tags > em:focus-visible {
   outline: none;
   border-color: rgba(37, 99, 235, 0.55);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
@@ -450,11 +730,12 @@
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  pointer-events: none;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more[open] .issue-rule-scene-popover,
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more:hover .issue-rule-scene-popover,
-.sales-role-dashboard-page .review-insight-list .issue-rule-scene-more:focus-within .issue-rule-scene-popover {
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes:has(.issue-rule-tags > em:hover) > .issue-rule-scene-popover,
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes:has(.issue-rule-scene-more:hover) > .issue-rule-scene-popover,
+.sales-role-dashboard-page .review-insight-list .issue-rule-scenes:focus-within > .issue-rule-scene-popover {
   display: grid;
   gap: 10px;
 }
@@ -634,9 +915,16 @@
   box-shadow: none;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-name-line > .issue-rule-name-text {
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-copy {
   position: relative;
-  flex: 1 1 auto;
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-copy > .issue-rule-name-text {
+  display: block;
+  width: 100%;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -668,8 +956,8 @@
   cursor: text;
   pointer-events: auto;
 }
-.sales-role-dashboard-page .review-insight-list .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
-.sales-role-dashboard-page .review-insight-list .issue-rule-name-line:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):hover .issue-rule-name-popover,
+.sales-role-dashboard-page .review-insight-list .issue-rule-name-copy:has(strong[data-rule-name-truncated="true"]):focus-within .issue-rule-name-popover {
   display: block;
 }
 
@@ -689,30 +977,16 @@
   white-space: nowrap;
   position: relative;
 }
-.sales-role-dashboard-page .review-insight-list .issue-rule-tag-popover {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  max-width: 240px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
-  color: #162033;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-  word-break: break-word;
-  pointer-events: none;
-}
-.sales-role-dashboard-page .review-insight-list .issue-rule-name em:hover .issue-rule-tag-popover,
-.sales-role-dashboard-page .review-insight-list .issue-rule-name em:focus-within .issue-rule-tag-popover {
-  display: block;
+.sales-role-dashboard-page .review-insight-list .issue-rule-tags > em {
+  width: 30px;
+  min-width: 30px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid #d3dff6;
+  background: rgba(33, 95, 208, 0.1);
+  color: #215fd0;
+  line-height: 12px;
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-rate,
@@ -761,31 +1035,112 @@
   flex-wrap: nowrap;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-pager {
+.sales-role-dashboard-page .review-insight-list .issue-rule-footer {
+  width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  .sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-num:not(.is-compact-visible) {
+    display: none;
+  }
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .dashboard-pagination {
+  width: 100%;
+  min-height: 38px;
+  padding: 0;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .dashboard-pagination-controls {
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-pagination-page-size {
+  position: relative;
+  display: inline-flex;
+  min-width: 116px;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 37px 0 15px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+  color: #617088;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-pagination-page-size::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid #94a3b8;
+  border-bottom: 1.5px solid #94a3b8;
+  transform: translateY(-70%) rotate(45deg);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-group,
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-group {
   display: inline-flex;
   align-items: center;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-group {
+  gap: 10px;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-group {
   gap: 8px;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-page-btn {
-  appearance: none;
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  border: 1px solid rgba(217, 226, 239, 0.9);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--color-text);
-  font: inherit;
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .session-pagination-total,
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .session-page-jump-label,
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .session-page-jump-suffix {
+  color: #617088;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 22.4px;
   white-space: nowrap;
-  cursor: pointer;
 }
 
-.sales-role-dashboard-page .review-insight-list .issue-rule-page-btn:hover:not(:disabled) {
+.sales-role-dashboard-page .review-insight-list .issue-rule-page-btn,
+.sales-role-dashboard-page .review-insight-list .issue-rule-page-number {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #617088;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-page-btn:hover:not(:disabled),
+.sales-role-dashboard-page .review-insight-list .issue-rule-page-number:hover:not(.active) {
   border-color: rgba(37, 99, 235, 0.35);
   color: var(--brand-primary);
 }
@@ -793,6 +1148,45 @@
 .sales-role-dashboard-page .review-insight-list .issue-rule-page-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-page-number.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-select {
+  display: inline-flex;
+  width: 52px;
+  min-width: 52px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 1px solid rgba(207, 217, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-select input {
+  width: 24px;
+  border: 0;
+  background: transparent;
+  color: #162033;
+  font: inherit;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  appearance: textfield;
+}
+
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-select input::-webkit-outer-spin-button,
+.sales-role-dashboard-page .review-insight-list .issue-rule-pagination .page-jump-select input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
 }
 
 .sales-role-dashboard-page .review-insight-list .issue-rule-empty {
