@@ -1,7 +1,7 @@
 /* 销售看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
 (function loadPageRuntime() {
-  const assetVersion = '20260810-sticky-24px-v5';
+  const assetVersion = '20260811-unified-metric-tooltip-v15';
   const scripts = ["../date-filter-component-utils.js","../shared/issue-rule-list.js","../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

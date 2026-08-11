@@ -274,10 +274,13 @@
                 <div class="card-sub">从录音中识别顾问的优势、短板与风险行为。</div>
               </div>
             </div>
-            <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
-              <button type="button" class="issue-insight-tab active" data-issue-insight-tab="advantage" role="tab" aria-selected="true">优势项识别</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="defect" role="tab" aria-selected="false">短板项识别</button>
-              <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+            <div class="issue-insight-controls">
+              <div class="issue-insight-tabs" role="tablist" aria-label="顾问行为洞察类型">
+                <button type="button" class="issue-insight-tab active" data-issue-insight-tab="advantage" role="tab" aria-selected="true">优势项识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="defect" role="tab" aria-selected="false">短板项识别</button>
+                <button type="button" class="issue-insight-tab" data-issue-insight-tab="risk" role="tab" aria-selected="false">风险命中分析</button>
+              </div>
+              <div class="issue-insight-sort-host" id="issue-insight-sort-host"></div>
             </div>
             <div class="issue-detail-section">
               <section class="track issue-detail-card active" id="detail-rule-analysis" role="tabpanel" aria-label="规则命中分析">
@@ -1179,32 +1182,7 @@
 
   const metricBtn = (label) => {
     if (!METRIC_DEFS[label]) return '';
-    return `<button class="metric-def-btn" onclick="event.stopPropagation();window.showMetricDef(this,'${label}')" title="查看指标定义">?</button>`;
-  };
-
-  window.showMetricDef = function(btn, label) {
-    const desc = METRIC_DEFS[label];
-    if (!desc) return;
-    const existing = document.getElementById('metric-def-tip');
-    if (existing) {
-      if (existing.dataset.label === label) { existing.remove(); return; }
-      existing.remove();
-    }
-    const tip = document.createElement('div');
-    tip.id = 'metric-def-tip';
-    tip.className = 'metric-def-tip';
-    tip.dataset.label = label;
-    tip.textContent = desc;
-    factoryPage.appendChild(tip);
-    const rect = btn.getBoundingClientRect();
-    const tipW = 280;
-    let left = rect.left + rect.width / 2 - tipW / 2;
-    if (left < 8) left = 8;
-    if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
-    tip.style.cssText = `left:${left}px;top:${rect.bottom + 6}px;width:${tipW}px`;
-    requestAnimationFrame(() => tip.classList.add('show'));
-    const close = (e) => { if (!tip.contains(e.target)) { tip.remove(); document.removeEventListener('click', close, true); } };
-    setTimeout(() => document.addEventListener('click', close, true), 0);
+    return `<button type="button" class="metric-def-btn" onclick="event.stopPropagation()" aria-label="${label}指标说明">?<span class="metric-def-tooltip" role="tooltip">${METRIC_DEFS[label]}</span></button>`;
   };
 
   window.closeRecordingPlayer = function() {
@@ -4776,7 +4754,15 @@
     return rules.length;
   };
 
-  const renderIssueRulePagination = (totalItems, currentPage, pageCount) => `
+  const getCompactIssueRulePaginationPages = (pageCount, currentPage) => {
+    if (pageCount <= 3) return new Set(Array.from({ length: pageCount }, (_, index) => index + 1));
+    const startPage = Math.min(Math.max(currentPage - 1, 1), pageCount - 2);
+    return new Set([startPage, startPage + 1, startPage + 2]);
+  };
+
+  const renderIssueRulePagination = (totalItems, currentPage, pageCount) => {
+    const compactPages = getCompactIssueRulePaginationPages(pageCount, currentPage);
+    return `
     <div class="issue-rule-footer issue-rule-pagination session-pagination">
       <div class="dashboard-pagination">
         <span class="session-pagination-total">共 ${totalItems} 条</span>
@@ -4785,7 +4771,7 @@
           <div class="page-group" aria-label="规则分页">
             <button type="button" class="issue-rule-page-btn page-arrow" data-page-action="prev" aria-label="上一页" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
             ${Array.from({ length: pageCount }, (_, index) => index + 1).map(page => `
-              <button type="button" class="issue-rule-page-number page-num${page === currentPage ? ' active' : ''}" data-page-number="${page}" aria-label="第 ${page} 页" ${page === currentPage ? 'aria-current="page"' : ''}>${page}</button>
+              <button type="button" class="issue-rule-page-number page-num${page === currentPage ? ' active' : ''}${compactPages.has(page) ? ' is-compact-visible' : ''}" data-page-number="${page}" aria-label="第 ${page} 页" ${page === currentPage ? 'aria-current="page"' : ''}>${page}</button>
             `).join('')}
             <button type="button" class="issue-rule-page-btn page-arrow" data-page-action="next" aria-label="下一页" ${currentPage >= pageCount ? 'disabled' : ''}>›</button>
           </div>
@@ -4796,6 +4782,34 @@
             </span>
             <span class="session-page-jump-suffix">页</span>
           </label>
+        </div>
+      </div>
+    </div>
+  `;
+  };
+
+  const renderIssueRuleSortControl = (state = issueRuleAnalysisState) => `
+    <div class="issue-rule-sort">
+      <span>排序</span>
+      <div class="issue-rule-sort-dropdown">
+        <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+          <span class="issue-rule-sort-value">${escapeHtml(getIssueRuleSortLabel(state.sort))}</span>
+          <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式">
+          <div class="session-menu-option-list">
+            ${ISSUE_RULE_SORT_OPTIONS.map(option => `
+              <button
+                type="button"
+                class="issue-rule-sort-option store-model-option session-menu-option${state.sort === option.value ? ' active' : ''}"
+                data-sort-value="${option.value}"
+                role="option"
+                aria-selected="${state.sort === option.value ? 'true' : 'false'}"
+              ><span>${escapeHtml(option.label)}</span></button>
+            `).join('')}
+          </div>
         </div>
       </div>
     </div>
@@ -4835,30 +4849,7 @@
             <span>搜索规则</span>
             <input class="issue-rule-search-input" type="search" value="${escapeHtml(state.query)}" placeholder="输入规则名称" autocomplete="off">
           </label>
-          <div class="issue-rule-sort">
-            <span>排序</span>
-            <div class="issue-rule-sort-dropdown">
-              <button type="button" class="issue-rule-sort-trigger store-model-trigger session-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                <span class="issue-rule-sort-value">${escapeHtml(getIssueRuleSortLabel(state.sort))}</span>
-                <svg class="session-select-caret" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </button>
-              <div class="issue-rule-sort-panel store-model-panel session-menu-panel" role="listbox" aria-label="排序方式">
-                <div class="session-menu-option-list">
-                  ${ISSUE_RULE_SORT_OPTIONS.map(option => `
-                    <button
-                      type="button"
-                      class="issue-rule-sort-option store-model-option session-menu-option${state.sort === option.value ? ' active' : ''}"
-                      data-sort-value="${option.value}"
-                      role="option"
-                      aria-selected="${state.sort === option.value ? 'true' : 'false'}"
-                    ><span>${escapeHtml(option.label)}</span></button>
-                  `).join('')}
-                </div>
-              </div>
-            </div>
-          </div>
+          ${renderIssueRuleSortControl(state)}
           <button type="button" class="issue-rule-export-btn" ${rules.length ? '' : 'disabled'}>
             <img src="../assets/factory-issue-overview/export-icon-565-5396.svg" alt="" aria-hidden="true">
             <span>导出</span>
@@ -5022,8 +5013,11 @@
       }, 1600);
     });
 
-    const sortTrigger = root.querySelector('.issue-rule-sort-trigger');
-    const sortPanel = root.querySelector('.issue-rule-sort-panel');
+    const sortScope = rootId === 'issue-rule-analysis-root'
+      ? root.closest('.issue-overview-wrapper')
+      : root;
+    const sortTrigger = sortScope?.querySelector('.issue-rule-sort-trigger');
+    const sortPanel = sortScope?.querySelector('.issue-rule-sort-panel');
     const closeSortPanel = () => {
       if (!sortTrigger || !sortPanel) return;
       sortPanel.classList.remove('show');
@@ -5148,8 +5142,11 @@
       document.addEventListener('click', (event) => {
         ['issue-rule-analysis-root', 'issue-sop-analysis-root'].forEach(id => {
           const activeRoot = document.getElementById(id);
-          const activeTrigger = activeRoot?.querySelector('.issue-rule-sort-trigger');
-          const activePanel = activeRoot?.querySelector('.issue-rule-sort-panel');
+          const activeScope = id === 'issue-rule-analysis-root'
+            ? activeRoot?.closest('.issue-overview-wrapper')
+            : activeRoot;
+          const activeTrigger = activeScope?.querySelector('.issue-rule-sort-trigger');
+          const activePanel = activeScope?.querySelector('.issue-rule-sort-panel');
           if (!activeTrigger || !activePanel) return;
           if (activeTrigger.contains(event.target) || activePanel.contains(event.target)) return;
           activePanel.classList.remove('show');
@@ -5162,8 +5159,11 @@
         if (event.key !== 'Escape') return;
         ['issue-rule-analysis-root', 'issue-sop-analysis-root'].forEach(id => {
           const activeRoot = document.getElementById(id);
-          const activeTrigger = activeRoot?.querySelector('.issue-rule-sort-trigger');
-          const activePanel = activeRoot?.querySelector('.issue-rule-sort-panel');
+          const activeScope = id === 'issue-rule-analysis-root'
+            ? activeRoot?.closest('.issue-overview-wrapper')
+            : activeRoot;
+          const activeTrigger = activeScope?.querySelector('.issue-rule-sort-trigger');
+          const activePanel = activeScope?.querySelector('.issue-rule-sort-panel');
           if (!activeTrigger || !activePanel) return;
           activePanel.classList.remove('show');
           activeTrigger.classList.remove('active');
@@ -5176,6 +5176,8 @@
   const renderIssueRuleAnalysis = (focusSearch = false) => {
     const root = document.getElementById('issue-rule-analysis-root');
     if (!root) return;
+    const sortHost = document.getElementById('issue-insight-sort-host');
+    if (sortHost) sortHost.innerHTML = renderIssueRuleSortControl(issueRuleAnalysisState);
     const config = getActiveIssueRuleConfig();
     const selectedRule = getActiveIssueRule();
     const rules = getVisibleIssueRules();

@@ -1,7 +1,7 @@
 /* 门店看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
 (function loadPageRuntime() {
-  const version = '20260810-sticky-24px-v5';
+  const version = '20260811-unified-metric-tooltip-v6';
   const scripts = [`../dashboard-filter-utils.js?v=${version}`, `../date-filter-component-utils.js?v=${version}`, `../store-date-control-utils.js?v=${version}`, `../shared/issue-rule-list.js?v=${version}`, `../app-runtime.js?v=${version}`];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

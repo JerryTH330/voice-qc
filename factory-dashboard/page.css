@@ -1,4 +1,4 @@
 /* 厂端看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260810-responsive-rule-tags-v2");
-@import url("../app-inline.css?v=20260810-responsive-rule-tags-v2");
-@import url("./factory-dashboard.css?v=20260810-responsive-rule-tags-v2");
+@import url("../voice-qc-admin.css?v=20260811-unified-metric-tooltip-v10");
+@import url("../app-inline.css?v=20260811-unified-metric-tooltip-v10");
+@import url("./factory-dashboard.css?v=20260811-unified-metric-tooltip-v10");
