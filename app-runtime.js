@@ -7558,6 +7558,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerLeadIssuedEndDate: '',
         customerFirstRecordingStartDate: '',
         customerFirstRecordingEndDate: '',
+        customerLatestRecordingStartDate: '',
+        customerLatestRecordingEndDate: '',
         startDate: '2026-03-08',
         endDate: '2026-03-12'
       }
@@ -9674,6 +9676,28 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
+      function getLeadsCustomerDateFilterConfig(menuKey) {
+        if (menuKey === 'customerFirstRecordingDate') {
+          return {
+            startDateKey: 'customerFirstRecordingStartDate',
+            endDateKey: 'customerFirstRecordingEndDate',
+            dateField: 'firstRecordingAt'
+          }
+        }
+        if (menuKey === 'customerLatestRecordingDate') {
+          return {
+            startDateKey: 'customerLatestRecordingStartDate',
+            endDateKey: 'customerLatestRecordingEndDate',
+            dateField: 'latestRecordingAt'
+          }
+        }
+        return {
+          startDateKey: 'customerLeadIssuedStartDate',
+          endDateKey: 'customerLeadIssuedEndDate',
+          dateField: 'firstLeadIssuedAt'
+        }
+      }
+
       function renderLeadsOptionMenu(filterKey, options, selectedValue, extraClass = '') {
         return `
           <div class="session-menu-panel ${extraClass}" data-leads-menu-panel="${escapeHtml(filterKey)}">
@@ -10041,6 +10065,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return buildLeadCustomerAggregateRecords(leadRecords).filter((item) => {
           const leadIssuedDate = String(item.firstLeadIssuedAt || '').slice(0, 10)
           const firstRecordingDate = String(item.firstRecordingAt || '').slice(0, 10)
+          const latestRecordingDate = String(item.latestRecordingAt || '').slice(0, 10)
           const brandMatch = leadsFilterState.brand === '全部'
             || item.aggregateBrandSet?.has(leadsFilterState.brand)
           const organizationMatch = leadsFilterState.organization === '全部组织'
@@ -10064,8 +10089,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const leadIssuedEndMatch = !leadsFilterState.customerLeadIssuedEndDate || leadIssuedDate <= leadsFilterState.customerLeadIssuedEndDate
           const firstRecordingStartMatch = !leadsFilterState.customerFirstRecordingStartDate || firstRecordingDate >= leadsFilterState.customerFirstRecordingStartDate
           const firstRecordingEndMatch = !leadsFilterState.customerFirstRecordingEndDate || firstRecordingDate <= leadsFilterState.customerFirstRecordingEndDate
+          const hasLatestRecordingDateFilter = Boolean(leadsFilterState.customerLatestRecordingStartDate || leadsFilterState.customerLatestRecordingEndDate)
+          const latestRecordingMatch = !hasLatestRecordingDateFilter || Boolean(latestRecordingDate)
+            && (!leadsFilterState.customerLatestRecordingStartDate || latestRecordingDate >= leadsFilterState.customerLatestRecordingStartDate)
+            && (!leadsFilterState.customerLatestRecordingEndDate || latestRecordingDate <= leadsFilterState.customerLatestRecordingEndDate)
 
-          return brandMatch && organizationMatch && customerStatusMatch && leadCoverageMatch && storeCoverageMatch && crossStoreMatch && multiLeadMatch && leadCountMatch && storeCountMatch && audioCountMatch && leadIssuedStartMatch && leadIssuedEndMatch && firstRecordingStartMatch && firstRecordingEndMatch
+          return brandMatch && organizationMatch && customerStatusMatch && leadCoverageMatch && storeCoverageMatch && crossStoreMatch && multiLeadMatch && leadCountMatch && storeCountMatch && audioCountMatch && leadIssuedStartMatch && leadIssuedEndMatch && firstRecordingStartMatch && firstRecordingEndMatch && latestRecordingMatch
         })
       }
 
@@ -10169,7 +10198,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <th style="min-width: 130px; width: 130px;">最新线索状态</th>
               <th style="min-width: 170px; width: 170px;">线索首次下发时间</th>
               <th style="min-width: 170px; width: 170px;">首次录音时间</th>
-              <th style="min-width: 160px; width: 160px;">最近联系时间</th>
+              <th style="min-width: 170px; width: 170px;">最近录音时间</th>
               <th style="min-width: 360px; width: 360px;">关联概况</th>
               <th style="min-width: 100px; width: 100px;">操作</th>
             </tr>
@@ -10249,6 +10278,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const statusUpdatedTime = getLeadStatusUpdatedTime(item)
           const leadIssuedTime = parseDateTimeValue(item.leadIssuedAt || item.recordStartTime)
           const firstRecordingTime = hasRecord ? recordTime : 0
+          const latestRecordingTime = hasRecord ? recordTime : 0
 
           if (!customerMap.has(key)) {
             const recordStoreSet = new Set()
@@ -10283,6 +10313,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               firstLeadIssuedAt: item.leadIssuedAt || item.recordStartTime,
               aggregateEarliestRecordingTime: firstRecordingTime,
               firstRecordingAt: hasRecord ? item.recordStartTime : '',
+              aggregateLatestRecordingTime: latestRecordingTime,
+              latestRecordingAt: hasRecord ? item.recordStartTime : '',
               aggregateEarliestTime: recordTime,
               aggregateHasRecordCount: hasRecord ? 1 : 0
             })
@@ -10351,6 +10383,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           if (firstRecordingTime > 0 && (!aggregated.aggregateEarliestRecordingTime || firstRecordingTime < aggregated.aggregateEarliestRecordingTime)) {
             aggregated.aggregateEarliestRecordingTime = firstRecordingTime
             aggregated.firstRecordingAt = item.recordStartTime
+          }
+
+          if (latestRecordingTime > aggregated.aggregateLatestRecordingTime) {
+            aggregated.aggregateLatestRecordingTime = latestRecordingTime
+            aggregated.latestRecordingAt = item.recordStartTime
           }
 
           if (recordTime < aggregated.aggregateEarliestTime) {
@@ -10430,6 +10467,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ${renderLeadsMenuControl('customerStatus', '最新线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
             ${renderLeadsCustomerAggregateDateControl('customerLeadIssuedDate', '线索首次下发时间', 'customerLeadIssuedStartDate', 'customerLeadIssuedEndDate')}
             ${renderLeadsCustomerAggregateDateControl('customerFirstRecordingDate', '首次录音时间', 'customerFirstRecordingStartDate', 'customerFirstRecordingEndDate')}
+            ${renderLeadsCustomerAggregateDateControl('customerLatestRecordingDate', '最近录音时间', 'customerLatestRecordingStartDate', 'customerLatestRecordingEndDate')}
             <div class="leads-filter-inline-actions">
               <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
             </div>
@@ -10567,7 +10605,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               const multiLeadText = Number(item.aggregateLeadCount) >= 2 ? '是' : '否'
               const firstLeadIssuedDisplay = item.firstLeadIssuedAt || '–'
               const firstRecordingDisplay = item.firstRecordingAt || '–'
-              const lastContactDisplay = item.lastContact || '–'
+              const latestRecordingDisplay = item.latestRecordingAt || '–'
               const shouldOpenCustomerDetail = item.crossStore || Number(item.aggregateLeadCount) > 1
               const customerDetailDisabled = Number(item.aggregateAudioCount) <= 0
               const detailActionMarkup = customerDetailDisabled
@@ -10604,7 +10642,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <td><span class="cv-status-pill cv-status-${escapeHtml(statusClass)}">${escapeHtml(item.leadStatus)}</span></td>
                 <td class="cv-time-cell">${escapeHtml(firstLeadIssuedDisplay)}</td>
                 <td class="cv-time-cell">${escapeHtml(firstRecordingDisplay)}</td>
-                <td class="cv-time-cell">${escapeHtml(lastContactDisplay)}</td>
+                <td class="cv-time-cell">${escapeHtml(latestRecordingDisplay)}</td>
                 <td class="cv-association-summary-cell">${escapeHtml(item.associationSummary || '–')}</td>
                 <td>${detailActionMarkup}</td>
               </tr>
@@ -10715,11 +10753,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.dateViewMonth = Number(leadsMenuState.dateDraftStartDate.slice(5, 7))
             }
 
-            if (nextMenu === 'customerLeadIssuedDate' || nextMenu === 'customerFirstRecordingDate') {
-              const isFirstRecordingDate = nextMenu === 'customerFirstRecordingDate'
-              const startDateKey = isFirstRecordingDate ? 'customerFirstRecordingStartDate' : 'customerLeadIssuedStartDate'
-              const endDateKey = isFirstRecordingDate ? 'customerFirstRecordingEndDate' : 'customerLeadIssuedEndDate'
-              const anchorDate = getLeadCustomerDateAnchorDate(isFirstRecordingDate ? 'firstRecordingAt' : 'firstLeadIssuedAt')
+            if (nextMenu === 'customerLeadIssuedDate' || nextMenu === 'customerFirstRecordingDate' || nextMenu === 'customerLatestRecordingDate') {
+              const { startDateKey, endDateKey, dateField } = getLeadsCustomerDateFilterConfig(nextMenu)
+              const anchorDate = getLeadCustomerDateAnchorDate(dateField)
               const fallbackDateValue = formatSessionDateValue(anchorDate)
               const endDate = leadsFilterState[endDateKey] || fallbackDateValue
               leadsMenuState.customerDateActiveField = 'startDate'
@@ -10932,9 +10968,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               return
             }
 
-            const dateField = leadsMenuState.openMenu === 'customerFirstRecordingDate'
-              ? 'firstRecordingAt'
-              : 'firstLeadIssuedAt'
+            const { dateField } = getLeadsCustomerDateFilterConfig(leadsMenuState.openMenu)
             const anchorDateValue = formatSessionDateValue(getLeadCustomerDateAnchorDate(dateField))
             const { startDate, endDate } = getLeadCustomerRangeValues(shortcut, anchorDateValue)
             leadsMenuState.customerDateDraftStartDate = startDate
@@ -10959,9 +10993,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-leads-customer-date-apply]').forEach((node) => {
           node.addEventListener('click', () => {
-            const isFirstRecordingDate = node.dataset.leadsCustomerDateApply === 'customerFirstRecordingDate'
-            const startDateKey = isFirstRecordingDate ? 'customerFirstRecordingStartDate' : 'customerLeadIssuedStartDate'
-            const endDateKey = isFirstRecordingDate ? 'customerFirstRecordingEndDate' : 'customerLeadIssuedEndDate'
+            const { startDateKey, endDateKey } = getLeadsCustomerDateFilterConfig(node.dataset.leadsCustomerDateApply)
             leadsFilterState[startDateKey] = leadsMenuState.customerDateDraftStartDate
             leadsFilterState[endDateKey] = leadsMenuState.customerDateDraftEndDate
             leadsMenuState.openMenu = null
