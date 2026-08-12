@@ -1,5 +1,11 @@
 /* Generated from /Users/linxianxin/Downloads/厂端看板/factory-v2.* for native SPA route. */
 (function () {
+  const buildFactoryMockRecordingId = (sequence = 0) => `2087346${String(17925713920 + Number(sequence || 0)).padStart(12, '0')}`;
+  const normalizeFactoryMockRecordingId = (value) => {
+    const safeValue = String(value || '').trim();
+    const legacyMatch = safeValue.match(/^R-(\d+)$/i);
+    return legacyMatch ? buildFactoryMockRecordingId(700000 + Number(legacyMatch[1])) : safeValue;
+  };
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const FACTORY_HERO_UTILS = window.__factoryHeroUtils || {};
   const ISSUE_RULE_ANALYSIS_UTILS = window.__factoryIssueRuleAnalysisUtils || {};
@@ -1191,6 +1197,7 @@
   };
 
   window.openRecordingPlayer = function(id) {
+    const displayId = normalizeFactoryMockRecordingId(id);
     const existing = document.getElementById('rec-modal-overlay');
     if (existing) existing.remove();
     const overlay = document.createElement('div');
@@ -1201,7 +1208,7 @@
         <div class="rec-modal-head">
           <div>
             <div class="rec-modal-eyebrow">录音信息及试听</div>
-            <div class="rec-modal-title">${id}</div>
+            <div class="rec-modal-title">${displayId}</div>
           </div>
           <button class="rec-modal-close" onclick="closeRecordingPlayer()" aria-label="关闭">×</button>
         </div>
@@ -5368,7 +5375,7 @@
     if (existing) existing.remove();
 
     const fallbackTimes = ['3-25 15:20', '3-25 11:05', '3-24 16:40', '3-24 10:15', '3-23 14:20'];
-    const baseId = type === 'risk' ? 2053659125047042048n : 2052659125047042048n;
+    const baseId = type === 'risk' ? 2087346132915122176n : 2087346017925713920n;
     const records = (issue.recordings || []).map((record, recordIndex) => ({
       advisor: record.advisor,
       time: record.time || fallbackTimes[recordIndex % fallbackTimes.length],

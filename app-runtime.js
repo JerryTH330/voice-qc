@@ -7,6 +7,16 @@ const escapeInsightTop5Html = (value) => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
+// 正式环境的录音 ID 和线索 ID 均为 19 位纯数字。假数据始终按字符串生成，
+// 避免超过 JavaScript 安全整数范围后出现末位精度丢失。
+const buildMockRecordingId = (sequence = 0) => `2087346${String(17925713920 + Number(sequence || 0)).padStart(12, '0')}`;
+const buildMockLeadId = (sequence = 0) => `2087208${String(482066334067 + Number(sequence || 0)).padStart(12, '0')}`;
+const normalizeMockRecordingId = (value) => {
+  const safeValue = String(value || '').trim();
+  const legacyMatch = safeValue.match(/^R-(\d+)$/i);
+  return legacyMatch ? buildMockRecordingId(700000 + Number(legacyMatch[1])) : safeValue;
+};
+
 function renderSharedInsightTop5Rank(index, options = {}) {
   const {
     baseClass = 'issue-rank',
@@ -826,7 +836,7 @@ function initStoreDashboardPage() {
   };
 
   const getRecordingDetailUrl = (id, rec = {}) => {
-    const dbRecord = RECORDING_DB[id] || {};
+    const dbRecord = RECORDING_DB[rec.legacyId || id] || {};
     const detail = { ...dbRecord, ...rec };
     const url = new URL(window.location.href);
     url.searchParams.set('route', 'session-detail');
@@ -841,9 +851,10 @@ function initStoreDashboardPage() {
   };
 
   const getRecordingDetailAttrs = (recording) => {
-    const id = recording?.id || '';
+    const legacyId = recording?.id || '';
+    const id = normalizeMockRecordingId(legacyId);
     return [
-      `href="${escapeAttr(getRecordingDetailUrl(id, recording))}"`,
+      `href="${escapeAttr(getRecordingDetailUrl(id, { ...recording, legacyId }))}"`,
       'target="_blank"',
       'rel="noopener noreferrer"',
       `aria-label="打开录音详情 ${escapeAttr(id)}"`
@@ -1604,7 +1615,7 @@ function initStoreDashboardPage() {
         advisor: person.name,
         customer: `${person.name}相关客户${sceneIndex + 1}-${recordingIndex + 1}`,
         time: `3-${25 - ((ruleIndex + personIndex + sceneIndex + recordingIndex) % 4)} ${String(9 + ((ruleIndex + personIndex + recordingIndex) % 8)).padStart(2, '0')}:${String((ruleIndex * 7 + personIndex * 13 + sceneIndex * 5 + recordingIndex * 9) % 60).padStart(2, '0')}`,
-        id: `SOP-${String(ruleIndex + 1).padStart(3, '0')}-${String(personIndex + 1).padStart(2, '0')}-${String(sceneIndex + 1).padStart(2, '0')}-${String(recordingIndex + 1).padStart(2, '0')}`,
+        id: buildMockRecordingId(10000 + ruleIndex * 1000 + personIndex * 100 + sceneIndex * 10 + recordingIndex),
         sceneKey,
         scene: getSceneLabel(sceneKey)
       }))
@@ -3295,7 +3306,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const recsHtml = tag.recordings ? tag.recordings.map(r =>
       `<a class="rec-link" ${getRecordingDetailAttrs(r)} onclick="event.stopPropagation()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${r.id}</span>
+        <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${normalizeMockRecordingId(r.id)}</span>
       </a>`).join('') : '';
     return `<div class="tag-card ${cssClass}" onclick="event.stopPropagation();this.classList.toggle('tag-expanded')">
       <div class="tag-card-header">
@@ -3407,7 +3418,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const recsHtml = t.recordings ? t.recordings.map(r =>
           `<a class="rec-link" ${getRecordingDetailAttrs(r)} onclick="event.stopPropagation()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${r.id}</span>
+            <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${normalizeMockRecordingId(r.id)}</span>
           </a>`).join('') : '';
         const detailHtml = hasDetail ? `
           <div class="tag-card-detail">
@@ -4005,7 +4016,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const recLinks = (recs) => recs.map(r =>
     `<a class="rec-link" ${getRecordingDetailAttrs(r)} onclick="event.stopPropagation()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${r.id}</span>
+      <span class="rec-advisor">${r.advisor}</span><span class="rec-time">${r.time}</span><span class="rec-id">${normalizeMockRecordingId(r.id)}</span>
     </a>`).join('');
   const storeIssueAnimationFrames = new Set();
   const parseStoreIssuePercent = (value) => Number.parseFloat(String(value || '').replace('%', '')) || 0;
@@ -4347,7 +4358,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           time: sceneIndex === 0 && recordingIndex === 0 && seed.time
             ? seed.time
             : `3-${25 - ((ruleIndex + personIndex + sceneIndex + recordingIndex) % 4)} ${String(9 + ((ruleIndex + personIndex + recordingIndex) % 8)).padStart(2, '0')}:${String((ruleIndex * 7 + personIndex * 13 + sceneIndex * 5 + recordingIndex * 9) % 60).padStart(2, '0')}`,
-          id: `${type.toUpperCase()}-${String(ruleIndex + 1).padStart(3, '0')}-${String(personIndex + 1).padStart(2, '0')}-${String(sceneIndex + 1).padStart(2, '0')}-${String(recordingIndex + 1).padStart(2, '0')}`,
+          id: buildMockRecordingId(200000 + ruleIndex * 1000 + personIndex * 100 + sceneIndex * 10 + recordingIndex),
           sceneKey,
           scene: getSceneLabel(sceneKey)
         }))
@@ -5289,7 +5300,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     const allAdvisors = ['林涛', '张华', '王萌', '赵强', '李昱', '韩宇', '许明', '陈亮'];
     const fallbackTimes = ['3-25 15:20', '3-25 11:05', '3-24 16:40', '3-24 10:15', '3-23 14:20'];
-    const baseId = type === 'risk' ? 2053659125047042048n : 2052659125047042048n;
+    const baseId = type === 'risk' ? 2087346132915122176n : 2087346017925713920n;
     const advisorOrgMap = {
       '林涛': '华南大区-粤桂战区-广州店-林涛',
       '张华': '华南大区-粤桂战区-深圳店-张华',
@@ -5531,8 +5542,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       ],
       strategy: '建议提取李昱的「需求挖掘 → 竞品对比 → 试驾邀约」三段式话术录制为培训视频，作为全店标准 SOP 示范。',
       recordings: [
-        { advisor: '李昱', time: '3-25 10:30', id: 'R-0401', label: '深度需求挖掘样本' },
-        { advisor: '李昱', time: '3-25 16:10', id: 'R-0313', label: '金融方案引导下订样本' }
+        { advisor: '李昱', time: '3-25 10:30', id: buildMockRecordingId(700401), label: '深度需求挖掘样本' },
+        { advisor: '李昱', time: '3-25 16:10', id: buildMockRecordingId(700313), label: '金融方案引导下订样本' }
       ]
     },
     {
@@ -5540,9 +5551,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       advisor: '林涛',
       summary: '昨日 3 条录音触发服务风险标签（未及时致歉×1、明显不耐烦×1、与客户争执×1），建议今日面谈辅导。',
       reasons: [
-        { label: '出现问题，或是客户不满时，未及时表示歉意', desc: '在 R-0283 中客户对前次跟进存在明显不满，销售未第一时间道歉安抚，直接进入促单沟通。' },
-        { label: '明显不耐烦、催促打断客户', desc: '在 R-0310 中多次抢话并催促客户表态，导致客户表达空间被压缩，沟通氛围明显紧张。' },
-        { label: '与客户争执、冲突', desc: '在 R-0314 中面对客户异议时持续辩解并提高语气，出现对抗式沟通苗头。' }
+        { label: '出现问题，或是客户不满时，未及时表示歉意', desc: `在 ${buildMockRecordingId(700283)} 中客户对前次跟进存在明显不满，销售未第一时间道歉安抚，直接进入促单沟通。` },
+        { label: '明显不耐烦、催促打断客户', desc: `在 ${buildMockRecordingId(700310)} 中多次抢话并催促客户表态，导致客户表达空间被压缩，沟通氛围明显紧张。` },
+        { label: '与客户争执、冲突', desc: `在 ${buildMockRecordingId(700314)} 中面对客户异议时持续辩解并提高语气，出现对抗式沟通苗头。` }
       ],
       coachingPlan: [
         { topic: '服务场景先致歉', action: '遇到客户表达不满、抱怨或指出问题时，先用一句明确致歉完成情绪安抚，再进入解释和解决方案。' },
@@ -5550,9 +5561,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         { topic: '冲突降温表达', action: '使用「我理解您的顾虑 / 我先确认一下您的意思」等降温句式，禁止和客户正面争执。' }
       ],
       recordings: [
-        { advisor: '林涛', time: '3-23 15:30', id: 'R-0283', label: '未及时致歉' },
-        { advisor: '林涛', time: '3-25 14:00', id: 'R-0310', label: '明显不耐烦' },
-        { advisor: '林涛', time: '3-25 16:20', id: 'R-0314', label: '与客户争执风险' }
+        { advisor: '林涛', time: '3-23 15:30', id: buildMockRecordingId(700283), label: '未及时致歉' },
+        { advisor: '林涛', time: '3-25 14:00', id: buildMockRecordingId(700310), label: '明显不耐烦' },
+        { advisor: '林涛', time: '3-25 16:20', id: buildMockRecordingId(700314), label: '与客户争执风险' }
       ]
     }
   ];
@@ -6766,7 +6777,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const sessionRecordSeeds = [
         {
-          id: 'REC-20260313-0913',
+          id: buildMockRecordingId(0),
           scene: '上海浦东门店 / 邀约场景',
           uploadTime: '2026-03-13 09:13',
           status: '失败',
@@ -6778,7 +6789,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorId: 'ADV-10021',
           advisorName: '李凯',
           advisorPhone: '138****8001',
-          leadId: 'LD-20260313-318',
+          leadId: buildMockLeadId(0),
           customerName: '王先生',
           customerPhone: '139****1268',
           qualifiedRate: '82%',
@@ -6788,7 +6799,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           stage: '试驾'
         },
         {
-          id: 'REC-20260313-0861',
+          id: buildMockRecordingId(1),
           scene: '苏州园区门店 / 试驾跟进',
           uploadTime: '2026-03-13 08:21',
           status: '已完成',
@@ -6800,7 +6811,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorId: 'ADV-10034',
           advisorName: '周倩',
           advisorPhone: '139****7332',
-          leadId: 'LD-20260313-287',
+          leadId: buildMockLeadId(1),
           customerName: '陈女士',
           customerPhone: '137****4158',
           qualifiedRate: '96%',
@@ -6810,7 +6821,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           stage: '邀约'
         },
         {
-          id: 'REC-20260312-2411',
+          id: buildMockRecordingId(2),
           scene: '杭州拱墅门店 / 价格异议',
           uploadTime: '2026-03-12 16:48',
           status: '已完成',
@@ -6822,7 +6833,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorId: 'ADV-10056',
           advisorName: '张帆',
           advisorPhone: '136****1886',
-          leadId: 'LD-20260312-116',
+          leadId: buildMockLeadId(2),
           customerName: '赵女士',
           customerPhone: '186****0922',
           qualifiedRate: '88%',
@@ -6832,7 +6843,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           stage: '试驾PDC'
         },
         {
-          id: 'REC-20260312-2375',
+          id: buildMockRecordingId(3),
           scene: '南京建邺门店 / 到店接待',
           uploadTime: '2026-03-12 15:07',
           status: '失败',
@@ -6844,7 +6855,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorId: 'ADV-10009',
           advisorName: '吴晨',
           advisorPhone: '135****1902',
-          leadId: 'LD-20260312-094',
+          leadId: buildMockLeadId(3),
           customerName: '刘先生',
           customerPhone: '150****3821',
           qualifiedRate: '67%',
@@ -6854,7 +6865,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           stage: '到店接待'
         },
         {
-          id: 'REC-20260311-9926',
+          id: buildMockRecordingId(4),
           scene: '合肥滨湖门店 / 回访成交',
           uploadTime: '2026-03-11 18:05',
           status: '已完成',
@@ -6866,7 +6877,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           advisorId: 'ADV-10073',
           advisorName: '许诺',
           advisorPhone: '137****2201',
-          leadId: 'LD-20260311-062',
+          leadId: buildMockLeadId(4),
           customerName: '孙先生',
           customerPhone: '188****6739',
           qualifiedRate: '98%',
@@ -6963,14 +6974,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const duration = `${padNumber(6 + ((index + offset) % 9))}:${padNumber((12 + index * 9 + offset * 5) % 60)}`
             generated.push({
               ...item,
-              id: `REC-202603${padNumber(day)}-${padNumber(hour)}${padNumber(minute)}${padNumber(index + offset)}`,
+              id: buildMockRecordingId(100 + index * 20 + offset),
               recordStartTime: getSessionRecordStartTime(uploadTime, duration, 2 + ((index + offset) % 5)),
               uploadTime,
               status,
               duration,
               advisorId: `ADV-${10000 + index * 20 + offset}`,
               advisorPhone: `13${8 + ((index + offset) % 2)}****${phoneSuffix}`,
-              leadId: `LD-202603${padNumber(day)}-${200 + index * 17 + offset}`,
+              leadId: buildMockLeadId(100 + index * 20 + offset),
               customerName,
               customerPhone: `13${7 + ((index + offset) % 2)}****${phoneSuffix}`,
               qualifiedRate: `${62 + ((index * 9 + offset * 4) % 37)}%`,
@@ -6988,7 +6999,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const leadRecordSeeds = [
         {
-          id: 'LEAD-20260312-118',
+          id: buildMockLeadId(1000),
           store: '上海浦东门店',
           organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
           customerPhone: '139****1268',
@@ -7002,7 +7013,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           owner: '李凯'
         },
         {
-          id: 'LEAD-20260311-102',
+          id: buildMockLeadId(1001),
           store: '苏州园区门店',
           organizationPath: '全国 > 华东大区 > 江苏战区 > 苏州园区门店',
           customerPhone: '137****4158',
@@ -7016,7 +7027,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           owner: '周衡'
         },
         {
-          id: 'LEAD-20260310-087',
+          id: buildMockLeadId(1002),
           store: '杭州拱墅门店',
           organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州拱墅门店',
           customerPhone: '186****0922',
@@ -7030,7 +7041,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           owner: '王诚'
         },
         {
-          id: 'LEAD-20260309-221',
+          id: buildMockLeadId(1003),
           store: '南京建邺门店',
           organizationPath: '全国 > 华东大区 > 江苏战区 > 南京建邺门店',
           customerPhone: '150****3821',
@@ -7044,7 +7055,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           owner: '刘青'
         },
         {
-          id: 'LEAD-20260308-402',
+          id: buildMockLeadId(1004),
           store: '合肥滨湖门店',
           organizationPath: '全国 > 华东大区 > 安徽战区 > 合肥滨湖门店',
           customerPhone: '188****6739',
@@ -7223,6 +7234,91 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const leadOwners = ['李凯', '周衡', '王诚', '刘青', '韩深', '陈璐', '顾明', '赵宁', '何川', '沈楠', '徐舟', '唐韵']
         const leadCustomerNames = ['王巍娴', '王慕瑶', '吴耀锋', '冯靖宇', '钱泺西', '林若彤', '郑昱辰', '蒋沐晴', '邵宇泽', '顾芮宁', '程嘉屹', '姚可欣']
 
+        generated.push(normalizeLeadRecord({
+          id: buildMockLeadId(9000),
+          store: '上海浦东门店',
+          organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
+          customerPhone: '139****3488',
+          customerName: '沈知远',
+          recordStartTime: '2026-03-12 20:30',
+          leadIssuedAt: '2026-02-21 09:20',
+          lastContact: '2026-03-12 20:45',
+          recordingCount: 21,
+          validRecording: '是',
+          sopScore: '86%',
+          carSeries: '传祺 M8',
+          stage: '试驾',
+          owner: '李凯',
+          intent: 'H',
+          leadStatus: '跟进中',
+          aiLeadValidity: '有效',
+          isMultiNodeJourneyDemo: true,
+          summary: '客户已完成多轮邀约、到店和试驾沟通，对传祺 M8 的空间与静谧性较满意，当前重点关注金融方案和置换补贴。',
+          action: '持续跟进金融方案和置换政策，推动客户确认下定时间'
+        }, 0))
+
+        ;[
+          {
+            id: buildMockLeadId(9010),
+            store: '上海浦东门店',
+            organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
+            leadIssuedAt: '2026-03-09 09:20',
+            recordStartTime: '2026-03-12 18:40',
+            lastContact: '2026-03-12 18:55',
+            recordingCount: 8,
+            stage: '试驾',
+            owner: '李凯'
+          },
+          {
+            id: buildMockLeadId(9011),
+            store: '杭州西湖门店',
+            organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州西湖门店',
+            leadIssuedAt: '2026-03-09 10:10',
+            recordStartTime: '2026-03-11 15:20',
+            lastContact: '2026-03-11 15:38',
+            recordingCount: 7,
+            stage: '到店接待',
+            owner: '周衡'
+          },
+          {
+            id: buildMockLeadId(9012),
+            store: '杭州滨江门店',
+            organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州滨江门店',
+            leadIssuedAt: '2026-03-10 08:50',
+            recordStartTime: '2026-03-10 16:10',
+            lastContact: '2026-03-10 16:28',
+            recordingCount: 6,
+            stage: '邀约',
+            owner: '陈璐'
+          },
+          {
+            id: buildMockLeadId(9013),
+            store: '杭州西湖门店',
+            organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州西湖门店',
+            leadIssuedAt: '2026-03-10 11:30',
+            recordStartTime: '2026-03-10 11:30',
+            lastContact: '2026-03-10 11:30',
+            recordingCount: 0,
+            validRecording: '否',
+            stage: '未跟进',
+            owner: '周衡'
+          }
+        ].forEach((item, index) => {
+          generated.push(normalizeLeadRecord({
+            ...item,
+            customerPhone: '138****6098',
+            customerName: '林嘉远',
+            validRecording: Number(item.recordingCount) > 0 ? '是' : '否',
+            leadStatus: Number(item.recordingCount) > 0 ? '跟进中' : '未跟进',
+            aiLeadValidity: Number(item.recordingCount) > 0 ? '有效' : '暂未分析',
+            carSeries: '传祺 M8',
+            intent: index === 0 ? 'H' : 'A',
+            isMultiNodeCustomerDemo: true,
+            summary: '客户在多家门店持续了解传祺 M8，重点比较空间、试驾体验、金融免息和置换补贴。',
+            action: '统一多门店跟进信息，确认最终购车门店和成交方案'
+          }, index + 1))
+        })
+
         leadRecordSeeds.forEach((item, index) => {
           generated.push(normalizeLeadRecord(item, index))
 
@@ -7237,7 +7333,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
             generated.push(normalizeLeadRecord({
               ...item,
-              id: `LEAD-202603${padNumber(day)}-${300 + index * 23 + offset}`,
+              id: buildMockLeadId(1100 + index * 20 + offset),
               customerPhone: `13${7 + ((index + offset) % 3)}****${phoneSuffix}`,
               customerName: leadCustomerNames[(index * 2 + offset) % leadCustomerNames.length],
               recordStartTime,
@@ -7252,7 +7348,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
 
         generated.push(normalizeLeadRecord({
-          id: 'LEAD-DEMO-20260312-001',
+          id: buildMockLeadId(1200),
           store: '上海浦东门店',
           organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
           customerPhone: '136****0000',
@@ -7269,7 +7365,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         ;[
           {
-            id: 'LEAD-SINGLE-STORE-DEMO-001',
+            id: buildMockLeadId(1210),
             store: '上海浦东门店',
             organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
             leadIssuedAt: '2026-03-16 09:20',
@@ -7281,7 +7377,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             owner: '李凯'
           },
           {
-            id: 'LEAD-SINGLE-STORE-DEMO-002',
+            id: buildMockLeadId(1211),
             store: '上海浦东门店',
             organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
             leadIssuedAt: '2026-03-17 13:40',
@@ -7304,7 +7400,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         ;[
           {
-            id: 'LEAD-CUSTOMER-DEMO-001',
+            id: buildMockLeadId(1220),
             store: '上海浦东门店',
             organizationPath: '全国 > 华东大区 > 上海战区 > 上海浦东门店',
             leadIssuedAt: '2026-03-13 09:13',
@@ -7316,7 +7412,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             owner: '李凯'
           },
           {
-            id: 'LEAD-CUSTOMER-DEMO-002',
+            id: buildMockLeadId(1221),
             store: '杭州西湖门店',
             organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州西湖门店',
             leadIssuedAt: '2026-03-14 10:20',
@@ -7328,7 +7424,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             owner: '周衡'
           },
           {
-            id: 'LEAD-CUSTOMER-DEMO-003',
+            id: buildMockLeadId(1222),
             store: '杭州滨江门店',
             organizationPath: '全国 > 华东大区 > 浙江战区 > 杭州滨江门店',
             leadIssuedAt: '2026-03-15 09:40',
@@ -7345,15 +7441,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customerPhone: '138****2751',
             customerName: '郑昱辰',
             leadStatus: '跟进中',
-            carSeries: '传祺 M8'
+            carSeries: '传祺 M8',
+            isMultiStoreCustomerDemo: true
           }, leadRecordSeeds.length + index + 1))
         })
 
-        const sorted = generated.sort((a, b) => parseDateTimeValue(b.recordStartTime) - parseDateTimeValue(a.recordStartTime))
-        if (sorted.length > 0) {
-          sorted[0].isFirstLeadRecord = true
-        }
-        return sorted
+        return generated.sort((a, b) => {
+          const demoPriority = Number(Boolean(b.isMultiNodeJourneyDemo)) - Number(Boolean(a.isMultiNodeJourneyDemo))
+          return demoPriority || parseDateTimeValue(b.recordStartTime) - parseDateTimeValue(a.recordStartTime)
+        })
       }
 
       const leadRecords = buildLeadRecords()
@@ -8880,6 +8976,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function rerenderSessionFilters() {
         renderSessionFilters()
         bindSessionFilterEvents()
+        if (!sessionFilterState.collapsed) {
+          pageHost.querySelectorAll('#sessionFilterControls .session-filter-extra').forEach((node) => {
+            node.classList.add('is-visible')
+          })
+        }
       }
 
       function renderSessionCollapseActionButton() {
@@ -9652,13 +9753,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
-      function renderLeadsCustomerAggregateDateControl(menuKey, label, startDateKey, endDateKey) {
+      function renderLeadsCustomerAggregateDateControl(menuKey, label, startDateKey, endDateKey, extraClass = '') {
         const open = leadsMenuState.openMenu === menuKey
         const startDate = leadsFilterState[startDateKey]
         const endDate = leadsFilterState[endDateKey]
 
         return `
-          <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date${open ? ' is-open' : ''}" data-leads-menu-root="${escapeHtml(menuKey)}">
+          <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date${open ? ' is-open' : ''} ${extraClass}" data-leads-menu-root="${escapeHtml(menuKey)}">
             <span>${escapeHtml(label)}</span>
             <button
               type="button"
@@ -10411,7 +10512,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const associationSummary = getCustomerAssociationSummary(base)
           return { ...base, aggregateStoreDetails, recordCoverage, storeRecordCoverage, crossStore, associationSummary }
         }).sort((left, right) => {
-          return (right.aggregateEarliestLeadIssuedTime || 0) - (left.aggregateEarliestLeadIssuedTime || 0)
+          const multiNodePriority = Number(Boolean(right.isMultiNodeCustomerDemo)) - Number(Boolean(left.isMultiNodeCustomerDemo))
+          const multiStorePriority = Number(Boolean(right.isMultiStoreCustomerDemo)) - Number(Boolean(left.isMultiStoreCustomerDemo))
+          return multiNodePriority || multiStorePriority || (right.aggregateEarliestLeadIssuedTime || 0) - (left.aggregateEarliestLeadIssuedTime || 0)
         })
       }
 
@@ -10459,17 +10562,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
             ${renderLeadsMenuControl('customerCrossStore', '是否跨门店', leadsFilterState.customerCrossStore || '全部', renderLeadsOptionMenu('customerCrossStore', cvCrossStoreOpts, leadsFilterState.customerCrossStore || '全部'))}
             ${renderLeadsMenuControl('customerStoreCountRange', '关联门店数', leadsFilterState.customerStoreCountRange || '全部', renderLeadsOptionMenu('customerStoreCountRange', cvStoreCountOpts, leadsFilterState.customerStoreCountRange || '全部'))}
-            ${renderLeadsMenuControl('customerMultiLead', '是否多线索', leadsFilterState.customerMultiLead || '全部', renderLeadsOptionMenu('customerMultiLead', cvMultiLeadOpts, leadsFilterState.customerMultiLead || '全部'))}
-            ${renderLeadsMenuControl('customerLeadCountRange', '关联线索数', leadsFilterState.customerLeadCountRange || '全部', renderLeadsOptionMenu('customerLeadCountRange', cvLeadCountOpts, leadsFilterState.customerLeadCountRange || '全部'))}
-            ${renderLeadsMenuControl('customerAudioCountRange', '关联录音数', leadsFilterState.customerAudioCountRange || '全部', renderLeadsOptionMenu('customerAudioCountRange', cvAudioCountOpts, leadsFilterState.customerAudioCountRange || '全部'))}
-            ${renderLeadsMenuControl('customerRecordCoverage', '线索录音覆盖', leadsFilterState.customerRecordCoverage || '全部', renderLeadsOptionMenu('customerRecordCoverage', cvCoverageOpts, leadsFilterState.customerRecordCoverage || '全部'))}
-            ${renderLeadsMenuControl('customerStoreRecordCoverage', '门店录音覆盖', leadsFilterState.customerStoreRecordCoverage || '全部', renderLeadsOptionMenu('customerStoreRecordCoverage', cvCoverageOpts, leadsFilterState.customerStoreRecordCoverage || '全部'))}
-            ${renderLeadsMenuControl('customerStatus', '最新线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus))}
-            ${renderLeadsCustomerAggregateDateControl('customerLeadIssuedDate', '线索首次下发时间', 'customerLeadIssuedStartDate', 'customerLeadIssuedEndDate')}
-            ${renderLeadsCustomerAggregateDateControl('customerFirstRecordingDate', '首次录音时间', 'customerFirstRecordingStartDate', 'customerFirstRecordingEndDate')}
-            ${renderLeadsCustomerAggregateDateControl('customerLatestRecordingDate', '最近录音时间', 'customerLatestRecordingStartDate', 'customerLatestRecordingEndDate')}
+            ${renderLeadsMenuControl('customerMultiLead', '是否多线索', leadsFilterState.customerMultiLead || '全部', renderLeadsOptionMenu('customerMultiLead', cvMultiLeadOpts, leadsFilterState.customerMultiLead || '全部'), 'leads-filter-extra')}
+            ${renderLeadsMenuControl('customerLeadCountRange', '关联线索数', leadsFilterState.customerLeadCountRange || '全部', renderLeadsOptionMenu('customerLeadCountRange', cvLeadCountOpts, leadsFilterState.customerLeadCountRange || '全部'), 'leads-filter-extra')}
+            ${renderLeadsMenuControl('customerAudioCountRange', '关联录音数', leadsFilterState.customerAudioCountRange || '全部', renderLeadsOptionMenu('customerAudioCountRange', cvAudioCountOpts, leadsFilterState.customerAudioCountRange || '全部'), 'leads-filter-extra')}
+            ${renderLeadsMenuControl('customerRecordCoverage', '线索录音覆盖', leadsFilterState.customerRecordCoverage || '全部', renderLeadsOptionMenu('customerRecordCoverage', cvCoverageOpts, leadsFilterState.customerRecordCoverage || '全部'), 'leads-filter-extra')}
+            ${renderLeadsMenuControl('customerStoreRecordCoverage', '门店录音覆盖', leadsFilterState.customerStoreRecordCoverage || '全部', renderLeadsOptionMenu('customerStoreRecordCoverage', cvCoverageOpts, leadsFilterState.customerStoreRecordCoverage || '全部'), 'leads-filter-extra')}
+            ${renderLeadsMenuControl('customerStatus', '最新线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus), 'leads-filter-extra')}
+            ${renderLeadsCustomerAggregateDateControl('customerLeadIssuedDate', '线索首次下发时间', 'customerLeadIssuedStartDate', 'customerLeadIssuedEndDate', 'leads-filter-extra')}
+            ${renderLeadsCustomerAggregateDateControl('customerFirstRecordingDate', '首次录音时间', 'customerFirstRecordingStartDate', 'customerFirstRecordingEndDate', 'leads-filter-extra')}
+            ${renderLeadsCustomerAggregateDateControl('customerLatestRecordingDate', '最近录音时间', 'customerLatestRecordingStartDate', 'customerLatestRecordingEndDate', 'leads-filter-extra')}
             <div class="leads-filter-inline-actions">
               <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
+              ${renderLeadsCollapseActionButton()}
             </div>
           `
           return
@@ -10536,7 +10640,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const thead = document.getElementById('leadsTableHeader')
         const table = document.getElementById('leadsDataTable')
         const tableWrap = table?.closest('.table-wrap')
-        const totalCount = document.getElementById('leadsFilterCount')
+        let totalCount = document.getElementById('leadsFilterCount')
         const pendingCount = document.getElementById('leadsPendingCount')
         const followingCount = document.getElementById('leadsFollowingCount')
         const orderedCount = document.getElementById('leadsOrderedCount')
@@ -10561,6 +10665,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (summaryLabelEl) summaryLabelEl.innerHTML = viewMode === 'customers'
           ? `当前匹配 <strong id="leadsFilterCount">${displayRecords.length.toLocaleString()}</strong> 位客户`
           : `当前匹配 <strong id="leadsFilterCount">0</strong> 条线索`
+        totalCount = document.getElementById('leadsFilterCount')
 
         // Update KPI cards for customer view
         if (viewMode === 'customers') {
@@ -10734,6 +10839,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
+      function rerenderLeadsFilters() {
+        renderLeadsFilters()
+        bindLeadsFilterEvents()
+        if (!leadsFilterState.collapsed) {
+          pageHost.querySelectorAll('#leadsFilterControls .leads-filter-extra').forEach((node) => {
+            node.classList.add('is-visible')
+          })
+        }
+      }
+
       function bindLeadsFilterEvents() {
         pageHost.querySelectorAll('[data-leads-menu-trigger]').forEach((node) => {
           node.addEventListener('click', (event) => {
@@ -10765,8 +10880,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.customerDateViewMonth = Number(endDate.slice(5, 7))
             }
 
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10794,8 +10908,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           node.addEventListener('click', () => {
             leadsMenuState.organizationDraftPath = node.dataset.leadsOrgPath
             if (node.dataset.leadsOrgHasChildren === 'true') {
-              renderLeadsFilters()
-              bindLeadsFilterEvents()
+              rerenderLeadsFilters()
               return
             }
             leadsFilterState.organization = node.dataset.leadsOrgPath
@@ -10831,8 +10944,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.dateViewYear = target.getFullYear()
               leadsMenuState.dateViewMonth = target.getMonth() + 1
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10844,8 +10956,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             while (nextMonth > 12) { nextMonth -= 12; nextYear += 1 }
             leadsMenuState.dateViewYear = nextYear
             leadsMenuState.dateViewMonth = nextMonth
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10864,8 +10975,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 leadsMenuState.dateDraftStartDate = value
               }
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10888,8 +10998,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.dateViewYear = endDate.getFullYear()
               leadsMenuState.dateViewMonth = endDate.getMonth() + 1
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10920,8 +11029,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.customerDateViewYear = target.getFullYear()
               leadsMenuState.customerDateViewMonth = target.getMonth() + 1
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10933,8 +11041,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             while (nextMonth > 12) { nextMonth -= 12; nextYear += 1 }
             leadsMenuState.customerDateViewYear = nextYear
             leadsMenuState.customerDateViewMonth = nextMonth
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10953,8 +11060,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 leadsMenuState.customerDateDraftStartDate = value
               }
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -10963,8 +11069,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const shortcut = node.dataset.leadsCustomerDateShortcut
             if (shortcut === 'custom') {
               leadsMenuState.customerDateActiveField = 'startDate'
-              renderLeadsFilters()
-              bindLeadsFilterEvents()
+              rerenderLeadsFilters()
               return
             }
 
@@ -10979,8 +11084,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.customerDateViewYear = endDateObject.getFullYear()
               leadsMenuState.customerDateViewMonth = endDateObject.getMonth() + 1
             }
-            renderLeadsFilters()
-            bindLeadsFilterEvents()
+            rerenderLeadsFilters()
           })
         })
 
@@ -13122,7 +13226,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function getCustomerDetailRecordId(customerPhone) {
         const serial = (String(customerPhone || '').replace(/\D/g, '').slice(-4) || '1268').padStart(4, '0')
-        return `LEAD-20260313-${serial}`
+        return buildMockLeadId(100000 + Number(serial))
       }
 
       function setCustomerDetailSelection(selection = {}) {
@@ -13154,13 +13258,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           ...selection,
           ...(aggregateRecord || {})
         }
-        const storeCountText = Number(safeSelection.aggregateStoreCount) > 1
-          ? `${safeSelection.store} 等 ${safeSelection.aggregateStoreCount} 家门店`
-          : safeSelection.store
+        const isDefaultCustomer = safeSelection.customerName === customerDetailDefaultSelection.customerName
         const storeAudioCounts = safeSelection.aggregateStoreAudioCounts instanceof Map
           ? safeSelection.aggregateStoreAudioCounts
           : new Map([[safeSelection.store, Number(safeSelection.aggregateAudioCount) || 0]])
-        const rawStoreBreakdown = Array.isArray(safeSelection.aggregateStoreDetails)
+        const baseStoreBreakdown = Array.isArray(safeSelection.aggregateStoreDetails)
           ? safeSelection.aggregateStoreDetails
           : Array.from(storeAudioCounts.entries()).map(([name, audioCount], index) => ({
               name,
@@ -13169,6 +13271,19 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               updatedAt: index === 0 ? safeSelection.lastContact : '—',
               tone: index === 0 ? 'current' : 'other'
             }))
+        const defaultDemoStoreDetails = [
+          { name: '苏州园区门店', audioCount: 2, status: '需求确认', updatedAt: '2026-03-11 17:20', tone: 'violet' },
+          { name: '南京建邺门店', audioCount: 1, status: '方案沟通', updatedAt: '2026-03-10 15:40', tone: 'cyan' },
+          { name: '合肥滨湖门店', audioCount: 1, status: '邀约试驾', updatedAt: '2026-03-09 14:15', tone: 'red' },
+          { name: '宁波鄞州门店', audioCount: 0, status: '未跟进', updatedAt: '2026-03-08 10:30', tone: 'slate' }
+        ]
+        const existingStoreNames = new Set(baseStoreBreakdown.map((item) => item.name))
+        const rawStoreBreakdown = isDefaultCustomer
+          ? [
+              ...baseStoreBreakdown,
+              ...defaultDemoStoreDetails.filter((item) => !existingStoreNames.has(item.name))
+            ]
+          : baseStoreBreakdown
         const storeBreakdown = rawStoreBreakdown
           .map((item, originalIndex) => ({ item, originalIndex }))
           .sort((left, right) => {
@@ -13191,9 +13306,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ...item,
             filterKey: ['current', 'other', 'extra'].includes(item.tone) ? item.tone : `store-${index + 1}`
           }))
-        const recordedStoreCount = safeSelection.aggregateRecordStoreSet instanceof Set
+        const recordedStoreCount = isDefaultCustomer
+          ? storeBreakdown.filter((item) => Number(item.audioCount) > 0).length
+          : safeSelection.aggregateRecordStoreSet instanceof Set
           ? safeSelection.aggregateRecordStoreSet.size
           : storeBreakdown.filter((item) => Number(item.audioCount) > 0).length
+        const effectiveStoreCount = isDefaultCustomer
+          ? storeBreakdown.length
+          : Number(safeSelection.aggregateStoreCount) || 1
+        const effectiveAudioCount = isDefaultCustomer
+          ? storeBreakdown.reduce((total, item) => total + Math.max(0, Number(item.audioCount) || 0), 0)
+          : Number(safeSelection.aggregateAudioCount) || 0
+        const effectiveLeadCount = isDefaultCustomer
+          ? Math.max(Number(safeSelection.aggregateLeadCount) || 1, storeBreakdown.length)
+          : Number(safeSelection.aggregateLeadCount) || 1
+        const effectiveRecordedLeadCount = isDefaultCustomer
+          ? Math.max(Number(safeSelection.aggregateHasRecordCount) || 0, recordedStoreCount)
+          : Number(safeSelection.aggregateHasRecordCount) || 0
+        const storeCountText = effectiveStoreCount > 1
+          ? `${safeSelection.store} 等 ${effectiveStoreCount} 家门店`
+          : safeSelection.store
         const latestRecordedStore = storeBreakdown
           .filter((item) => Number(item.audioCount) > 0)
           .sort((left, right) => String(right.updatedAt || '').localeCompare(String(left.updatedAt || '')))[0] || null
@@ -13207,7 +13339,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return recordingCount > 0
         })
         const latestRecordedLead = [...recordedLeadRecords].sort((left, right) => parseDateTimeValue(right.recordStartTime) - parseDateTimeValue(left.recordStartTime))[0] || null
-        const isDefaultCustomer = safeSelection.customerName === customerDetailDefaultSelection.customerName
         const currentIntentSummary = isDefaultCustomer
           ? '客户本次重点确认总价、金融免息和置换补贴；若成交条件合适，可继续推进。'
           : `本次沟通处于“${latestRecordedStore?.status || safeSelection.customerStatus}”阶段，客户的表达以最近一通可分析录音为准。`
@@ -13219,14 +13350,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const latestRecordingSource = latestRecordedLead
           ? `${latestRecordedLead.store} · ${latestRecordedLead.recordStartTime} · ${latestRecordedLead.stage || latestRecordedLead.leadStatus}`
           : '暂无可分析录音'
-        const dialogueTags = [...new Set(recordedLeadRecords.flatMap((item) => [
+        const derivedDialogueTags = [...new Set(recordedLeadRecords.flatMap((item) => [
           item.carSeries,
           item.stage,
           ...(Array.isArray(item.tags) ? item.tags : [])
         ]).filter(Boolean))]
+        const dialogueTags = isDefaultCustomer
+          ? ['高意向', '价格敏感', '家庭出行', '周末试驾', '决策待推动', '竞品对比', '金融方案诉求', '关注静谧性']
+          : derivedDialogueTags.slice(0, 8)
         const storeFilterKeyMap = new Map(storeBreakdown.map((item) => [getLeadDealerCode(item), item.filterKey]))
         const storeNameFilterKeyMap = new Map(storeBreakdown.map((item) => [item.name, item.filterKey]))
-        const journeyEntries = recordedLeadRecords.flatMap((item) => {
+        const baseJourneyEntries = recordedLeadRecords.flatMap((item, leadIndex) => {
           const recordingCount = Number.isFinite(Number(item.recordingCount))
             ? Math.max(0, Number(item.recordingCount))
             : item.validRecording === '是' ? 1 : 0
@@ -13236,7 +13370,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const baseTime = Number(parseDateTimeValue(item.recordStartTime))
 
           return Array.from({ length: recordingCount }, (_, index) => ({
-            id: `${item.id}-REC-${index + 1}`,
+            id: buildMockRecordingId(2000 + leadIndex * 10 + index),
             store: item.store,
             filterKey,
             tone: storeDetail?.tone || '',
@@ -13250,18 +13384,77 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             tags: Array.isArray(item.tags) ? item.tags : [],
             sopScore: item.sopScore || '—'
           }))
-        }).sort((left, right) => parseDateTimeValue(right.time) - parseDateTimeValue(left.time))
+        })
+        const defaultDemoJourneyEntries = isDefaultCustomer
+          ? [
+              {
+                id: buildMockRecordingId(2801),
+                store: '苏州园区门店',
+                time: '2026-03-11 17:20',
+                stage: '需求确认',
+                intentLevel: '中',
+                advisorName: '周倩',
+                summary: '客户补充了七座空间、儿童座椅与长途舒适性需求，希望对比不同配置。',
+                action: '整理七座空间与家庭出行配置对比表，引导下一次到店',
+                tags: ['七座需求', '家庭出行']
+              },
+              {
+                id: buildMockRecordingId(2802),
+                store: '苏州园区门店',
+                time: '2026-03-11 16:20',
+                stage: '配置对比',
+                intentLevel: '中',
+                advisorName: '周倩',
+                summary: '客户重点对比了智驾、座椅舒适配置与车机功能。',
+                action: '发送配置差异清单，并标记客户最关注的功能',
+                tags: ['配置对比', '智驾关注']
+              },
+              {
+                id: buildMockRecordingId(2803),
+                store: '南京建邺门店',
+                time: '2026-03-10 15:40',
+                stage: '方案沟通',
+                intentLevel: '高',
+                advisorName: '吴晨',
+                summary: '客户询问金融免息、置换补贴与保险组合，对落地价较敏感。',
+                action: '统一各店报价口径，输出可对比的落地方案',
+                tags: ['金融方案', '价格敏感']
+              },
+              {
+                id: buildMockRecordingId(2804),
+                store: '合肥滨湖门店',
+                time: '2026-03-09 14:15',
+                stage: '邀约试驾',
+                intentLevel: '高',
+                advisorName: '许诺',
+                summary: '客户愿意周末携家人到店，希望体验二排静谧性与底盘舒适性。',
+                action: '确认周末试驾时段，提前准备家庭出行路线',
+                tags: ['周末试驾', '静谧性']
+              }
+            ].map((entry) => {
+              const storeDetail = storeBreakdown.find((item) => item.name === entry.store)
+              return {
+                ...entry,
+                filterKey: storeDetail?.filterKey || 'current',
+                tone: storeDetail?.tone || '',
+                intentLevelClass: entry.intentLevel === '高' ? 'red' : 'amber',
+                sopScore: '82%'
+              }
+            }).filter((entry) => !baseJourneyEntries.some((baseEntry) => baseEntry.store === entry.store && baseEntry.time === entry.time))
+          : []
+        const journeyEntries = [...baseJourneyEntries, ...defaultDemoJourneyEntries]
+          .sort((left, right) => parseDateTimeValue(right.time) - parseDateTimeValue(left.time))
 
         return {
           leadId: getCustomerDetailRecordId(safeSelection.customerPhone),
           store: storeCountText,
           customer: safeSelection.customerName,
           customerStatus: safeSelection.customerStatus,
-          aggregateLeadCount: Number(safeSelection.aggregateLeadCount) || 1,
-          aggregateStoreCount: Number(safeSelection.aggregateStoreCount) || 1,
-          aggregateRecordedLeadCount: Number(safeSelection.aggregateHasRecordCount) || 0,
+          aggregateLeadCount: effectiveLeadCount,
+          aggregateStoreCount: effectiveStoreCount,
+          aggregateRecordedLeadCount: effectiveRecordedLeadCount,
           aggregateRecordedStoreCount: recordedStoreCount,
-          aggregateAudioCount: Number(safeSelection.aggregateAudioCount) || 0,
+          aggregateAudioCount: effectiveAudioCount,
           latestRecordingSource,
           currentIntentSummary,
           currentEvidenceSummary,
@@ -13270,10 +13463,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           dialogueTags,
           showDefaultPublicTags: isDefaultCustomer,
           journeyEntries,
-          recordCoverage: safeSelection.recordCoverage || getCustomerRecordCoverage(Number(safeSelection.aggregateLeadCount) || 1, Number(safeSelection.aggregateHasRecordCount) || 0),
-          storeRecordCoverage: safeSelection.storeRecordCoverage || getCustomerRecordCoverage(Number(safeSelection.aggregateStoreCount) || 1, recordedStoreCount),
+          recordCoverage: isDefaultCustomer
+            ? getCustomerRecordCoverage(effectiveLeadCount, effectiveRecordedLeadCount)
+            : safeSelection.recordCoverage || getCustomerRecordCoverage(effectiveLeadCount, effectiveRecordedLeadCount),
+          storeRecordCoverage: isDefaultCustomer
+            ? getCustomerRecordCoverage(effectiveStoreCount, recordedStoreCount)
+            : safeSelection.storeRecordCoverage || getCustomerRecordCoverage(effectiveStoreCount, recordedStoreCount),
           storeBreakdown,
-          subtitle: `${safeSelection.customerPhone} · 关联 ${safeSelection.aggregateLeadCount} 条线索 · 关联 ${safeSelection.aggregateStoreCount} 家门店`,
+          subtitle: `${safeSelection.customerPhone} · 关联 ${effectiveLeadCount} 条线索 · 关联 ${effectiveStoreCount} 家门店`,
           currentStoreTitle: `本门店评估 (${safeSelection.store})`,
           currentStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
           otherStoreStatus: `线索状态: ${safeSelection.customerStatus}`,
@@ -13360,8 +13557,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function syncCustomerDetailDateDisplays() {
         const selectors = [
           '.customer-hero-store-fact span:last-child',
-          '.customer-hero-journey-date',
-          '.journey-time'
+          '.customer-hero-journey-date'
         ]
 
         selectors.forEach((selector) => {
@@ -13369,6 +13565,40 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             node.textContent = formatCustomerDetailDisplayDateText(node.textContent)
           })
         })
+      }
+
+      function formatJourneyCompactDateTime(value) {
+        const text = String(value || '').trim()
+        const matched = text.match(/(?:\d{4}[-/])?(\d{2})[-/](\d{2})\s+(\d{2}:\d{2})/)
+        return matched ? `${matched[1]}/${matched[2]} ${matched[3]}` : text
+      }
+
+      function syncJourneyCompactDateTimes() {
+        pageHost.querySelectorAll('.lead-journey-scroll .journey-time, .customer-journey-timeline .journey-time').forEach((node) => {
+          node.textContent = formatJourneyCompactDateTime(node.textContent)
+        })
+      }
+
+      function syncJourneyHeaderWidth(timeline) {
+        if (!timeline) {
+          return
+        }
+
+        const contentWidths = [...timeline.querySelectorAll('.journey-header')].flatMap((header) => (
+          [...header.children].map((child) => child.getBoundingClientRect().width)
+        ))
+        const widestContent = Math.ceil(Math.max(0, ...contentWidths))
+        if (widestContent > 0) {
+          timeline.style.setProperty('--journey-header-width', `${widestContent}px`)
+        }
+      }
+
+      function syncCustomerJourneyHeaderWidth() {
+        syncJourneyHeaderWidth(pageHost.querySelector('.customer-journey-timeline'))
+      }
+
+      function syncLeadJourneyHeaderWidth() {
+        syncJourneyHeaderWidth(pageHost.querySelector('.lead-journey-scroll'))
       }
 
       function getCustomerJourneyLevelMeta(intentLevel) {
@@ -13385,15 +13615,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const tagTones = ['green', 'blue', 'amber', 'violet']
-        overview.innerHTML = payload.journeyEntries.map((entry) => {
+        overview.innerHTML = payload.journeyEntries.map((entry, index, list) => {
           const levelMeta = getCustomerJourneyLevelMeta(entry.intentLevel)
           const toneClass = entry.tone ? ` customer-hero-flat-store-${entry.tone}` : ''
           return `
-            <div class="customer-hero-flat-step ${levelMeta.stepClass}" data-hero-timeline-step="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
-              <div class="customer-hero-flat-marker">${escapeHtml(entry.intentLevel)}</div>
-              <div class="customer-hero-flat-stage">${escapeHtml(entry.stage)}</div>
-              <div class="customer-hero-flat-store${toneClass}">${escapeHtml(entry.store)}</div>
-              <div class="customer-hero-flat-date">${escapeHtml(entry.time.slice(0, 10))}</div>
+            <div class="lead-detail-hero-step customer-hero-flat-step ${levelMeta.stepClass}" data-hero-timeline-step="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
+              <div class="lead-detail-hero-step-connector" aria-hidden="true"></div>
+              <div class="lead-detail-hero-step-marker customer-hero-flat-marker">${escapeHtml(entry.intentLevel)}</div>
+              <div class="lead-detail-hero-step-label customer-hero-flat-stage" title="${escapeHtml(entry.stage)}">${escapeHtml(entry.stage)}</div>
+              <div class="customer-hero-flat-store${toneClass}" title="${escapeHtml(entry.store)}">${escapeHtml(entry.store)}</div>
+              <div class="lead-detail-hero-step-meta customer-hero-flat-date">${escapeHtml(entry.time.slice(5, 10).replace('-', '/'))}</div>
             </div>
           `
         }).join('')
@@ -13406,12 +13637,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return `
               <article class="journey-item customer-journey-item${toneClass}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
                 <div class="journey-header">
-                  <div class="customer-journey-store-name">${escapeHtml(entry.store)} · 顾问：${escapeHtml(entry.advisorName)}</div>
                   <div class="journey-headline">
                     <div class="journey-time">${escapeHtml(entry.time)}</div>
                     <div class="journey-level ${levelMeta.levelClass}">${escapeHtml(entry.stage)}·${escapeHtml(entry.intentLevel)}</div>
                   </div>
-                  <div class="journey-call-id">录音ID：${escapeHtml(entry.id)}</div>
+                  <div class="journey-call-id">
+                    <span class="journey-call-id-label">录音ID</span>
+                    <a
+                      class="lead-journey-session-link"
+                      data-lead-session-link="true"
+                      data-session-id="${escapeHtml(entry.id)}"
+                      data-session-store="${escapeHtml(entry.store)}"
+                      data-session-date="${escapeHtml(entry.time.slice(0, 10).replaceAll('-', '/'))}"
+                      data-session-scene="${escapeHtml(entry.stage)}"
+                      href="javascript:void(0)"
+                    ><span class="journey-call-id-value">${escapeHtml(entry.id)}</span><span class="journey-call-id-arrow" aria-hidden="true"></span></a>
+                  </div>
                 </div>
                 <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
                 <div class="journey-body">
@@ -13429,6 +13670,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                       ${entry.tags.map((tag, index) => `<span class="tag ${tagTones[index % tagTones.length]}">${escapeHtml(tag)}</span>`).join('')}
                     </div>
                   </div>
+                  <div class="customer-journey-store-name customer-journey-store-badge">${escapeHtml(entry.store)} · 顾问：${escapeHtml(entry.advisorName)}</div>
                 </div>
               </article>
             `
@@ -13476,7 +13718,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         const insightScope = pageHost.querySelector('[data-customer-insight-scope]')
         if (insightScope) {
-          insightScope.textContent = '左侧展示最近一通录音，右侧综合全部关联录音'
+          insightScope.textContent = '汇总当前客户的可分析录音，集中展示对话标签与外部公域标签，便于统一查看客户相关信息。'
         }
 
         setText('[data-customer-current-intent]', payload.currentIntentSummary)
@@ -13493,9 +13735,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (dialogueTags) {
           dialogueTags.hidden = payload.aggregateAudioCount <= 0
           const tagList = dialogueTags.querySelector('.customer-insight-tag-list')
-          const tagTones = ['tone-blue', 'tone-red', 'tone-green', 'tone-violet', 'tone-amber']
+          const tagTones = ['tone-blue', 'tone-red', 'tone-green', 'tone-green', 'tone-red', 'tone-amber', 'tone-violet', 'tone-blue']
           if (tagList) {
-            tagList.innerHTML = payload.dialogueTags.map((tag, index) => `<span class="customer-insight-tag ${tagTones[index % tagTones.length]}">${escapeHtml(tag)}</span>`).join('')
+            const relationshipPaths = Array.from({ length: 9 }, (_, index) => `
+              <div class="lead-tag-relationship-path path-${index + 1}" aria-hidden="true">
+                <img src="../assets/lead-tag-path-0${index + 1}.svg" alt="" />
+              </div>
+            `).join('')
+            const relationshipTags = payload.dialogueTags.slice(0, 8).map((tag, index) => `
+              <span class="lead-relationship-chip ${tagTones[index]} position-${index + 1}">${escapeHtml(tag)}</span>
+            `).join('')
+            tagList.innerHTML = `${relationshipPaths}${relationshipTags}`
           }
         }
 
@@ -13544,8 +13794,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <div class="customer-voice-store-name">${escapeHtml(item.name)}</div>
                 <div class="customer-voice-store-count">录音 ${escapeHtml(String(item.audioCount))} 条</div>
                 <div class="customer-voice-store-meta">
-                  <span class="customer-voice-store-status ${statusClass}">当前状态：${escapeHtml(item.status)}</span>
-                  <span class="customer-voice-store-update">最近更新：${escapeHtml(item.updatedAt)}</span>
+                  <span class="customer-voice-store-status ${statusClass}">${escapeHtml(item.status)}</span>
+                  <span class="customer-voice-store-update">最近更新：${escapeHtml(formatJourneyCompactDateTime(item.updatedAt))}</span>
                 </div>
               </button>
             `
@@ -13869,12 +14119,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const board = pageHost.querySelector('.customer-journey-board')
         const timeline = board?.querySelector('.customer-journey-timeline')
         const overview = pageHost.querySelector('.customer-hero-flat-timeline')
+        const evolutionContainer = pageHost.querySelector('.customer-detail-journey-evolution')
         const scopeCards = Array.from(pageHost.querySelectorAll('[data-customer-journey-scope]'))
         const items = Array.from(pageHost.querySelectorAll('[data-customer-journey-store]'))
         const detailItems = items.filter((item) => item.classList.contains('customer-journey-item'))
         const overviewSteps = items.filter((item) => item.classList.contains('customer-hero-flat-step'))
-        const scopeLabel = pageHost.querySelector('[data-customer-journey-scope-label]')
-        const scopeMeta = pageHost.querySelector('[data-customer-journey-scope-meta]')
         const emptyState = board?.querySelector('[data-customer-journey-empty]')
         const emptyTitle = emptyState?.querySelector('[data-customer-journey-empty-title]')
 
@@ -13926,23 +14175,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
           const activeCard = scopeCards.find((card) => (card.dataset.customerJourneyScope || 'all') === selectedScope) || scopeCards[0]
           const storeName = activeCard.dataset.customerJourneyStoreName || '全部门店'
-          const audioCount = Number(activeCard.dataset.customerJourneyAudioCount) || 0
-          const recordedStoreCount = Number(activeCard.dataset.customerJourneyRecordedStoreCount) || 0
           const visibleDetailCount = detailItems.filter((item) => !item.hidden).length
           const visibleStepCount = overviewSteps.filter((step) => !step.hidden).length
 
-          if (scopeLabel) {
-            scopeLabel.textContent = storeName
-          }
-          if (scopeMeta) {
-            scopeMeta.textContent = selectedScope === 'all'
-              ? `${recordedStoreCount} 家门店有录音 · 共 ${audioCount} 条`
-              : audioCount > 0 ? `${audioCount} 条录音 · 按时间展示` : '暂无录音 · 可查看上方门店状态'
-          }
-
           overview.style.setProperty('--customer-journey-step-count', String(Math.max(visibleStepCount, 1)))
           overview.classList.toggle('is-single-step', visibleStepCount <= 1)
-          overview.hidden = visibleStepCount === 0
+          if (evolutionContainer) {
+            evolutionContainer.hidden = visibleStepCount === 0
+            window.requestAnimationFrame(() => evolutionContainer._syncEvolutionLayout?.())
+          } else {
+            overview.hidden = visibleStepCount === 0
+          }
           timeline.hidden = visibleDetailCount === 0
           if (emptyState) {
             emptyState.hidden = visibleDetailCount > 0
@@ -14025,9 +14268,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function initCustomerDetailPage() {
-        applyCustomerDetailPayload(buildCustomerDetailPayload())
+        const customerPayload = buildCustomerDetailPayload()
+        applyCustomerDetailPayload(customerPayload)
         syncCustomerDetailDateDisplays()
         initCustomerJourneyFilter()
+        syncJourneyCompactDateTimes()
+        syncCustomerJourneyHeaderWidth()
+        window.requestAnimationFrame(syncCustomerJourneyHeaderWidth)
+        bindCustomerStoreEvolutionUI()
+        bindCustomerDetailEvolutionUI()
+        bindLeadDetailSessionLinks(customerPayload)
         syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
         renderCustomerAiPortraitGeneration()
@@ -14075,11 +14325,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getLeadDetailRecordId(leadId, role) {
+        if (/^\d{19}$/.test(String(leadId || ''))) {
+          return String(leadId)
+        }
         const leads = getSalesLeadCollection(role)
         const leadIndex = leads.findIndex((lead) => lead.id === leadId)
-        const prefix = role === 'advisor' ? 'ADV' : 'DCC'
-        const serial = String(leadIndex >= 0 ? leadIndex + 1 : 1).padStart(3, '0')
-        return `LEAD-${prefix}-20260323-${serial}`
+        const roleOffset = role === 'advisor' ? 100 : 0
+        return buildMockLeadId(3000 + roleOffset + (leadIndex >= 0 ? leadIndex : 0))
       }
 
       function getLeadDetailUniqueTags(lead) {
@@ -14135,7 +14387,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function buildLeadDetailEvolutionSteps(lead, role) {
         const baseDate = getLeadDetailEvolutionBaseDate(lead.updatedAt)
 
-        if (lead.isFirstLeadRecord) {
+        if (lead.isMultiNodeJourneyDemo) {
           const steps = []
           for (let i = 0; i < 21; i += 1) {
             const date = new Date(baseDate)
@@ -14405,24 +14657,30 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `).join('')
       }
 
-      function bindLeadDetailEvolutionUI() {
-        const container = pageHost.querySelector('.lead-detail-journey-evolution')
-        const track = pageHost.querySelector('#leadDetailHeroEvolutionSteps')
+      function bindJourneyEvolutionUI(container, track, options = {}) {
         if (!container || !track) return
 
-        const steps = track.querySelectorAll('.lead-detail-hero-step')
         const evolution = container.querySelector('.lead-detail-hero-evolution')
         if (!evolution) return
-        track.style.setProperty('--lead-evolution-step-count', String(steps.length || 1))
+
+        const itemSelector = options.itemSelector || '.lead-detail-hero-step'
+        const itemMinWidth = Math.max(1, Number(options.itemMinWidth) || 80)
+        const itemGap = Math.max(0, Number(options.itemGap) || 0)
+        const stepWidth = itemMinWidth + itemGap
+        const trackEndPadding = Math.max(0, Number(options.trackEndPadding ?? 25) || 0)
+        const countProperty = options.countProperty || '--lead-evolution-step-count'
+        const syncRowEnds = options.syncRowEnds !== false
+        const getVisibleSteps = () => [...track.querySelectorAll(itemSelector)].filter((step) => !step.hidden)
 
         const prevBtn = container.querySelector('.lead-detail-evolution-arrow-prev')
         const nextBtn = container.querySelector('.lead-detail-evolution-arrow-next')
         const toggleBtn = container.querySelector('.lead-detail-evolution-toggle')
-        const stepWidth = 80
-        const trackEndPadding = 25
 
         function hasOverflowAtMinimumWidth() {
-          return steps.length > 1 && steps.length * stepWidth > evolution.clientWidth + 1
+          const visibleSteps = getVisibleSteps()
+          const minimumContentWidth = visibleSteps.length * itemMinWidth
+            + Math.max(0, visibleSteps.length - 1) * itemGap
+          return visibleSteps.length > 1 && minimumContentWidth > evolution.clientWidth + 1
         }
 
         function collapseEvolution() {
@@ -14436,8 +14694,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         function syncLayoutMode() {
+          const visibleSteps = getVisibleSteps()
           const overflow = hasOverflowAtMinimumWidth()
-          container.toggleAttribute('data-evolution-single', steps.length === 1)
+          track.style.setProperty(countProperty, String(visibleSteps.length || 1))
+          container.toggleAttribute('data-evolution-single', visibleSteps.length === 1)
           container.toggleAttribute('data-evolution-overflow', overflow)
           if (!overflow) {
             collapseEvolution()
@@ -14463,11 +14723,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         function syncExpandedRowEnds() {
-          steps.forEach((step) => step.classList.remove('is-row-end'))
-          if (!container.hasAttribute('data-evolution-expanded')) return
+          const allSteps = [...track.querySelectorAll(itemSelector)]
+          const visibleSteps = getVisibleSteps()
+          allSteps.forEach((step) => step.classList.remove('is-row-end', 'is-visible-end'))
+          visibleSteps.at(-1)?.classList.add('is-visible-end')
+          if (!syncRowEnds || !container.hasAttribute('data-evolution-expanded')) return
 
-          steps.forEach((step, index) => {
-            const nextStep = steps[index + 1]
+          visibleSteps.forEach((step, index) => {
+            const nextStep = visibleSteps[index + 1]
             if (!nextStep || nextStep.offsetTop !== step.offsetTop) {
               step.classList.add('is-row-end')
             }
@@ -14562,9 +14825,44 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           container._leadEvolutionResizeObserver.observe(container)
         }
 
+        container._syncEvolutionLayout = () => {
+          syncLayoutMode()
+          syncExpandedRowEnds()
+          updateArrows()
+        }
+
         syncLayoutMode()
         syncExpandedRowEnds()
         updateArrows()
+      }
+
+      function bindLeadDetailEvolutionUI() {
+        bindJourneyEvolutionUI(
+          pageHost.querySelector('.lead-detail-journey-evolution'),
+          pageHost.querySelector('#leadDetailHeroEvolutionSteps')
+        )
+      }
+
+      function bindCustomerDetailEvolutionUI() {
+        bindJourneyEvolutionUI(
+          pageHost.querySelector('.customer-detail-journey-evolution'),
+          pageHost.querySelector('#customerDetailJourneyEvolutionSteps')
+        )
+      }
+
+      function bindCustomerStoreEvolutionUI() {
+        bindJourneyEvolutionUI(
+          pageHost.querySelector('.customer-store-evolution'),
+          pageHost.querySelector('#customerDetailStoreCards'),
+          {
+            itemSelector: '.customer-voice-store-card',
+            itemMinWidth: 220,
+            itemGap: 12,
+            trackEndPadding: 0,
+            countProperty: '--customer-store-card-count',
+            syncRowEnds: false
+          }
+        )
       }
 
       function getLeadDetailIntentLevelClass(level) {
@@ -14649,11 +14947,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function bindLeadDetailSessionLinks(payload) {
-        const sessionStore = payload?.store || pageHost.querySelector('#leadDetailStore')?.textContent.replace(/^门店[：:]\s*/, '') || '上海浦东门店'
         const sessionCustomer = payload?.customer || pageHost.querySelector('#leadDetailHeroTitle')?.textContent.trim() || '王先生'
 
         pageHost.querySelectorAll('[data-lead-session-link]').forEach((node) => {
           const sessionId = node.dataset.sessionId || node.textContent.replace(/^录音ID:\s*/, '').trim()
+          const sessionStore = node.dataset.sessionStore || payload?.store || pageHost.querySelector('#leadDetailStore')?.textContent.replace(/^门店[：:]\s*/, '') || '上海浦东门店'
           const sessionDate = node.dataset.sessionDate || '2026/03/13'
           const sessionScene = node.dataset.sessionScene || '邀约'
 
@@ -14703,6 +15001,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         bindLeadDetailSessionLinks(leadPayload)
+        syncJourneyCompactDateTimes()
+        syncLeadJourneyHeaderWidth()
+        window.requestAnimationFrame(syncLeadJourneyHeaderWidth)
 
         handleLeadDetailResize()
 
@@ -15542,7 +15843,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '客户口头同意到店后，没有在当天下午完成二次确认，导致晚间临时变更行程。',
               link: '关联客户：郑女士 · 03-22 16:40（今日未到店）',
               detailParams: {
-                sessionId: 'REC-20260322-1640',
+                sessionId: buildMockRecordingId(3000),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 16:40',
                 sessionCustomer: '郑女士',
@@ -15554,7 +15855,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '个别新线索超过 30 分钟后才首次联系，虽然补打电话，但客户热度已经明显下降。',
               link: '关联客户：钱先生 · 03-22 10:18（超时样本）',
               detailParams: {
-                sessionId: 'REC-20260322-1018',
+                sessionId: buildMockRecordingId(3001),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 10:18',
                 sessionCustomer: '钱先生',
@@ -15568,7 +15869,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '对 H 级客户能在首触后快速给出可选到店时段，并同步试驾顾问信息，减少客户犹豫。',
               link: '关联客户：刘女士 · 03-22 14:12（标准邀约样本）',
               detailParams: {
-                sessionId: 'REC-20260322-1412',
+                sessionId: buildMockRecordingId(3002),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 14:12',
                 sessionCustomer: '刘女士',
@@ -15618,7 +15919,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         ],
         leads: [
           {
-            id: 'liu',
+            id: buildMockLeadId(4000),
             priority: 'important',
             intent: 'H',
             customer: '刘女士',
@@ -15638,7 +15939,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '首触 6 分钟完成'
           },
           {
-            id: 'han',
+            id: buildMockLeadId(4001),
             priority: 'urgent',
             intent: 'H',
             customer: '韩先生',
@@ -15658,7 +15959,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '首触 11 分钟完成'
           },
           {
-            id: 'zheng',
+            id: buildMockLeadId(4002),
             priority: 'urgent',
             intent: 'H',
             customer: '郑女士',
@@ -15678,7 +15979,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '已等待 18 分钟'
           },
           {
-            id: 'qian',
+            id: buildMockLeadId(4003),
             priority: 'urgent',
             intent: 'A',
             customer: '钱先生',
@@ -15698,7 +15999,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '已超时 14 分钟'
           },
           {
-            id: 'zhou',
+            id: buildMockLeadId(4004),
             priority: 'important',
             intent: 'A',
             customer: '周女士',
@@ -15718,7 +16019,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '首触 9 分钟完成'
           },
           {
-            id: 'lin',
+            id: buildMockLeadId(4005),
             priority: 'normal',
             intent: 'B',
             customer: '林先生',
@@ -15738,7 +16039,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             responseText: '首触已完成'
           },
           {
-            id: 'sun',
+            id: buildMockLeadId(4006),
             priority: 'normal',
             intent: 'C',
             customer: '孙女士',
@@ -16974,7 +17275,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           time: `03-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${minute}`,
           scene,
           detailParams: {
-            sessionId: `REC-202603${String(day).padStart(2, '0')}-${String(hour).padStart(2, '0')}${minute}`,
+            sessionId: buildMockRecordingId(4000 + (role === 'advisor' ? 500 : 0) + typeIndex * 20 + recordIndex + dayOffset),
             sessionStore: '上海中心店',
             sessionDate,
             sessionCustomer: customer,
@@ -17209,7 +17510,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (existing) existing.remove()
 
         const fallbackTimes = ['3-25 15:20', '3-25 11:05', '3-24 16:40', '3-24 10:15', '3-23 14:20']
-        const baseId = type === 'risk' ? 2053659125047042048n : 2052659125047042048n
+        const baseId = type === 'risk' ? 2087346132915122176n : 2087346017925713920n
         const currentRoleProfileName = document.getElementById('profile-name')?.textContent?.trim() || (role === 'advisor' ? '李昱' : '张琳')
         const records = (issue.recordings || []).map((record, recordIndex) => ({
           advisor: currentRoleProfileName,
@@ -17763,13 +18064,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildSalesLeadSessionId(value) {
         const digits = String(value || '').replace(/\D/g, '')
-        if (digits.length >= 12) {
-          return `REC-${digits.slice(0, 8)}-${digits.slice(8, 12)}`
-        }
-        if (digits.length >= 8) {
-          return `REC-${digits.slice(0, 8)}-1000`
-        }
-        return 'REC-20260323-1000'
+        const dateTimeSeed = Number((digits.slice(-8) || '0').padStart(8, '0'))
+        return buildMockRecordingId(500000 + dateTimeSeed)
       }
 
       function getSalesLeadDetailParams(lead) {
@@ -17800,7 +18096,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function getSessionDetailRouteContext() {
         const params = new URLSearchParams(window.location.search)
         return {
-          sessionId: params.get('sessionId') || 'REC-20260313-0913',
+          sessionId: params.get('sessionId') || buildMockRecordingId(0),
           sessionStore: params.get('sessionStore') || '上海浦东门店',
           sessionDate: params.get('sessionDate') || '2026/03/13',
           sessionCustomer: params.get('sessionCustomer') || '王先生',
@@ -18889,7 +19185,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '客户兴趣点已经被激发，但还停留在静态讲解，错过了最适合推进试驾的窗口。',
               link: '关联客户：赵女士 · 03-22 15:18（待试驾样本）',
               detailParams: {
-                sessionId: 'REC-20260322-1518',
+                sessionId: buildMockRecordingId(3100),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 15:18',
                 sessionCustomer: '赵女士',
@@ -18901,7 +19197,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '客户试驾反馈积极，但报价与金融方案没有在热度最高时立刻跟上，导致议价周期被拉长。',
               link: '关联客户：王先生 · 03-22 16:02（报价样本）',
               detailParams: {
-                sessionId: 'REC-20260322-1602',
+                sessionId: buildMockRecordingId(3101),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 16:02',
                 sessionCustomer: '王先生',
@@ -18915,7 +19211,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               desc: '能够直接利用 DCC 同步来的基础信息，不重复盘问客户，把时间用在需求深挖和异议处理上。',
               link: '关联客户：陈先生 · 03-22 11:46（成交样本）',
               detailParams: {
-                sessionId: 'REC-20260322-1146',
+                sessionId: buildMockRecordingId(3102),
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 11:46',
                 sessionCustomer: '陈先生',
@@ -18936,7 +19232,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         },
         leads: [
           {
-            id: 'wang',
+            id: buildMockLeadId(4100),
             priority: 'important',
             intent: 'A',
             customer: '王先生',
@@ -18958,7 +19254,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             followUpTime: '2026-03-23 15:00'
           },
           {
-            id: 'zhao',
+            id: buildMockLeadId(4101),
             priority: 'urgent',
             intent: 'A',
             customer: '赵女士',
@@ -18980,7 +19276,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             followUpTime: '2026-03-23 14:00'
           },
           {
-            id: 'huang',
+            id: buildMockLeadId(4102),
             priority: 'urgent',
             intent: 'B',
             customer: '黄先生',
@@ -19002,7 +19298,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             followUpTime: '2026-03-23 16:00'
           },
           {
-            id: 'chen',
+            id: buildMockLeadId(4103),
             priority: 'important',
             intent: 'A',
             customer: '陈先生',
@@ -19024,7 +19320,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             followUpTime: '2026-03-24 10:00'
           },
           {
-            id: 'sun',
+            id: buildMockLeadId(4104),
             priority: 'normal',
             intent: 'C',
             customer: '孙女士',
@@ -19046,7 +19342,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             followUpTime: '2026-03-24 09:00'
           },
           {
-            id: 'wu',
+            id: buildMockLeadId(4105),
             priority: 'urgent',
             intent: 'B',
             customer: '吴女士',

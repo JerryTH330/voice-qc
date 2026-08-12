@@ -7123,7 +7123,7 @@ body::before {
   align-items: center;
   gap: 8px;
   justify-self: end;
-  grid-column: span 3;
+  grid-column: 1 / -1;
 }
 
 #leadsFilterControls .leads-filter-extra {

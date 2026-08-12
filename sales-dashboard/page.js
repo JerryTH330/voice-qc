@@ -1,7 +1,7 @@
 /* 销售看板 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
 (function loadPageRuntime() {
-  const assetVersion = '20260811-figma-panels-v19';
+  const assetVersion = '20260812-real-id-v1';
   const scripts = ["../date-filter-component-utils.js","../shared/issue-rule-list.js","../app-runtime.js"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
