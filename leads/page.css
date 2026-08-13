@@ -1,5 +1,5 @@
 /* 线索列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260812-date-picker-fix-v10");
+@import url("../voice-qc-admin.css?v=20260813-back-to-top-v12");
 @import url("../app-inline.css");
 
 .leads-list-table-wrap {
@@ -2144,8 +2144,10 @@
 
 .table-wrap.customer-aggregate-wrap {
   display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
+  box-sizing: border-box !important;
+  width: calc(100% - 40px) !important;
+  max-width: calc(100% - 40px) !important;
+  margin-inline: 20px !important;
   overflow-x: auto !important;
   overflow-y: visible !important;
   -webkit-overflow-scrolling: touch !important;
@@ -2700,6 +2702,40 @@
   min-width: 80px;
 }
 
+.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target] {
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target] {
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target]:hover,
+.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step.is-journey-target-active {
+  background: rgba(37, 99, 235, 0.06);
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.06);
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target]:hover,
+.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step.is-journey-target-active {
+  background: rgba(37, 99, 235, 0.06);
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.06);
+}
+
+.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target]:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.48);
+  outline-offset: 4px;
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target]:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.48);
+  outline-offset: 4px;
+}
+
 .customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-store,
 .customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-stage {
   display: block;
@@ -2757,6 +2793,28 @@
   border: 1px solid rgba(37, 99, 235, 0.16);
   border-radius: 16px;
   background: #fff;
+  transition: border-color 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
+}
+
+.customer-detail-page .customer-journey-panel .customer-journey-item.is-journey-located .journey-body {
+  border-color: rgba(37, 99, 235, 0.62);
+  background: #f8fbff;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item.is-journey-located .journey-body {
+  border-color: rgba(37, 99, 235, 0.62);
+  background: #f8fbff;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target],
+  .customer-detail-page .customer-journey-panel .customer-journey-item .journey-body,
+  .leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target],
+  .leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item .journey-body {
+    transition: none;
+  }
 }
 
 /* 客户聚合的录音条目严格复用线索旅程规范，门店与顾问信息使用 Figma 角标。 */
@@ -2869,6 +2927,123 @@
   color: #162033;
   font-size: 14px;
   line-height: 20px;
+}
+
+.journey-session-summary-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.journey-session-summary-item {
+  position: relative;
+  padding-left: 14px;
+}
+
+.journey-session-summary-item::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: "•";
+  color: #162033;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.journey-session-summary-item + .journey-session-summary-item {
+  margin-top: 10px;
+}
+
+.journey-session-summary-title {
+  display: block;
+  margin-bottom: 4px;
+  color: #162033;
+  font-weight: 600;
+}
+
+.journey-session-summary-copy p {
+  margin: 0;
+}
+
+.journey-session-summary-copy p + p {
+  margin-top: 4px;
+}
+
+.journey-item.is-summary-collapsed .journey-session-summary-item:first-child {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+  align-items: baseline;
+  column-gap: 12px;
+}
+
+.journey-item.is-summary-collapsed .journey-session-summary-item:first-child .journey-session-summary-title {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.journey-item.is-summary-collapsed .journey-session-summary-item:first-child .journey-session-summary-copy {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-item.is-summary-collapsed .journey-session-summary-item:first-child .journey-session-summary-copy p {
+  display: inline;
+  white-space: nowrap;
+}
+
+.journey-item.is-summary-collapsed .journey-session-summary-item:first-child .journey-session-summary-copy p + p {
+  margin-top: 0;
+  margin-left: 8px;
+}
+
+.journey-session-summary-section {
+  position: relative;
+}
+
+.journey-session-summary-section > .journey-section-content {
+  box-sizing: border-box;
+  padding-right: 92px;
+}
+
+.journey-card-toggle {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.journey-card-toggle:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.journey-card-toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-card-toggle {
+    transition: none;
+  }
 }
 
 .customer-detail-page .customer-journey-panel .customer-journey-item .journey-tags .tag {

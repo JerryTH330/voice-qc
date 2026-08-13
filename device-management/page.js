@@ -168,4 +168,85 @@ document.addEventListener('keydown', (event) => {
   if (!relationModal.hidden) closeModal(relationModal);
 });
 
+function initDeviceBackToTop() {
+  const scrollContainer = document.querySelector('.main');
+  if (!scrollContainer) return;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'global-back-to-top';
+  button.setAttribute('aria-label', '回到顶部');
+  button.setAttribute('title', '回到顶部');
+  button.setAttribute('aria-hidden', 'true');
+  button.tabIndex = -1;
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 14.5 5.5-5.5 5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  document.body.appendChild(button);
+
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let visible = false;
+  let animationFrame = 0;
+
+  const isBlocked = () => !importModal.hidden
+    || !relationModal.hidden
+    || visitDrawer.classList.contains('open');
+  const updateVisibility = () => {
+    const isLongPage = scrollContainer.scrollHeight > scrollContainer.clientHeight * 1.5;
+    const shouldShow = !isBlocked()
+      && isLongPage
+      && (visible ? scrollContainer.scrollTop > 300 : scrollContainer.scrollTop > 600);
+    if (shouldShow === visible) return;
+    visible = shouldShow;
+    button.classList.toggle('is-visible', visible);
+    button.setAttribute('aria-hidden', String(!visible));
+    button.tabIndex = visible ? 0 : -1;
+  };
+  const focusTitle = () => {
+    const title = document.querySelector('.page-title, .topbar h1, main h1, h1');
+    if (!title) return;
+    if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
+    title.focus({ preventScroll: true });
+  };
+  const scrollToTop = () => {
+    if (animationFrame) window.cancelAnimationFrame(animationFrame);
+    const startScrollTop = scrollContainer.scrollTop;
+    if (reducedMotionQuery.matches || startScrollTop < 2) {
+      scrollContainer.scrollTop = 0;
+      updateVisibility();
+      focusTitle();
+      return;
+    }
+    const duration = 500;
+    let startTime = 0;
+    const easeInOutCubic = (progress) => progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      scrollContainer.scrollTop = startScrollTop * (1 - easeInOutCubic(progress));
+      if (progress < 1) {
+        animationFrame = window.requestAnimationFrame(animate);
+        return;
+      }
+      animationFrame = 0;
+      scrollContainer.scrollTop = 0;
+      updateVisibility();
+      focusTitle();
+    };
+    animationFrame = window.requestAnimationFrame(animate);
+  };
+
+  button.addEventListener('click', scrollToTop);
+  scrollContainer.addEventListener('scroll', updateVisibility, { passive: true });
+  window.addEventListener('resize', () => window.requestAnimationFrame(updateVisibility));
+  new MutationObserver(() => window.requestAnimationFrame(updateVisibility)).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'hidden', 'aria-hidden', 'style']
+  });
+  updateVisibility();
+}
+
 setRoute(getRoute(), !window.location.hash);
+initDeviceBackToTop();

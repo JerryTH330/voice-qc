@@ -1,5 +1,5 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260811-figma-panels-v13");
+@import url("../voice-qc-admin.css?v=20260813-back-to-top-v14");
 @import url("../app-inline.css?v=20260811-figma-panels-v13");
 
 /* Figma 546:1160 — 门店核心指标 */
@@ -3495,6 +3495,98 @@ body .uat-review-recording-overlay .recording-library-more {
     flex-direction: column;
     align-items: flex-end;
   }
+}
+
+/* SOP执行分析严格复用厂端看板规范，收口后续历史覆盖。 */
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper {
+  gap: 16px;
+  padding: 21px;
+  border: 1px solid rgba(217, 226, 239, 0.88);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 253, 0.94));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper > .card-header {
+  width: 100%;
+  min-height: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  margin: 0 0 4px;
+  text-align: left;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper > .card-header > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper .card-title {
+  justify-content: flex-start;
+  color: #162033;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.store-dashboard-page #main-panel-advisors .issue-sop-analysis-wrapper .card-sub {
+  margin-top: 4px;
+  color: #617088;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+
+@media (min-width: 961px) {
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-toolbar {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 10px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-sort {
+    width: auto;
+    min-width: max-content;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-sort-trigger .session-select-caret {
+    width: 14px;
+    height: 14px;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-list-head > :last-child {
+    justify-content: flex-start;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action {
+    justify-self: start;
+    color: #2563eb;
+    font-weight: 700;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-action::after {
+    display: block;
+  }
+
+  .store-dashboard-page #main-panel-advisors #detail-sop-analysis :is(.issue-rule-rate, .issue-rule-count) {
+    color: #162033;
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+}
+
+.store-dashboard-page #detail-sop-analysis .store-sop-rule-sort-option.store-model-option.session-menu-option.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(56, 189, 248, 0.08));
+  color: #2563eb;
+}
+
+.store-dashboard-page #detail-sop-analysis .store-sop-rule-sort-option.store-model-option.session-menu-option.active::after {
+  width: 6px;
+  height: 6px;
+  background: #2563eb;
 }
 
 @media (max-width: 640px) {
