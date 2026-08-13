@@ -110,6 +110,153 @@ function initStickyFilterBars() {
   });
 }
 
+function initGlobalBackToTop() {
+  const scrollContainer = document.querySelector('.main');
+  if (!scrollContainer) return null;
+
+  const existingController = window.__globalBackToTopController;
+  if (existingController?.scrollContainer === scrollContainer) {
+    existingController.refresh();
+    return existingController;
+  }
+
+  existingController?.destroy?.();
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'global-back-to-top';
+  button.setAttribute('aria-label', '回到顶部');
+  button.setAttribute('title', '回到顶部');
+  button.setAttribute('aria-hidden', 'true');
+  button.tabIndex = -1;
+  button.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6.5 14.5 5.5-5.5 5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  `;
+  document.body.appendChild(button);
+
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const overlaySelectors = [
+    '.modal-overlay.open',
+    '.modal-backdrop:not([hidden])',
+    '.drawer-backdrop:not([hidden])',
+    '.drawer.open',
+    '.rec-modal-overlay.show',
+    '#issue-recording-library-overlay',
+    '#lead-detail-overlay',
+    '[role="dialog"][aria-modal="true"]',
+    'dialog[open]'
+  ];
+  let visible = false;
+  let animationFrame = 0;
+  let contentObserver = null;
+
+  const isElementVisible = (element) => {
+    if (!(element instanceof HTMLElement)) return false;
+    const style = window.getComputedStyle(element);
+    return style.display !== 'none'
+      && style.visibility !== 'hidden'
+      && style.pointerEvents !== 'none'
+      && Number(style.opacity || 1) > 0;
+  };
+
+  const hasBlockingOverlay = () => overlaySelectors.some((selector) => (
+    Array.from(document.querySelectorAll(selector)).some(isElementVisible)
+  ));
+
+  const updateVisibility = () => {
+    const isLongPage = scrollContainer.scrollHeight > scrollContainer.clientHeight * 1.5;
+    const blocked = hasBlockingOverlay();
+    const shouldShow = !blocked
+      && isLongPage
+      && (visible ? scrollContainer.scrollTop > 300 : scrollContainer.scrollTop > 600);
+
+    if (shouldShow === visible) return;
+    visible = shouldShow;
+    button.classList.toggle('is-visible', visible);
+    button.setAttribute('aria-hidden', String(!visible));
+    button.tabIndex = visible ? 0 : -1;
+  };
+
+  const focusPageTitle = () => {
+    const title = document.getElementById('pageTitle') || document.querySelector('.page-title, main h1, h1');
+    if (!title) return;
+    if (!title.hasAttribute('tabindex')) {
+      title.setAttribute('tabindex', '-1');
+      title.dataset.backToTopFocusTarget = 'true';
+    }
+    title.focus({ preventScroll: true });
+  };
+
+  const scrollToTop = () => {
+    if (animationFrame) {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+    }
+
+    const startScrollTop = scrollContainer.scrollTop;
+    if (reducedMotionQuery.matches || startScrollTop < 2) {
+      scrollContainer.scrollTop = 0;
+      updateVisibility();
+      focusPageTitle();
+      return;
+    }
+
+    const duration = 500;
+    let startTime = 0;
+    const easeInOutCubic = (progress) => progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      scrollContainer.scrollTop = startScrollTop * (1 - easeInOutCubic(progress));
+
+      if (progress < 1) {
+        animationFrame = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      animationFrame = 0;
+      scrollContainer.scrollTop = 0;
+      updateVisibility();
+      focusPageTitle();
+    };
+    animationFrame = window.requestAnimationFrame(animate);
+  };
+
+  const scheduleVisibilityUpdate = () => {
+    window.requestAnimationFrame(updateVisibility);
+  };
+
+  button.addEventListener('click', scrollToTop);
+  scrollContainer.addEventListener('scroll', updateVisibility, { passive: true });
+  window.addEventListener('resize', scheduleVisibilityUpdate);
+  contentObserver = new MutationObserver(scheduleVisibilityUpdate);
+  contentObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'hidden', 'open', 'aria-hidden', 'style']
+  });
+
+  const controller = {
+    scrollContainer,
+    refresh: scheduleVisibilityUpdate,
+    destroy() {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      contentObserver?.disconnect();
+      scrollContainer.removeEventListener('scroll', updateVisibility);
+      window.removeEventListener('resize', scheduleVisibilityUpdate);
+      button.remove();
+    }
+  };
+  window.__globalBackToTopController = controller;
+  updateVisibility();
+  return controller;
+}
+
 function initUnifiedMetricTooltips() {
   const root = document.documentElement;
   if (root.dataset.metricTooltipInit === 'true') return;
@@ -7698,6 +7845,193 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .replace(/'/g, '&#39;')
       }
 
+      const journeySessionSummaryItems = [
+        {
+          title: '客户购车需求',
+          paragraphs: [
+            '核心购车诉求：本次通话未体现预算范围、购车用途、付款方式、是否贷款、是否置换、是否关注补贴或优惠政策等信息。',
+            '总结性描述：本次通话未体现客户核心购车诉求相关信息。'
+          ]
+        },
+        {
+          title: '客户对产品关注',
+          paragraphs: ['核心关注拍照、车辆；拍照关注车辆拍照，车辆关注车辆印象，其中客户最担心的是车辆拍照会影响对车辆的印象。']
+        },
+        {
+          title: '客户竞品识别',
+          paragraphs: ['未讨论']
+        },
+        {
+          title: '成交阻碍',
+          paragraphs: ['本次通话未体现客户未能快速下订或继续推进成交的原因及典型托词，客户当前状态不明。']
+        },
+        {
+          title: '生成客户描摹',
+          paragraphs: [
+            '【客户情况概括】客户是有7座车购车意向的用户，预算在几万块区间，主要关注本品空间、优惠政策和车辆拍照，未讨论竞品，目前处于收集优惠信息阶段，担心车辆拍照影响印象，客户状态仍不明朗。',
+            '【购车需求】预算几万块，关注七座车和20000块钱的优惠，本次通话未提及购车用途、付款方式、是否贷款、是否置换等信息，仍处于收集优惠阶段。',
+            '【产品关注点】核心关注拍照、车辆；拍照关注车辆拍照，车辆关注车辆印象，其中客户最担心的是车辆拍照会影响对车辆的印象。',
+            '【竞品对比】未讨论竞品相关内容，没有进行竞品在价格、配置、空间、续航等方面的对比，本次通话也无相关讨论。',
+            '【成交阻碍】客户目前处于收集优惠信息阶段，还未明确是否下订，主要顾虑车辆优惠是否足够划算，本次通话未提及成交相关内容，客户状态未进一步明确。'
+          ]
+        }
+      ]
+
+      function renderJourneySessionSummaryList() {
+        return `<ul class="journey-session-summary-list">${journeySessionSummaryItems.map((item) => `
+          <li class="journey-session-summary-item">
+            <strong class="journey-session-summary-title">${escapeHtml(item.title)}</strong>
+            <div class="journey-session-summary-copy">${item.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
+          </li>
+        `).join('')}</ul>`
+      }
+
+      function applyJourneySessionSummaryLists() {
+        pageHost.querySelectorAll('.journey-section').forEach((section) => {
+          const label = section.querySelector('.journey-section-label')
+          const content = section.querySelector('.journey-section-content')
+          if (label?.textContent?.includes('会话小结') && content) {
+            content.innerHTML = renderJourneySessionSummaryList()
+          }
+        })
+      }
+
+      function initJourneyCardAccordions(routeId) {
+        const isCustomerDetail = routeId === 'customer-detail'
+        const cardSelector = isCustomerDetail
+          ? '.customer-journey-timeline .customer-journey-item'
+          : '.lead-journey-scroll .journey-item'
+        const cards = Array.from(pageHost.querySelectorAll(cardSelector))
+        const timeline = pageHost.querySelector(isCustomerDetail ? '.customer-journey-timeline' : '.lead-journey-scroll')
+        if (!cards.length || !timeline) {
+          return
+        }
+
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
+        const animationDuration = 240
+
+        const updateToggleButton = (card, expanded) => {
+          const button = card.querySelector('[data-journey-card-toggle]')
+          if (!button) return
+          button.setAttribute('aria-expanded', String(expanded))
+          const copy = button.querySelector('.journey-card-toggle-copy')
+          if (copy) copy.textContent = expanded ? '收起' : '展开'
+          button.classList.toggle('is-expanded', expanded)
+        }
+
+        const setCardExpanded = (card, expanded, { instant = false } = {}) => {
+          const summaryContent = card.querySelector('.journey-session-summary-section > .journey-section-content')
+          if (!summaryContent) return
+
+          summaryContent._journeyCardAnimation?.cancel()
+          summaryContent._journeyCardAnimation = null
+          const lineHeight = Number.parseFloat(window.getComputedStyle(summaryContent).lineHeight) || 20
+          card.classList.toggle('is-summary-expanded', expanded)
+          card.classList.toggle('is-summary-collapsed', !expanded)
+          updateToggleButton(card, expanded)
+
+          if (instant || reducedMotionQuery.matches || typeof summaryContent.animate !== 'function') {
+            summaryContent.style.height = expanded ? '' : `${lineHeight}px`
+            summaryContent.style.overflow = expanded ? '' : 'hidden'
+            return
+          }
+
+          if (expanded) {
+            const startHeight = summaryContent.getBoundingClientRect().height
+            const targetHeight = summaryContent.scrollHeight
+            summaryContent.style.overflow = 'hidden'
+            summaryContent._journeyCardAnimation = summaryContent.animate([
+              { height: `${startHeight}px` },
+              { height: `${targetHeight}px` }
+            ], {
+              duration: animationDuration,
+              easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+            })
+            summaryContent._journeyCardAnimation.addEventListener('finish', () => {
+              summaryContent._journeyCardAnimation = null
+              summaryContent.style.height = ''
+              summaryContent.style.overflow = ''
+            }, { once: true })
+            return
+          }
+
+          const startHeight = summaryContent.getBoundingClientRect().height
+          summaryContent.style.overflow = 'hidden'
+          summaryContent._journeyCardAnimation = summaryContent.animate([
+            { height: `${startHeight}px` },
+            { height: `${lineHeight}px` }
+          ], {
+            duration: animationDuration,
+            easing: 'cubic-bezier(0.64, 0, 0.78, 0)'
+          })
+          summaryContent._journeyCardAnimation.addEventListener('finish', () => {
+            summaryContent._journeyCardAnimation = null
+            summaryContent.style.height = `${lineHeight}px`
+            summaryContent.style.overflow = 'hidden'
+          }, { once: true })
+        }
+
+        const stabilizeCardPosition = (card, anchorTop) => {
+          if (!scrollContainer || reducedMotionQuery.matches) {
+            return
+          }
+          const startTime = performance.now()
+          const stabilize = (timestamp) => {
+            if (!card.isConnected) return
+            const offset = card.getBoundingClientRect().top - anchorTop
+            if (Math.abs(offset) > 0.5) {
+              scrollContainer.scrollTop += offset
+            }
+            if (timestamp - startTime < animationDuration + 40) {
+              window.requestAnimationFrame(stabilize)
+            }
+          }
+          window.requestAnimationFrame(stabilize)
+        }
+
+        const collapseAll = ({ instant = false } = {}) => {
+          cards.forEach((card) => setCardExpanded(card, false, { instant }))
+        }
+
+        cards.forEach((card, index) => {
+          const summarySection = Array.from(card.querySelectorAll('.journey-section')).find((section) => (
+            section.querySelector('.journey-section-label')?.textContent.includes('会话小结')
+          ))
+          const summaryContent = summarySection?.querySelector('.journey-section-content')
+          if (!summarySection || !summaryContent) return
+          summarySection.classList.add('journey-session-summary-section')
+          const summaryId = `journey-card-summary-${routeId}-${index + 1}`
+          summaryContent.id = summaryId
+
+          const toggleButton = document.createElement('button')
+          toggleButton.type = 'button'
+          toggleButton.className = 'journey-card-toggle'
+          toggleButton.dataset.journeyCardToggle = 'true'
+          toggleButton.setAttribute('aria-controls', summaryId)
+          toggleButton.setAttribute('aria-expanded', 'false')
+          toggleButton.innerHTML = '<span class="journey-card-toggle-copy">展开</span>'
+          toggleButton.addEventListener('click', () => {
+            const shouldExpand = !card.classList.contains('is-summary-expanded')
+            const previouslyExpanded = cards.find((item) => item !== card && item.classList.contains('is-summary-expanded'))
+            const anchorTop = card.getBoundingClientRect().top
+
+            if (previouslyExpanded) {
+              setCardExpanded(previouslyExpanded, false)
+            }
+            setCardExpanded(card, shouldExpand)
+
+            if (shouldExpand && previouslyExpanded) {
+              stabilizeCardPosition(card, anchorTop)
+            }
+          })
+          summarySection.appendChild(toggleButton)
+        })
+
+        timeline._collapseJourneyCards = collapseAll
+        collapseAll({ instant: true })
+      }
+
       function getScriptLibrarySceneKey(scene) {
         if (scene === '邀约') {
           return 'invite'
@@ -13601,6 +13935,188 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         syncJourneyHeaderWidth(pageHost.querySelector('.lead-journey-scroll'))
       }
 
+      function bindCustomerJourneyNodeNavigation() {
+        const steps = Array.from(pageHost.querySelectorAll('[data-customer-journey-target]'))
+        const cards = Array.from(pageHost.querySelectorAll('[data-customer-journey-entry]'))
+        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
+        if (!steps.length || !cards.length || !scrollContainer) {
+          return
+        }
+
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const isDocumentScroll = scrollContainer === document.scrollingElement
+          || scrollContainer === document.documentElement
+          || scrollContainer === document.body
+        let scrollAnimationFrame = 0
+
+        const highlightCard = (card, step) => {
+          cards.forEach((item) => item.classList.remove('is-journey-located'))
+          steps.forEach((item) => item.classList.remove('is-journey-target-active'))
+          card.classList.add('is-journey-located')
+          step.classList.add('is-journey-target-active')
+          window.clearTimeout(card._journeyLocatedTimer)
+          card._journeyLocatedTimer = window.setTimeout(() => {
+            card.classList.remove('is-journey-located')
+            step.classList.remove('is-journey-target-active')
+          }, 1100)
+        }
+
+        const scrollToCard = (card, step) => {
+          if (scrollAnimationFrame) {
+            window.cancelAnimationFrame(scrollAnimationFrame)
+            scrollAnimationFrame = 0
+          }
+
+          const startScrollTop = scrollContainer.scrollTop
+          const containerTop = isDocumentScroll ? 0 : scrollContainer.getBoundingClientRect().top
+          const targetScrollTop = Math.max(0, Math.min(
+            scrollContainer.scrollHeight - scrollContainer.clientHeight,
+            startScrollTop + card.getBoundingClientRect().top - containerTop - 24
+          ))
+
+          if (reducedMotionQuery.matches || Math.abs(targetScrollTop - startScrollTop) < 2) {
+            scrollContainer.scrollTop = targetScrollTop
+            highlightCard(card, step)
+            return
+          }
+
+          const duration = 560
+          let startTime = 0
+          const easeInOutCubic = (progress) => progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
+          const animateScroll = (timestamp) => {
+            if (!card.isConnected) {
+              scrollAnimationFrame = 0
+              return
+            }
+            if (!startTime) startTime = timestamp
+            const progress = Math.min((timestamp - startTime) / duration, 1)
+            const easedProgress = easeInOutCubic(progress)
+            scrollContainer.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * easedProgress
+
+            if (progress < 1) {
+              scrollAnimationFrame = window.requestAnimationFrame(animateScroll)
+              return
+            }
+
+            scrollAnimationFrame = 0
+            scrollContainer.scrollTop = targetScrollTop
+            highlightCard(card, step)
+          }
+          scrollAnimationFrame = window.requestAnimationFrame(animateScroll)
+        }
+
+        steps.forEach((step) => {
+          const targetId = step.dataset.customerJourneyTarget || ''
+          const card = cards.find((item) => item.dataset.customerJourneyEntry === targetId)
+          if (!card) return
+
+          step.setAttribute('role', 'button')
+          step.setAttribute('tabindex', '0')
+          const stage = step.querySelector('.customer-hero-flat-stage')?.textContent.trim() || '当前节点'
+          const date = step.querySelector('.customer-hero-flat-date')?.textContent.trim() || ''
+          step.setAttribute('aria-label', `定位到${date ? `${date} ` : ''}${stage}对应的会话卡片`)
+          step.addEventListener('click', () => scrollToCard(card, step))
+          step.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            scrollToCard(card, step)
+          })
+        })
+      }
+
+      function bindLeadJourneyNodeNavigation() {
+        const steps = Array.from(pageHost.querySelectorAll('[data-lead-journey-target]'))
+        const cards = Array.from(pageHost.querySelectorAll('[data-lead-journey-entry]'))
+        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
+        if (!steps.length || steps.length !== cards.length || !scrollContainer) {
+          return
+        }
+
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const isDocumentScroll = scrollContainer === document.scrollingElement
+          || scrollContainer === document.documentElement
+          || scrollContainer === document.body
+        let scrollAnimationFrame = 0
+
+        const highlightCard = (card, step) => {
+          cards.forEach((item) => item.classList.remove('is-journey-located'))
+          steps.forEach((item) => item.classList.remove('is-journey-target-active'))
+          card.classList.add('is-journey-located')
+          step.classList.add('is-journey-target-active')
+          window.clearTimeout(card._journeyLocatedTimer)
+          card._journeyLocatedTimer = window.setTimeout(() => {
+            card.classList.remove('is-journey-located')
+            step.classList.remove('is-journey-target-active')
+          }, 1100)
+        }
+
+        const scrollToCard = (card, step) => {
+          if (scrollAnimationFrame) {
+            window.cancelAnimationFrame(scrollAnimationFrame)
+            scrollAnimationFrame = 0
+          }
+
+          const startScrollTop = scrollContainer.scrollTop
+          const containerTop = isDocumentScroll ? 0 : scrollContainer.getBoundingClientRect().top
+          const targetScrollTop = Math.max(0, Math.min(
+            scrollContainer.scrollHeight - scrollContainer.clientHeight,
+            startScrollTop + card.getBoundingClientRect().top - containerTop - 24
+          ))
+
+          if (reducedMotionQuery.matches || Math.abs(targetScrollTop - startScrollTop) < 2) {
+            scrollContainer.scrollTop = targetScrollTop
+            highlightCard(card, step)
+            return
+          }
+
+          const duration = 560
+          let startTime = 0
+          const easeInOutCubic = (progress) => progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
+          const animateScroll = (timestamp) => {
+            if (!card.isConnected) {
+              scrollAnimationFrame = 0
+              return
+            }
+            if (!startTime) startTime = timestamp
+            const progress = Math.min((timestamp - startTime) / duration, 1)
+            const easedProgress = easeInOutCubic(progress)
+            scrollContainer.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * easedProgress
+
+            if (progress < 1) {
+              scrollAnimationFrame = window.requestAnimationFrame(animateScroll)
+              return
+            }
+
+            scrollAnimationFrame = 0
+            scrollContainer.scrollTop = targetScrollTop
+            highlightCard(card, step)
+          }
+          scrollAnimationFrame = window.requestAnimationFrame(animateScroll)
+        }
+
+        steps.forEach((step) => {
+          const targetId = step.dataset.leadJourneyTarget || ''
+          const card = cards.find((item) => item.dataset.leadJourneyEntry === targetId)
+          if (!card) return
+
+          step.setAttribute('role', 'button')
+          step.setAttribute('tabindex', '0')
+          const stage = step.querySelector('.lead-detail-hero-step-label')?.textContent.trim() || '当前节点'
+          const date = step.querySelector('.lead-detail-hero-step-meta')?.textContent.trim() || ''
+          step.setAttribute('aria-label', `定位到${date ? `${date} ` : ''}${stage}对应的会话卡片`)
+          step.addEventListener('click', () => scrollToCard(card, step))
+          step.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            scrollToCard(card, step)
+          })
+        })
+      }
+
       function getCustomerJourneyLevelMeta(intentLevel) {
         if (intentLevel === '高') return { stepClass: 'is-high', levelClass: 'level-high' }
         if (intentLevel === '低') return { stepClass: 'is-low', levelClass: 'level-low' }
@@ -13619,7 +14135,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const levelMeta = getCustomerJourneyLevelMeta(entry.intentLevel)
           const toneClass = entry.tone ? ` customer-hero-flat-store-${entry.tone}` : ''
           return `
-            <div class="lead-detail-hero-step customer-hero-flat-step ${levelMeta.stepClass}" data-hero-timeline-step="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
+            <div class="lead-detail-hero-step customer-hero-flat-step ${levelMeta.stepClass}" data-hero-timeline-step="${escapeHtml(entry.id)}" data-customer-journey-target="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
               <div class="lead-detail-hero-step-connector" aria-hidden="true"></div>
               <div class="lead-detail-hero-step-marker customer-hero-flat-marker">${escapeHtml(entry.intentLevel)}</div>
               <div class="lead-detail-hero-step-label customer-hero-flat-stage" title="${escapeHtml(entry.stage)}">${escapeHtml(entry.stage)}</div>
@@ -13635,7 +14151,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const levelMeta = getCustomerJourneyLevelMeta(entry.intentLevel)
             const toneClass = entry.tone ? ` customer-journey-item-${entry.tone}` : ''
             return `
-              <article class="journey-item customer-journey-item${toneClass}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
+              <article class="journey-item customer-journey-item${toneClass}" data-customer-journey-entry="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
                 <div class="journey-header">
                   <div class="journey-headline">
                     <div class="journey-time">${escapeHtml(entry.time)}</div>
@@ -13658,7 +14174,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <div class="journey-body">
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                    <div class="journey-section-content">${escapeHtml(entry.summary)}</div>
+                    <div class="journey-section-content">${renderJourneySessionSummaryList()}</div>
                   </div>
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
@@ -14143,6 +14659,92 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           })
           .map(({ item }) => item)
         let selectedScope = 'all'
+        let scrollAnimationFrame = 0
+        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const initialBoardPaddingBottom = board.style.paddingBottom
+        const baseBoardPaddingBottom = Number.parseFloat(window.getComputedStyle(board).paddingBottom) || 0
+
+        const setScrollCompensation = (height) => {
+          board.style.paddingBottom = `${baseBoardPaddingBottom + Math.max(0, height)}px`
+        }
+
+        const restoreBoardPadding = () => {
+          board.style.paddingBottom = initialBoardPaddingBottom
+        }
+
+        const animateHeightChange = (applyChange) => {
+          if (!scrollContainer || reducedMotionQuery.matches) {
+            applyChange()
+            return
+          }
+
+          if (scrollAnimationFrame) {
+            window.cancelAnimationFrame(scrollAnimationFrame)
+            scrollAnimationFrame = 0
+          }
+
+          const scrollTopBefore = scrollContainer.scrollTop
+          const scrollHeightBefore = scrollContainer.scrollHeight
+          const guardHeight = Math.max(scrollHeightBefore, scrollContainer.clientHeight)
+
+          // 先用临时占位撑住原有滚动范围，避免筛选内容时被浏览器单帧拉回顶部。
+          setScrollCompensation(guardHeight)
+          applyChange()
+
+          const naturalScrollHeight = Math.max(
+            scrollContainer.clientHeight,
+            scrollContainer.scrollHeight - guardHeight
+          )
+          const targetScrollTop = Math.min(
+            scrollTopBefore,
+            Math.max(0, naturalScrollHeight - scrollContainer.clientHeight)
+          )
+          const requiredCompensation = Math.max(0, scrollTopBefore - targetScrollTop)
+
+          setScrollCompensation(requiredCompensation)
+          scrollContainer.scrollTop = scrollTopBefore
+
+          if (requiredCompensation < 1) {
+            restoreBoardPadding()
+            return
+          }
+
+          const duration = 360
+          let startTime = 0
+          const easeInOutCubic = (progress) => progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
+
+          const step = (timestamp) => {
+            if (!board.isConnected) {
+              scrollAnimationFrame = 0
+              return
+            }
+            if (!startTime) {
+              startTime = timestamp
+            }
+
+            const progress = Math.min((timestamp - startTime) / duration, 1)
+            const easedProgress = easeInOutCubic(progress)
+            const remainingCompensation = requiredCompensation * (1 - easedProgress)
+
+            setScrollCompensation(remainingCompensation)
+            scrollContainer.scrollTop = scrollTopBefore
+              + (targetScrollTop - scrollTopBefore) * easedProgress
+
+            if (progress < 1) {
+              scrollAnimationFrame = window.requestAnimationFrame(step)
+              return
+            }
+
+            scrollAnimationFrame = 0
+            restoreBoardPadding()
+            scrollContainer.scrollTop = targetScrollTop
+          }
+
+          scrollAnimationFrame = window.requestAnimationFrame(step)
+        }
 
         const applyFilter = () => {
           timeSortedItems.forEach((item) => {
@@ -14197,8 +14799,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         scopeCards.forEach((card) => {
           card.addEventListener('click', () => {
-            selectedScope = card.dataset.customerJourneyScope || 'all'
-            applyFilter()
+            const nextScope = card.dataset.customerJourneyScope || 'all'
+            if (nextScope === selectedScope) {
+              return
+            }
+            timeline._collapseJourneyCards?.({ instant: true })
+            selectedScope = nextScope
+            animateHeightChange(applyFilter)
           })
         })
 
@@ -14277,6 +14884,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         window.requestAnimationFrame(syncCustomerJourneyHeaderWidth)
         bindCustomerStoreEvolutionUI()
         bindCustomerDetailEvolutionUI()
+        bindCustomerJourneyNodeNavigation()
         bindLeadDetailSessionLinks(customerPayload)
         syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
@@ -14396,7 +15004,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             steps.push({
               label: `节点${i + 1}`,
               meta: `${formatLeadDetailEvolutionDate(date)}`,
-              level
+              level,
+              entryKey: `lead-journey-node-${i + 1}`,
+              recordingId: `20873460179257${String(13920 + i)}`,
+              time: `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())} ${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
             })
           }
           return steps
@@ -14448,6 +15059,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentText: lead.summary,
           evidenceText: `来源 ${lead.source}；当前阶段为“${lead.stage}”；质检场景为“${sceneLabel}”；客户标签包括 ${tags.slice(0, 3).join('、')}；客户表示“再考虑一下”。`,
           evolutionSteps: buildLeadDetailEvolutionSteps(lead, role),
+          isMultiNodeJourneyDemo: Boolean(lead.isMultiNodeJourneyDemo),
           actionText: lead.action,
           reminderBadge: lead.followUpTime ? '需要二次跟进' : '持续跟进',
           reminderTime: lead.followUpTime || '待确认',
@@ -14648,13 +15260,74 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         return (steps || []).map((step, index, list) => `
-          <div class="lead-detail-hero-step${index < list.length - 1 ? ' is-complete' : ''}${index === list.length - 1 ? ' is-current' : ''}">
+          <div class="lead-detail-hero-step${index < list.length - 1 ? ' is-complete' : ''}${index === list.length - 1 ? ' is-current' : ''}"${step.entryKey ? ` data-lead-journey-target="${escapeHtml(step.entryKey)}"` : ''}>
             ${index < list.length - 1 ? '<div class="lead-detail-hero-step-connector" aria-hidden="true"></div>' : ''}
             <div class="lead-detail-hero-step-marker tone-${getLevelTone(getLevelText(step))}">${escapeHtml(getLevelText(step))}</div>
-            <div class="lead-detail-hero-step-label" tabindex="0" title="${escapeHtml(step.label || '-')}" aria-label="${escapeHtml(step.label || '-')}">${escapeHtml(step.label || '-')}</div>
+            <div class="lead-detail-hero-step-label"${step.entryKey ? '' : ' tabindex="0"'} title="${escapeHtml(step.label || '-')}" aria-label="${escapeHtml(step.label || '-')}">${escapeHtml(step.label || '-')}</div>
             <div class="lead-detail-hero-step-meta">${escapeHtml(step.meta || '')}</div>
           </div>
         `).join('')
+      }
+
+      function renderLeadDetailJourneyEntries(payload) {
+        if (!payload?.isMultiNodeJourneyDemo) return
+
+        const timeline = pageHost.querySelector('.lead-journey-scroll')
+        const entries = [...(payload.evolutionSteps || [])].reverse()
+        if (!timeline || entries.length !== 21) return
+
+        const strategyCopies = [
+          '及时回访客户当前考虑进度，确认下一次沟通时间并记录新的关注点。',
+          '结合客户关注的空间与舒适性提供针对性说明，推动客户继续到店体验。',
+          '同步最新优惠、金融和置换方案，针对价格顾虑给出清晰的费用说明。'
+        ]
+        const tagGroups = [
+          ['持续跟进', '传祺M8', '价格敏感'],
+          ['家庭出行', '空间关注', '周末到店'],
+          ['金融方案', '置换补贴', '决策待推动']
+        ]
+        const tagTones = ['green', 'blue', 'amber']
+        const levelClassMap = { 高: 'level-high', 中: 'level-medium', 低: 'level-low' }
+
+        timeline.innerHTML = `
+          <div class="journey-axis-track" aria-hidden="true"></div>
+          ${entries.map((entry, index) => `
+            <div class="journey-item" data-lead-journey-entry="${escapeHtml(entry.entryKey)}">
+              <div class="journey-header">
+                <div class="journey-headline">
+                  <div class="journey-time">${escapeHtml(entry.time)}</div>
+                  <div class="journey-level ${levelClassMap[entry.level] || 'level-medium'}">${escapeHtml(entry.label)}·${escapeHtml(entry.level)}</div>
+                </div>
+                <div class="journey-call-id">
+                  <span class="journey-call-id-label">录音ID</span>
+                  <a
+                    class="lead-journey-session-link"
+                    data-lead-session-link="true"
+                    data-session-id="${escapeHtml(entry.recordingId)}"
+                    data-session-date="${escapeHtml(entry.time.slice(0, 10).replaceAll('-', '/'))}"
+                    data-session-scene="${escapeHtml(entry.label)}"
+                    href="javascript:void(0)"
+                  ><span class="journey-call-id-value">${escapeHtml(entry.recordingId)}</span><span class="journey-call-id-arrow" aria-hidden="true"></span></a>
+                </div>
+              </div>
+              <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
+              <div class="journey-body">
+                <div class="journey-section">
+                  <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
+                  <div class="journey-section-content">${renderJourneySessionSummaryList()}</div>
+                </div>
+                <div class="journey-section">
+                  <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
+                  <div class="journey-section-content">${escapeHtml(strategyCopies[index % strategyCopies.length])}</div>
+                </div>
+                <div class="journey-section">
+                  <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-tags.svg" alt="" />客户标签</div>
+                  <div class="journey-tags">${tagGroups[index % tagGroups.length].map((tag, tagIndex) => `<span class="tag ${tagTones[tagIndex]}">${escapeHtml(tag)}</span>`).join('')}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        `
       }
 
       function bindJourneyEvolutionUI(container, track, options = {}) {
@@ -14931,6 +15604,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         setText('#leadDetailHeroTitle', maskLeadDetailCustomerName(payload.customer))
         setHtml('#leadDetailHeroTags', renderLeadDetailHeroTags(payload.heroTags))
         setHtml('#leadDetailHeroEvolutionSteps', renderLeadDetailEvolutionSteps(payload.evolutionSteps))
+        renderLeadDetailJourneyEntries(payload)
         setText('#leadDetailIntentLevel', `AI意向级别：${payload.intentLevel}`)
         const intentLevelNode = pageHost.querySelector('#leadDetailIntentLevel')
         if (intentLevelNode) {
@@ -14995,6 +15669,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           leadPayload = buildLeadDetailPayload(selectedLead, leadSelection.source)
           applyLeadDetailPayload(leadPayload)
           bindLeadDetailEvolutionUI()
+          bindLeadJourneyNodeNavigation()
           syncLeadDetailModelRow(leadPayload.models, true)
         } else {
           window.requestAnimationFrame(syncLeadDetailTagCloudLayout)
@@ -20477,6 +21152,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           initCustomerDetailPage()
         }
 
+        if (activeRouteId === 'leads-detail' || activeRouteId === 'customer-detail') {
+          applyJourneySessionSummaryLists()
+          initJourneyCardAccordions(activeRouteId)
+        }
+
         if (activeRouteId === 'dashboard' || activeRouteId === 'store-dashboard') {
           initStoreDashboardPage()
         }
@@ -20490,6 +21170,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         syncRoute(activeRouteId)
+        window.__globalBackToTopController?.refresh()
       }
 
       navButtons.forEach((button) => {
@@ -20565,4 +21246,5 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       })
 
       renderPage(getCurrentRoute())
+      initGlobalBackToTop()
     

@@ -2,7 +2,7 @@
 window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
 (function loadPageRuntime() {
   const assetVersion = '20260812-real-id-v1';
-  const scripts = ["../date-filter-component-utils.js","../shared/issue-rule-list.js","../app-runtime.js"];
+  const scripts = ["../date-filter-component-utils.js","../shared/issue-rule-list.js","../app-runtime.js?v=20260813-back-to-top-v1"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');

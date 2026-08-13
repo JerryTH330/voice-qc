@@ -1,5 +1,5 @@
 /* 销售看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260811-figma-panels-v19");
+@import url("../voice-qc-admin.css?v=20260813-back-to-top-v20");
 @import url("../app-inline.css?v=20260811-figma-panels-v19");
 
 .sales-role-dashboard-page .hm-label--ellipsis {
@@ -2045,4 +2045,97 @@ body .sales-recording-library-overlay .recording-library-more {
 
 .sales-role-dashboard-page .sales-sop-review-list > .issue-rule-pagination {
   margin: 0;
+}
+
+/* SOP执行分析严格复用厂端看板规范，收口后续历史覆盖。 */
+.sales-role-dashboard-page .sales-sop-review-card {
+  gap: 16px;
+  padding: 21px;
+  border: 1px solid rgba(217, 226, 239, 0.88);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 253, 0.94));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.sales-role-dashboard-page .sales-sop-review-card > .card-header {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  margin: 0 0 4px;
+  text-align: left;
+}
+
+.sales-role-dashboard-page .sales-sop-review-card > .card-header > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.sales-role-dashboard-page .sales-sop-review-card .card-title {
+  justify-content: flex-start;
+  color: #162033;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.sales-role-dashboard-page .sales-sop-review-card .card-sub {
+  margin-top: 4px;
+  color: #617088;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.sales-role-dashboard-page .sales-sop-review-toolbar .store-sop-rule-toolbar {
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 10px;
+}
+
+.sales-role-dashboard-page .sales-sop-review-toolbar .store-sop-rule-field--sort {
+  width: auto;
+  min-width: max-content;
+}
+
+.sales-role-dashboard-page .sales-sop-review-list .issue-rule-list-head > :last-child {
+  justify-self: start;
+}
+
+.sales-role-dashboard-page .sales-sop-review-list :is(.issue-rule-rate, .issue-rule-count) {
+  color: #162033;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.sales-role-dashboard-page .sales-sop-review-list .issue-rule-action {
+  justify-self: start;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.sales-role-dashboard-page .sales-sop-review-list .issue-rule-action::after {
+  display: block;
+}
+
+.sales-role-dashboard-page .sales-sop-review-toolbar .sales-review-sop-sort-option.store-model-option.session-menu-option.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(56, 189, 248, 0.08));
+  color: #2563eb;
+}
+
+.sales-role-dashboard-page .sales-sop-review-toolbar .sales-review-sop-sort-option.store-model-option.session-menu-option.active::after {
+  width: 6px;
+  height: 6px;
+  background: #2563eb;
+}
+
+@media (max-width: 900px) {
+  .sales-role-dashboard-page .sales-sop-review-list .issue-rule-action {
+    justify-self: stretch;
+  }
 }
