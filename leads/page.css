@@ -1,11 +1,22 @@
 /* 线索列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260813-back-to-top-v12");
+@import url("../voice-qc-admin.css?v=20260814-filter-popover-layer-v2");
 @import url("../app-inline.css");
 
 .leads-list-table-wrap {
   box-sizing: border-box;
   width: calc(100% - 40px);
   margin-inline: 20px;
+}
+
+.leads-data-table thead th:last-child,
+.leads-data-table tbody td:last-child {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.leads-data-table:not(.customer-aggregate-table) {
+  min-width: 2180px;
 }
 
 .ai-lead-validity-heading {
@@ -1379,10 +1390,11 @@
   background: rgba(255, 255, 255, 0.7);
 }
 
-.customer-detail-page .customer-insight-ai-title {
+.customer-detail-page .customer-insight-ai-title,
+.customer-detail-page .customer-insight-section-title {
   min-height: 22px;
   color: #1e293b;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 22px;
 }
@@ -2195,9 +2207,9 @@
 #leadsDataTable.customer-aggregate-table td:last-child {
   position: sticky !important;
   right: 0 !important;
-  width: 112px !important;
-  min-width: 112px !important;
-  max-width: 112px !important;
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
   background: #ffffff !important;
   z-index: 5 !important;
   box-shadow: -12px 0 20px rgba(15, 23, 42, 0.05) !important;
@@ -2715,15 +2727,17 @@
 }
 
 .customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target]:hover,
-.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step.is-journey-target-active {
+.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target]:hover {
   background: rgba(37, 99, 235, 0.06);
   box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.06);
 }
 
-.leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target]:hover,
+.customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step.is-journey-target-active,
 .leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step.is-journey-target-active {
-  background: rgba(37, 99, 235, 0.06);
-  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.06);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.14);
+  animation: journey-node-locate-pulse 2s ease-in-out both;
 }
 
 .customer-detail-page .customer-detail-journey-evolution .customer-hero-flat-step[data-customer-journey-target]:focus-visible {
@@ -2797,15 +2811,59 @@
 }
 
 .customer-detail-page .customer-journey-panel .customer-journey-item.is-journey-located .journey-body {
-  border-color: rgba(37, 99, 235, 0.62);
+  border-color: #2563eb;
+  outline: 2px solid #2563eb;
+  outline-offset: -1px;
   background: #f8fbff;
-  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.18);
+  animation: journey-card-locate-pulse 2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item .journey-body {
+  transition: border-color 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item.is-journey-located .journey-body {
-  border-color: rgba(37, 99, 235, 0.62);
+  border-color: #2563eb;
+  outline: 2px solid #2563eb;
+  outline-offset: -1px;
   background: #f8fbff;
-  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.18);
+  animation: journey-card-locate-pulse 2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes journey-card-locate-pulse {
+  0%, 100% {
+    outline-color: rgba(37, 99, 235, 0.72);
+    background: #f8fbff;
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.16), 0 0 0 0 rgba(37, 99, 235, 0.18);
+  }
+
+  20%, 62% {
+    outline-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.22), 0 0 0 8px rgba(37, 99, 235, 0.12);
+  }
+
+  40%, 82% {
+    outline-color: rgba(37, 99, 235, 0.86);
+    background: #f5f9ff;
+    box-shadow: 0 11px 30px rgba(37, 99, 235, 0.18), 0 0 0 3px rgba(37, 99, 235, 0.08);
+  }
+}
+
+@keyframes journey-node-locate-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  }
+
+  20%, 62% {
+    box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.18);
+  }
+
+  40%, 82% {
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.13);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2814,6 +2872,7 @@
   .leads-detail-page:not(.customer-detail-page) .lead-detail-journey-evolution .lead-detail-hero-step[data-lead-journey-target],
   .leads-detail-page:not(.customer-detail-page) .lead-journey-scroll .journey-item .journey-body {
     transition: none;
+    animation: none;
   }
 }
 
@@ -3006,7 +3065,7 @@
 
 .journey-session-summary-section > .journey-section-content {
   box-sizing: border-box;
-  padding-right: 92px;
+  padding-right: 44px;
 }
 
 .journey-card-toggle {
@@ -3016,17 +3075,27 @@
   z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 14px;
   background: #fff;
   color: #4b5563;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
   cursor: pointer;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.08);
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.journey-card-toggle-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.journey-card-toggle.is-expanded .journey-card-toggle-icon {
+  transform: rotate(180deg);
 }
 
 .journey-card-toggle:hover {
@@ -3042,6 +3111,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .journey-card-toggle {
+    transition: none;
+  }
+
+  .journey-card-toggle-icon {
     transition: none;
   }
 }
