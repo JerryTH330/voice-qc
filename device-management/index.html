@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>设备管理 · AI质检平台</title>
+    <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20260813-back-to-top-v1" />
+    <link rel="stylesheet" href="./page.css?v=20260813-badge-low-battery-log-v15" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -15,7 +15,6 @@
           <span class="brand-mark"><img src="../assets/ds-logo.png" alt="DS" /></span>
           <span class="brand-copy"><strong>AI质检平台</strong></span>
         </div>
-
         <nav class="nav-scroll" aria-label="主导航">
           <section class="nav-group">
             <div class="nav-label">看板</div>
@@ -24,203 +23,199 @@
             <a class="nav-item" href="../store-dashboard/index.html"><span class="nav-icon nav-device-symbol">▤</span><span class="nav-text">门店看板</span></a>
             <a class="nav-item" href="../sales-dashboard/index.html"><span class="nav-icon nav-device-symbol">♙</span><span class="nav-text">销售看板</span></a>
           </section>
-
           <section class="nav-group">
             <div class="nav-label">业务</div>
             <a class="nav-item" href="../script-library/index.html"><span class="nav-icon nav-device-symbol">▰</span><span class="nav-text">优秀话术库</span></a>
             <a class="nav-item" href="../session/index.html"><span class="nav-icon nav-device-symbol">◉</span><span class="nav-text">录音列表</span></a>
             <a class="nav-item" href="../leads/index.html"><span class="nav-icon nav-device-symbol">⌁</span><span class="nav-text">线索列表</span></a>
           </section>
-
-          <section class="nav-group" aria-label="设备">
-            <div class="nav-label">设备</div>
-            <button class="nav-item device-nav active" type="button" data-route="visits"><span class="nav-icon nav-device-symbol">◫</span><span class="nav-text">到访记录</span></button>
-            <button class="nav-item device-nav" type="button" data-route="projects"><span class="nav-icon nav-device-symbol">◇</span><span class="nav-text">设备门店</span></button>
-            <button class="nav-item device-nav" type="button" data-route="docks"><span class="nav-icon nav-device-symbol">▱</span><span class="nav-text">充电坞</span></button>
-            <button class="nav-item device-nav" type="button" data-route="badges"><span class="nav-icon nav-device-symbol">▣</span><span class="nav-text">工牌状态</span></button>
-            <button class="nav-item device-nav" type="button" data-route="relations"><span class="nav-icon nav-device-symbol">⇄</span><span class="nav-text">工牌关系</span></button>
-            <button class="nav-item device-nav" type="button" data-route="dashboard"><span class="nav-icon nav-device-symbol">▥</span><span class="nav-text">工牌看板</span></button>
+          <section class="nav-group" aria-label="工牌">
+            <div class="nav-label">工牌</div>
+            <button class="nav-item device-nav" type="button" data-route="stores"><span class="nav-icon nav-device-symbol">◇</span><span class="nav-text">门店总览</span></button>
+            <button class="nav-item device-nav" type="button" data-route="badges"><span class="nav-icon nav-device-symbol">▣</span><span class="nav-text">工牌明细</span></button>
+            <button class="nav-item device-nav active" type="button" data-route="visits"><span class="nav-icon nav-device-symbol">◫</span><span class="nav-text">到访明细</span></button>
+            <button class="nav-item device-nav" type="button" data-route="dashboard"><span class="nav-icon nav-device-symbol">▥</span><span class="nav-text">录音匹配排查</span></button>
           </section>
-
           <section class="nav-group" aria-label="管理">
             <div class="nav-label">管理</div>
             <a class="nav-item" href="../config/index.html"><span class="nav-icon nav-device-symbol">⚙</span><span class="nav-text">质检配置</span></a>
             <a class="nav-item" href="../system/index.html"><span class="nav-icon nav-device-symbol">▰</span><span class="nav-text">系统管理</span></a>
           </section>
         </nav>
-
       </aside>
 
       <main class="main">
         <header class="topbar">
-          <div>
-            <h1 id="pageTitle">到访记录</h1>
-            <p id="pageDescription">统一查看销售助手与人工导入的到访记录及录音匹配结果</p>
-          </div>
+          <div><h1 id="pageTitle">到访明细</h1><p id="pageDescription">查看销售助手到访数据与工牌录音的完整处理状态</p></div>
           <div class="top-actions" id="topActions"></div>
         </header>
 
         <div class="page-content">
-          <section class="page-panel active" data-page="visits">
-            <div class="filter-card">
-              <div class="filter-grid visits-filter-grid">
-                <label class="field span-2"><span>客户信息</span><input type="search" placeholder="客户ID / 姓名 / 电话" /></label>
-                <label class="field"><span>所属门店</span><select><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option></select></label>
-                <label class="field"><span>员工名称</span><select><option>全部员工</option><option>陈佳</option><option>李洋</option></select></label>
-                <label class="field"><span>到访日期</span><input type="date" value="2026-08-03" /></label>
-                <label class="field"><span>匹配状态</span><select><option>全部状态</option><option>匹配成功</option><option>待匹配</option><option>匹配失败</option></select></label>
-                <label class="field"><span>到访来源</span><select><option>全部来源</option><option>销售助手</option><option>Excel导入</option></select></label>
-                <label class="field"><span>录音切分模式</span><select><option>全部模式</option><option>自动切分</option><option>人工确认</option></select></label>
-                <div class="filter-actions"><button class="btn ghost reset-filters" type="button">重置</button><button class="btn primary apply-filter" type="button">查询</button></div>
+          <section class="page-panel" data-page="stores">
+            <div class="filter-card store-overview-filter-card">
+              <div class="store-filter-toolbar" id="storeFilterControls">
+                <div class="store-filter-control" data-store-filter-root="brand">
+                  <span>品牌</span>
+                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="brand" aria-expanded="false"><strong id="storeBrandFilterText">全部品牌</strong><i aria-hidden="true"></i></button>
+                  <div class="store-filter-menu" data-store-filter-menu="brand" hidden>
+                    <button class="active" type="button" data-store-filter-option="brand" data-value="全部品牌">全部品牌</button>
+                    <button type="button" data-store-filter-option="brand" data-value="广汽传祺">广汽传祺</button>
+                    <button type="button" data-store-filter-option="brand" data-value="广汽埃安">广汽埃安</button>
+                  </div>
+                </div>
+                <div class="store-filter-control" data-store-filter-root="organization">
+                  <span>组织</span>
+                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="organization" aria-expanded="false"><strong id="storeOrganizationFilterText">全部组织</strong><i aria-hidden="true"></i></button>
+                  <div class="store-organization-menu" data-store-filter-menu="organization" hidden></div>
+                </div>
+                <label class="store-filter-control store-name-search">
+                  <span>门店</span>
+                  <input type="search" data-store-name-search placeholder="输入门店名称" aria-label="输入门店名称快捷筛选" />
+                </label>
+                <div class="store-date-filter-host" id="storeDateFilterControl"></div>
+                <button class="btn store-filter-reset" type="button" data-store-filter-reset>重置筛选</button>
               </div>
             </div>
-
-            <div class="summary-row compact-summary">
-              <article class="summary-card"><span class="summary-icon blue">访</span><div><small>到访记录</small><strong>1,286</strong></div><em>今日 46 条</em></article>
-              <article class="summary-card"><span class="summary-icon green">✓</span><div><small>匹配成功</small><strong>1,142</strong></div><em class="positive">88.8%</em></article>
-              <article class="summary-card"><span class="summary-icon amber">◷</span><div><small>待匹配</small><strong>96</strong></div><em>需持续等待录音</em></article>
-              <article class="summary-card"><span class="summary-icon red">!</span><div><small>匹配失败</small><strong>48</strong></div><em class="negative">需人工处理</em></article>
+            <div class="summary-row store-overview-metrics">
+              <article class="summary-card mini"><span class="summary-icon blue">店</span><div><small>门店数</small><strong id="storeMetricStoreCount">0</strong><span class="store-metric-note">已绑定工牌的门店数</span></div></article>
+              <article class="summary-card mini"><span class="summary-icon violet">牌</span><div><small>工牌资产数</small><strong id="storeMetricBadgeAssetCount">0</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon amber">绑</span><div><small>工牌绑定数</small><strong id="storeMetricBindingCount">0</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon green">绑</span><div><small>工牌绑定率</small><strong id="storeMetricBindingRate">—</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon blue">人</span><div><small>员工数</small><strong id="storeMetricEmployeeCount">0</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon amber">绑</span><div><small>绑定工牌员工数</small><strong id="storeMetricBoundEmployeeCount">0</strong></div></article>
             </div>
-
-            <section class="card table-card">
-              <div class="card-head">
-                <div><h2>到访记录</h2><p>共 1,286 条，数据更新于 10:24</p></div>
-                <div class="segmented"><button class="active">全部到访</button><button>自动切分到访</button></div>
-              </div>
-              <div class="table-scroll visits-table-scroll">
-                <table class="data-table visits-table">
-                  <thead><tr>
-                    <th>客户ID</th><th>客户姓名</th><th>客户电话</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配时间</th><th>员工名称</th><th>所属门店</th><th>会话类型</th><th>到访记录来源</th><th>更新时间</th><th>录音切分模式</th><th>场景</th><th>意向车系</th><th class="sticky-right">操作</th>
-                  </tr></thead>
-                  <tbody>
-                    <tr><td>C202608031204</td><td>王先生</td><td>138****0628</td><td>2026-08-03</td><td>09:42:10</td><td>10:26:35</td><td><span class="status success">匹配成功</span></td><td><button class="text-btn open-detail">已匹配 2 段录音</button></td><td>10:31:08</td><td>陈佳</td><td>上海浦东体验中心</td><td>销售接待</td><td><span class="source-tag api">销售助手</span></td><td>10:31:08</td><td>自动切分</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail">查看</button></td></tr>
-                    <tr><td>C202608031198</td><td>赵女士</td><td>159****8312</td><td>2026-08-03</td><td>09:18:22</td><td>09:55:46</td><td><span class="status waiting">待匹配</span></td><td><span class="muted-text">等待工牌录音上传</span></td><td>—</td><td>李洋</td><td>上海浦东体验中心</td><td>试乘试驾</td><td><span class="source-tag excel">Excel导入</span></td><td>10:02:16</td><td>自动切分</td><td>试乘试驾</td><td>星海 L9</td><td class="sticky-right"><button class="text-btn open-detail">查看</button></td></tr>
-                    <tr><td>C202608031176</td><td>周先生</td><td>186****1045</td><td>2026-08-03</td><td>08:46:03</td><td>09:32:15</td><td><span class="status danger">匹配失败</span></td><td><button class="text-btn danger-text open-detail">时间窗内无可用录音</button></td><td>09:36:42</td><td>孙悦</td><td>杭州滨江体验中心</td><td>销售接待</td><td><span class="source-tag api">销售助手</span></td><td>09:36:42</td><td>自动切分</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail">处理</button></td></tr>
-                    <tr><td>C202608021058</td><td>刘女士</td><td>135****2776</td><td>2026-08-02</td><td>16:23:41</td><td>17:08:02</td><td><span class="status success">匹配成功</span></td><td><button class="text-btn open-detail">已匹配 1 段录音</button></td><td>17:13:24</td><td>高翔</td><td>苏州园区体验中心</td><td>销售接待</td><td><span class="source-tag excel">Excel导入</span></td><td>17:15:09</td><td>人工确认</td><td>进店接待</td><td>星海 V6</td><td class="sticky-right"><button class="text-btn open-detail">查看</button></td></tr>
-                    <tr><td>C202608021021</td><td>胡先生</td><td>177****4930</td><td>2026-08-02</td><td>15:40:05</td><td>16:12:48</td><td><span class="status success">匹配成功</span></td><td><button class="text-btn open-detail">已匹配 2 段录音</button></td><td>16:18:33</td><td>陈佳</td><td>上海浦东体验中心</td><td>销售接待</td><td><span class="source-tag api">销售助手</span></td><td>16:18:33</td><td>自动切分</td><td>进店接待</td><td>星海 L9</td><td class="sticky-right"><button class="text-btn open-detail">查看</button></td></tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="pagination"><span>共 1,286 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><span>…</span><button>129</button><button>›</button><select><option>10 条/页</option><option>20 条/页</option></select></div>
-            </section>
-          </section>
-
-          <section class="page-panel" data-page="projects">
-            <div class="filter-card single-line">
-              <label class="search-field"><span class="search-icon">⌕</span><input type="search" placeholder="搜索门店名称或门店编码" /></label>
-              <label class="field inline-field"><span>所属区域</span><select><option>全部区域</option><option>华东大区</option><option>华南大区</option></select></label>
-              <label class="field inline-field"><span>门店状态</span><select><option>全部状态</option><option>使用中</option><option>已停用</option></select></label>
-              <button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button>
-            </div>
-            <div class="summary-row">
-              <article class="summary-card"><span class="summary-icon blue">店</span><div><small>门店总数</small><strong>36</strong></div><em>覆盖 8 个区域</em></article>
-              <article class="summary-card"><span class="summary-icon green">人</span><div><small>绑定员工</small><strong>428</strong></div><em class="positive">较上月 +12</em></article>
-              <article class="summary-card"><span class="summary-icon violet">牌</span><div><small>已分配工牌</small><strong>462</strong></div><em>备用 34 枚</em></article>
-              <article class="summary-card"><span class="summary-icon amber">坞</span><div><small>充电坞</small><strong>58</strong></div><em>在线 52 台</em></article>
-            </div>
-            <div class="project-grid">
-              <article class="project-card"><div class="project-head"><span class="project-mark">沪</span><div><h3>上海浦东体验中心</h3><p>门店编码：SH-PD-001</p></div><span class="status success">使用中</span></div><div class="project-metrics"><span><small>员工</small><strong>28</strong></span><span><small>工牌</small><strong>32</strong></span><span><small>充电坞</small><strong>4</strong></span><span><small>今日在线</small><strong>29</strong></span></div><div class="project-foot"><span>华东大区 · 上海战区</span><button class="text-btn toast-action">查看设备</button></div></article>
-              <article class="project-card"><div class="project-head"><span class="project-mark green-mark">杭</span><div><h3>杭州滨江体验中心</h3><p>门店编码：HZ-BJ-003</p></div><span class="status success">使用中</span></div><div class="project-metrics"><span><small>员工</small><strong>24</strong></span><span><small>工牌</small><strong>26</strong></span><span><small>充电坞</small><strong>3</strong></span><span><small>今日在线</small><strong>23</strong></span></div><div class="project-foot"><span>华东大区 · 浙江战区</span><button class="text-btn toast-action">查看设备</button></div></article>
-              <article class="project-card"><div class="project-head"><span class="project-mark amber-mark">苏</span><div><h3>苏州园区体验中心</h3><p>门店编码：SZ-YQ-006</p></div><span class="status success">使用中</span></div><div class="project-metrics"><span><small>员工</small><strong>21</strong></span><span><small>工牌</small><strong>24</strong></span><span><small>充电坞</small><strong>3</strong></span><span><small>今日在线</small><strong>20</strong></span></div><div class="project-foot"><span>华东大区 · 江苏战区</span><button class="text-btn toast-action">查看设备</button></div></article>
-              <article class="project-card"><div class="project-head"><span class="project-mark violet-mark">深</span><div><h3>深圳南山体验中心</h3><p>门店编码：SZ-NS-008</p></div><span class="status success">使用中</span></div><div class="project-metrics"><span><small>员工</small><strong>32</strong></span><span><small>工牌</small><strong>35</strong></span><span><small>充电坞</small><strong>4</strong></span><span><small>今日在线</small><strong>31</strong></span></div><div class="project-foot"><span>华南大区 · 深圳战区</span><button class="text-btn toast-action">查看设备</button></div></article>
-            </div>
-            <div class="pagination card-pagination"><span>共 36 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><button>›</button></div>
-          </section>
-
-          <section class="page-panel" data-page="docks">
-            <div class="notice warning-notice"><span class="notice-icon">!</span><div><strong>数据接口待确认</strong><p>当前页面使用模拟数据展示目标形态。充电坞清单、在线状态及关联工牌需明略提供正式接口后接入。</p></div><button class="notice-close" aria-label="关闭">×</button></div>
-            <div class="filter-card single-line">
-              <label class="search-field"><span class="search-icon">⌕</span><input type="search" placeholder="搜索充电坞名称或设备编号" /></label>
-              <label class="field inline-field"><span>所属门店</span><select><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option></select></label>
-              <label class="field inline-field"><span>在线状态</span><select><option>全部状态</option><option>在线</option><option>离线</option></select></label>
-              <button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button>
-            </div>
-            <div class="summary-row three-cols">
-              <article class="summary-card"><span class="summary-icon blue">坞</span><div><small>充电坞总数</small><strong>58</strong></div><em>可用端口 456 个</em></article>
-              <article class="summary-card"><span class="summary-icon green">✓</span><div><small>当前在线</small><strong>52</strong></div><em class="positive">在线率 89.7%</em></article>
-              <article class="summary-card"><span class="summary-icon red">!</span><div><small>当前离线</small><strong>6</strong></div><em class="negative">2 台超过 24 小时</em></article>
-            </div>
-            <section class="card table-card">
-              <div class="card-head"><div><h2>充电坞列表</h2><p>模拟数据 · 最近同步时间 10:22</p></div><span class="demo-badge">原型数据</span></div>
-              <div class="table-scroll"><table class="data-table"><thead><tr><th>充电坞名称</th><th>设备编号</th><th>所属门店</th><th>在线状态</th><th>端口使用</th><th>正在充电</th><th>已充满</th><th>异常端口</th><th>最后在线时间</th><th>操作</th></tr></thead><tbody>
-                <tr><td><strong>浦东展厅充电坞 A</strong></td><td>DOCK-SH001-A</td><td>上海浦东体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="port-bar"><i style="width:75%"></i></span> 6/8</td><td>3 枚</td><td>3 枚</td><td>0</td><td>刚刚</td><td><button class="text-btn toast-action">查看</button></td></tr>
-                <tr><td><strong>浦东交付区充电坞 B</strong></td><td>DOCK-SH001-B</td><td>上海浦东体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="port-bar"><i style="width:50%"></i></span> 4/8</td><td>2 枚</td><td>2 枚</td><td>0</td><td>1 分钟前</td><td><button class="text-btn toast-action">查看</button></td></tr>
-                <tr><td><strong>滨江展厅充电坞 A</strong></td><td>DOCK-HZ003-A</td><td>杭州滨江体验中心</td><td><span class="status danger dot-status">离线</span></td><td><span class="port-bar danger-bar"><i style="width:0%"></i></span> —</td><td>—</td><td>—</td><td>—</td><td>26 小时前</td><td><button class="text-btn danger-text toast-action">排查</button></td></tr>
-                <tr><td><strong>园区展厅充电坞 A</strong></td><td>DOCK-SZ006-A</td><td>苏州园区体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="port-bar"><i style="width:88%"></i></span> 7/8</td><td>4 枚</td><td>2 枚</td><td><strong class="danger-text">1</strong></td><td>2 分钟前</td><td><button class="text-btn toast-action">查看</button></td></tr>
-              </tbody></table></div>
-              <div class="pagination"><span>共 58 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><button>›</button></div>
+            <section class="card table-card store-overview-table-card">
+              <div class="card-head store-overview-table-head"><div><h2>门店总览</h2></div><span class="store-filter-summary">当前展示 <strong id="storeFilteredCount">0</strong> 家门店</span></div>
+              <div class="table-scroll store-overview-table-scroll"><table class="data-table store-overview-table"><thead><tr><th>品牌</th><th>大区</th><th>战区</th><th>门店名称</th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="badgeAssets">工牌资产数<span data-store-sort-icon>↕</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindings">工牌绑定数<span data-store-sort-icon>↕</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindingRate">工牌绑定率<span data-store-sort-icon>↕</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="employees">员工数<span data-store-sort-icon>↕</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="boundEmployees">绑定工牌员工数<span data-store-sort-icon>↕</span></button></th><th>最新数据同步时间</th><th>操作</th></tr></thead><tbody id="storeOverviewTableBody"></tbody></table></div>
+              <div class="store-pagination" id="storeOverviewPagination"></div>
             </section>
           </section>
 
           <section class="page-panel" data-page="badges">
-            <div class="filter-card single-line wrap-filters">
-              <label class="search-field"><span class="search-icon">⌕</span><input type="search" placeholder="搜索工牌SN或员工姓名" /></label>
-              <label class="field inline-field"><span>所属门店</span><select><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option></select></label>
-              <label class="field inline-field"><span>设备状态</span><select><option>全部状态</option><option>正常</option><option>离线</option><option>录音中</option><option>低电量</option></select></label>
-              <button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button>
-            </div>
-            <div class="summary-row five-cols">
-              <article class="summary-card mini"><span class="summary-icon blue">牌</span><div><small>工牌总数</small><strong>462</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon green">✓</span><div><small>当前在线</small><strong>418</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon violet">●</span><div><small>正在录音</small><strong>86</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon amber">▰</span><div><small>低电量</small><strong>17</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon red">!</span><div><small>异常设备</small><strong>9</strong></div></article>
-            </div>
-            <section class="card table-card">
-              <div class="card-head"><div><h2>工牌状态</h2><p>状态每 5 分钟同步一次</p></div><div class="legend"><span><i class="dot green-dot"></i>正常</span><span><i class="dot amber-dot"></i>关注</span><span><i class="dot red-dot"></i>异常</span></div></div>
-              <div class="table-scroll"><table class="data-table badge-table"><thead><tr><th>工牌SN</th><th>绑定员工</th><th>所属门店</th><th>设备状态</th><th>录音状态</th><th>网络</th><th>电量</th><th>可用存储</th><th>今日开机时长</th><th>待上传录音</th><th>固件版本</th><th>最后同步</th><th>操作</th></tr></thead><tbody>
-                <tr><td><strong>MN-BDG-004821</strong></td><td><span class="person-cell"><i>陈</i><span>陈佳<small>A01728</small></span></span></td><td>上海浦东体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="recording-pulse"></span>录音中</td><td>Wi-Fi · 优</td><td><span class="battery"><i style="width:84%"></i></span>84%</td><td>18.6 GB</td><td>06:42</td><td>0</td><td>v3.8.2</td><td>刚刚</td><td><button class="text-btn toast-action">详情</button></td></tr>
-                <tr><td><strong>MN-BDG-004836</strong></td><td><span class="person-cell"><i>李</i><span>李洋<small>A01805</small></span></span></td><td>上海浦东体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="muted-text">空闲</span></td><td>4G · 良</td><td><span class="battery amber-battery"><i style="width:18%"></i></span><strong class="amber-text">18%</strong></td><td>12.1 GB</td><td>06:18</td><td>2</td><td>v3.8.2</td><td>1 分钟前</td><td><button class="text-btn toast-action">详情</button></td></tr>
-                <tr><td><strong>MN-BDG-004792</strong></td><td><span class="person-cell"><i>孙</i><span>孙悦<small>A01692</small></span></span></td><td>杭州滨江体验中心</td><td><span class="status danger dot-status">离线</span></td><td><span class="muted-text">—</span></td><td>无信号</td><td><span class="battery danger-battery"><i style="width:7%"></i></span><strong class="danger-text">7%</strong></td><td>8.2 GB</td><td>02:14</td><td><strong class="danger-text">6</strong></td><td>v3.7.9</td><td class="danger-text">3 小时前</td><td><button class="text-btn danger-text toast-action">排查</button></td></tr>
-                <tr><td><strong>MN-BDG-004855</strong></td><td><span class="person-cell"><i>高</i><span>高翔<small>A01911</small></span></span></td><td>苏州园区体验中心</td><td><span class="status success dot-status">在线</span></td><td><span class="muted-text">空闲</span></td><td>Wi-Fi · 优</td><td><span class="battery"><i style="width:92%"></i></span>92%</td><td><strong class="amber-text">1.4 GB</strong></td><td>07:05</td><td>0</td><td>v3.8.2</td><td>2 分钟前</td><td><button class="text-btn toast-action">详情</button></td></tr>
-              </tbody></table></div>
-              <div class="pagination"><span>共 462 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><span>…</span><button>47</button><button>›</button></div>
+            <section class="card session-filter-card badge-session-filter-card">
+              <div class="session-filter-toolbar" id="sessionFilterControls"></div>
+            </section>
+            <section class="card table-card badge-detail-table-card">
+              <div class="table-shell">
+                <div class="table-headbar session-list-table-headbar">
+                  <div class="panel-title"><h3>工牌明细</h3></div>
+                  <div class="session-filter-summary">
+                    <span>当前匹配 <strong id="badgeFilterCount">0</strong> 枚工牌</span>
+                    <span>已连接 <strong id="badgeConnectedCount">0</strong> 枚</span>
+                    <span>录音中 <strong id="badgeRecordingCount">0</strong> 枚</span>
+                  </div>
+                </div>
+                <div class="table-wrap badge-list-table-wrap">
+                  <table class="data-table session-data-table badge-data-table">
+                    <thead><tr><th>工牌 SN</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>顾问ID</th><th>顾问姓名</th><th>录音状态</th><th>WiFi连接</th><th>是否接入充电坞</th><th>信号</th><th>剩余电量</th><th>低电量预警</th><th>剩余内存</th><th>今日开机时长</th><th>待上传录音</th><th>最新数据同步时间</th><th>操作</th></tr></thead>
+                    <tbody id="badgeDetailTableBody"></tbody>
+                  </table>
+                </div>
+                <div class="session-pagination" id="badgeDetailPagination"></div>
+              </div>
             </section>
           </section>
 
-          <section class="page-panel" data-page="relations">
-            <div class="filter-card single-line wrap-filters">
-              <label class="search-field"><span class="search-icon">⌕</span><input type="search" placeholder="搜索员工、工号或工牌SN" /></label>
-              <label class="field inline-field"><span>所属门店</span><select><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option></select></label>
-              <label class="field inline-field"><span>关系状态</span><select><option>当前有效</option><option>全部状态</option><option>已失效</option></select></label>
-              <button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button>
+          <section class="page-panel" data-page="events">
+            <section class="card badge-record-header">
+              <button class="badge-record-back" type="button" data-badge-detail-back><span aria-hidden="true">‹</span> 返回工牌明细</button>
+              <div class="badge-record-person">
+                <span class="profile-avatar" id="badgeRecordAvatar">陈</span>
+                <div><small>顾问姓名</small><strong id="badgeRecordAdvisorName">陈佳</strong></div>
+                <i aria-hidden="true"></i>
+                <div><small>SN 设备号</small><strong id="badgeRecordSn">MN-BDG-004821</strong></div>
+              </div>
+              <div class="badge-record-tabs" role="tablist" aria-label="工牌记录类型">
+                <button class="active" type="button" role="tab" aria-selected="true" data-badge-record-tab="events">工牌事件</button>
+                <button type="button" role="tab" aria-selected="false" data-badge-record-tab="uploads">录音上传日志</button>
+              </div>
+            </section>
+
+            <div data-badge-record-content="events">
+              <div class="filter-card single-line wrap-filters" id="badgeEventFilters">
+                <label class="field inline-field"><span>查询日期（单日）</span><input id="badgeEventDate" type="date" value="2026-08-11" /></label>
+                <label class="field inline-field"><span>事件类型</span><select id="badgeEventType"><option value="all">全部事件</option><option value="power-on">工牌开机</option><option value="power-off">工牌关机</option><option value="recording-start">开始录音</option><option value="recording-end">结束录音</option><option value="charging-start">开始充电</option><option value="charging-end">结束充电</option><option value="low-battery">工牌电量预警</option></select></label>
+                <button class="btn ghost" type="button" data-badge-event-reset>重置</button><button class="btn primary" type="button" data-badge-event-query>查询</button>
+              </div>
+              <section class="card table-card">
+                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="badgeEventResultSummary">2026-08-11 · 共 11 条</span></div>
+                <div class="event-timeline" id="badgeEventTimeline"></div>
+              </section>
             </div>
-            <div class="info-strip"><span>i</span><p>工牌重新分配后，系统仍会保留历史关系，并按照到访发生时间匹配当时的使用员工。</p></div>
+
+            <div data-badge-record-content="uploads" hidden>
+              <div class="notice warning-notice"><span class="notice-icon">i</span><div><strong>待上传明细来源</strong><p><code>recnu</code> 提供未上传数量，<code>reclist</code> 提供逐条明细，收到 <code>rec</code> 回调后更新为已上传。</p></div></div>
+              <div class="filter-card filter-grid badge-upload-filter-grid">
+                <label class="field span-2"><span>录音开始时间</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-12T00:00:00" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" /></span></label>
+                <label class="field"><span>上传状态</span><select><option>全部状态</option><option>已上传</option><option>未上传</option></select></label>
+                <div class="filter-actions"><button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button></div>
+              </div>
+              <div class="summary-row three-cols">
+                <article class="summary-card"><span class="summary-icon blue">录</span><div><small>录音片段</small><strong id="badgeUploadTotal">0</strong></div><em>当前工牌</em></article>
+                <article class="summary-card"><span class="summary-icon green">✓</span><div><small>已上传</small><strong id="badgeUploadCompleted">0</strong></div><em class="positive" id="badgeUploadRate">—</em></article>
+                <article class="summary-card"><span class="summary-icon amber">⇧</span><div><small>未上传</small><strong id="badgeUploadPending">0</strong></div><em>来自 reclist</em></article>
+              </div>
+              <section class="card table-card">
+                <div class="card-head"><div><h2>录音上传日志</h2><p>仅展示当前顾问、当前工牌的录音上传记录</p></div></div>
+                <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>日期</th><th>顾问姓名</th><th>工牌 SN</th><th>片段序号</th><th>音频时间</th><th>片段时长</th><th>文件大小</th><th>上传状态</th><th>上传完成时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
+                <div class="pagination"><span id="badgeUploadPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="page-panel active" data-page="visits">
+            <div class="filter-card filter-grid visits-filter-grid">
+              <label class="field span-2"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" /></span></label>
+              <label class="field"><span>组织</span><select><option>全部组织</option><option>华东大区</option><option>上海战区</option></select></label>
+              <label class="field"><span>销售顾问</span><select><option>全部销售顾问</option><option>韩如臣</option><option>陈佳</option></select></label>
+              <label class="field"><span>到访来源</span><select><option>全部来源</option><option>销售助手</option><option>模板导入</option></select></label>
+              <label class="field"><span>匹配状态</span><select><option>全部状态</option><option>已匹配</option><option>录音上传中</option><option>录音转写中</option><option>模型分析中</option><option>员工未绑定工牌</option><option>到访时段未开机</option><option>到访时段无录音</option><option>匹配失败</option></select></label>
+              <label class="field span-2"><span>客户信息</span><input type="search" placeholder="business_id / 客户 ID / 姓名 / 电话" /></label>
+              <div class="filter-actions"><button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button></div>
+            </div>
+            <div class="summary-row five-cols">
+              <article class="summary-card mini"><span class="summary-icon blue">访</span><div><small>到访数</small><strong>1,286</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon green">✓</span><div><small>已匹配</small><strong>1,142</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon amber">⇧</span><div><small>录音上传中</small><strong>67</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon violet">析</span><div><small>转写/分析中</small><strong>43</strong></div></article>
+              <article class="summary-card mini"><span class="summary-icon red">!</span><div><small>问题到访</small><strong>34</strong></div></article>
+            </div>
             <section class="card table-card">
-              <div class="card-head"><div><h2>员工—工牌关系</h2><p>当前有效关系 428 条，未绑定工牌 34 枚</p></div><div class="legend"><span class="status success">当前有效</span><span class="status neutral">历史关系</span></div></div>
-              <div class="table-scroll"><table class="data-table"><thead><tr><th>员工姓名</th><th>员工工号</th><th>角色</th><th>所属门店</th><th>工牌SN</th><th>关系状态</th><th>生效时间</th><th>失效时间</th><th>最近操作人</th><th>更新时间</th><th>操作</th></tr></thead><tbody>
-                <tr><td><span class="person-cell"><i>陈</i><span><strong>陈佳</strong><small>chenjia@demo.com</small></span></span></td><td>A01728</td><td>销售顾问</td><td>上海浦东体验中心</td><td><strong>MN-BDG-004821</strong></td><td><span class="status success">当前有效</span></td><td>2026-05-12 09:20</td><td>—</td><td>赵敏</td><td>2026-05-12 09:20</td><td><button class="text-btn relation-action">换绑</button><button class="text-btn danger-text relation-action">解绑</button></td></tr>
-                <tr><td><span class="person-cell"><i>李</i><span><strong>李洋</strong><small>liyang@demo.com</small></span></span></td><td>A01805</td><td>销售顾问</td><td>上海浦东体验中心</td><td><strong>MN-BDG-004836</strong></td><td><span class="status success">当前有效</span></td><td>2026-06-01 13:45</td><td>—</td><td>赵敏</td><td>2026-06-01 13:45</td><td><button class="text-btn relation-action">换绑</button><button class="text-btn danger-text relation-action">解绑</button></td></tr>
-                <tr><td><span class="person-cell"><i>孙</i><span><strong>孙悦</strong><small>sunyue@demo.com</small></span></span></td><td>A01692</td><td>销售顾问</td><td>杭州滨江体验中心</td><td><strong>MN-BDG-004792</strong></td><td><span class="status success">当前有效</span></td><td>2026-03-18 10:11</td><td>—</td><td>林浩</td><td>2026-03-18 10:11</td><td><button class="text-btn relation-action">换绑</button><button class="text-btn danger-text relation-action">解绑</button></td></tr>
-                <tr class="history-row"><td><span class="person-cell"><i>周</i><span><strong>周宁</strong><small>zhouning@demo.com</small></span></span></td><td>A01362</td><td>销售顾问</td><td>苏州园区体验中心</td><td><strong>MN-BDG-004855</strong></td><td><span class="status neutral">已失效</span></td><td>2025-11-08 09:30</td><td>2026-07-31 18:05</td><td>钱芳</td><td>2026-07-31 18:05</td><td><button class="text-btn toast-action">查看历史</button></td></tr>
+              <div class="card-head"><div><h2>到访明细</h2><p>共 1,286 条 · 匹配状态按当前最新处理状态展示</p></div></div>
+              <div class="table-scroll visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>business_id</th><th>客户 ID</th><th>客户姓名</th><th>客户电话</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配完成时间</th><th>员工姓名</th><th>所属门店</th><th>门店编码</th><th>到访来源</th><th>数据更新时间</th><th>业务场景</th><th>意向车系</th><th class="sticky-right">操作</th></tr></thead><tbody>
+                <tr><td>BIZ-20260812-0136</td><td>C202608120315</td><td>王先生</td><td>138****0628</td><td>2026-08-12</td><td>13:04:00</td><td>13:28:00</td><td><span class="status success">已匹配</span></td><td><button class="text-btn open-detail" data-detail="matched">已匹配 5 个录音片段</button></td><td>13:36:10</td><td>陈佳</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>13:36:10</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="matched">查看</button></td></tr>
+                <tr><td>BIZ-20260812-0148</td><td>C202608120342</td><td>赵女士</td><td>159****8312</td><td>2026-08-12</td><td>13:22:45</td><td>13:56:08</td><td><span class="status waiting">录音上传中</span></td><td><button class="text-btn open-detail" data-detail="uploading">可能存在未上传录音</button></td><td>—</td><td>李洋</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>14:14:02</td><td>试乘试驾</td><td>星海 L9</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="uploading">查看</button></td></tr>
+                <tr><td>BIZ-20260811-0831</td><td>C202608110922</td><td>刘先生</td><td>186****1045</td><td>2026-08-11</td><td>18:31:35</td><td>18:31:55</td><td><span class="status danger">到访时段无录音</span></td><td><button class="text-btn danger-text open-detail" data-detail="no-record">工牌开机但未开启录音</button></td><td>—</td><td>韩如臣</td><td>杭州滨江体验中心</td><td>HZ-BJ-003</td><td><span class="source-tag api">销售助手</span></td><td>18:32:06</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="no-record">查看</button></td></tr>
+                <tr><td>BIZ-20260811-0772</td><td>C202608110861</td><td>周女士</td><td>135****2776</td><td>2026-08-11</td><td>16:23:41</td><td>17:08:02</td><td><span class="status danger">员工未绑定工牌</span></td><td><button class="text-btn danger-text open-detail" data-detail="unbound">到访时点无有效绑定关系</button></td><td>—</td><td>周宁</td><td>苏州园区体验中心</td><td>SZ-YQ-006</td><td><span class="source-tag api">销售助手</span></td><td>17:09:11</td><td>进店接待</td><td>星海 V6</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="unbound">查看</button></td></tr>
               </tbody></table></div>
-              <div class="pagination"><span>共 428 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><span>…</span><button>43</button><button>›</button></div>
+              <div class="pagination"><span>共 1,286 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><span>…</span><button>129</button><button>›</button><select><option>10 条/页</option><option>20 条/页</option></select></div>
             </section>
           </section>
 
           <section class="page-panel" data-page="dashboard">
-            <div class="filter-card dashboard-filter">
-              <label class="field"><span>统计日期</span><input type="date" value="2026-08-03" /></label>
-              <label class="field"><span>所属区域</span><select><option>全国</option><option>华东大区</option><option>华南大区</option></select></label>
-              <label class="field"><span>所属门店</span><select><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option></select></label>
+            <div class="filter-card filter-grid dashboard-filter-grid">
+              <label class="field span-2"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" /></span></label>
+              <label class="field"><span>组织</span><select><option>全国</option><option>华东大区</option><option>上海战区</option></select></label>
+              <label class="field"><span>销售顾问</span><select><option>全部销售顾问</option><option>韩如臣</option><option>陈佳</option></select></label>
               <div class="filter-actions"><button class="btn ghost reset-filters">重置</button><button class="btn primary apply-filter">查询</button></div>
             </div>
-            <div class="metric-grid">
-              <article class="metric-card"><div class="metric-top"><span>有效到访</span><i class="metric-icon blue">访</i></div><strong>1,286</strong><p><span class="up-arrow">↑ 8.4%</span> 较昨日</p></article>
-              <article class="metric-card"><div class="metric-top"><span>已关联录音到访</span><i class="metric-icon green">录</i></div><strong>1,142</strong><p><span class="up-arrow">↑ 6.2%</span> 较昨日</p></article>
-              <article class="metric-card featured"><div class="metric-top"><span>录音率 <button class="help" title="有成功关联录音的到访记录数 ÷ 有效到访记录数">?</button></span><i class="metric-icon violet">%</i></div><strong>88.8%</strong><p>目标值 90% <span class="progress-mini"><i style="width:88.8%"></i></span></p></article>
-              <article class="metric-card"><div class="metric-top"><span>平均录音时长</span><i class="metric-icon amber">时</i></div><strong>46<small>分钟</small></strong><p><span class="down-arrow">↓ 2.1%</span> 较昨日</p></article>
+            <div class="metric-grid five-metrics">
+              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong>1,286</strong><p>按 business_id 去重</p></article>
+              <article class="metric-card"><div class="metric-top"><span>已匹配</span><i class="metric-icon green">✓</i></div><strong>1,142</strong><p>整个处理流程最终成功</p></article>
+              <article class="metric-card featured"><div class="metric-top"><span>录音匹配率 <button class="help" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数">?</button></span><i class="metric-icon violet">%</i></div><strong>88.8%</strong><p>1,142 ÷ 1,286</p></article>
+              <article class="metric-card"><div class="metric-top"><span>处理中</span><i class="metric-icon amber">…</i></div><strong>110</strong><p>上传中、转写中、分析中</p></article>
+              <article class="metric-card"><div class="metric-top"><span>问题到访</span><i class="metric-icon red">!</i></div><strong>34</strong><p>未绑定、未开机、无录音等</p></article>
             </div>
-            <div class="dashboard-grid">
-              <section class="card chart-card"><div class="card-head"><div><h2>近 7 日录音表现</h2><p>有效到访与录音率变化趋势</p></div><div class="legend"><span><i class="dot blue-dot"></i>有效到访</span><span><i class="dot violet-dot"></i>录音率</span></div></div><div class="combo-chart"><div class="y-labels"><span>1,600</span><span>1,200</span><span>800</span><span>400</span><span>0</span></div><div class="chart-plot"><div class="grid-line" style="top:0"></div><div class="grid-line" style="top:25%"></div><div class="grid-line" style="top:50%"></div><div class="grid-line" style="top:75%"></div><div class="grid-line" style="top:100%"></div><div class="bars"><span style="height:58%"><i>07/28</i></span><span style="height:64%"><i>07/29</i></span><span style="height:72%"><i>07/30</i></span><span style="height:61%"><i>07/31</i></span><span style="height:77%"><i>08/01</i></span><span style="height:73%"><i>08/02</i></span><span class="today" style="height:82%"><i>08/03</i></span></div><svg class="line-svg" viewBox="0 0 700 220" preserveAspectRatio="none"><polyline points="35,75 140,68 245,82 350,63 455,54 560,59 665,43" fill="none" stroke="#7c3aed" stroke-width="3"/><g fill="#fff" stroke="#7c3aed" stroke-width="3"><circle cx="35" cy="75" r="5"/><circle cx="140" cy="68" r="5"/><circle cx="245" cy="82" r="5"/><circle cx="350" cy="63" r="5"/><circle cx="455" cy="54" r="5"/><circle cx="560" cy="59" r="5"/><circle cx="665" cy="43" r="5"/></g></svg></div></div></section>
-              <section class="card health-card"><div class="card-head"><div><h2>今日设备使用</h2><p>绑定、在线和开机状态</p></div></div><div class="health-list"><div><span>已绑定工牌</span><strong>428 / 462</strong><div class="health-bar"><i style="width:92.6%"></i></div><small>绑定率 92.6%</small></div><div><span>在线工牌</span><strong>418 / 428</strong><div class="health-bar green-health"><i style="width:97.7%"></i></div><small>在线率 97.7%</small></div><div><span>有录音工牌</span><strong>396 / 428</strong><div class="health-bar violet-health"><i style="width:92.5%"></i></div><small>设备活跃率 92.5%</small></div><div class="pending-rule"><span class="pending-icon">i</span><p><strong>佩戴状态待确认</strong><small>当前接口只能证明绑定、在线或有录音，不能直接判断员工是否实际佩戴。</small></p></div></div></section>
-            </div>
-            <section class="card table-card dashboard-table-card"><div class="card-head"><div><h2>门店使用明细</h2><p>按门店汇总当日到访与工牌使用表现</p></div><div class="segmented"><button class="active">门店</button><button>员工</button><button>团队</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>门店名称</th><th>有效到访</th><th>已关联录音到访</th><th>录音率</th><th>平均录音时长</th><th>绑定工牌</th><th>在线工牌</th><th>有录音工牌</th><th>平均开机时长</th><th>状态</th></tr></thead><tbody>
-              <tr><td><strong>上海浦东体验中心</strong></td><td>186</td><td>174</td><td><span class="rate-cell good-rate"><strong>93.5%</strong><i><b style="width:93.5%"></b></i></span></td><td>52 分钟</td><td>32</td><td>31</td><td>30</td><td>7.2 小时</td><td><span class="status success">表现良好</span></td></tr>
-              <tr><td><strong>杭州滨江体验中心</strong></td><td>148</td><td>132</td><td><span class="rate-cell good-rate"><strong>89.2%</strong><i><b style="width:89.2%"></b></i></span></td><td>47 分钟</td><td>26</td><td>24</td><td>23</td><td>6.8 小时</td><td><span class="status waiting">需要关注</span></td></tr>
-              <tr><td><strong>苏州园区体验中心</strong></td><td>126</td><td>104</td><td><span class="rate-cell bad-rate"><strong>82.5%</strong><i><b style="width:82.5%"></b></i></span></td><td>43 分钟</td><td>24</td><td>21</td><td>19</td><td>6.2 小时</td><td><span class="status danger">低于目标</span></td></tr>
-              <tr><td><strong>深圳南山体验中心</strong></td><td>203</td><td>188</td><td><span class="rate-cell good-rate"><strong>92.6%</strong><i><b style="width:92.6%"></b></i></span></td><td>49 分钟</td><td>35</td><td>34</td><td>33</td><td>7.4 小时</td><td><span class="status success">表现良好</span></td></tr>
-            </tbody></table></div></section>
+            <div class="info-strip"><span>i</span><p>录音匹配率只把当前最终状态为“已匹配”的到访计入分子；转写中、分析中不会重复计算。</p></div>
+            <section class="card table-card dashboard-table-card">
+              <div class="card-head"><div><h2>到访录音匹配率明细</h2><p>支持按门店和员工查看到访录音问题</p></div><div class="segmented"><button class="active">门店</button><button>员工</button></div></div>
+              <div class="table-scroll"><table class="data-table matching-table"><thead><tr><th>日期</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>到访数</th><th>已匹配</th><th>录音上传中</th><th>转写/分析中</th><th>员工未绑定工牌</th><th>到访时段未开机</th><th>到访时段无录音</th><th>其他失败</th><th>录音匹配率</th><th>问题分类</th></tr></thead><tbody>
+                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>上海战区</td><td><strong>上海浦东体验中心</strong></td><td>186</td><td>174</td><td>4</td><td>3</td><td>1</td><td>1</td><td>2</td><td>1</td><td><span class="rate-cell good-rate"><strong>93.5%</strong><i><b style="width:93.5%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 5 条问题</button></td></tr>
+                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>浙江战区</td><td><strong>杭州滨江体验中心</strong></td><td>148</td><td>132</td><td>7</td><td>4</td><td>1</td><td>1</td><td>2</td><td>1</td><td><span class="rate-cell good-rate"><strong>89.2%</strong><i><b style="width:89.2%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 5 条问题</button></td></tr>
+                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>江苏战区</td><td><strong>苏州园区体验中心</strong></td><td>126</td><td>104</td><td>10</td><td>5</td><td>2</td><td>2</td><td>2</td><td>1</td><td><span class="rate-cell bad-rate"><strong>82.5%</strong><i><b style="width:82.5%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 7 条问题</button></td></tr>
+              </tbody></table></div>
+              <div class="pagination"><span>共 36 条</span><button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><button>›</button></div>
+            </section>
           </section>
         </div>
       </main>
@@ -228,33 +223,21 @@
 
     <div class="modal-backdrop" id="importModal" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
-        <div class="modal-head"><div><h2 id="importTitle">导入到访记录</h2><p>上传 Excel 文件后，系统将先校验数据再生成到访记录。</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
-        <div class="upload-zone"><span class="upload-icon">⇧</span><strong>点击或拖拽 Excel 文件到这里</strong><p>支持 .xlsx，单次最多 5,000 条，文件不超过 20MB</p><button class="btn ghost toast-action">选择文件</button></div>
-        <div class="template-row"><span><strong>还没有模板？</strong><small>请使用最新版模板，避免字段校验失败。</small></span><button class="text-btn toast-action">下载导入模板</button></div>
+        <div class="modal-head"><div><h2 id="importTitle">导入到访明细</h2><p>仅用于销售顾问手动补传到访数据。</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="upload-zone"><span class="upload-icon">⇧</span><strong>点击或拖拽 Excel 文件到这里</strong><p>系统校验门店、员工和到访时间后生成到访记录</p><button class="btn ghost toast-action">选择文件</button></div>
+        <div class="template-row"><span><strong>请使用固定模板</strong><small>模板字段需与销售助手到访数据保持同一口径。</small></span><button class="text-btn toast-action">下载模板</button></div>
         <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary toast-action">开始校验</button></div>
       </section>
     </div>
 
-    <div class="modal-backdrop" id="relationModal" hidden>
-      <section class="modal relation-modal" role="dialog" aria-modal="true" aria-labelledby="relationTitle">
-        <div class="modal-head"><div><h2 id="relationTitle">分配工牌</h2><p>新的使用关系将保留生效时间，历史关系不会被覆盖。</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
-        <div class="form-grid"><label class="field"><span>所属门店 <b>*</b></span><select><option>请选择门店</option><option>上海浦东体验中心</option></select></label><label class="field"><span>员工 <b>*</b></span><select><option>请选择员工</option><option>陈佳（A01728）</option></select></label><label class="field"><span>工牌SN <b>*</b></span><select><option>请选择未绑定工牌</option><option>MN-BDG-004901</option></select></label><label class="field"><span>生效时间 <b>*</b></span><input type="datetime-local" value="2026-08-03T10:30" /></label><label class="field full-field"><span>备注</span><textarea placeholder="可填写借用、备用或其他说明"></textarea></label></div>
-        <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary confirm-relation">确认分配</button></div>
-      </section>
-    </div>
-
     <div class="drawer-backdrop" id="visitDrawer" hidden></div>
-    <aside class="drawer" id="visitDetail" aria-hidden="true">
-      <div class="drawer-head"><div><span class="status success">匹配成功</span><h2>到访记录详情</h2><p>C202608031204</p></div><button class="icon-btn close-drawer" aria-label="关闭">×</button></div>
-      <div class="drawer-body">
-        <section class="detail-section"><h3>客户与到访</h3><div class="detail-grid"><span><small>客户姓名</small><strong>王先生</strong></span><span><small>客户电话</small><strong>138****0628</strong></span><span><small>到访日期</small><strong>2026-08-03</strong></span><span><small>到访时间</small><strong>09:42:10—10:26:35</strong></span><span><small>员工名称</small><strong>陈佳</strong></span><span><small>所属门店</small><strong>上海浦东体验中心</strong></span><span><small>会话类型</small><strong>销售接待</strong></span><span><small>意向车系</small><strong>星海 S7</strong></span></div></section>
-        <section class="detail-section"><h3>录音匹配</h3><div class="match-timeline"><article><i class="done">✓</i><div><strong>收到到访记录</strong><p>销售助手 · 2026-08-03 09:41:52</p></div></article><article><i class="done">✓</i><div><strong>定位员工有效工牌</strong><p>陈佳 · MN-BDG-004821</p></div></article><article><i class="done">✓</i><div><strong>匹配并切分录音</strong><p>共匹配 2 段原始录音，生成 1 段业务录音</p></div></article></div><div class="recording-item"><span class="record-icon">▶</span><div><strong>2087346017925719920</strong><p>44分25秒 · 09:42:10—10:26:35</p></div><button class="text-btn toast-action">查看录音</button></div></section>
-        <section class="detail-section"><h3>数据记录</h3><div class="detail-grid"><span><small>到访记录来源</small><strong>销售助手</strong></span><span><small>录音切分模式</small><strong>自动切分</strong></span><span><small>匹配时间</small><strong>2026-08-03 10:31:08</strong></span><span><small>更新时间</small><strong>2026-08-03 10:31:08</strong></span></div></section>
-      </div>
-      <div class="drawer-foot"><button class="btn ghost toast-action">编辑记录</button><button class="btn primary toast-action">重新匹配</button></div>
+    <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true">
+      <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer" aria-label="关闭">×</button></div>
+      <div class="drawer-body" id="drawerBody"></div>
     </aside>
 
     <div class="toast" id="toast" role="status">操作已完成</div>
-    <script src="./page.js?v=20260813-back-to-top-v1"></script>
+    <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
+    <script src="./page.js?v=20260813-badge-low-battery-log-v15"></script>
   </body>
 </html>

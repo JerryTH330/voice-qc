@@ -9,7 +9,7 @@
   if (!pageShell || !navButtons.length) return;
 
   function getFrameKey(page) {
-    return page === 'customer-insight' ? 'customer-insight' : page?.startsWith('device-') ? 'device-management' : null;
+    return page === 'customer-insight' ? 'customer-insight' : null;
   }
 
   function setActiveNavigation(page) {
@@ -64,6 +64,13 @@
   document.addEventListener('click', (event) => {
     const button = event.target.closest('.nav-button');
     if (!button || !desktopShell.matches) return;
+
+    if (button.dataset.page?.startsWith('device-') && button.dataset.href) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.location.href = new URL(button.dataset.href, window.location.href).href;
+      return;
+    }
 
     const frameKey = getFrameKey(button.dataset.page);
     if (frameKey && button.dataset.href) {
