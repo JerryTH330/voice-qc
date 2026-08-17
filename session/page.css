@@ -1,9 +1,20 @@
 /* 录音列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260813-back-to-top-v3");
+@import url("../voice-qc-admin.css?v=20260814-advisor-id-lock-v1");
 @import url("../app-inline.css?v=20260812-date-picker-fix-v2");
 
 .session-list-table-wrap {
   box-sizing: border-box;
   width: calc(100% - 40px);
   margin-inline: 20px;
+}
+
+.session-data-table {
+  min-width: 2480px;
+}
+
+.session-data-table thead th:last-child,
+.session-data-table tbody td:last-child {
+  width: 92px;
+  min-width: 92px;
+  max-width: 92px;
 }

@@ -7915,8 +7915,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const button = card.querySelector('[data-journey-card-toggle]')
           if (!button) return
           button.setAttribute('aria-expanded', String(expanded))
-          const copy = button.querySelector('.journey-card-toggle-copy')
-          if (copy) copy.textContent = expanded ? '收起' : '展开'
+          const actionLabel = expanded ? '收起会话小结' : '展开会话小结'
+          button.setAttribute('aria-label', actionLabel)
+          button.setAttribute('title', actionLabel)
           button.classList.toggle('is-expanded', expanded)
         }
 
@@ -8010,7 +8011,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           toggleButton.dataset.journeyCardToggle = 'true'
           toggleButton.setAttribute('aria-controls', summaryId)
           toggleButton.setAttribute('aria-expanded', 'false')
-          toggleButton.innerHTML = '<span class="journey-card-toggle-copy">展开</span>'
+          toggleButton.setAttribute('aria-label', '展开会话小结')
+          toggleButton.setAttribute('title', '展开会话小结')
+          toggleButton.innerHTML = '<svg class="journey-card-toggle-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
           toggleButton.addEventListener('click', () => {
             const shouldExpand = !card.classList.contains('is-summary-expanded')
             const previouslyExpanded = cards.find((item) => item !== card && item.classList.contains('is-summary-expanded'))
@@ -8718,6 +8721,43 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const flatSessionOrganizationNodes = flattenSessionOrganizationNodes(sessionOrganizationTree)
 
+      function getSessionOrganizationNode(path) {
+        return flatSessionOrganizationNodes.find((node) => node.path === path) || null
+      }
+
+      function isSessionAdvisorOrganizationSelected(path = sessionFilterState.organization) {
+        return getSessionOrganizationNode(path)?.type === 'advisor'
+      }
+
+      function applySessionOrganizationFilter(path) {
+        const nextPath = path || '全部组织'
+        sessionFilterState.organization = nextPath
+
+        if (isSessionAdvisorOrganizationSelected(nextPath)) {
+          sessionFilterState.searchQueries.advisorId = ''
+        }
+      }
+
+      let sessionToastTimer = null
+
+      function showSessionToast(message) {
+        let toast = document.getElementById('sessionFeedbackToast')
+        if (!toast) {
+          toast = document.createElement('div')
+          toast.id = 'sessionFeedbackToast'
+          toast.className = 'session-feedback-toast'
+          toast.setAttribute('role', 'status')
+          toast.setAttribute('aria-live', 'polite')
+          document.body.appendChild(toast)
+        }
+
+        toast.textContent = message
+        toast.classList.remove('is-visible')
+        window.requestAnimationFrame(() => toast.classList.add('is-visible'))
+        window.clearTimeout(sessionToastTimer)
+        sessionToastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 2200)
+      }
+
       function getSessionOrganizationSearchResults(keyword) {
         const normalizedKeyword = normalizeSessionOrganizationSearchText(keyword)
         if (!normalizedKeyword) {
@@ -9046,8 +9086,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function renderSessionSearchFieldControl(field) {
         const currentValue = (sessionFilterState.searchQueries && sessionFilterState.searchQueries[field.key]) || ''
+        const advisorIdLocked = field.key === 'advisorId' && isSessionAdvisorOrganizationSelected()
+        const disabledMessage = '已通过组织筛选指定顾问，无需重复填写顾问ID'
         return `
-          <div class="session-toolbar-control session-toolbar-control-search session-toolbar-control-search-field" aria-label="${escapeHtml(`${field.label}筛选`)}">
+          <div
+            class="session-toolbar-control session-toolbar-control-search session-toolbar-control-search-field${advisorIdLocked ? ' is-disabled' : ''}"
+            aria-label="${escapeHtml(`${field.label}筛选`)}"
+            ${advisorIdLocked ? `aria-disabled="true" role="button" tabindex="0" data-session-disabled-search="advisorId" data-session-disabled-search-message="${escapeHtml(disabledMessage)}"` : ''}
+          >
             <span>${escapeHtml(field.label)}</span>
             <div class="session-search-field">
               <input
@@ -9057,6 +9103,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 value="${escapeHtml(currentValue)}"
                 aria-label="${escapeHtml(`${field.label}输入`)}"
                 placeholder="${escapeHtml(`请输入${field.label}`)}"
+                ${advisorIdLocked ? 'readonly aria-disabled="true" tabindex="-1"' : ''}
               />
               <span class="session-search-icon" aria-hidden="true"></span>
             </div>
@@ -9395,7 +9442,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (!records.length) {
           tbody.innerHTML = `
             <tr class="session-empty-row">
-              <td colspan="20">当前筛选条件下暂无录音，请调整组织、质检场景、数据来源、AI意向等级、车系、录音开始时间、录音状态或搜索条件后重试。</td>
+              <td colspan="21">当前筛选条件下暂无录音，请调整组织、质检场景、数据来源、AI意向等级、车系、录音开始时间、录音状态或搜索条件后重试。</td>
             </tr>
           `
           if (pagination) {
@@ -9409,6 +9456,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return `
               <tr>
                 <td><span class="cell-main">${escapeHtml(item.id)}</span></td>
+                <td>${escapeHtml(getSessionBrand(item.carSeries))}</td>
                 <td>${escapeHtml(item.recordStartTime)}</td>
                 <td>${escapeHtml(item.uploadTime)}</td>
                 <td>
@@ -9629,7 +9677,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             }
 
             const searchKey = node.dataset.sessionSearchKey
-            if (!searchKey) {
+            if (!searchKey || (searchKey === 'advisorId' && isSessionAdvisorOrganizationSelected())) {
               return
             }
             const nextValue = node.value || ''
@@ -9652,6 +9700,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           })
         })
 
+        pageHost.querySelectorAll('[data-session-disabled-search]').forEach((node) => {
+          const showDisabledReason = () => {
+            showSessionToast(node.dataset.sessionDisabledSearchMessage || '当前筛选项已禁用')
+          }
+
+          node.addEventListener('click', showDisabledReason)
+          node.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+              return
+            }
+            event.preventDefault()
+            showDisabledReason()
+          })
+        })
+
         pageHost.querySelectorAll('[data-session-org-path]').forEach((node) => {
           node.addEventListener('click', () => {
             sessionMenuState.organizationDraftPath = node.dataset.sessionOrgPath
@@ -9665,7 +9728,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               return
             }
 
-            sessionFilterState.organization = node.dataset.sessionOrgPath
+            applySessionOrganizationFilter(node.dataset.sessionOrgPath)
             sessionPaginationState.page = 1
             sessionMenuState.organizationSearchQuery = ''
             sessionMenuState.organizationSearchActive = false
@@ -9706,7 +9769,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-session-org-clear]').forEach((node) => {
           node.addEventListener('click', () => {
-            sessionFilterState.organization = '全部组织'
+            applySessionOrganizationFilter('全部组织')
             sessionPaginationState.page = 1
             sessionMenuState.organizationDraftPath = '全部组织'
             sessionMenuState.organizationSearchQuery = ''
@@ -9718,7 +9781,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-session-org-apply]').forEach((node) => {
           node.addEventListener('click', () => {
-            sessionFilterState.organization = node.dataset.sessionOrgApply || sessionMenuState.organizationDraftPath || '全部组织'
+            applySessionOrganizationFilter(node.dataset.sessionOrgApply || sessionMenuState.organizationDraftPath || '全部组织')
             sessionPaginationState.page = 1
             sessionMenuState.organizationDraftPath = sessionFilterState.organization
             sessionMenuState.organizationSearchQuery = ''
@@ -10643,6 +10706,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return `
           <tr>
             <th>线索ID</th>
+            <th>品牌</th>
             <th>大区</th>
             <th>战区</th>
             <th>门店</th>
@@ -10920,17 +10984,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
           ${renderLeadsMenuControl('leadStatus', '线索状态', leadsFilterState.leadStatus, renderLeadsOptionMenu('leadStatus', leadStatusOptions, leadsFilterState.leadStatus))}
           ${renderLeadsMenuControl('intentGrade', '意向级别', leadsFilterState.intentGrade, renderLeadsOptionMenu('intentGrade', leadIntentGradeOptions, leadsFilterState.intentGrade))}
-          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu" data-leads-menu-root="sourceType">
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu${leadsMenuState.openMenu === 'sourceType' ? ' is-open' : ''}" data-leads-menu-root="sourceType">
             <span>录音来源类型</span>
-            <button type="button" class="session-select-trigger" data-leads-menu-trigger="sourceType" aria-label="录音来源类型" aria-haspopup="listbox" aria-expanded="false">
+            <button type="button" class="session-select-trigger${leadsMenuState.openMenu === 'sourceType' ? ' active' : ''}" data-leads-menu-trigger="sourceType" aria-label="录音来源类型" aria-haspopup="listbox" aria-expanded="${leadsMenuState.openMenu === 'sourceType' ? 'true' : 'false'}">
               <strong>${escapeHtml(leadsFilterState.sourceType)}</strong>
               <span class="session-select-caret" aria-hidden="true"></span>
             </button>
             ${leadsMenuState.openMenu === 'sourceType' ? renderLeadsOptionMenu('sourceType', leadSourceTypeOptions, leadsFilterState.sourceType) : ''}
           </div>
-          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu session-toolbar-control-date" data-leads-menu-root="date">
+          <div class="leads-filter-extra session-toolbar-control session-toolbar-menu session-toolbar-control-date${leadsMenuState.openMenu === 'date' ? ' is-open' : ''}" data-leads-menu-root="date">
             <span>日期</span>
-            <button type="button" class="session-date-trigger" data-leads-menu-trigger="date" aria-label="线索日期筛选" aria-haspopup="dialog" aria-expanded="false">
+            <button type="button" class="session-date-trigger${leadsMenuState.openMenu === 'date' ? ' active' : ''}" data-leads-menu-trigger="date" aria-label="线索日期筛选" aria-haspopup="dialog" aria-expanded="${leadsMenuState.openMenu === 'date' ? 'true' : 'false'}">
               <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.startDate))}</strong>
               <em>至</em>
               <strong>${escapeHtml(formatSessionDateDisplay(leadsFilterState.endDate))}</strong>
@@ -11022,7 +11086,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
-          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 15 : 16}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
+          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 15 : 17}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
           if (pagination) {
             pagination.innerHTML = ''
           }
@@ -11092,6 +11156,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             .map((item) => `
               <tr>
                 <td><span class="cell-main">${escapeHtml(item.id)}</span></td>
+                <td>${escapeHtml(getSessionBrand(item.carSeries))}</td>
                 <td>${escapeHtml(item.region)}</td>
                 <td>${escapeHtml(item.zone)}</td>
                 <td>${escapeHtml(item.store)}</td>
@@ -13958,7 +14023,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           card._journeyLocatedTimer = window.setTimeout(() => {
             card.classList.remove('is-journey-located')
             step.classList.remove('is-journey-target-active')
-          }, 1100)
+          }, 2000)
         }
 
         const scrollToCard = (card, step) => {
@@ -14049,7 +14114,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           card._journeyLocatedTimer = window.setTimeout(() => {
             card.classList.remove('is-journey-located')
             step.classList.remove('is-journey-target-active')
-          }, 1100)
+          }, 2000)
         }
 
         const scrollToCard = (card, step) => {
@@ -16606,7 +16671,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: 'G 助手已回传签到结果和接待顾问信息，你的邀约责任已闭环。',
             summary: '客户昨天完成二次确认，今天按约到店，是高意向邀约的标准样本。',
-            action: '这条今天主要做邀约复盘，确认交接表和到店确认记录已经补齐。',
+            action: '今日 12:00 前完成邀约复盘，重点核对“32 万以内预算”和“夫妻同行”已写入交接表，并补齐到店确认记录。',
+            actionHighlights: ['今日 12:00 前', '32 万以内预算', '夫妻同行'],
             tags: ['H级高意向', '夫妻同行', '已到店样本'],
             chainNote: '接待顾问 赵倩已承接，后续接待与试驾由顾问继续推进。',
             updatedAt: '2026-03-23 10:34',
@@ -16626,7 +16692,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '上游系统已同步 16:00 到店预约，仍需在到店前补发停车指引。',
             summary: '客户已明确今天下午到店，兴趣集中在家用空间与金融方案，热度较高。',
-            action: '14:30 前完成提醒并确认同行人信息，避免到店前最后一小时失约。',
+            action: '14:30 前补发停车指引，再确认“配偶同行”和 16:00 到店时间，避免到店前最后一小时失约。',
+            actionHighlights: ['14:30 前', '停车指引', '配偶同行', '16:00 到店'],
             tags: ['H级高意向', '今日16:00', '停车指引待发'],
             chainNote: '计划交接给销售顾问 李昱，预算与置换信息已录入邀约备注。',
             updatedAt: '2026-03-23 09:18',
@@ -16646,7 +16713,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '待回传',
             syncNote: '线索已进入 DMS，但首次电话结果还未从上游写回，需要你先完成首触。',
             summary: '客户刚留资不久，咨询点集中在纯电续航和用车成本，仍处于最容易建立联系的窗口。',
-            action: '10 分钟内完成首次电话和企微加微动作，先锁住需求信息再判断是否约店。',
+            action: '10 分钟内完成首次电话和企微加微，优先确认“纯电续航”与“每日通勤成本”，再判断是否邀约到店。',
+            actionHighlights: ['10 分钟内', '纯电续航', '每日通勤成本'],
             tags: ['H级新线索', '30分钟考核窗内', '需首触'],
             chainNote: '到店顾问暂未分配，先完成首触后再按意向匹配接待人。',
             updatedAt: '2026-03-23 11:06',
@@ -16666,7 +16734,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '超时预警',
             syncNote: '超 30 分钟仍未形成有效触达记录，需要先补首触并说明原因。',
             summary: '客户询价后留下电话，当前还没形成真实接通记录，继续拖延会快速失温。',
-            action: '立即完成补救电话，并在上游系统补写超时原因和下一次联系计划。',
+            action: '立即回拨客户，优先说明“首触已超时 14 分钟”的补救动作，并在 11:30 前补写超时原因与下次联系计划。',
+            actionHighlights: ['立即回拨', '首触已超时 14 分钟', '11:30 前'],
             tags: ['A级跟进', '超时线索', '先补救'],
             chainNote: '如果客户仍有意向，需今天重新确认是否可转为本周到店邀约。',
             updatedAt: '2026-03-23 10:52',
@@ -16686,7 +16755,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '上游已同步 18:30 到店预约，提醒任务将于 17:30 自动推送。',
             summary: '客户昨天已经确认今晚到店，需求信息基本齐全，当前主要看提醒和交接备注是否完整。',
-            action: '17:30 做一次行程确认，同时补充客户通勤与补能场景，方便顾问接待时直接展开。',
+            action: '17:30 完成二次行程确认，同时补齐“每日通勤 30 公里”和“小区充电条件”，便于顾问到店后直接讲解续航与补能。',
+            actionHighlights: ['17:30', '每日通勤 30 公里', '小区充电条件'],
             tags: ['A级中意向', '今日18:30', '交接备注待补'],
             chainNote: '计划交接给销售顾问 陈涛，客户重点关注续航与金融政策。',
             updatedAt: '2026-03-23 09:46',
@@ -16706,7 +16776,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '企微跟进纪要已同步，客户计划下周再确认到店时间。',
             summary: '客户需求明确但购车时间稍远，当前适合维持低打扰沟通，等待节点性刺激。',
-            action: '这条不需要今天强推到店，先按约定在周四发送新款配置对比，再观察热度变化。',
+            action: '本周不强推到店，按约定于周四 14:00 发送“M8 宗师新旧款配置差异”，重点观察客户对智能座舱的反馈。',
+            actionHighlights: ['周四 14:00', 'M8 宗师新旧款配置差异', '智能座舱'],
             tags: ['B级培育', '下周考虑', '低打扰跟进'],
             chainNote: '暂无接待顾问分配，到店前再根据车型偏好安排合适顾问。',
             updatedAt: '2026-03-23 08:28',
@@ -16726,7 +16797,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '上游最近一次回访记录已同步，客户计划五一后再看车。',
             summary: '客户购车时机较晚，目前更像内容培育对象，不适合占用今日高优先邀约资源。',
-            action: '维持内容触达即可，本周不用强行邀约，避免把低意向线索误拉进今日清单。',
+            action: '本周仅保持内容触达，发送“五一家庭出行场景”资料，不强行邀约；于 4 月 28 日再确认看车计划。',
+            actionHighlights: ['本周仅保持内容触达', '五一家庭出行场景', '4 月 28 日'],
             tags: ['C级长期', '节后再看', '内容培育'],
             chainNote: '暂无接待顾问安排，保持线索池培育状态即可。',
             updatedAt: '2026-03-22 18:22',
@@ -19218,6 +19290,31 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         document.getElementById('lead-view-note').textContent = getDccViewNote()
       }
 
+      function renderSalesFollowupAction(lead) {
+        const text = String(lead?.action || '')
+        const highlights = [...new Set((lead?.actionHighlights || []).map((item) => String(item || '').trim()).filter(Boolean))]
+        const ranges = highlights
+          .map((highlight) => ({ highlight, start: text.indexOf(highlight) }))
+          .filter((item) => item.start >= 0)
+          .sort((a, b) => a.start - b.start)
+
+        if (!ranges.length) {
+          return escapeHtml(text)
+        }
+
+        let html = ''
+        let cursor = 0
+        ranges.forEach(({ highlight, start }) => {
+          if (start < cursor) {
+            return
+          }
+          html += escapeHtml(text.slice(cursor, start))
+          html += `<strong class="sales-followup-alert">${escapeHtml(highlight)}</strong>`
+          cursor = start + highlight.length
+        })
+        return html + escapeHtml(text.slice(cursor))
+      }
+
       function buildDccLeadCard(lead) {
         const isCompleted = isDccLeadCompleted(lead.id)
 
@@ -19250,7 +19347,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                     <span class="todo-guidance-label todo-guidance-label-primary"><img class="todo-guidance-label-icon" src="../assets/sales-followup-icon.svg" alt="" aria-hidden="true">跟进建议</span>
                     ${lead.followUpTime ? `<span class="followup-time-badge">建议时间 ${lead.followUpTime}</span>` : ''}
                   </div>
-                  <div class="todo-next-step-text">${lead.action}</div>
+                  <div class="todo-next-step-text">${renderSalesFollowupAction(lead)}</div>
                   <div class="todo-action-btns">
                     <button type="button" class="lead-detail-toggle">
                       <span class="toggle-text">展开</span>
@@ -19922,7 +20019,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '上游已回传试驾和报价记录，当前适合趁热推进金融方案和置换测算。',
             summary: '客户试驾反馈积极，但预算仍有拉扯，当前正处于最适合报价与议价收口的窗口。',
-            action: '今天优先补一版预算分层方案，把置换和金融两个版本一起讲清楚，避免客户回去后失温。',
+            action: '今日 15:00 前输出“28 万以内”预算分层方案，同时对比“旧车置换”与“两年免息”两种版本，趁试驾热度完成报价收口。',
+            actionHighlights: ['今日 15:00 前', '28 万以内', '旧车置换', '两年免息'],
             tags: ['A级中意向', '试驾已完成', '预算异议处理中'],
             chainNote: 'DCC 已完成到店交接，当前由你负责报价、议价和后续跟进。',
             updatedAt: '2026-03-23 09:12',
@@ -19944,7 +20042,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: '接待完成记录已同步，但试驾预约尚未回写，需要你尽快排定路线和时段。',
             summary: '客户已经到店完成基础接待，兴趣点明确，但如果今天不推进试驾，热度容易掉下去。',
-            action: '把她放进今天的优先试驾清单，尽快锁定车型、路线和陪同人安排。',
+            action: '今日 14:00 前锁定 ES9 试驾车和城市路线，重点安排“配偶陪同”，试驾中验证客户关注的“纯电续航”。',
+            actionHighlights: ['今日 14:00 前', 'ES9 试驾车', '配偶陪同', '纯电续航'],
             tags: ['A级中意向', '今日待试驾', '二次到店'],
             chainNote: 'DCC 张琳已补齐预算和家庭场景信息，你可以直接进入试驾安排。',
             updatedAt: '2026-03-23 08:45',
@@ -19966,7 +20065,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '待到店',
             syncNote: 'DCC 已确认客户今天下午到店，你需要提前准备接待和试驾承接。',
             summary: '客户今天首次到店，基础信息已经由 DCC 录好，顾问端要做好首轮接待和车型演示准备。',
-            action: '提前看完交接备注，到店后直接进入需求深挖，不要再重复问基础信息。',
+            action: '客户 16:00 到店前读完交接备注，直接围绕“二排舒适性”和“家庭长途出行”深挖，不再重复询问预算与车型偏好。',
+            actionHighlights: ['16:00 到店前', '二排舒适性', '家庭长途出行'],
             tags: ['B级今日到店', '首次进店', '待接待'],
             chainNote: '邀约阶段已完成，客户签到后由你承接接待并决定是否继续跟进。',
             updatedAt: '2026-03-23 07:56',
@@ -19988,7 +20088,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '同步正常',
             syncNote: 'DMS 已回传订单信息，可作为接待后回访催化成功的标准样本。',
             summary: '客户首轮接待后回店犹豫，后续由你连续回访促成下订，适合做顾问端成交样本复盘。',
-            action: '这条今天不需要追动作，重点复盘试驾后如何把报价、回访和催化串起来。',
+            action: '今日不再追客户动作，输出一份成交复盘，重点还原“试驾后 2 小时内报价”与“离店当晚回访”两个有效动作。',
+            actionHighlights: ['今日不再追客户动作', '试驾后 2 小时内报价', '离店当晚回访'],
             tags: ['成交样本', '离店后催化', 'A级'],
             chainNote: '现场接待由陈涛完成，你承接回访后促成下订，是典型协同成交样本。',
             updatedAt: '2026-03-23 09:02',
@@ -20010,7 +20111,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '回访待确认',
             syncNote: '接待动作已同步，但离店后的跟进责任还未在系统中补齐，需要先确认 follow owner。',
             summary: '客户上周已到店并听完讲解，目前既没有明确战败也没有后续回访记录，最容易在忙时被遗漏。',
-            action: '先补齐回访责任，再确认客户是继续推进还是转入战败回访，避免客户悬空。',
+            action: '今日先将回访责任人确认为李昱，并在明日 09:00 前核实“继续推进”或“转入战败回访”，避免离店客户无人承接。',
+            actionHighlights: ['回访责任人确认为李昱', '明日 09:00 前', '继续推进', '转入战败回访'],
             tags: ['C级培育', '责任待确认', '离店未闭环'],
             chainNote: '前序接待由你完成，但离店后的跟进责任尚未补齐。',
             updatedAt: '2026-03-22 18:10',
@@ -20032,7 +20134,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             syncLabel: '战败待补录',
             syncNote: '客户未成交，但战败原因和回访结果还没有在上游系统中补齐。',
             summary: '这类客户最怕被拖过 3 天，一旦不及时记录战败原因，后面复盘和二次激活都会断层。',
-            action: '今天先补齐战败原因，再确认价格、竞品还是时机导致流失，保留二次激活可能。',
+            action: '今日 11:00 前完成战败回访，明确记录是“价格超预算”、“竞品对比”还是“购车时机延后”，并设置 30 天二次激活任务。',
+            actionHighlights: ['今日 11:00 前', '价格超预算', '竞品对比', '购车时机延后', '30 天二次激活任务'],
             tags: ['B级客户', '战败待回访', '需补原因'],
             chainNote: '到店接待和试驾都已完成，当前只剩战败回访与原因归档。',
             updatedAt: '2026-03-22 21:30',
@@ -20232,7 +20335,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                     <span class="todo-guidance-label todo-guidance-label-primary"><img class="todo-guidance-label-icon" src="../assets/sales-followup-icon.svg" alt="" aria-hidden="true">跟进建议</span>
                     ${lead.followUpTime ? `<span class="followup-time-badge">建议时间 ${lead.followUpTime}</span>` : ''}
                   </div>
-                  <div class="todo-next-step-text">${lead.action}</div>
+                  <div class="todo-next-step-text">${renderSalesFollowupAction(lead)}</div>
                   <div class="todo-action-btns">
                     <button type="button" class="lead-detail-toggle">
                       <span class="toggle-text">展开</span>

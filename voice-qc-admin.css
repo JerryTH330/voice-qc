@@ -270,6 +270,45 @@ body::before {
   font-weight: 700;
 }
 
+/* Figma 637:1048 补充的统一菜单图标。使用 mask 保留菜单悬停与选中态颜色。 */
+.nav-button[data-page="customer-insight"] .nav-icon {
+  --nav-menu-icon: url('./assets/nav-customer-insight-figma.svg');
+}
+
+.nav-button[data-page="factory-dashboard"] .nav-icon {
+  --nav-menu-icon: url('./assets/nav-factory-dashboard-figma.svg');
+}
+
+.nav-button[data-page="device-stores"] .nav-icon {
+  --nav-menu-icon: url('./assets/nav-store-overview-figma.svg');
+}
+
+.nav-button[data-page="device-badges"] .nav-icon {
+  --nav-menu-icon: url('./assets/nav-badge-detail-figma.svg');
+}
+
+.nav-button[data-page="customer-insight"] .nav-icon,
+.nav-button[data-page="factory-dashboard"] .nav-icon,
+.nav-button[data-page="device-stores"] .nav-icon,
+.nav-button[data-page="device-badges"] .nav-icon {
+  display: block;
+  font-size: 0;
+  background-color: currentColor;
+  -webkit-mask-image: var(--nav-menu-icon);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 18px 18px;
+  mask-image: var(--nav-menu-icon);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 18px 18px;
+}
+
+.nav-button[data-page="customer-insight"] .nav-icon path,
+.nav-button[data-page="factory-dashboard"] .nav-icon path {
+  display: none;
+}
+
 .sidebar-user {
   display: none;
 }
@@ -3619,6 +3658,12 @@ body::before {
   font-size: 14px;
   line-height: 20px;
   font-weight: 500;
+}
+
+.sales-role-dashboard-page .todo-next-step-text .sales-followup-alert {
+  color: #dc2626;
+  font-size: 1.08em;
+  font-weight: 700;
 }
 
 .sales-role-dashboard-page .role-compact-grid,
@@ -7401,6 +7446,16 @@ body::before {
   z-index: 32;
 }
 
+/* 打开的查询弹层必须连同所在筛选行一起高于后续控件，避免跨行遮挡。 */
+.session-toolbar-menu:has(> .session-menu-panel) {
+  z-index: 40;
+}
+
+#sessionFilterControls .session-filter-row:has(.session-toolbar-menu.is-open),
+#sessionFilterControls .session-filter-row:has(.session-toolbar-menu > .session-menu-panel) {
+  z-index: 40;
+}
+
 .session-select-trigger,
 .session-date-trigger {
   border: 0;
@@ -8444,6 +8499,55 @@ body::before {
 .session-search-input::placeholder {
   color: var(--soft);
   font-weight: 500;
+}
+
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled {
+  border-color: rgba(201, 210, 224, 0.72);
+  background: rgba(241, 245, 249, 0.92);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled:focus,
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled:focus-within {
+  border-color: rgba(201, 210, 224, 0.72);
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.12);
+  outline: none;
+}
+
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled > span,
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled .session-search-input,
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled .session-search-input::placeholder,
+#sessionFilterControls .session-toolbar-control-search-field.is-disabled .session-search-icon {
+  color: #9aa7b8;
+  cursor: not-allowed;
+}
+
+.session-feedback-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 1000;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 11px 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -10px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.session-feedback-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .session-filter-grid {
