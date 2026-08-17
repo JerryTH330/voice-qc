@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20260817-store-drilldown-filter-flush-v41" />
+    <link rel="stylesheet" href="./page.css?v=20260817-visit-detail-content-v50" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -60,12 +60,10 @@
           <div class="nav-group">
             <div class="nav-label">工牌</div>
             <div class="nav-menu">
-              <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><span class="nav-icon nav-device-symbol" aria-hidden="true">◇</span><span class="nav-text">门店总览</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><span class="nav-icon nav-device-symbol" aria-hidden="true">◇</span><span class="nav-text">工牌总览</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-badges" data-href="../device-management/index.html#badges" data-route="badges"><span class="nav-icon nav-device-symbol" aria-hidden="true">▣</span><span class="nav-text">工牌明细</span></button>
-              <button class="nav-item nav-button device-nav" data-page="device-events" data-href="../device-management/index.html#events" data-route="events"><span class="nav-icon nav-device-symbol" aria-hidden="true">≋</span><span class="nav-text">工牌事件</span></button>
-              <button class="nav-item nav-button device-nav" data-page="device-uploads" data-href="../device-management/index.html#uploads" data-route="uploads"><span class="nav-icon nav-device-symbol" aria-hidden="true">⇧</span><span class="nav-text">录音上传日志</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-visits" data-href="../device-management/index.html#visits" data-route="visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访明细</span></button>
-              <button class="nav-item nav-button device-nav" data-page="device-dashboard" data-href="../device-management/index.html#dashboard" data-route="dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">录音匹配排查</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-dashboard" data-href="../device-management/index.html#dashboard" data-route="dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">录音排查</span></button>
             </div>
           </div>
 
@@ -126,7 +124,7 @@
               </div>
             </div>
             <div class="summary-row store-overview-metrics">
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-store-count.png" alt="" aria-hidden="true" /><div><small>门店数</small><strong id="storeMetricStoreCount">0</strong></div></article>
+              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-store-count.png" alt="" aria-hidden="true" /><div><small>门店数<span class="store-metric-note">仅统计使用工牌的门店数</span></small><strong id="storeMetricStoreCount">0</strong></div></article>
               <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png?v=20260814-simplified-v3" alt="" aria-hidden="true" /><div><small>工牌资产数</small><strong id="storeMetricBadgeAssetCount">0</strong></div></article>
               <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-bindings.png" alt="" aria-hidden="true" /><div><small>工牌绑定数</small><strong id="storeMetricBindingCount">0</strong></div></article>
               <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-binding-rate.png?v=20260814-revised-v2" alt="" aria-hidden="true" /><div><small>工牌绑定率</small><strong id="storeMetricBindingRate">—</strong></div></article>
@@ -135,7 +133,7 @@
             </div>
             <section class="card table-card store-overview-table-card">
               <div class="table-shell">
-                <div class="table-headbar session-list-table-headbar store-overview-table-head"><div class="panel-title"><h2>门店总览</h2></div><span class="session-filter-summary store-filter-summary">当前展示 <strong id="storeFilteredCount">0</strong> 家门店</span></div>
+                <div class="table-headbar session-list-table-headbar store-overview-table-head"><div class="panel-title"><h2>工牌总览</h2></div><span class="session-filter-summary store-filter-summary">当前展示 <strong id="storeFilteredCount">0</strong> 家门店</span></div>
                 <div class="table-wrap session-list-table-wrap store-overview-table-scroll"><table class="data-table session-data-table store-overview-table"><thead><tr><th>品牌</th><th>大区</th><th>战区</th><th>门店名称</th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="badgeAssets">工牌资产数<span data-store-sort-icon>▲</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindings">工牌绑定数<span data-store-sort-icon>▲</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindingRate">工牌绑定率<span data-store-sort-icon>▲</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="employees">员工数<span data-store-sort-icon>▲</span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="boundEmployees">绑定工牌员工数<span data-store-sort-icon>▲</span></button></th><th>最新数据同步时间</th><th>操作</th></tr></thead><tbody id="storeOverviewTableBody"></tbody></table></div>
                 <div class="session-pagination store-pagination" id="storeOverviewPagination"></div>
               </div>
@@ -144,7 +142,7 @@
 
           <section class="page-panel" data-page="badges">
             <div class="store-drilldown-actions" data-store-drilldown-actions hidden>
-              <button class="store-drilldown-back" type="button" data-store-drilldown-back>返回门店总览</button>
+              <button class="store-drilldown-back" type="button" data-store-drilldown-back>返回工牌总览</button>
             </div>
             <section class="card session-filter-card badge-session-filter-card">
               <div class="session-filter-toolbar" id="sessionFilterControls"></div>
@@ -161,7 +159,7 @@
                 </div>
                 <div class="table-wrap badge-list-table-wrap">
                   <table class="data-table session-data-table badge-data-table">
-                    <thead><tr><th>工牌 SN</th><th>工牌类型</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>顾问ID</th><th>顾问姓名</th><th>录音状态</th><th>WiFi连接</th><th>是否接入充电坞</th><th>信号</th><th>剩余电量</th><th>低电量预警</th><th>剩余内存</th><th>今日开机时长</th><th>待上传录音</th><th>最新数据同步时间</th><th>操作</th></tr></thead>
+                    <thead><tr><th>工牌 SN</th><th>工牌类型</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>顾问ID</th><th>顾问姓名</th><th>录音状态</th><th>WiFi连接</th><th>是否接入充电坞</th><th>信号</th><th>剩余电量</th><th>剩余内存</th><th>今日开机时长</th><th>待上传录音</th><th>最新数据同步时间</th><th>操作</th></tr></thead>
                     <tbody id="badgeDetailTableBody"></tbody>
                   </table>
                 </div>
@@ -174,8 +172,9 @@
             <section class="card badge-record-header">
               <button class="badge-record-back" type="button" data-badge-detail-back><span aria-hidden="true">‹</span> 返回工牌明细</button>
               <div class="badge-record-person">
-                <span class="profile-avatar" id="badgeRecordAvatar">陈</span>
                 <div><small>顾问姓名</small><strong id="badgeRecordAdvisorName">陈佳</strong></div>
+                <i aria-hidden="true"></i>
+                <div><small>所属门店</small><strong id="badgeRecordStoreName">上海浦东体验中心</strong></div>
                 <i aria-hidden="true"></i>
                 <div><small>SN 设备号</small><strong id="badgeRecordSn">MN-BDG-004821</strong></div>
               </div>
@@ -198,21 +197,13 @@
             </div>
 
             <div data-badge-record-content="uploads" hidden>
-              <div class="notice warning-notice"><span class="notice-icon">i</span><div><strong>待上传明细来源</strong><p><code>recnu</code> 提供未上传数量，<code>reclist</code> 提供逐条明细，收到 <code>rec</code> 回调后更新为已上传。</p></div></div>
               <div class="filter-card filter-grid badge-upload-filter-grid" data-badge-upload-filter-card>
-                <label class="field span-2"><span>录音开始时间</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-12T00:00:00" data-badge-upload-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-badge-upload-filter="endDateTime" /></span></label>
-                <label class="field"><span>上传状态</span><select data-badge-upload-filter="status"><option>全部状态</option><option>已上传</option><option>未上传</option></select></label>
+                <label class="field"><span>上传完成日期</span><span class="range-field"><input type="date" value="2026-08-06" required data-badge-upload-filter="startDate" /><b>至</b><input type="date" value="2026-08-12" required data-badge-upload-filter="endDate" /></span></label>
                 <div class="filter-actions"><button class="btn ghost" type="button" data-badge-upload-filter-reset>重置</button><button class="btn primary" type="button" data-badge-upload-filter-apply>查询</button></div>
               </div>
-              <div class="summary-row three-cols">
-                <article class="summary-card"><span class="summary-icon blue">录</span><div><small>录音片段</small><strong id="badgeUploadTotal">0</strong></div><em>当前工牌</em></article>
-                <article class="summary-card"><span class="summary-icon green">✓</span><div><small>已上传</small><strong id="badgeUploadCompleted">0</strong></div><em class="positive" id="badgeUploadRate">—</em></article>
-                <article class="summary-card"><span class="summary-icon amber">⇧</span><div><small>未上传</small><strong id="badgeUploadPending">0</strong></div><em>来自 reclist</em></article>
-              </div>
-              <section class="card table-card">
-                <div class="card-head"><div><h2>录音上传日志</h2><p>仅展示当前顾问、当前工牌的录音上传记录</p></div></div>
-                <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>日期</th><th>顾问姓名</th><th>工牌 SN</th><th>片段序号</th><th>音频时间</th><th>片段时长</th><th>文件大小</th><th>上传状态</th><th>上传完成时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
-                <div class="pagination"><span id="badgeUploadPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+              <section class="card table-card badge-upload-daily-card">
+                <div class="card-head"><div><h2>每日录音上传数量</h2><p id="badgeUploadDailySummary">当前日期范围内共 0 条上传完成录音</p></div></div>
+                <div class="table-scroll"><table class="data-table badge-upload-daily-table"><thead><tr><th>日期</th><th>录音上传数量</th></tr></thead><tbody id="badgeUploadDailyTableBody"></tbody></table></div>
               </section>
             </div>
           </section>
@@ -223,8 +214,8 @@
               <label class="field"><span>组织</span><select data-visit-filter="organization"><option>全部组织</option><option>华东大区</option><option>上海战区</option></select></label>
               <label class="field"><span>销售顾问</span><select data-visit-filter="advisor"><option>全部销售顾问</option><option>韩如臣</option><option>陈佳</option></select></label>
               <label class="field"><span>到访来源</span><select data-visit-filter="source"><option>全部来源</option><option>销售助手</option><option>模板导入</option></select></label>
-              <label class="field"><span>匹配状态</span><select data-visit-filter="status"><option>全部状态</option><option>已匹配</option><option>录音上传中</option><option>录音转写中</option><option>模型分析中</option><option>员工未绑定工牌</option><option>到访时段未开机</option><option>到访时段无录音</option><option>匹配失败</option></select></label>
-              <label class="field span-2"><span>客户信息</span><input type="search" placeholder="business_id / 客户 ID / 姓名 / 电话" data-visit-filter="query" /></label>
+              <label class="field"><span>匹配状态</span><select data-visit-filter="status"><option>全部状态</option><option>已匹配</option><option>匹配失败</option><option>无录音</option><option>录音上传中</option><option>待匹配</option><option>匹配超时</option><option>录音转写中</option><option>模型分析中</option><option>客户不同意录音</option><option>无效录音</option></select></label>
+              <label class="field span-2"><span>客户信息</span><input type="search" placeholder="businessId / 客户 ID / 姓名 / 电话" data-visit-filter="query" /></label>
               <div class="filter-actions"><button class="btn ghost" type="button" data-visit-filter-reset>重置</button><button class="btn primary" type="button" data-visit-filter-apply>查询</button></div>
             </div>
             <div class="summary-row five-cols">
@@ -236,13 +227,13 @@
             </div>
             <section class="card table-card">
               <div class="card-head"><div><h2>到访明细</h2><p id="visitResultSummary">共 1,286 条 · 匹配状态按当前最新处理状态展示</p></div></div>
-              <div class="table-scroll visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>business_id</th><th>客户 ID</th><th>客户姓名</th><th>客户电话</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配完成时间</th><th>员工姓名</th><th>所属门店</th><th>门店编码</th><th>到访来源</th><th>数据更新时间</th><th>业务场景</th><th>意向车系</th><th class="sticky-right">操作</th></tr></thead><tbody id="visitTableBody">
-                <tr><td>BIZ-20260812-0136</td><td>C202608120315</td><td>王先生</td><td>138****0628</td><td>2026-08-12</td><td>13:04:00</td><td>13:28:00</td><td><span class="status success">已匹配</span></td><td><button class="text-btn open-detail" data-detail="matched">已匹配 5 个录音片段</button></td><td>13:36:10</td><td>陈佳</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>13:36:10</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="matched">查看</button></td></tr>
-                <tr><td>BIZ-20260812-0148</td><td>C202608120342</td><td>赵女士</td><td>159****8312</td><td>2026-08-12</td><td>13:22:45</td><td>13:56:08</td><td><span class="status waiting">录音上传中</span></td><td><button class="text-btn open-detail" data-detail="uploading">可能存在未上传录音</button></td><td>—</td><td>李洋</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>14:14:02</td><td>试乘试驾</td><td>星海 L9</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="uploading">查看</button></td></tr>
-                <tr><td>BIZ-20260811-0831</td><td>C202608110922</td><td>刘先生</td><td>186****1045</td><td>2026-08-11</td><td>18:31:35</td><td>18:31:55</td><td><span class="status danger">到访时段无录音</span></td><td><button class="text-btn danger-text open-detail" data-detail="no-record">工牌开机但未开启录音</button></td><td>—</td><td>韩如臣</td><td>杭州滨江体验中心</td><td>HZ-BJ-003</td><td><span class="source-tag api">销售助手</span></td><td>18:32:06</td><td>进店接待</td><td>星海 S7</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="no-record">查看</button></td></tr>
-                <tr><td>BIZ-20260811-0772</td><td>C202608110861</td><td>周女士</td><td>135****2776</td><td>2026-08-11</td><td>16:23:41</td><td>17:08:02</td><td><span class="status danger">员工未绑定工牌</span></td><td><button class="text-btn danger-text open-detail" data-detail="unbound">到访时点无有效绑定关系</button></td><td>—</td><td>周宁</td><td>苏州园区体验中心</td><td>SZ-YQ-006</td><td><span class="source-tag api">销售助手</span></td><td>17:09:11</td><td>进店接待</td><td>星海 V6</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="unbound">查看</button></td></tr>
+              <div class="table-scroll visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>businessId</th><th>客户 ID</th><th>客户姓名</th><th>客户电话</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配完成时间</th><th>员工姓名</th><th>所属门店</th><th>门店编码</th><th>到访来源</th><th>数据更新时间</th><th>业务场景</th><th>意向车系</th></tr></thead><tbody id="visitTableBody">
+                <tr><td>BIZ-20260812-0136</td><td>C202608120315</td><td>王先生</td><td>138****0628</td><td>2026-08-12</td><td>13:04:00</td><td>13:28:00</td><td><span class="status success">已匹配</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0136">已匹配完成5段录音</button></td><td>13:36:10</td><td>陈佳</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>13:36:10</td><td>进店接待</td><td>星海 S7</td></tr>
+                <tr><td>BIZ-20260812-0148</td><td>C202608120342</td><td>赵女士</td><td>159****8312</td><td>2026-08-12</td><td>13:22:45</td><td>13:56:08</td><td><span class="status waiting">录音上传中</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0148">可能存在未上传录音</button></td><td>—</td><td>李洋</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>14:14:02</td><td>试乘试驾</td><td>星海 L9</td></tr>
+                <tr><td>BIZ-20260811-0831</td><td>C202608110922</td><td>刘先生</td><td>186****1045</td><td>2026-08-11</td><td>18:31:35</td><td>18:31:55</td><td><span class="status danger">无录音</span></td><td><button class="text-btn" data-visit-detail-type="events" data-business-id="BIZ-20260811-0831">工牌未录音</button></td><td>—</td><td>韩如臣</td><td>杭州滨江体验中心</td><td>HZ-BJ-003</td><td><span class="source-tag api">销售助手</span></td><td>18:32:06</td><td>进店接待</td><td>星海 S7</td></tr>
+                <tr><td>BIZ-20260811-0772</td><td>C202608110861</td><td>周女士</td><td>135****2776</td><td>2026-08-11</td><td>16:23:41</td><td>17:08:02</td><td><span class="status danger">匹配失败</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260811-0772">未绑定工牌</button></td><td>—</td><td>周宁</td><td>苏州园区体验中心</td><td>SZ-YQ-006</td><td><span class="source-tag api">销售助手</span></td><td>17:09:11</td><td>进店接待</td><td>星海 V6</td></tr>
               </tbody></table></div>
-              <div class="pagination"><span id="visitPaginationTotal">共 1,286 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button><select><option>10 条/页</option><option>20 条/页</option></select></div>
+              <div class="pagination"><span id="visitPaginationTotal">共 1,286 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button><select><option>20 条/页</option><option>50 条/页</option></select></div>
             </section>
           </section>
 
@@ -254,13 +245,12 @@
               <div class="filter-actions"><button class="btn ghost" type="button" data-matching-filter-reset>重置</button><button class="btn primary" type="button" data-matching-filter-apply>查询</button></div>
             </div>
             <div class="metric-grid five-metrics">
-              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong id="matchingMetricVisits">1,286</strong><p>按 business_id 去重</p></article>
+              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong id="matchingMetricVisits">1,286</strong><p>按 businessId 去重</p></article>
               <article class="metric-card"><div class="metric-top"><span>已匹配</span><i class="metric-icon green">✓</i></div><strong id="matchingMetricMatched">1,142</strong><p>整个处理流程最终成功</p></article>
               <article class="metric-card featured"><div class="metric-top"><span>录音匹配率 <button class="help" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数">?</button></span><i class="metric-icon violet">%</i></div><strong id="matchingMetricRate">88.8%</strong><p id="matchingMetricRateNote">1,142 ÷ 1,286</p></article>
               <article class="metric-card"><div class="metric-top"><span>处理中</span><i class="metric-icon amber">…</i></div><strong id="matchingMetricProcessing">110</strong><p>上传中、转写中、分析中</p></article>
               <article class="metric-card"><div class="metric-top"><span>问题到访</span><i class="metric-icon red">!</i></div><strong id="matchingMetricProblems">34</strong><p>未绑定、未开机、无录音等</p></article>
             </div>
-            <div class="info-strip"><span>i</span><p>录音匹配率只把当前最终状态为“已匹配”的到访计入分子；转写中、分析中不会重复计算。</p></div>
             <section class="card table-card dashboard-table-card">
               <div class="card-head"><div><h2>到访录音匹配率明细</h2><p>支持按门店和员工查看到访录音问题</p></div><div class="segmented"><button class="active" type="button" data-matching-dimension="store">门店</button><button type="button" data-matching-dimension="advisor">员工</button></div></div>
               <div class="table-scroll"><table class="data-table matching-table"><thead id="matchingTableHead"><tr><th>日期</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>到访数</th><th>已匹配</th><th>录音上传中</th><th>转写/分析中</th><th>员工未绑定工牌</th><th>到访时段未开机</th><th>到访时段无录音</th><th>其他失败</th><th>录音匹配率</th><th>问题分类</th></tr></thead><tbody id="matchingTableBody">
@@ -284,6 +274,35 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="badgeUploadDetailModal" hidden>
+      <section class="modal badge-upload-modal" role="dialog" aria-modal="true" aria-labelledby="badgeUploadDetailTitle">
+        <div class="modal-head"><div><h2 id="badgeUploadDetailTitle">录音上传明细</h2><p id="badgeUploadDetailDescription">仅展示当前顾问、当前工牌在所选日期上传完成的录音</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="badge-upload-modal-body"><div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>顾问姓名</th><th>工牌 SN</th><th>录音片段</th><th>音频时间</th><th>音频时长</th><th>文件大小</th><th>录音上传时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div></div>
+        <div class="pagination badge-upload-modal-pagination"><span id="badgeUploadPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="visitEventDetailModal" hidden>
+      <section class="modal badge-upload-modal visit-event-modal" role="dialog" aria-modal="true" aria-labelledby="visitEventDetailTitle">
+        <div class="modal-head"><div><h2 id="visitEventDetailTitle">工牌事件明细</h2><p id="visitEventDetailDescription"></p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="visit-event-modal-body">
+          <div class="visit-event-context">
+            <span><small>顾问姓名</small><strong id="visitEventAdvisorName">—</strong></span>
+            <span><small>所属门店</small><strong id="visitEventStoreName">—</strong></span>
+            <span><small>工牌 SN</small><strong id="visitEventSn">—</strong></span>
+          </div>
+          <div class="visit-event-filter-preview">
+            <label class="field inline-field"><span>查询日期（单日）</span><input id="visitEventDate" type="date" readonly /></label>
+            <label class="field inline-field"><span>事件类型</span><select disabled><option>全部事件</option></select></label>
+          </div>
+          <section class="visit-event-card">
+            <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="visitEventResultSummary">共 0 条</span></div>
+            <div class="event-timeline" id="visitEventDetailTimeline"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+
     <div class="drawer-backdrop" id="visitDrawer" hidden></div>
     <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true">
       <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer" aria-label="关闭">×</button></div>
@@ -293,6 +312,6 @@
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260817-store-badge-drilldown-v2"></script>
+    <script src="./page.js?v=20260817-visit-event-rule-v13"></script>
   </body>
 </html>
