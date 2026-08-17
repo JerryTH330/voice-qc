@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20260814-filter-popover-layer-v31" />
+    <link rel="stylesheet" href="./page.css?v=20260817-store-drilldown-filter-flush-v41" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -92,7 +92,10 @@
 
       <main class="main">
         <header class="topbar">
-          <div><h1 id="pageTitle">到访明细</h1><p id="pageDescription">查看销售助手到访数据与工牌录音的完整处理状态</p></div>
+          <div class="topbar-copy">
+            <h1 id="pageTitle">到访明细</h1>
+            <p id="pageDescription">查看销售助手到访数据与工牌录音的完整处理状态</p>
+          </div>
           <div class="top-actions" id="topActions"></div>
         </header>
 
@@ -140,6 +143,9 @@
           </section>
 
           <section class="page-panel" data-page="badges">
+            <div class="store-drilldown-actions" data-store-drilldown-actions hidden>
+              <button class="store-drilldown-back" type="button" data-store-drilldown-back>返回门店总览</button>
+            </div>
             <section class="card session-filter-card badge-session-filter-card">
               <div class="session-filter-toolbar" id="sessionFilterControls"></div>
             </section>
@@ -287,6 +293,6 @@
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260814-functional-filter-audit-v1"></script>
+    <script src="./page.js?v=20260817-store-badge-drilldown-v2"></script>
   </body>
 </html>

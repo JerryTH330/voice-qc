@@ -9,6 +9,11 @@ const pageMeta = {
     description: '查看当前绑定员工的录音、连接、剩余电量、剩余内存与上传状态',
     actions: [{ label: '导出明细', style: 'recording-primary', action: 'export' }]
   },
+  'store-badges': {
+    title: '门店工牌明细',
+    description: '查看当前门店绑定员工的录音、连接、剩余电量、剩余内存与上传状态',
+    actions: [{ label: '导出明细', style: 'recording-primary', action: 'export' }]
+  },
   events: {
     title: '工牌详情',
     description: '查看当前顾问工牌的设备事件和录音上传记录',
@@ -640,6 +645,14 @@ const badgeMenuState = {
   dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
 const badgePaginationState = { page: 1, pageSize: 10 };
+const storeDrilldownState = {
+  active: false,
+  storeCode: '',
+  storeName: '',
+  returnScrollY: 0,
+  previousBadgeFilters: null,
+  previousBadgePage: 1
+};
 
 function escapeBadgeHtml(value) {
   return String(value ?? '')
@@ -821,6 +834,18 @@ function renderBadgeFilterActions() {
 function renderBadgeFilters() {
   const container = document.getElementById('sessionFilterControls');
   if (!container) return;
+  container.classList.toggle('is-store-drilldown', storeDrilldownState.active);
+  if (storeDrilldownState.active) {
+    container.innerHTML = `
+      <div class="session-filter-row session-filter-row-main store-drilldown-filter-row">
+        ${renderBadgeDateControl()}
+        ${renderBadgeSearchControl('snQuery', '工牌SN', badgeFilterState.snQuery)}
+        ${renderBadgeSearchControl('advisorIdQuery', '顾问ID', badgeFilterState.advisorIdQuery)}
+        ${renderBadgeSearchControl('advisorNameQuery', '顾问姓名', badgeFilterState.advisorNameQuery)}
+        <button type="button" class="btn session-reset-btn store-drilldown-reset" data-badge-reset>重置筛选</button>
+      </div>`;
+    return;
+  }
   const organizationOpen = badgeMenuState.openMenu === 'organization';
   const mainControls = `
     <div class="session-toolbar-control session-toolbar-control-org session-toolbar-menu${organizationOpen ? ' is-open' : ''}" data-badge-menu-root="organization">
@@ -828,7 +853,9 @@ function renderBadgeFilters() {
       <button type="button" class="session-select-trigger${organizationOpen ? ' active' : ''}" data-badge-org-trigger><strong>${escapeBadgeHtml(formatBadgeOrganizationPath(badgeFilterState.organization))}</strong><i class="session-select-caret"></i></button>
       ${organizationOpen ? renderBadgeOrganizationMenu() : ''}
     </div>
-    ${renderBadgeDateControl()}`;
+    ${renderBadgeDateControl()}
+    ${renderBadgeSearchControl('snQuery', '工牌SN', badgeFilterState.snQuery)}
+    ${renderBadgeSearchControl('storeNameQuery', '门店名称', badgeFilterState.storeNameQuery)}`;
   container.innerHTML = `
     <div class="session-filter-row session-filter-row-segment${badgeFilterState.collapsed ? ' is-collapsed' : ''}">
       ${renderBadgeSegmentControl()}
@@ -838,8 +865,6 @@ function renderBadgeFilters() {
       ${mainControls}
     </div>
     <div class="session-filter-row session-filter-row-search session-filter-extra${badgeFilterState.collapsed ? '' : ' is-visible'}">
-      ${renderBadgeSearchControl('snQuery', '工牌SN', badgeFilterState.snQuery)}
-      ${renderBadgeSearchControl('storeNameQuery', '门店名称', badgeFilterState.storeNameQuery)}
       ${renderBadgeSearchControl('advisorIdQuery', '顾问ID', badgeFilterState.advisorIdQuery)}
       ${renderBadgeSearchControl('advisorNameQuery', '顾问姓名', badgeFilterState.advisorNameQuery)}
       ${renderBadgeFilterActions()}
@@ -1256,7 +1281,7 @@ function renderStoreOverview() {
         <td>${item.employees}</td>
         <td>${item.boundEmployees}</td>
         <td>${escapeBadgeHtml(projectDemoTimestampToDate(item.syncedAt, storeOverviewState.endDate))}</td>
-        <td><button class="text-btn" data-store-drilldown data-store-brand="${escapeBadgeHtml(item.brand)}" data-store-region="${escapeBadgeHtml(item.organization)}" data-store-zone="${escapeBadgeHtml(item.zone)}" data-store-name="${escapeBadgeHtml(item.name)}">查看明细</button></td>
+        <td><button class="text-btn" data-store-drilldown data-store-code="${escapeBadgeHtml(item.code)}" data-store-brand="${escapeBadgeHtml(item.brand)}" data-store-region="${escapeBadgeHtml(item.organization)}" data-store-zone="${escapeBadgeHtml(item.zone)}" data-store-name="${escapeBadgeHtml(item.name)}">查看明细</button></td>
       </tr>`).join('')
     : '<tr class="store-empty-row"><td colspan="11">当前筛选条件下暂无已绑定工牌的门店，请调整品牌或组织后重试。</td></tr>';
   renderStoreOverviewPagination(records.length);
@@ -1266,8 +1291,103 @@ function validRoute(value) {
   return Object.prototype.hasOwnProperty.call(pageMeta, value) ? value : 'visits';
 }
 
+function getRouteState() {
+  const [routeValue = '', queryString = ''] = window.location.hash.replace(/^#/, '').split('?');
+  return { route: validRoute(routeValue), params: new URLSearchParams(queryString) };
+}
+
 function getRoute() {
-  return validRoute(window.location.hash.replace('#', ''));
+  return getRouteState().route;
+}
+
+function getStoreDrilldownHash() {
+  const params = new URLSearchParams({
+    store: storeDrilldownState.storeCode,
+    start: badgeFilterState.queryStartDate,
+    end: badgeFilterState.queryEndDate
+  });
+  return `#store-badges?${params.toString()}`;
+}
+
+function applyStoreDrilldown(store, { captureReturnState = false } = {}) {
+  if (!store) return false;
+  if (captureReturnState) {
+    storeDrilldownState.returnScrollY = window.scrollY;
+    storeDrilldownState.previousBadgeFilters = { ...badgeFilterState };
+    storeDrilldownState.previousBadgePage = badgePaginationState.page;
+  }
+  storeDrilldownState.active = true;
+  storeDrilldownState.storeCode = store.code;
+  storeDrilldownState.storeName = store.name;
+  badgeFilterState.brand = store.brand;
+  badgeFilterState.organization = `${store.organization} > ${store.zone} > ${store.name}`;
+  badgeFilterState.storeNameQuery = '';
+  badgeFilterState.advisorNameQuery = '';
+  badgeFilterState.advisorIdQuery = '';
+  badgeFilterState.snQuery = '';
+  badgeFilterState.queryStartDate = storeOverviewState.startDate;
+  badgeFilterState.queryEndDate = storeOverviewState.endDate;
+  badgeFilterState.collapsed = false;
+  badgeMenuState.openMenu = '';
+  badgeMenuState.organizationDraft = badgeFilterState.organization;
+  badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
+  badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
+  badgeMenuState.activeDateField = 'startDate';
+  syncBadgeDateView(badgeFilterState.queryStartDate);
+  badgePaginationState.page = 1;
+  renderBadgePage();
+  return true;
+}
+
+function applyStoreDrilldownFromRoute(params) {
+  const store = storeOverviewRecords.find((item) => item.code === params.get('store'));
+  if (!store) return false;
+  const startDate = params.get('start');
+  const endDate = params.get('end');
+  if (storeDrilldownState.active && storeDrilldownState.storeCode === store.code) {
+    if (parseStoreDateValue(startDate) && parseStoreDateValue(endDate)) {
+      badgeFilterState.queryStartDate = startDate;
+      badgeFilterState.queryEndDate = endDate;
+      badgeMenuState.dateDraftStartDate = startDate;
+      badgeMenuState.dateDraftEndDate = endDate;
+    }
+    renderBadgePage();
+    return true;
+  }
+  if (parseStoreDateValue(startDate) && parseStoreDateValue(endDate)) {
+    storeOverviewState.startDate = startDate;
+    storeOverviewState.endDate = endDate;
+  }
+  return applyStoreDrilldown(store, { captureReturnState: true });
+}
+
+function syncStoreDrilldownHash() {
+  if (!storeDrilldownState.active) return;
+  window.history.replaceState(null, '', getStoreDrilldownHash());
+}
+
+function restoreOrdinaryBadgeState() {
+  Object.assign(badgeFilterState, storeDrilldownState.previousBadgeFilters || badgeDefaultFilters);
+  badgePaginationState.page = storeDrilldownState.previousBadgeFilters ? storeDrilldownState.previousBadgePage : 1;
+  badgeMenuState.openMenu = '';
+  badgeMenuState.organizationDraft = badgeFilterState.organization;
+  badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
+  badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
+  storeDrilldownState.active = false;
+  storeDrilldownState.storeCode = '';
+  storeDrilldownState.storeName = '';
+  storeDrilldownState.previousBadgeFilters = null;
+  renderBadgePage();
+}
+
+function leaveStoreDrilldown(destination = 'stores') {
+  const returnScrollY = storeDrilldownState.returnScrollY;
+  restoreOrdinaryBadgeState();
+  setRoute(destination);
+  if (destination === 'stores') {
+    renderStoreOverview();
+    window.requestAnimationFrame(() => window.scrollTo({ top: returnScrollY, behavior: 'auto' }));
+  }
 }
 
 function renderActions(route) {
@@ -1284,18 +1404,23 @@ function renderActions(route) {
 
 function setRoute(route, updateHash = true) {
   const safeRoute = validRoute(route);
+  const storeDrilldownRoute = safeRoute === 'store-badges';
   document.body.classList.toggle('device-store-overview-page', safeRoute === 'stores');
-  document.body.classList.toggle('device-badge-detail-page', safeRoute === 'badges');
+  document.body.classList.toggle('device-badge-detail-page', safeRoute === 'badges' || storeDrilldownRoute);
   const detailRoute = safeRoute === 'events' || safeRoute === 'uploads';
-  const visiblePanel = detailRoute ? 'events' : safeRoute;
-  routeButtons.forEach((button) => button.classList.toggle('active', button.dataset.route === safeRoute));
+  const visiblePanel = detailRoute ? 'events' : storeDrilldownRoute ? 'badges' : safeRoute;
+  const activeNavigationRoute = storeDrilldownRoute ? 'stores' : safeRoute;
+  routeButtons.forEach((button) => button.classList.toggle('active', button.dataset.route === activeNavigationRoute));
   pagePanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.page === visiblePanel));
   if (detailRoute) syncBadgeRecordTabs(safeRoute);
-  title.textContent = pageMeta[safeRoute].title;
+  title.textContent = storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title;
   description.textContent = pageMeta[safeRoute].description;
-  document.title = `${pageMeta[safeRoute].title} · AI质检平台`;
+  document.title = `${storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title} · AI质检平台`;
+  const drilldownActions = document.querySelector('[data-store-drilldown-actions]');
+  if (drilldownActions) drilldownActions.hidden = !storeDrilldownRoute;
   renderActions(safeRoute);
-  if (updateHash && window.location.hash !== `#${safeRoute}`) window.location.hash = safeRoute;
+  const nextHash = storeDrilldownRoute ? getStoreDrilldownHash() : `#${safeRoute}`;
+  if (updateHash && window.location.hash !== nextHash) window.location.hash = nextHash;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1335,15 +1460,49 @@ function closeDrawer() {
   document.body.style.overflow = '';
 }
 
-routeButtons.forEach((button) => button.addEventListener('click', () => setRoute(button.dataset.route)));
+routeButtons.forEach((button) => button.addEventListener('click', () => {
+  if (storeDrilldownState.active) {
+    if (button.dataset.route === 'badges') {
+      leaveStoreDrilldown('badges');
+      return;
+    }
+    if (button.dataset.route === 'stores') {
+      leaveStoreDrilldown('stores');
+      return;
+    }
+    restoreOrdinaryBadgeState();
+  }
+  setRoute(button.dataset.route);
+}));
 document.querySelectorAll('.nav-button[data-href]:not(.device-nav)').forEach((button) => {
   button.addEventListener('click', () => {
     window.location.href = new URL(button.dataset.href, window.location.href).href;
   });
 });
-window.addEventListener('hashchange', () => setRoute(getRoute(), false));
+window.addEventListener('hashchange', () => {
+  const routeState = getRouteState();
+  if (routeState.route === 'store-badges') {
+    if (!applyStoreDrilldownFromRoute(routeState.params)) {
+      leaveStoreDrilldown('stores');
+      return;
+    }
+  } else if (storeDrilldownState.active) {
+    const returnScrollY = storeDrilldownState.returnScrollY;
+    restoreOrdinaryBadgeState();
+    if (routeState.route === 'stores') {
+      renderStoreOverview();
+      window.requestAnimationFrame(() => window.scrollTo({ top: returnScrollY, behavior: 'auto' }));
+    }
+  }
+  setRoute(routeState.route, false);
+});
 
 document.addEventListener('click', (event) => {
+  if (event.target.closest('[data-store-drilldown-back]')) {
+    leaveStoreDrilldown('stores');
+    return;
+  }
+
   const badgeRecordTab = event.target.closest('[data-badge-record-tab]');
   if (badgeRecordTab) {
     setRoute(badgeRecordTab.dataset.badgeRecordTab);
@@ -1351,7 +1510,7 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-detail-back]')) {
-    setRoute('badges');
+    setRoute(storeDrilldownState.active ? 'store-badges' : 'badges');
     return;
   }
 
@@ -1478,7 +1637,7 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-org-clear]')) {
     badgeFilterState.organization = '全部组织';
-    badgeMenuState.organizationDraft = '全部组织';
+    badgeMenuState.organizationDraft = badgeFilterState.organization;
     badgeMenuState.openMenu = '';
     badgePaginationState.page = 1;
     renderBadgePage();
@@ -1556,19 +1715,29 @@ document.addEventListener('click', (event) => {
     badgeMenuState.openMenu = '';
     badgePaginationState.page = 1;
     renderBadgePage();
+    syncStoreDrilldownHash();
     return;
   }
 
   if (event.target.closest('[data-badge-reset]')) {
+    const drilldownStore = storeDrilldownState.active
+      ? storeOverviewRecords.find((item) => item.code === storeDrilldownState.storeCode)
+      : null;
     Object.assign(badgeFilterState, badgeDefaultFilters);
+    if (drilldownStore) {
+      badgeFilterState.brand = drilldownStore.brand;
+      badgeFilterState.organization = `${drilldownStore.organization} > ${drilldownStore.zone} > ${drilldownStore.name}`;
+      badgeFilterState.storeNameQuery = '';
+    }
     badgeMenuState.openMenu = '';
-    badgeMenuState.organizationDraft = '全部组织';
+    badgeMenuState.organizationDraft = badgeFilterState.organization;
     badgeMenuState.dateDraftStartDate = badgeDefaultFilters.queryStartDate;
     badgeMenuState.dateDraftEndDate = badgeDefaultFilters.queryEndDate;
     badgeMenuState.activeDateField = 'startDate';
     syncBadgeDateView(badgeDefaultFilters.queryStartDate);
     badgePaginationState.page = 1;
     renderBadgePage();
+    syncStoreDrilldownHash();
     showToast('筛选条件已重置');
     return;
   }
@@ -1779,23 +1948,10 @@ document.addEventListener('click', (event) => {
 
   const storeDrilldown = event.target.closest('[data-store-drilldown]');
   if (storeDrilldown) {
-    badgeFilterState.brand = storeDrilldown.dataset.storeBrand;
-    badgeFilterState.organization = `${storeDrilldown.dataset.storeRegion} > ${storeDrilldown.dataset.storeZone} > ${storeDrilldown.dataset.storeName}`;
-    badgeFilterState.advisorNameQuery = '';
-    badgeFilterState.advisorIdQuery = '';
-    badgeFilterState.snQuery = '';
-    badgeFilterState.queryStartDate = storeOverviewState.startDate;
-    badgeFilterState.queryEndDate = storeOverviewState.endDate;
-    badgeFilterState.collapsed = false;
-    badgeMenuState.openMenu = '';
-    badgeMenuState.organizationDraft = badgeFilterState.organization;
-    badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
-    badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
-    badgeMenuState.activeDateField = 'startDate';
-    syncBadgeDateView(badgeFilterState.queryStartDate);
-    badgePaginationState.page = 1;
-    renderBadgePage();
-    setRoute('badges');
+    const store = storeOverviewRecords.find((item) => item.code === storeDrilldown.dataset.storeCode)
+      || storeOverviewRecords.find((item) => item.name === storeDrilldown.dataset.storeName);
+    applyStoreDrilldown(store, { captureReturnState: true });
+    setRoute('store-badges');
     showToast(`已展示${storeDrilldown.dataset.storeName}的工牌明细`);
     return;
   }
@@ -1880,7 +2036,12 @@ document.addEventListener('keydown', (event) => {
   if (!importModal.hidden) closeModal(importModal);
 });
 
-setRoute(getRoute(), !window.location.hash);
+let initialRouteState = getRouteState();
+if (initialRouteState.route === 'store-badges' && !applyStoreDrilldownFromRoute(initialRouteState.params)) {
+  window.location.hash = 'stores';
+  initialRouteState = { route: 'stores', params: new URLSearchParams() };
+}
+setRoute(initialRouteState.route, !window.location.hash);
 renderStoreOverview();
 renderBadgePage();
 selectBadgeRecord(badgeRecordState.sn, badgeRecordState.advisorName);
