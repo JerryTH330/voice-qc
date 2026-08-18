@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260814-customer-insight-title-size-v58" />
+  <link rel="stylesheet" href="./page.css?v=20260818-customer-ai-title-v3" />
+    <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
     </head>
@@ -503,33 +504,41 @@
                           <p class="intention-ai-copy">最近一通录音的语音洞察结果</p>
                         </div>
                       </div>
-                      <div class="intention-top-tags">
-                        <span class="intention-level level-medium" id="leadDetailIntentLevel">AI意向级别：中</span>
-                        <div class="intention-model-row" id="leadDetailModelRow">
-                          <span class="intention-model-chip">AI意向车系：N60</span>
-                        </div>
-                      </div>
                     </div>
-                    <div class="intention-body">
-                      <div class="intention-item">
-                        <div class="intention-item-head">
-                          <img class="intention-item-icon" src="../assets/intention-intent.svg" alt="" />
-                          <div class="intention-item-label">意图</div>
+                    <div class="lead-recording-summary-card">
+                      <div class="lead-recording-summary-header">
+                        <div class="lead-recording-summary-title">
+                          <img src="../assets/customer-insight-recording-summary-figma.svg" alt="" aria-hidden="true" />
+                          <h3>最近一次录音摘要</h3>
                         </div>
-                        <div class="intention-item-content" id="leadDetailIntentText">
-                          <ul class="lead-detail-intent-list">
-                            <li>客户从首次到店接待到线上留资再到电话邀约，意向逐步提升。</li>
-                            <li>初期关注空间与静谧性，中期转为价格敏感型对比，后期表现出明确试驾意向但仍需推动决策。</li>
-                            <li>综合判定为高意向客户，但存在价格顾虑，需重点跟进。</li>
-                          </ul>
+                        <div class="intention-top-tags">
+                          <span class="intention-level level-medium" id="leadDetailIntentLevel">AI意向级别：中</span>
+                          <div class="intention-model-row" id="leadDetailModelRow">
+                            <span class="intention-model-chip">AI意向车系：N60</span>
+                          </div>
                         </div>
                       </div>
-                      <div class="intention-item">
-                        <div class="intention-item-head">
-                          <img class="intention-item-icon" src="../assets/intention-evidence.svg" alt="" />
-                          <div class="intention-item-label">证据</div>
+                      <div class="intention-body">
+                        <div class="intention-item">
+                          <div class="intention-item-head">
+                            <img class="intention-item-icon" src="../assets/intention-intent.svg" alt="" />
+                            <div class="intention-item-label">意图</div>
+                          </div>
+                          <div class="intention-item-content" id="leadDetailIntentText">
+                            <ul class="lead-detail-intent-list">
+                              <li>客户从首次到店接待到线上留资再到电话邀约，意向逐步提升。</li>
+                              <li>初期关注空间与静谧性，中期转为价格敏感型对比，后期表现出明确试驾意向但仍需推动决策。</li>
+                              <li>综合判定为高意向客户，但存在价格顾虑，需重点跟进。</li>
+                            </ul>
+                          </div>
                         </div>
-                        <div class="intention-item-content" id="leadDetailEvidenceText">①到店时对车内静谧性表示认可；②官网留资时明确车型偏好ES6/传祺M8，预算25-35万；③电话邀约中主动比较竞品价格，同意加微信并提及周末可能到店，但表示需要“<strong class="lead-detail-evidence-alert">再考虑一下</strong>”。</div>
+                        <div class="intention-item">
+                          <div class="intention-item-head">
+                            <img class="intention-item-icon" src="../assets/intention-evidence.svg" alt="" />
+                            <div class="intention-item-label">证据</div>
+                          </div>
+                          <div class="intention-item-content" id="leadDetailEvidenceText">①到店时对车内静谧性表示认可；②官网留资时明确车型偏好ES6/传祺M8，预算25-35万；③电话邀约中主动比较竞品价格，同意加微信并提及周末可能到店，但表示需要“<strong class="lead-detail-evidence-alert">再考虑一下</strong>”。</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -537,7 +546,8 @@
     
                 <section class="card lead-detail-tag-panel">
                   <div class="panel-header lead-detail-tag-panel-header">
-                    <div class="panel-title">
+                    <div class="panel-title lead-detail-tag-heading">
+                      <img src="../assets/customer-tags-title-figma.svg" alt="" aria-hidden="true" />
                       <h3>客户标签</h3>
                     </div>
                   </div>
@@ -1005,5 +1015,6 @@
     <script src="../unified-navigation-shell.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="./page.js?v=20260814-leads-brand-column-v21"></script>
+    <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
