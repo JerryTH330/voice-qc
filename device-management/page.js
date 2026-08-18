@@ -1587,7 +1587,7 @@ function updateStoreSortHeaders() {
     button.classList.toggle('is-descending', active && direction === 'desc');
     button.closest('th')?.setAttribute('aria-sort', active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
     const icon = button.querySelector('[data-store-sort-icon]');
-    if (icon) icon.textContent = active && direction === 'desc' ? '▼' : '▲';
+    if (icon) icon.dataset.direction = direction || 'none';
   });
 }
 

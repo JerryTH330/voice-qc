@@ -725,10 +725,16 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .store-overview-table thead th:last-child,
 .store-overview-table tbody td:last-child { width: 92px; min-width: 92px; max-width: 92px; }
 .store-overview-table thead th:last-child { background: #eef3fb; }
-.store-sort-button { padding: 0; display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
-.store-sort-button span { color: #a8b1bf; font-size: 10px; line-height: 1; transform: translateY(-1px); }
+.store-sort-button { padding: 0; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.store-sort-icon { display: inline-flex; width: 8px; height: 14px; flex: 0 0 8px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.store-sort-icon i { display: block; width: 7px; height: 4px; background: #a8b1bf; opacity: .72; transition: background-color .16s ease, opacity .16s ease; }
+.store-sort-icon-up { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.store-sort-icon-down { clip-path: polygon(0 0, 100% 0, 50% 100%); }
 .store-sort-button:hover, .store-sort-button.active { color: var(--blue); }
-.store-sort-button.active span { color: var(--blue); }
+.store-sort-button:hover .store-sort-icon i { background: #7d8ba1; opacity: 1; }
+.store-sort-button.active .store-sort-icon i { background: #b7c3d3; opacity: .52; }
+.store-sort-button.is-ascending .store-sort-icon i.store-sort-icon-up,
+.store-sort-button.is-descending .store-sort-icon i.store-sort-icon-down { background: var(--blue); opacity: 1; }
 .store-empty-row td { height: 160px; color: #8a96a8; text-align: center; }
 
 .store-pagination { padding: 16px 20px 20px; border-top: 1px solid rgba(217, 226, 239, .72); }
