@@ -1,6 +1,6 @@
 const pageMeta = {
   stores: {
-    title: '门店总览',
+    title: '工牌总览',
     description: '按查询日期、品牌、组织和门店名称查看员工与工牌绑定情况',
     actions: [{ label: '导出门店', style: 'recording-primary', action: 'export' }]
   },
@@ -22,7 +22,7 @@ const pageMeta = {
   uploads: {
     title: '工牌详情',
     description: '查看当前顾问工牌的设备事件和录音上传记录',
-    actions: [{ label: '导出日志', style: 'ghost', action: 'export' }]
+    actions: []
   },
   visits: {
     title: '到访明细',
@@ -33,7 +33,7 @@ const pageMeta = {
     ]
   },
   dashboard: {
-    title: '录音匹配排查',
+    title: '录音排查',
     description: '按组织和员工查看已匹配到访占全部到访的比例',
     actions: [{ label: '导出报表', style: 'ghost', action: 'export' }]
   }
@@ -77,6 +77,31 @@ const badgeEventRecords = [
       { type: 'charging-end', label: '结束充电', time: '17:00:00', icon: '满', color: 'neutral' },
       { type: 'power-off', label: '工牌关机', time: '17:10:00', icon: '关', color: 'neutral' }
     ]
+  },
+  {
+    date: '2026-08-11',
+    sn: 'MN-BDG-004792',
+    employeeName: '韩如臣',
+    storeName: '杭州滨江体验中心',
+    powerOnDuration: '10:28:32',
+    uploadedRecordingDuration: '01:13:20',
+    events: [
+      { type: 'power-on', label: '工牌开机', time: '08:03:32', icon: '开', color: 'green' },
+      { type: 'recording-start', label: '开始录音', time: '09:30:00', icon: '录', color: 'blue' },
+      { type: 'recording-end', label: '结束录音', time: '10:36:57', icon: '停', color: 'red' },
+      { type: 'recording-start', label: '开始录音', time: '11:36:13', icon: '录', color: 'blue' },
+      { type: 'recording-end', label: '结束录音', time: '11:42:36', icon: '停', color: 'red' },
+      { type: 'power-off', label: '工牌关机', time: '18:32:04', icon: '关', color: 'neutral' }
+    ]
+  },
+  {
+    date: '2026-08-12',
+    sn: 'MN-BDG-004845',
+    employeeName: '李洋',
+    storeName: '上海浦东体验中心',
+    powerOnDuration: '—',
+    uploadedRecordingDuration: '—',
+    events: []
   }
 ];
 
@@ -109,27 +134,39 @@ const badgeRecordState = {
 };
 
 const badgeUploadRecords = [
+  { date: '2026-08-08', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '09:02:18—09:07:18', duration: '00:05:00', size: '4.7 MB', status: '已上传', completedAt: '2026-08-08 09:07:56' },
+  { date: '2026-08-09', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '10:16:04—10:21:04', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-09 10:21:43' },
+  { date: '2026-08-09', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '10:21:04—10:26:04', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-09 10:26:45' },
+  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '15:32:10—15:37:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-11 15:37:51' },
+  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '15:37:10—15:42:10', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-11 15:42:49' },
+  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '3', audioTime: '15:42:10—15:47:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-11 15:47:54' },
   { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '13:03:03—13:08:03', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-12 13:08:41' },
   { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '13:08:03—13:13:03', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:13:42' },
+  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '3', audioTime: '13:13:03—13:18:03', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-12 13:20:34' },
+  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '4', audioTime: '13:18:03—13:23:03', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:33:48' },
+  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '5', audioTime: '13:23:03—13:28:03', duration: '00:05:00', size: '4.7 MB', status: '已上传', completedAt: '2026-08-12 13:34:58' },
+  { date: '2026-08-10', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '1', audioTime: '11:05:10—11:10:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-10 11:10:49' },
+  { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '2', audioTime: '13:20:58—13:25:58', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:26:37' },
   { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '3', audioTime: '13:25:58—13:30:58', duration: '00:05:00', size: '4.7 MB', status: '未上传', completedAt: '未上传' },
   { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '4 · 结束片段', audioTime: '13:30:58—13:35:58', duration: '00:05:00', size: '4.6 MB', status: '未上传', completedAt: '未上传' }
 ];
 
 const badgeUploadDefaultFilters = {
-  startDateTime: '2026-08-12T00:00:00',
-  endDateTime: '2026-08-12T23:59:59',
+  startDate: '2026-08-06',
+  endDate: '2026-08-12',
   status: '全部状态'
 };
 const badgeUploadFilterState = { ...badgeUploadDefaultFilters };
 const badgeUploadStatusOptions = ['全部状态', '已上传', '未上传'];
 const badgeUploadMenuState = {
   openMenu: null,
-  dateDraftStartDate: badgeUploadDefaultFilters.startDateTime.slice(0, 10),
-  dateDraftEndDate: badgeUploadDefaultFilters.endDateTime.slice(0, 10),
+  dateDraftStartDate: badgeUploadDefaultFilters.startDate,
+  dateDraftEndDate: badgeUploadDefaultFilters.endDate,
   activeDateField: 'startDate',
   dateViewYear: 2026,
   dateViewMonth: 8
 };
+let badgeUploadSelectedDate = badgeUploadDefaultFilters.endDate;
 
 const visitDefaultFilters = {
   startDateTime: '2026-08-11T00:00:00',
@@ -142,12 +179,22 @@ const visitDefaultFilters = {
 };
 const visitFilterState = { ...visitDefaultFilters };
 const visitProcessingStatuses = new Set(['录音转写中', '模型分析中']);
+const visitWaitingStatuses = new Set(['录音上传中', '待匹配', ...visitProcessingStatuses]);
+const visitUploadDetailStatuses = new Set(['已匹配', '匹配失败', '录音上传中']);
+const visitEventDetailStatuses = new Set(['无录音']);
 const visitRecords = [
-  { businessId: 'BIZ-20260812-0136', customerId: 'C202608120315', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配 5 个录音片段', completedAt: '13:36:10', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '进店接待', carSeries: '星海 S7', detailKey: 'matched', weight: 1142 },
-  { businessId: 'BIZ-20260812-0148', customerId: 'C202608120342', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
-  { businessId: 'BIZ-20260812-0162', customerId: 'C202608120368', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '模型分析中', detailText: '已完成转写，等待模型分析', completedAt: '—', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', detailKey: 'uploading', weight: 43 },
-  { businessId: 'BIZ-20260811-0831', customerId: 'C202608110922', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '到访时段无录音', detailText: '工牌开机但未开启录音', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 17 },
-  { businessId: 'BIZ-20260811-0772', customerId: 'C202608110861', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '员工未绑定工牌', detailText: '到访时点无有效绑定关系', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '进店接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 17 }
+  { businessId: 'BIZ-20260812-0136', customerId: 'C202608120315', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配完成5段录音', completedAt: '13:36:10', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '进店接待', carSeries: '星海 S7', detailKey: 'matched', weight: 1142 },
+  { businessId: 'BIZ-20260812-0148', customerId: 'C202608120342', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004836', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
+  { businessId: 'BIZ-20260812-0154', customerId: 'C202608120354', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '录音转写中', detailText: '—', completedAt: '—', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
+  { businessId: 'BIZ-20260812-0162', customerId: 'C202608120368', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '模型分析中', detailText: '—', completedAt: '—', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
+  { businessId: 'BIZ-20260812-0171', customerId: 'C202608120377', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 5 },
+  { businessId: 'BIZ-20260812-0183', customerId: 'C202608120389', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '进店接待', carSeries: '星海 L9', weight: 5 },
+  { businessId: 'BIZ-20260811-0831', customerId: 'C202608110922', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
+  { businessId: 'BIZ-20260811-0816', customerId: 'C202608110907', customerName: '钱女士', customerPhone: '189****4036', date: '2026-08-11', startTime: '17:42:08', endTime: '18:05:20', status: '待匹配', detailText: '到访记录已接收，等待录音匹配', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:06:03', scene: '试乘试驾', carSeries: '星海 S7', weight: 2 },
+  { businessId: 'BIZ-20260811-0804', customerId: 'C202608110895', customerName: '许先生', customerPhone: '187****9541', date: '2026-08-11', startTime: '17:08:36', endTime: '17:38:57', status: '匹配超时', detailText: '超过匹配等待时限仍未完成', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:38:57', scene: '进店接待', carSeries: '星海 L9', weight: 4 },
+  { businessId: 'BIZ-20260811-0793', customerId: 'C202608110884', customerName: '沈女士', customerPhone: '139****7272', date: '2026-08-11', startTime: '16:46:15', endTime: '17:03:40', status: '客户不同意录音', detailText: '客户明确不同意录音，本次未采集', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:04:12', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
+  { businessId: 'BIZ-20260811-0785', customerId: 'C202608110876', customerName: '顾先生', customerPhone: '150****3864', date: '2026-08-11', startTime: '16:35:02', endTime: '16:41:17', status: '无效录音', detailText: '录音时长过短或音频不可用', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '16:45:09', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
+  { businessId: 'BIZ-20260811-0772', customerId: 'C202608110861', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '匹配失败', detailText: '未绑定工牌', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '进店接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 6 }
 ];
 
 const matchingDefaultFilters = {
@@ -192,14 +239,48 @@ function isWithinDateTimeRange(value, startDateTime, endDateTime) {
   return (!startDateTime || value >= startDateTime) && (!endDateTime || value <= endDateTime);
 }
 
+function getBadgeUploadCompletedDate(item) {
+  return item.status === '已上传' && /^\d{4}-\d{2}-\d{2}/.test(item.completedAt) ? item.completedAt.slice(0, 10) : '';
+}
+
+function shiftBadgeUploadDate(date, dayOffset) {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + dayOffset);
+  return value.toISOString().slice(0, 10);
+}
+
+function getBadgeUploadDateRange(startDate, endDate) {
+  if (!startDate || !endDate || startDate > endDate) return [];
+  const dates = [];
+  for (let date = startDate; date <= endDate; date = shiftBadgeUploadDate(date, 1)) dates.push(date);
+  return dates;
+}
+
 function getFilteredBadgeUploadRecords() {
   return getCurrentBadgeUploadRecords().filter((item) => {
-    const startTime = item.audioTime.split('—')[0] || '00:00:00';
-    const dateTime = getRecordDateTime(item.date, startTime);
-    const dateMatch = isWithinDateTimeRange(dateTime, badgeUploadFilterState.startDateTime, badgeUploadFilterState.endDateTime);
+    const dateMatch = item.date >= badgeUploadFilterState.startDate && item.date <= badgeUploadFilterState.endDate;
     const statusMatch = badgeUploadFilterState.status === '全部状态' || item.status === badgeUploadFilterState.status;
     return dateMatch && statusMatch;
   });
+}
+
+function getCompletedBadgeUploadRecords() {
+  return getCurrentBadgeUploadRecords().filter((item) => {
+    const completedDate = getBadgeUploadCompletedDate(item);
+    return completedDate && completedDate >= badgeUploadFilterState.startDate && completedDate <= badgeUploadFilterState.endDate;
+  });
+}
+
+function getLatestBadgeUploadDate(records, fallbackDate) {
+  return records.map(getBadgeUploadCompletedDate).filter(Boolean).sort().at(-1) || fallbackDate;
+}
+
+function resetBadgeUploadDateRange() {
+  const completedRecords = getCurrentBadgeUploadRecords().filter((item) => getBadgeUploadCompletedDate(item));
+  const latestDate = getLatestBadgeUploadDate(completedRecords, badgeUploadDefaultFilters.endDate);
+  badgeUploadFilterState.startDate = shiftBadgeUploadDate(latestDate, -6);
+  badgeUploadFilterState.endDate = latestDate;
+  badgeUploadSelectedDate = latestDate;
 }
 
 function normalizeDeviceQuery(value) {
@@ -228,8 +309,14 @@ function formatDeviceCount(value) {
 
 function getVisitStatusClass(status) {
   if (status === '已匹配') return 'success';
-  if (status === '录音上传中' || visitProcessingStatuses.has(status)) return 'waiting';
+  if (visitWaitingStatuses.has(status)) return 'waiting';
   return 'danger';
+}
+
+function getVisitDetailType(record) {
+  if (visitUploadDetailStatuses.has(record.status)) return 'uploads';
+  if (visitEventDetailStatuses.has(record.status)) return 'events';
+  return '';
 }
 
 function renderVisits() {
@@ -259,15 +346,18 @@ function renderVisits() {
   if (paginationTotal) paginationTotal.textContent = `共 ${formatDeviceCount(total)} 条`;
   tbody.innerHTML = records.length ? records.map((item) => {
     const tone = getVisitStatusClass(item.status);
-    const detailTone = tone === 'danger' ? ' danger-text' : '';
+    const detailType = getVisitDetailType(item);
+    const detailControl = detailType
+      ? `<button class="text-btn" data-visit-detail-type="${detailType}" data-business-id="${escapeBadgeHtml(item.businessId)}">${escapeBadgeHtml(item.detailText)}</button>`
+      : '<span class="visit-detail-disabled">—</span>';
     return `<tr>
       <td>${escapeBadgeHtml(item.businessId)}</td><td>${escapeBadgeHtml(item.customerId)}</td><td>${escapeBadgeHtml(item.customerName)}</td><td>${escapeBadgeHtml(item.customerPhone)}</td>
       <td>${escapeBadgeHtml(item.date)}</td><td>${escapeBadgeHtml(item.startTime)}</td><td>${escapeBadgeHtml(item.endTime)}</td><td><span class="status ${tone}">${escapeBadgeHtml(item.status)}</span></td>
-      <td><button class="text-btn${detailTone} open-detail" data-detail="${escapeBadgeHtml(item.detailKey)}">${escapeBadgeHtml(item.detailText)}</button></td><td>${escapeBadgeHtml(item.completedAt)}</td>
+      <td>${detailControl}</td><td>${escapeBadgeHtml(item.completedAt)}</td>
       <td>${escapeBadgeHtml(item.advisor)}</td><td>${escapeBadgeHtml(item.store)}</td><td>${escapeBadgeHtml(item.storeCode)}</td><td><span class="source-tag ${item.source === '销售助手' ? 'api' : 'excel'}">${escapeBadgeHtml(item.source)}</span></td>
-      <td>${escapeBadgeHtml(item.updatedAt)}</td><td>${escapeBadgeHtml(item.scene)}</td><td>${escapeBadgeHtml(item.carSeries)}</td><td class="sticky-right"><button class="text-btn open-detail" data-detail="${escapeBadgeHtml(item.detailKey)}">查看</button></td>
+      <td>${escapeBadgeHtml(item.updatedAt)}</td><td>${escapeBadgeHtml(item.scene)}</td><td>${escapeBadgeHtml(item.carSeries)}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="18" class="badge-record-empty">当前筛选条件下暂无到访记录。</td></tr>';
+  }).join('') : '<tr><td colspan="17" class="badge-record-empty">当前筛选条件下暂无到访记录。</td></tr>';
 }
 
 function getFilteredMatchingRecords() {
@@ -397,8 +487,8 @@ function closeBadgeEventMenus() {
 }
 
 function syncBadgeUploadDateDraft() {
-  badgeUploadMenuState.dateDraftStartDate = badgeUploadFilterState.startDateTime.slice(0, 10);
-  badgeUploadMenuState.dateDraftEndDate = badgeUploadFilterState.endDateTime.slice(0, 10);
+  badgeUploadMenuState.dateDraftStartDate = badgeUploadFilterState.startDate;
+  badgeUploadMenuState.dateDraftEndDate = badgeUploadFilterState.endDate;
   const parsedDate = new Date(`${badgeUploadMenuState.dateDraftStartDate}T00:00:00`);
   if (!Number.isNaN(parsedDate.getTime())) {
     badgeUploadMenuState.dateViewYear = parsedDate.getFullYear();
@@ -434,8 +524,8 @@ function renderBadgeUploadFilters() {
   const dateOpen = badgeUploadMenuState.openMenu === 'date';
   const statusOpen = badgeUploadMenuState.openMenu === 'status';
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
-  const startDate = badgeUploadFilterState.startDateTime.slice(0, 10);
-  const endDate = badgeUploadFilterState.endDateTime.slice(0, 10);
+  const startDate = badgeUploadFilterState.startDate;
+  const endDate = badgeUploadFilterState.endDate;
   const draftRangeText = `${formatStoreDateDisplay(badgeUploadMenuState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(badgeUploadMenuState.dateDraftEndDate)}`;
   const datePanel = dateOpen && panelRenderer ? panelRenderer({
     dataNamespace: 'badge-upload-date',
@@ -475,22 +565,22 @@ function closeBadgeUploadMenus() {
 
 function getBadgeRecordProfile() {
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
-  if (detailRecord) return { advisorName: detailRecord.advisorName, sn: detailRecord.sn };
+  if (detailRecord) return { advisorName: detailRecord.advisorName, storeName: detailRecord.store, sn: detailRecord.sn };
   const eventRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
-  if (eventRecord) return { advisorName: eventRecord.employeeName, sn: eventRecord.sn };
-  return { advisorName: badgeRecordState.advisorName || '—', sn: badgeRecordState.sn || '—' };
+  if (eventRecord) return { advisorName: eventRecord.employeeName, storeName: eventRecord.storeName, sn: eventRecord.sn };
+  return { advisorName: badgeRecordState.advisorName || '—', storeName: '—', sn: badgeRecordState.sn || '—' };
 }
 
 function renderBadgeRecordHeader() {
   const profile = getBadgeRecordProfile();
   badgeRecordState.advisorName = profile.advisorName;
-  const avatar = document.getElementById('badgeRecordAvatar');
   const advisorName = document.getElementById('badgeRecordAdvisorName');
+  const storeName = document.getElementById('badgeRecordStoreName');
   const sn = document.getElementById('badgeRecordSn');
   const drawerAdvisorName = document.getElementById('badgeRecordDrawerAdvisorName');
   const drawerSn = document.getElementById('badgeRecordDrawerSn');
-  if (avatar) avatar.textContent = profile.advisorName === '—' ? '—' : profile.advisorName.slice(0, 1);
   if (advisorName) advisorName.textContent = profile.advisorName;
+  if (storeName) storeName.textContent = profile.storeName;
   if (sn) sn.textContent = profile.sn;
   if (drawerAdvisorName) drawerAdvisorName.textContent = profile.advisorName;
   if (drawerSn) drawerSn.textContent = profile.sn;
@@ -512,29 +602,55 @@ function getCurrentBadgeUploadRecords() {
 }
 
 function renderBadgeUploads() {
-  const tbody = document.getElementById('badgeUploadTableBody');
-  if (!tbody) return;
+  const dailyTbody = document.getElementById('badgeUploadDailyTableBody');
+  const logTbody = document.getElementById('badgeUploadLogTableBody');
+  const modalTbody = document.getElementById('badgeUploadTableBody');
+  if (!dailyTbody || !logTbody || !modalTbody) return;
   const records = getFilteredBadgeUploadRecords();
+  const completedRecords = getCompletedBadgeUploadRecords();
+  const dates = getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate);
+  if (!dates.includes(badgeUploadSelectedDate)) badgeUploadSelectedDate = getLatestBadgeUploadDate(completedRecords, badgeUploadFilterState.endDate);
+  const countsByDate = completedRecords.reduce((result, item) => {
+    const completedDate = getBadgeUploadCompletedDate(item);
+    result[completedDate] = (result[completedDate] || 0) + 1;
+    return result;
+  }, {});
+  const detailRecords = completedRecords.filter((item) => getBadgeUploadCompletedDate(item) === badgeUploadSelectedDate);
   const completed = records.filter((item) => item.status === '已上传').length;
   const pending = records.length - completed;
-  const rate = records.length ? `${(completed / records.length * 100).toFixed(1)}%` : '—';
+  const dailySummary = document.getElementById('badgeUploadDailySummary');
+  const detailTitle = document.getElementById('badgeUploadDetailTitle');
+  const paginationTotal = document.getElementById('badgeUploadPaginationTotal');
+  const logPaginationTotal = document.getElementById('badgeUploadLogPaginationTotal');
   const summary = {
     badgeUploadTotal: records.length,
     badgeUploadCompleted: completed,
     badgeUploadPending: pending,
-    badgeUploadRate: rate,
-    badgeUploadPaginationTotal: `共 ${records.length} 条`
+    badgeUploadRate: records.length ? `${(completed / records.length * 100).toFixed(1)}%` : '—'
   };
   Object.entries(summary).forEach(([id, value]) => {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
   });
-  tbody.innerHTML = records.length ? records.map((item) => `<tr>
+  if (dailySummary) dailySummary.textContent = `${badgeUploadFilterState.startDate} 至 ${badgeUploadFilterState.endDate} · 共 ${completedRecords.length} 条上传完成录音 · 点击数量查看明细`;
+  if (detailTitle) detailTitle.textContent = `${badgeUploadSelectedDate} 录音上传明细`;
+  if (paginationTotal) paginationTotal.textContent = `共 ${detailRecords.length} 条`;
+  if (logPaginationTotal) logPaginationTotal.textContent = `共 ${records.length} 条`;
+  dailyTbody.innerHTML = dates.length ? [...dates].reverse().map((date) => {
+    const count = countsByDate[date] || 0;
+    return `<tr class="${date === badgeUploadSelectedDate ? 'is-selected' : ''}"><td>${escapeBadgeHtml(date)}</td><td><button class="badge-upload-count-button" type="button" data-badge-upload-day="${escapeBadgeHtml(date)}" aria-label="查看 ${escapeBadgeHtml(date)} 的 ${count} 条录音上传明细">${count}</button></td></tr>`;
+  }).join('') : '<tr><td colspan="2" class="badge-record-empty">请选择有效的日期范围。</td></tr>';
+  logTbody.innerHTML = records.length ? records.map((item) => `<tr>
     <td>${escapeBadgeHtml(item.date)}</td><td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
     <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
     <td><span class="status ${item.status === '已上传' ? 'success' : 'waiting'}">${escapeBadgeHtml(item.status)}</span></td>
     <td class="${item.status === '已上传' ? '' : 'muted-text'}">${escapeBadgeHtml(item.completedAt)}</td>
   </tr>`).join('') : '<tr><td colspan="9" class="badge-record-empty">当前工牌暂无录音上传记录。</td></tr>';
+  modalTbody.innerHTML = detailRecords.length ? detailRecords.map((item) => `<tr>
+    <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
+    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
+    <td>${escapeBadgeHtml(item.completedAt)}</td>
+  </tr>`).join('') : '<tr><td colspan="7" class="badge-record-empty">当前日期没有上传完成的录音。</td></tr>';
 }
 
 function selectBadgeRecord(sn, advisorName) {
@@ -545,12 +661,8 @@ function selectBadgeRecord(sn, advisorName) {
   const eventRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
   badgeEventFilterState.date = eventRecord?.date || detailRecord?.queryDate || badgeEventDefaultFilters.date;
-  const uploadDate = getCurrentBadgeUploadRecords()[0]?.date;
-  if (uploadDate) {
-    badgeUploadFilterState.startDateTime = `${uploadDate}T00:00:00`;
-    badgeUploadFilterState.endDateTime = `${uploadDate}T23:59:59`;
-    badgeUploadFilterState.status = '全部状态';
-  }
+  resetBadgeUploadDateRange();
+  badgeUploadFilterState.status = '全部状态';
   syncBadgeEventDateView();
   renderBadgeEventFilters();
   syncBadgeUploadDateDraft();
@@ -558,6 +670,56 @@ function selectBadgeRecord(sn, advisorName) {
   renderBadgeRecordHeader();
   renderBadgeEvents();
   renderBadgeUploads();
+}
+
+function renderVisitUploadDetail(record) {
+  const isPendingDetail = record.status === '录音上传中';
+  const isFailedDetail = record.status === '匹配失败';
+  const detailRecords = isFailedDetail ? [] : badgeUploadRecords.filter((item) => item.sn === record.badgeSn
+    && item.date === record.date
+    && (isPendingDetail ? item.status !== '已上传' : item.status === '已上传'));
+  const detailTitle = document.getElementById('badgeUploadDetailTitle');
+  const paginationTotal = document.getElementById('badgeUploadPaginationTotal');
+  const tbody = document.getElementById('badgeUploadTableBody');
+  detailTitle.textContent = `${record.date} 录音上传明细`;
+  badgeUploadDetailDescription.textContent = isFailedDetail
+    ? `${record.status} · ${record.detailText}`
+    : `${record.status} · ${record.advisor} · ${record.badgeSn} · ${isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : record.date}`;
+  paginationTotal.textContent = `共 ${detailRecords.length} 条`;
+  tbody.innerHTML = detailRecords.length ? detailRecords.map((item, index) => `<tr>
+    <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(isPendingDetail ? String(index + 1) : item.sequence)}</td>
+    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
+    <td>${escapeBadgeHtml(isPendingDetail ? '未上传' : item.completedAt)}</td>
+  </tr>`).join('') : `<tr><td colspan="7" class="badge-record-empty">${isFailedDetail ? '当前暂无录音上传数据。' : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。'}</td></tr>`;
+}
+
+function renderVisitEventDetail(record) {
+  const eventRecord = badgeEventRecords.find((item) => item.sn === record.badgeSn && item.date === record.date);
+  const events = (eventRecord?.events || []).slice().sort((left, right) => left.time.localeCompare(right.time));
+  visitEventDetailTitle.textContent = '工牌事件明细';
+  visitEventDetailDescription.textContent = `${record.detailText} · 到访 ${record.startTime}—${record.endTime} · 展示当天全部工牌事件`;
+  visitEventAdvisorName.textContent = record.advisor;
+  visitEventStoreName.textContent = record.store;
+  visitEventSn.textContent = record.badgeSn;
+  visitEventDate.value = record.date;
+  visitEventResultSummary.textContent = `${record.date} · 共 ${events.length} 条`;
+  visitEventDetailTimeline.innerHTML = events.length ? events.map((item) => `
+    <article class="${badgeSecondaryEventTypes.has(item.type) ? 'event-secondary' : 'event-primary'}${item.note ? ' event-wide' : ''}">
+      <span class="event-dot ${item.color}">${escapeBadgeHtml(item.icon)}</span>
+      <div><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
+      ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
+    </article>`).join('') : `<div class="event-empty-state">${record.detailText === '工牌未开机' ? '到访当天没有开机、关机、录音等工牌事件。' : '当前工牌在所选日期没有工牌事件。'}</div>`;
+}
+
+function openVisitMatchDetail(record, detailType) {
+  if (detailType === 'uploads') {
+    renderVisitUploadDetail(record);
+    openModal(badgeUploadDetailModal);
+    return;
+  }
+
+  renderVisitEventDetail(record);
+  openModal(visitEventDetailModal);
 }
 
 function syncBadgeRecordTabs(route) {
@@ -596,13 +758,16 @@ function renderBadgeEvents() {
     : record.events.filter((item) => item.type === badgeEventFilterState.type))
     .slice()
     .sort((left, right) => left.time.localeCompare(right.time));
+  const emptyMessage = badgeEventFilterState.type === 'all'
+    ? '当前工牌在所选日期没有工牌事件。'
+    : '当前工牌在所选日期没有该类型事件。';
   summary.textContent = `${record.date} · 共 ${visibleEvents.length} 条`;
   timeline.innerHTML = visibleEvents.length ? visibleEvents.map((item) => `
     <article class="${badgeSecondaryEventTypes.has(item.type) ? 'event-secondary' : 'event-primary'}${item.note ? ' event-wide' : ''}">
       <span class="event-dot ${item.color}">${escapeBadgeHtml(item.icon)}</span>
       <div><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
       ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
-    </article>`).join('') : '<div class="event-empty-state">当前工牌在所选日期没有该类型事件。</div>';
+    </article>`).join('') : `<div class="event-empty-state">${emptyMessage}</div>`;
 }
 
 const detailData = {
@@ -618,7 +783,7 @@ const detailData = {
       <section class="detail-section">
         <h3>录音匹配</h3>
         <div class="detail-message success-message">2026/08/12 13:36:10 匹配成功</div>
-        <div class="fragment-table"><div class="fragment-head"><span>录音片段</span><span>音频时间</span><span>片段时长</span><span>录音上传时间</span></div>
+        <div class="fragment-table"><div class="fragment-head"><span>录音片段</span><span>音频时间</span><span>音频时长</span><span>录音上传时间</span></div>
           <div><span>1</span><span>13:03:03—13:08:03</span><span>00:05:00</span><span>13:08:41</span></div>
           <div><span>2</span><span>13:08:03—13:13:03</span><span>00:05:00</span><span>13:13:42</span></div>
           <div><span>3</span><span>13:13:03—13:18:03</span><span>00:05:00</span><span>13:20:34</span></div>
@@ -640,7 +805,7 @@ const detailData = {
       <section class="detail-section">
         <h3>录音匹配</h3>
         <div class="detail-message waiting-message">可能存在未上传录音，请稍候。录音上传后系统将自动重新匹配。</div>
-        <div class="fragment-table"><div class="fragment-head"><span>录音片段</span><span>音频时间</span><span>片段时长</span><span>录音上传时间</span></div>
+        <div class="fragment-table"><div class="fragment-head"><span>录音片段</span><span>音频时间</span><span>音频时长</span><span>录音上传时间</span></div>
           <div><span>1</span><span>13:16:05—13:21:05</span><span>00:05:00</span><span class="amber-text">未上传</span></div>
           <div><span>2</span><span>13:20:58—13:25:58</span><span>00:05:00</span><span class="amber-text">未上传</span></div>
           <div><span>3</span><span>13:25:58—13:30:58</span><span>00:05:00</span><span class="amber-text">未上传</span></div>
@@ -656,7 +821,7 @@ const detailData = {
     html: `
       <section class="detail-section">
         <h3>到访信息</h3>
-        <div class="detail-grid"><span><small>客户姓名</small><strong>刘先生</strong></span><span><small>到访时间</small><strong>2026-08-11 18:31:35—18:31:55</strong></span><span><small>员工 / 工牌</small><strong>韩如臣 / MN-BDG-004792</strong></span><span><small>判定结果</small><strong class="danger-text">工牌开机但未开启录音</strong></span></div>
+        <div class="detail-grid"><span><small>客户姓名</small><strong>刘先生</strong></span><span><small>到访时间</small><strong>2026-08-11 18:31:35—18:31:55</strong></span><span><small>员工 / 工牌</small><strong>韩如臣 / MN-BDG-004792</strong></span><span><small>判定结果</small><strong class="danger-text">当天存在开机事件，到访时段未匹配到录音</strong></span></div>
       </section>
       <section class="detail-section">
         <h3>当日录音时段</h3>
@@ -665,11 +830,11 @@ const detailData = {
       <section class="detail-section">
         <h3>工牌日志详情</h3>
         <div class="log-list">
-          <article><time>08:03:32</time><div><strong>工牌开机</strong><p class="danger-text">未发现工牌开启录音记录</p></div></article>
+          <article><time>08:03:32</time><div><strong>工牌开机</strong></div></article>
           <article><time>09:28:54</time><div><strong>工牌开机</strong></div></article>
           <article><time>09:30:00—10:36:57</time><div><strong>工牌开启录音</strong><p>期间关联牛先生、余先生、蒋女士 3 条已匹配到访</p></div></article>
           <article><time>11:36:13—11:42:36</time><div><strong>工牌开启录音</strong></div></article>
-          <article class="log-highlight"><time>18:31:35—18:31:55</time><div><strong>【未匹配】客户（刘先生）到访</strong><p class="danger-text">未发现工牌开启录音记录</p></div></article>
+          <article class="log-highlight"><time>18:31:35—18:31:55</time><div><strong>【未匹配】客户（刘先生）到访</strong><p class="danger-text">该到访时段未匹配到录音</p></div></article>
           <article><time>18:32:04</time><div><strong>工牌关机</strong></div></article>
         </div>
       </section>`
@@ -693,11 +858,42 @@ const detailData = {
 
 const routeButtons = Array.from(document.querySelectorAll('.device-nav[data-route]'));
 const pagePanels = Array.from(document.querySelectorAll('.page-panel[data-page]'));
+
+function createVisitRecordDetail(record) {
+  const statusClass = getVisitStatusClass(record.status);
+  const messageClass = statusClass === 'waiting' ? 'waiting-message' : 'danger-message';
+  return {
+    businessId: record.businessId,
+    status: record.status,
+    statusClass,
+    html: `
+      <section class="detail-section">
+        <h3>到访信息</h3>
+        <div class="detail-grid"><span><small>客户姓名</small><strong>${escapeBadgeHtml(record.customerName)}</strong></span><span><small>客户 ID</small><strong>${escapeBadgeHtml(record.customerId)}</strong></span><span><small>到访时间</small><strong>${escapeBadgeHtml(`${record.date} ${record.startTime}—${record.endTime}`)}</strong></span><span><small>员工姓名</small><strong>${escapeBadgeHtml(record.advisor)}</strong></span><span><small>所属门店</small><strong>${escapeBadgeHtml(record.store)}</strong></span><span><small>到访来源</small><strong>${escapeBadgeHtml(record.source)}</strong></span></div>
+      </section>
+      <section class="detail-section">
+        <h3>匹配结果</h3>
+        <div class="detail-message ${messageClass}">${escapeBadgeHtml(record.detailText)}</div>
+        <div class="detail-grid"><span><small>当前状态</small><strong>${escapeBadgeHtml(record.status)}</strong></span><span><small>数据更新时间</small><strong>${escapeBadgeHtml(`${record.date} ${record.updatedAt}`)}</strong></span><span><small>匹配完成时间</small><strong>${escapeBadgeHtml(record.completedAt)}</strong></span></div>
+      </section>`
+  };
+}
 const title = document.getElementById('pageTitle');
 const description = document.getElementById('pageDescription');
 const topActions = document.getElementById('topActions');
 const toast = document.getElementById('toast');
 const importModal = document.getElementById('importModal');
+const badgeUploadDetailModal = document.getElementById('badgeUploadDetailModal');
+const badgeUploadDetailDescription = document.getElementById('badgeUploadDetailDescription');
+const visitEventDetailModal = document.getElementById('visitEventDetailModal');
+const visitEventDetailTitle = document.getElementById('visitEventDetailTitle');
+const visitEventDetailDescription = document.getElementById('visitEventDetailDescription');
+const visitEventAdvisorName = document.getElementById('visitEventAdvisorName');
+const visitEventStoreName = document.getElementById('visitEventStoreName');
+const visitEventSn = document.getElementById('visitEventSn');
+const visitEventDate = document.getElementById('visitEventDate');
+const visitEventResultSummary = document.getElementById('visitEventResultSummary');
+const visitEventDetailTimeline = document.getElementById('visitEventDetailTimeline');
 const visitDrawer = document.getElementById('visitDetail');
 const drawerBackdrop = document.getElementById('visitDrawer');
 const drawerStatus = document.getElementById('drawerStatus');
@@ -791,7 +987,6 @@ const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ 
     dockConnected,
     signal: index % 3 === 0 ? '信号良好' : index % 3 === 1 ? '一般' : '较弱',
     battery,
-    operationLogs: index % 37 === 3 ? [{ ops: 'system', act: 'battery low' }] : [],
     remainingMemory: 100 - usedMemory,
     uptime: connected
       ? `${String(4 + (index % 5)).padStart(2, '0')}:${String((index * 13) % 60).padStart(2, '0')}:${String((index * 17) % 60).padStart(2, '0')}`
@@ -1135,12 +1330,11 @@ function renderBadgeDetail() {
       <td><span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span></td>
       <td>${escapeBadgeHtml(item.signal)}</td>
       <td><span class="battery"><i style="width:${item.battery}%"></i></span><strong>${item.battery}%</strong></td>
-      <td>${item.operationLogs.some((log) => log.ops === 'system' && log.act === 'battery low') ? '<span class="status-inline red"><span class="status-inline-dot"></span><span>有预警</span></span>' : '<span class="status-inline gray"><span>—</span></span>'}</td>
       <td><strong class="${memoryTone}">${item.remainingMemory}%</strong></td><td>${item.uptime}</td>
       <td><strong class="${pendingTone}">${item.pendingUploads}</strong></td><td>${escapeBadgeHtml(projectDemoTimestampToDate(item.syncedAt, badgeFilterState.queryEndDate))}</td>
       <td><button class="table-link" type="button" data-badge-record-drawer-open="events" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">事件</button><button class="table-link badge-inline-action" type="button" data-badge-record-drawer-open="uploads" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">日志</button></td>
     </tr>`;
-  }).join('') : '<tr class="session-empty-row"><td colspan="19">当前筛选条件下暂无工牌，请调整品牌、组织、顾问姓名、顾问ID或工牌SN后重试。</td></tr>';
+  }).join('') : '<tr class="session-empty-row"><td colspan="18">当前筛选条件下暂无工牌，请调整品牌、组织、顾问姓名、顾问ID或工牌SN后重试。</td></tr>';
   renderBadgePagination(records.length);
 }
 
@@ -1342,7 +1536,7 @@ function getFilteredStoreRecords() {
       (!zone || item.zone === zone) &&
       (!store || item.name === store)
     );
-    // 门店总览是每日快照原型：每个查询日期复用同一份门店数据。
+    // 工牌总览是每日快照原型：每个查询日期复用同一份门店数据。
     return item.bindings >= 1 && brandMatch && storeNameMatch && organizationMatch;
   });
   if (!storeOverviewState.sortKey) return records;
@@ -1592,7 +1786,7 @@ function setRoute(route, updateHash = true) {
     moveBadgeRecordContents(badgeRecordPageContent);
   }
   const visiblePanel = detailRoute ? 'events' : storeDrilldownRoute ? 'badges' : safeRoute;
-  const activeNavigationRoute = storeDrilldownRoute ? 'stores' : safeRoute;
+  const activeNavigationRoute = storeDrilldownRoute ? 'stores' : detailRoute ? 'badges' : safeRoute;
   routeButtons.forEach((button) => button.classList.toggle('active', button.dataset.route === activeNavigationRoute));
   pagePanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.page === visiblePanel));
   if (detailRoute) syncBadgeRecordTabs(safeRoute);
@@ -1684,7 +1878,10 @@ function closeModal(modal) {
 }
 
 function openDrawer(type) {
-  const detail = detailData[type] || detailData.matched;
+  const record = visitRecords.find((item) => item.businessId === type);
+  const detail = detailData[type]
+    || (record?.detailKey ? detailData[record.detailKey] : null)
+    || (record ? createVisitRecordDetail(record) : detailData.matched);
   drawerStatus.textContent = detail.status;
   drawerStatus.className = `status ${detail.statusClass}`;
   drawerBusinessId.textContent = detail.businessId;
@@ -1770,6 +1967,22 @@ document.addEventListener('click', (event) => {
     return;
   }
 
+  const visitDetailButton = event.target.closest('[data-visit-detail-type]');
+  if (visitDetailButton) {
+    const record = visitRecords.find((item) => item.businessId === visitDetailButton.dataset.businessId);
+    if (record) openVisitMatchDetail(record, visitDetailButton.dataset.visitDetailType);
+    return;
+  }
+
+  const badgeUploadDayButton = event.target.closest('[data-badge-upload-day]');
+  if (badgeUploadDayButton) {
+    badgeUploadSelectedDate = badgeUploadDayButton.dataset.badgeUploadDay;
+    renderBadgeUploads();
+    badgeUploadDetailDescription.textContent = '仅展示当前顾问、当前工牌在所选日期上传完成的录音';
+    openModal(badgeUploadDetailModal);
+    return;
+  }
+
   if (!event.target.closest('#badgeEventFilters')) closeBadgeEventMenus();
   if (!event.target.closest('#badgeUploadFilters')) closeBadgeUploadMenus();
 
@@ -1814,7 +2027,8 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-event-reset]')) {
-    const currentRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
+    const currentRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn && item.date === badgeEventFilterState.date)
+      || badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
     badgeEventFilterState.date = currentRecord?.date || badgeEventDefaultFilters.date;
     badgeEventFilterState.sn = badgeRecordState.sn;
     badgeEventFilterState.type = 'all';
@@ -1874,8 +2088,9 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-upload-date-apply]')) {
-    badgeUploadFilterState.startDateTime = `${badgeUploadMenuState.dateDraftStartDate}T00:00:00`;
-    badgeUploadFilterState.endDateTime = `${badgeUploadMenuState.dateDraftEndDate}T23:59:59`;
+    badgeUploadFilterState.startDate = badgeUploadMenuState.dateDraftStartDate;
+    badgeUploadFilterState.endDate = badgeUploadMenuState.dateDraftEndDate;
+    badgeUploadSelectedDate = getLatestBadgeUploadDate(getFilteredBadgeUploadRecords(), badgeUploadFilterState.endDate);
     badgeUploadMenuState.openMenu = null;
     renderBadgeUploadFilters();
     renderBadgeUploads();
@@ -1898,15 +2113,13 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-upload-filter-reset]')) {
-    const uploadDate = getCurrentBadgeUploadRecords()[0]?.date || badgeUploadDefaultFilters.startDateTime.slice(0, 10);
-    Object.assign(badgeUploadFilterState, badgeUploadDefaultFilters, {
-      startDateTime: `${uploadDate}T00:00:00`,
-      endDateTime: `${uploadDate}T23:59:59`
-    });
+    resetBadgeUploadDateRange();
+    badgeUploadFilterState.status = '全部状态';
     badgeUploadMenuState.openMenu = null;
     badgeUploadMenuState.activeDateField = 'startDate';
     syncBadgeUploadDateDraft();
     renderBadgeUploadFilters();
+    if (!badgeUploadDetailModal.hidden) closeModal(badgeUploadDetailModal);
     renderBadgeUploads();
     showToast('筛选条件已重置');
     return;
@@ -2407,6 +2620,8 @@ document.addEventListener('keydown', (event) => {
   if (isBadgeRecordDrawerOpen()) closeBadgeRecordDrawer();
   if (visitDrawer.classList.contains('open')) closeDrawer();
   if (!importModal.hidden) closeModal(importModal);
+  if (!badgeUploadDetailModal.hidden) closeModal(badgeUploadDetailModal);
+  if (!visitEventDetailModal.hidden) closeModal(visitEventDetailModal);
 });
 
 let initialRouteState = getRouteState();
