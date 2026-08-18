@@ -1,5 +1,5 @@
 /* 线索列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260814-filter-popover-layer-v2");
+@import url("../voice-qc-admin.css?v=20260817-action-column-shadow-v1");
 @import url("../app-inline.css");
 
 .leads-list-table-wrap {
@@ -204,7 +204,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 20px;
-  padding: 21px 25px 25px;
+  padding: 20px 24px 24px;
   overflow: hidden;
   border: 1px solid #d7e2f3;
   border-radius: 20px;
@@ -247,40 +247,90 @@
 .lead-detail-overview-grid {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(600px, 800px);
-  gap: 16px;
+  grid-template-columns: minmax(0, 510fr) minmax(0, 800fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 20px;
   align-items: stretch;
+  height: 546.8px;
+  box-sizing: border-box;
+  padding: 20px;
+  overflow: hidden;
+  border: 1.5px solid #dbeafe;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
 }
 
 .lead-detail-overview-grid > .intention-panel,
-.lead-detail-overview-grid > .lead-detail-tag-panel {
+.lead-detail-overview-grid > .intention-panel > .intention-card {
+  display: contents;
+}
+
+.lead-detail-overview-grid > .lead-detail-tag-panel,
+.lead-recording-summary-card {
+  box-sizing: border-box;
   min-width: 0;
-  height: auto;
+  height: 427.8px;
+  min-height: 427.8px;
   align-self: stretch;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
 }
 
-.lead-detail-overview-grid > .intention-panel {
+.lead-recording-summary-card {
   display: flex;
-  container-type: inline-size;
-  container-name: lead-intention;
+  grid-column: 1;
+  grid-row: 2;
   flex-direction: column;
-  padding: 21px;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+  gap: 16px;
+  padding: 18px 20px;
 }
 
-.lead-detail-overview-grid > .intention-panel .intention-card,
-.lead-detail-overview-grid > .intention-panel .intention-body {
-  min-height: 0;
-  flex: 1 1 auto;
+.lead-recording-summary-header {
+  display: flex;
+  min-width: 0;
+  min-height: 25px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.lead-detail-overview-grid > .intention-panel .intention-body > .intention-item:last-child {
-  flex: 1 1 auto;
+.lead-recording-summary-title {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.lead-recording-summary-title > img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+.lead-recording-summary-title > h3 {
+  margin: 0;
+  color: #162033;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: -0.36px;
+  white-space: nowrap;
 }
 
 .lead-detail-overview-grid > .lead-detail-tag-panel {
-  padding: 21px;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+  display: flex;
+  grid-column: 2;
+  grid-row: 2;
+  container-type: inline-size;
+  container-name: lead-tag-panel;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  overflow: hidden;
 }
 
 .leads-detail-page:not(.customer-detail-page) .lead-detail-layout {
@@ -295,9 +345,11 @@
 
 .lead-intention-insight-header {
   display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
   min-width: 0;
   min-height: 56px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -335,11 +387,11 @@
 
 .lead-intention-insight-copy .intention-title {
   margin: 0;
-  color: #162033;
-  font-size: 18px;
+  color: #0f172a;
+  font-size: 22px;
   font-weight: 600;
   line-height: normal;
-  letter-spacing: -0.36px;
+  letter-spacing: 0;
 }
 
 .lead-intention-insight-copy .intention-ai-copy {
@@ -348,18 +400,20 @@
   color: #64748b;
   font-size: 14px;
   font-weight: 400;
-  line-height: 22.4px;
+  line-height: normal;
   white-space: nowrap;
 }
 
-.lead-intention-insight-header .intention-top-tags {
+.lead-recording-summary-header .intention-top-tags {
+  display: flex;
   height: 24px;
   flex: 0 0 auto;
+  align-items: center;
   gap: 8px;
   margin-left: auto;
 }
 
-.lead-intention-insight-header .intention-level {
+.lead-recording-summary-header .intention-level {
   box-sizing: border-box;
   height: 24px;
   min-height: 24px;
@@ -367,11 +421,11 @@
   line-height: normal;
 }
 
-.lead-intention-insight-header .intention-model-row {
+.lead-recording-summary-header .intention-model-row {
   flex-wrap: nowrap;
 }
 
-.lead-intention-insight-header .intention-model-chip {
+.lead-recording-summary-header .intention-model-chip {
   box-sizing: border-box;
   height: 24px;
   min-height: 24px;
@@ -380,24 +434,7 @@
   line-height: 12px;
 }
 
-@container lead-intention (max-width: 520px) {
-  .lead-intention-insight-header .intention-top-tags {
-    height: auto;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-  }
-
-  .lead-intention-insight-header #leadDetailIntentLevel {
-    align-self: flex-end;
-  }
-
-  .lead-intention-insight-header .intention-model-row {
-    justify-content: flex-end;
-  }
-}
-
-@container lead-intention (max-width: 420px) {
+@container lead-overview (max-width: 1240px) {
   .lead-intention-insight-copy .intention-ai-copy {
     white-space: normal;
   }
@@ -1399,6 +1436,10 @@
   line-height: 22px;
 }
 
+.customer-detail-page .customer-insight-ai-title {
+  font-size: 18px;
+}
+
 .customer-detail-page .customer-ai-analysis-scope {
   display: none;
 }
@@ -1487,6 +1528,10 @@
   line-height: 22.4px;
 }
 
+.customer-detail-page .customer-insight-summary .intention-item-label {
+  font-size: 14px;
+}
+
 .customer-detail-page .customer-insight-tags-heading {
   display: flex;
   min-height: 24px;
@@ -1525,8 +1570,8 @@
   overflow: hidden;
   border: 1px solid #dbeafe;
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(248, 251, 255, 0.49), rgba(241, 246, 255, 0.46));
-  backdrop-filter: blur(4px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .customer-detail-page .customer-insight-tag-group + .customer-insight-tag-group {
@@ -1669,19 +1714,44 @@
 }
 
 .lead-detail-tag-panel-header {
-  margin-bottom: 8px;
+  min-height: 25px;
+  margin: 0;
+}
+
+.lead-detail-tag-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lead-detail-tag-heading > img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+.lead-detail-tag-heading > h3 {
+  margin: 0;
+  color: #162033;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: -0.36px;
 }
 
 .lead-detail-tag-section {
   display: flex;
   min-width: 0;
-  min-height: 0;
+  height: 348.8px;
+  min-height: 348.8px;
   flex-direction: column;
-  padding: 16px;
+  padding: 14px 16px;
   overflow: hidden;
-  border: 1px solid rgba(37, 99, 235, 0.14);
-  border-radius: 16px;
-  background: #fff;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: transparent;
+  backdrop-filter: blur(4px);
 }
 
 .lead-detail-tag-section-header {
@@ -1713,8 +1783,13 @@
 
 .lead-tag-relationship-map {
   position: relative;
-  min-height: 224px;
-  margin-top: 16px;
+  width: 100%;
+  max-width: 337px;
+  height: 240px;
+  min-height: 240px;
+  flex: 0 0 240px;
+  align-self: center;
+  margin-top: 12px;
 }
 
 .lead-tag-relationship-path {
@@ -1728,15 +1803,15 @@
   height: 100%;
 }
 
-.lead-tag-relationship-path.path-1 { left: 0.85%; top: 27.68%; width: 11.02%; height: 15.4%; }
-.lead-tag-relationship-path.path-2 { left: 31.07%; top: 12.5%; width: 9.32%; height: 3.8%; }
-.lead-tag-relationship-path.path-3 { left: 65.54%; top: 11.38%; width: 14.83%; height: 6.92%; }
-.lead-tag-relationship-path.path-4 { left: 89.97%; top: 36.61%; width: 2.73%; height: 14.51%; }
-.lead-tag-relationship-path.path-5 { left: 74.01%; top: 70.54%; width: 7.06%; height: 7.14%; }
-.lead-tag-relationship-path.path-6 { left: 7.58%; top: 61.83%; width: 51.03%; height: 33.35%; }
-.lead-tag-relationship-path.path-7 { left: 19.77%; top: 26.06%; width: 59.39%; height: 51.62%; }
-.lead-tag-relationship-path.path-8 { left: 36.19%; top: 44.2%; width: 31.66%; height: 21.28%; }
-.lead-tag-relationship-path.path-9 { left: 32.77%; top: 44.2%; width: 5.08%; height: 3.35%; }
+.lead-tag-relationship-path.path-1 { left: 0.85%; top: 32.5%; width: 11.02%; height: 14.37%; }
+.lead-tag-relationship-path.path-2 { left: 31.07%; top: 18.33%; width: 9.32%; height: 3.55%; }
+.lead-tag-relationship-path.path-3 { left: 65.54%; top: 17.29%; width: 14.83%; height: 6.46%; }
+.lead-tag-relationship-path.path-4 { left: 89.97%; top: 40.83%; width: 2.73%; height: 13.54%; }
+.lead-tag-relationship-path.path-5 { left: 74.01%; top: 72.5%; width: 7.06%; height: 6.66%; }
+.lead-tag-relationship-path.path-6 { left: 7.58%; top: 64.37%; width: 51.03%; height: 31.13%; }
+.lead-tag-relationship-path.path-7 { left: 19.77%; top: 30.99%; width: 59.39%; height: 48.18%; }
+.lead-tag-relationship-path.path-8 { left: 36.19%; top: 47.92%; width: 31.66%; height: 19.86%; }
+.lead-tag-relationship-path.path-9 { left: 32.77%; top: 47.92%; width: 5.08%; height: 3.13%; }
 
 .lead-relationship-chip {
   position: absolute;
@@ -1750,17 +1825,17 @@
   font-weight: 600;
   line-height: 18px;
   white-space: nowrap;
-  transform: translate(-50%, -50%);
+  transform: none;
 }
 
-.lead-relationship-chip.position-1 { left: 16%; top: 18%; }
-.lead-relationship-chip.position-2 { left: 50%; top: 8%; }
-.lead-relationship-chip.position-3 { left: 82%; top: 25%; }
-.lead-relationship-chip.position-4 { left: 83%; top: 60%; }
-.lead-relationship-chip.position-5 { left: 65%; top: 86%; }
-.lead-relationship-chip.position-6 { left: 28%; top: 78%; }
-.lead-relationship-chip.position-7 { left: 15%; top: 52%; }
-.lead-relationship-chip.position-8 { left: 52%; top: 43%; }
+.lead-relationship-chip.position-1 { left: 6.8%; top: 16.8%; }
+.lead-relationship-chip.position-2 { left: 39.02%; top: 7.46%; }
+.lead-relationship-chip.position-3 { left: 71.02%; top: 23.33%; }
+.lead-relationship-chip.position-4 { left: 72.02%; top: 56%; }
+.lead-relationship-chip.position-5 { left: 52.24%; top: 80.26%; }
+.lead-relationship-chip.position-6 { left: 17.02%; top: 72.8%; }
+.lead-relationship-chip.position-7 { left: 0.46%; top: 48.53%; }
+.lead-relationship-chip.position-8 { left: 39.24%; top: 40.13%; }
 
 .lead-relationship-chip.tone-blue,
 .lead-public-highlight.tone-blue,
@@ -1798,7 +1873,7 @@
 }
 
 .lead-public-profile {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .lead-public-profile-highlights {
@@ -1913,6 +1988,45 @@
   margin-top: 4px;
 }
 
+.lead-recording-summary-card .intention-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lead-recording-summary-card .intention-item {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0.49), rgba(241, 246, 255, 0.46));
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+.lead-recording-summary-card .intention-item:first-child {
+  min-height: 162px;
+  flex: 0 0 162px;
+}
+
+.lead-recording-summary-card .intention-item:last-child {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.lead-recording-summary-card .intention-item-content {
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22.4px;
+}
+
 @container lead-overview (max-width: 1240px) {
   .lead-detail-overview-header {
     align-items: flex-start;
@@ -1927,7 +2041,26 @@
   }
 
   .lead-detail-overview-grid {
+    height: auto;
     grid-template-columns: 1fr;
+  }
+
+  .lead-intention-insight-header,
+  .lead-recording-summary-card,
+  .lead-detail-overview-grid > .lead-detail-tag-panel {
+    grid-column: 1;
+  }
+
+  .lead-intention-insight-header {
+    grid-row: 1;
+  }
+
+  .lead-recording-summary-card {
+    grid-row: 2;
+  }
+
+  .lead-detail-overview-grid > .lead-detail-tag-panel {
+    grid-row: 3;
   }
 }
 
@@ -2205,20 +2338,14 @@
 
 #leadsDataTable.customer-aggregate-table th:last-child,
 #leadsDataTable.customer-aggregate-table td:last-child {
-  position: sticky !important;
-  right: 0 !important;
   width: 92px !important;
   min-width: 92px !important;
   max-width: 92px !important;
   background: #ffffff !important;
-  z-index: 5 !important;
-  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.05) !important;
 }
 
 #leadsDataTable.customer-aggregate-table th:last-child {
   background: #eef3fb !important;
-  z-index: 6 !important;
-  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.06) !important;
 }
 
 #leadsDataTable.customer-aggregate-table tbody tr:hover td:last-child {

@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20260817-store-drilldown-filter-flush-v41" />
+    <link rel="stylesheet" href="./page.css?v=20260817-badge-record-drawer-v48" />
+    <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -185,12 +186,9 @@
               </div>
             </section>
 
+            <div id="badgeRecordPageContent">
             <div data-badge-record-content="events">
-              <div class="filter-card single-line wrap-filters" id="badgeEventFilters">
-                <label class="field inline-field"><span>查询日期（单日）</span><input id="badgeEventDate" type="date" value="2026-08-11" /></label>
-                <label class="field inline-field"><span>事件类型</span><select id="badgeEventType"><option value="all">全部事件</option><option value="power-on">工牌开机</option><option value="power-off">工牌关机</option><option value="recording-start">开始录音</option><option value="recording-end">结束录音</option><option value="charging-start">开始充电</option><option value="charging-end">结束充电</option><option value="low-battery">工牌电量预警</option></select></label>
-                <button class="btn ghost" type="button" data-badge-event-reset>重置</button><button class="btn primary" type="button" data-badge-event-query>查询</button>
-              </div>
+              <div class="badge-event-filter-toolbar" id="badgeEventFilters"></div>
               <section class="card table-card">
                 <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="badgeEventResultSummary">2026-08-11 · 共 11 条</span></div>
                 <div class="event-timeline" id="badgeEventTimeline"></div>
@@ -199,21 +197,18 @@
 
             <div data-badge-record-content="uploads" hidden>
               <div class="notice warning-notice"><span class="notice-icon">i</span><div><strong>待上传明细来源</strong><p><code>recnu</code> 提供未上传数量，<code>reclist</code> 提供逐条明细，收到 <code>rec</code> 回调后更新为已上传。</p></div></div>
-              <div class="filter-card filter-grid badge-upload-filter-grid" data-badge-upload-filter-card>
-                <label class="field span-2"><span>录音开始时间</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-12T00:00:00" data-badge-upload-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-badge-upload-filter="endDateTime" /></span></label>
-                <label class="field"><span>上传状态</span><select data-badge-upload-filter="status"><option>全部状态</option><option>已上传</option><option>未上传</option></select></label>
-                <div class="filter-actions"><button class="btn ghost" type="button" data-badge-upload-filter-reset>重置</button><button class="btn primary" type="button" data-badge-upload-filter-apply>查询</button></div>
-              </div>
-              <div class="summary-row three-cols">
-                <article class="summary-card"><span class="summary-icon blue">录</span><div><small>录音片段</small><strong id="badgeUploadTotal">0</strong></div><em>当前工牌</em></article>
-                <article class="summary-card"><span class="summary-icon green">✓</span><div><small>已上传</small><strong id="badgeUploadCompleted">0</strong></div><em class="positive" id="badgeUploadRate">—</em></article>
-                <article class="summary-card"><span class="summary-icon amber">⇧</span><div><small>未上传</small><strong id="badgeUploadPending">0</strong></div><em>来自 reclist</em></article>
+              <div class="badge-event-filter-toolbar badge-upload-filter-toolbar" id="badgeUploadFilters"></div>
+              <div class="summary-row three-cols store-overview-metrics badge-upload-metrics">
+                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>录音片段</small><strong id="badgeUploadTotal">0</strong></div><em>当前工牌</em></article>
+                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>已上传</small><strong id="badgeUploadCompleted">0</strong></div><em class="positive" id="badgeUploadRate">—</em></article>
+                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>未上传</small><strong id="badgeUploadPending">0</strong></div><em>来自 reclist</em></article>
               </div>
               <section class="card table-card">
                 <div class="card-head"><div><h2>录音上传日志</h2><p>仅展示当前顾问、当前工牌的录音上传记录</p></div></div>
                 <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>日期</th><th>顾问姓名</th><th>工牌 SN</th><th>片段序号</th><th>音频时间</th><th>片段时长</th><th>文件大小</th><th>上传状态</th><th>上传完成时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
                 <div class="pagination"><span id="badgeUploadPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
               </section>
+            </div>
             </div>
           </section>
 
@@ -290,9 +285,30 @@
       <div class="drawer-body" id="drawerBody"></div>
     </aside>
 
+    <div class="drawer-backdrop" id="badgeRecordDrawerBackdrop" hidden></div>
+    <aside class="drawer detail-drawer badge-record-drawer" id="badgeRecordDrawer" role="dialog" aria-modal="true" aria-labelledby="badgeRecordDrawerTitle" aria-hidden="true">
+      <div class="drawer-head badge-record-drawer-head">
+        <div class="badge-record-drawer-title-row">
+          <div>
+            <h2 id="badgeRecordDrawerTitle">工牌记录</h2>
+            <p><span id="badgeRecordDrawerAdvisorName">陈佳</span><span aria-hidden="true"> · </span><span id="badgeRecordDrawerSn">MN-BDG-004821</span></p>
+          </div>
+          <button class="icon-btn badge-record-drawer-close" type="button" data-badge-record-drawer-close aria-label="关闭工牌记录抽屉">×</button>
+        </div>
+        <div class="badge-record-drawer-tabs session-toolbar-control session-toolbar-segment-control">
+          <div class="todo-filter-tabs" role="tablist" aria-label="工牌记录类型">
+            <button class="todo-filter-tab active" type="button" role="tab" aria-selected="true" data-badge-record-tab="events">工牌事件</button>
+            <button class="todo-filter-tab" type="button" role="tab" aria-selected="false" data-badge-record-tab="uploads">录音上传日志</button>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody"></div>
+    </aside>
+
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260817-store-badge-drilldown-v2"></script>
+    <script src="./page.js?v=20260817-badge-record-drawer-v6"></script>
+    <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
