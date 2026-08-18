@@ -8792,12 +8792,21 @@ body::before {
   word-break: keep-all;
 }
 
+.session-data-table thead th:last-child,
+.session-data-table tbody td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+}
+
 .session-data-table thead th:last-child {
   background: #eef3fb;
+  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.06);
 }
 
 .session-data-table tbody td:last-child {
   background: #ffffff;
+  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.05);
 }
 
 .session-data-table tbody tr:hover td:last-child {
@@ -8871,6 +8880,9 @@ body::before {
 
 .leads-data-table thead th:last-child,
 .leads-data-table tbody td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 2;
   width: 112px;
   min-width: 112px;
   max-width: 112px;
@@ -8878,10 +8890,12 @@ body::before {
 
 .leads-data-table thead th:last-child {
   background: #eef3fb;
+  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.06);
 }
 
 .leads-data-table tbody td:last-child {
   background: #ffffff;
+  box-shadow: -12px 0 20px rgba(15, 23, 42, 0.05);
 }
 
 .leads-data-table tbody tr:hover td:last-child {
