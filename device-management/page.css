@@ -723,7 +723,7 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .store-overview-table th { padding-top: 12px; padding-bottom: 12px; background: #eef3fb; color: #69768b; font-size: 14px; line-height: 1.15; }
 .store-overview-table td { padding-top: 15px; padding-bottom: 15px; color: #354258; font-size: 14px; line-height: 1.2; }
 .store-overview-table thead th:last-child,
-.store-overview-table tbody td:last-child { width: 84px; min-width: 84px; max-width: 84px; }
+.store-overview-table tbody td:last-child { width: 92px; min-width: 92px; max-width: 92px; }
 .store-overview-table thead th:last-child { background: #eef3fb; }
 .store-sort-button { padding: 0; display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
 .store-sort-button span { color: #a8b1bf; font-size: 10px; line-height: 1; transform: translateY(-1px); }

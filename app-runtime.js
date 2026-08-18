@@ -367,6 +367,152 @@ function initUnifiedMetricTooltips() {
 
 initUnifiedMetricTooltips();
 
+function initAiLeadValidityTooltips() {
+  const root = document.documentElement;
+  if (root.dataset.aiLeadTooltipInit === 'true') return;
+  root.dataset.aiLeadTooltipInit = 'true';
+  root.classList.add('ai-lead-tooltip-ready');
+
+  const tooltip = document.createElement('div');
+  tooltip.id = 'ai-lead-validity-floating-tooltip';
+  tooltip.className = 'ai-lead-validity-tooltip ai-lead-validity-floating-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.setAttribute('aria-hidden', 'true');
+  tooltip.style.visibility = 'hidden';
+  document.body.appendChild(tooltip);
+
+  let activeButton = null;
+  let positionFrame = 0;
+
+  const getTooltipButton = (target) => {
+    if (!(target instanceof Element)) return null;
+    return target.closest('.ai-lead-validity-help');
+  };
+
+  const hideTooltip = () => {
+    if (positionFrame) {
+      window.cancelAnimationFrame(positionFrame);
+      positionFrame = 0;
+    }
+    if (activeButton?.getAttribute('aria-describedby') === tooltip.id) {
+      activeButton.removeAttribute('aria-describedby');
+    }
+    activeButton = null;
+    tooltip.classList.remove('show', 'is-scrollable', 'ai-lead-validity-tooltip-table');
+    tooltip.setAttribute('aria-hidden', 'true');
+    tooltip.style.visibility = 'hidden';
+  };
+
+  const positionTooltip = () => {
+    positionFrame = 0;
+    if (!activeButton?.isConnected) {
+      hideTooltip();
+      return;
+    }
+
+    const buttonRect = activeButton.getBoundingClientRect();
+    if (
+      buttonRect.bottom < 0
+      || buttonRect.top > window.innerHeight
+      || buttonRect.right < 0
+      || buttonRect.left > window.innerWidth
+    ) {
+      hideTooltip();
+      return;
+    }
+    const edge = 12;
+    const gap = 10;
+    const mainRect = activeButton.closest('main')?.getBoundingClientRect();
+    const boundaryLeft = Math.max(0, mainRect?.left || 0);
+    const boundaryRight = Math.min(window.innerWidth, mainRect?.right || window.innerWidth);
+    const minLeft = boundaryLeft + edge;
+    const availableWidth = Math.max(0, boundaryRight - boundaryLeft - edge * 2);
+    tooltip.style.maxWidth = `${availableWidth}px`;
+    tooltip.classList.remove('is-scrollable');
+    if (tooltip.scrollHeight > tooltip.clientHeight + 1) {
+      tooltip.classList.add('is-scrollable');
+    }
+    const tooltipWidth = tooltip.offsetWidth;
+    const tooltipHeight = tooltip.offsetHeight;
+    const buttonCenter = buttonRect.left + buttonRect.width / 2;
+    const maxLeft = Math.max(minLeft, boundaryRight - tooltipWidth - edge);
+    const left = Math.min(Math.max(buttonCenter - tooltipWidth / 2, minLeft), maxLeft);
+    const spaceBelow = window.innerHeight - buttonRect.bottom - edge;
+    const spaceAbove = buttonRect.top - edge;
+    const placement = spaceBelow >= tooltipHeight + gap || spaceBelow >= spaceAbove ? 'bottom' : 'top';
+    const preferredTop = placement === 'bottom'
+      ? buttonRect.bottom + gap
+      : buttonRect.top - gap - tooltipHeight;
+    const maxTop = Math.max(edge, window.innerHeight - tooltipHeight - edge);
+    const top = Math.min(Math.max(preferredTop, edge), maxTop);
+    const arrowLeft = Math.min(
+      Math.max(buttonCenter - left - 5, 12),
+      Math.max(12, tooltipWidth - 22)
+    );
+
+    tooltip.dataset.placement = placement;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    tooltip.style.setProperty('--ai-lead-tooltip-arrow-left', `${arrowLeft}px`);
+  };
+
+  const schedulePosition = () => {
+    if (!activeButton || positionFrame) return;
+    positionFrame = window.requestAnimationFrame(positionTooltip);
+  };
+
+  const showTooltip = (button) => {
+    const source = button.closest('.ai-lead-validity-heading')?.querySelector('.ai-lead-validity-tooltip');
+    if (!source) return;
+
+    if (activeButton && activeButton !== button) {
+      activeButton.removeAttribute('aria-describedby');
+    }
+    activeButton = button;
+    tooltip.innerHTML = source.innerHTML;
+    tooltip.classList.toggle('ai-lead-validity-tooltip-table', source.classList.contains('ai-lead-validity-tooltip-table'));
+    tooltip.setAttribute('aria-hidden', 'false');
+    tooltip.style.visibility = 'hidden';
+    tooltip.classList.add('show');
+    positionTooltip();
+    tooltip.style.visibility = 'visible';
+    button.setAttribute('aria-describedby', tooltip.id);
+  };
+
+  document.addEventListener('pointerover', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || (event.relatedTarget && button.contains(event.relatedTarget))) return;
+    showTooltip(button);
+  });
+
+  document.addEventListener('pointerout', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || button !== activeButton) return;
+    if (event.relatedTarget && button.contains(event.relatedTarget)) return;
+    hideTooltip();
+  });
+
+  document.addEventListener('focusin', (event) => {
+    const button = getTooltipButton(event.target);
+    if (button) showTooltip(button);
+  });
+
+  document.addEventListener('focusout', (event) => {
+    const button = getTooltipButton(event.target);
+    if (!button || button !== activeButton) return;
+    if (event.relatedTarget && button.contains(event.relatedTarget)) return;
+    hideTooltip();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') hideTooltip();
+  });
+  window.addEventListener('scroll', schedulePosition, true);
+  window.addEventListener('resize', schedulePosition);
+}
+
+initAiLeadValidityTooltips();
+
 function getCompactIssueRulePaginationPages(pageCount, currentPage) {
   if (pageCount <= 3) return new Set(Array.from({ length: pageCount }, (_, index) => index + 1));
   const startPage = Math.min(Math.max(currentPage - 1, 1), pageCount - 2);
@@ -10646,11 +10792,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <span class="ai-lead-validity-heading">
             <span>AI线索有效性</span>
             <button type="button" class="ai-lead-validity-help" aria-label="查看AI线索有效性判别标准">?</button>
-            <span class="ai-lead-validity-tooltip" role="tooltip">
+            <span class="ai-lead-validity-tooltip ai-lead-validity-tooltip-table" role="tooltip">
               <strong>判别标准</strong>
-              <span><b>有效：</b>线索下发后3天内，前3次外呼中，至少有1次通话时长不少于15秒，且客户未明确拒绝。</span>
-              <span><b>无效：</b>线索下发后3天内未外呼，或前3次外呼中没有任何一次同时满足“通话时长不少于15秒且客户未明确拒绝”。</span>
-              <span><b>暂未分析：</b>尚未对录音完成分析。</span>
+              <span class="ai-lead-validity-rule-table" role="table" aria-label="AI线索有效性判别标准">
+                <span class="ai-lead-validity-rule-head is-valid" role="rowheader">有效</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">线索下发后3天内，前3次外呼中，至少有1次通话时长不少于15秒，且客户未明确拒绝。</span>
+                <span class="ai-lead-validity-rule-head is-invalid" role="rowheader">无效</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">线索下发后3天内未外呼，或前3次外呼中没有任何一次同时满足“通话时长不少于15秒且客户未明确拒绝”。</span>
+                <span class="ai-lead-validity-rule-head is-undetermined" role="rowheader">暂未分析</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">尚未对录音完成分析。</span>
+              </span>
             </span>
           </span>
         `
@@ -10665,16 +10816,29 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function renderCustomerRecordCoverageHeader(dimension = 'lead') {
         const isStoreDimension = dimension === 'store'
         const title = isStoreDimension ? '门店录音覆盖' : '线索录音覆盖'
-        const unit = isStoreDimension ? '门店' : '线索'
+        const allRecordedCopy = isStoreDimension
+          ? '该客户匹配的每个门店都至少关联了1通录音。'
+          : '该客户匹配的每条线索都至少关联了一通录音。'
+        const partiallyRecordedCopy = isStoreDimension
+          ? '该客户至少有1个门店关联上了录音。'
+          : '该客户至少有1条线索关联了录音，但并非全部都有。'
+        const noneRecordedCopy = isStoreDimension
+          ? '该客户匹配的所有门店均未关联上录音。'
+          : '该客户匹配的所有线索均未关联上录音。'
         return `
           <span class="ai-lead-validity-heading">
             <span>${title}</span>
             <button type="button" class="ai-lead-validity-help" aria-label="查看${title}判别标准">?</button>
-            <span class="ai-lead-validity-tooltip" role="tooltip">
+            <span class="ai-lead-validity-tooltip ai-lead-validity-tooltip-table" role="tooltip">
               <strong>判别标准</strong>
-              <span><b>全部有录音：</b>该客户关联的每个${unit}都存在至少1通可分析录音。</span>
-              <span><b>部分有录音：</b>该客户至少1个${unit}有可分析录音，但并非全部都有。</span>
-              <span><b>全部无录音：</b>该客户关联的所有${unit}均无可分析录音。</span>
+              <span class="ai-lead-validity-rule-table" role="table" aria-label="${title}判别标准">
+                <span class="ai-lead-validity-rule-head is-valid" role="rowheader">全部有录音</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">${allRecordedCopy}</span>
+                <span class="ai-lead-validity-rule-head is-partial" role="rowheader">部分有录音</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">${partiallyRecordedCopy}</span>
+                <span class="ai-lead-validity-rule-head is-undetermined" role="rowheader">全部无录音</span>
+                <span class="ai-lead-validity-rule-cell" role="cell">${noneRecordedCopy}</span>
+              </span>
             </span>
           </span>
         `
@@ -10684,6 +10848,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (viewMode === 'customers') {
           return `
             <tr>
+              <th style="min-width: 100px; width: 100px;">品牌</th>
               <th style="min-width: 110px; width: 110px;">客户姓名</th>
               <th style="min-width: 130px; width: 130px;">客户手机号</th>
               <th style="min-width: 110px; width: 110px;">是否跨门店</th>
@@ -11086,7 +11251,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
-          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 15 : 17}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
+          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${viewMode === 'customers' ? 16 : 17}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
           if (pagination) {
             pagination.innerHTML = ''
           }
@@ -11133,6 +11298,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                   </button>`
               return `
               <tr>
+                <td>${escapeHtml(Array.from(item.aggregateBrandSet || []).filter(Boolean).join('、') || getSessionBrand(item.carSeries))}</td>
                 <td><span class="cell-main cv-customer-name">${escapeHtml(maskDisplayName(item.customerName))}</span></td>
                 <td><span class="cv-customer-phone">${escapeHtml(item.customerPhone)}</span></td>
                 <td>${escapeHtml(crossStoreText)}</td>
