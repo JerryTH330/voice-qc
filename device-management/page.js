@@ -114,13 +114,10 @@ const badgeEventDefaultFilters = {
 const badgeEventFilterState = { ...badgeEventDefaultFilters };
 const badgeEventTypeOptions = [
   ['all', '全部事件'],
-  ['power-on', '工牌开机'],
-  ['power-off', '工牌关机'],
-  ['recording-start', '开始录音'],
-  ['recording-end', '结束录音'],
-  ['charging-start', '开始充电'],
-  ['charging-end', '结束充电'],
-  ['low-battery', '工牌电量预警']
+  ['session', '工牌事件'],
+  ['recording', '录音'],
+  ['charging', '充电'],
+  ['low-battery', '电量预警']
 ];
 const badgeEventMenuState = {
   openMenu: null,
@@ -153,11 +150,12 @@ const badgeUploadRecords = [
 
 const badgeUploadDefaultFilters = {
   startDate: '2026-08-06',
-  endDate: '2026-08-12',
-  status: '全部状态'
+  endDate: '2026-08-12'
 };
 const badgeUploadFilterState = { ...badgeUploadDefaultFilters };
-const badgeUploadStatusOptions = ['全部状态', '已上传', '未上传'];
+const badgeUploadDailyPaginationState = { page: 1, pageSize: 10 };
+const badgeUploadModalPaginationState = { page: 1, pageSize: 10 };
+const badgeUploadModalState = { records: [], emptyText: '当前日期没有上传完成的录音。' };
 const badgeUploadMenuState = {
   openMenu: null,
   dateDraftStartDate: badgeUploadDefaultFilters.startDate,
@@ -254,14 +252,6 @@ function getBadgeUploadDateRange(startDate, endDate) {
   const dates = [];
   for (let date = startDate; date <= endDate; date = shiftBadgeUploadDate(date, 1)) dates.push(date);
   return dates;
-}
-
-function getFilteredBadgeUploadRecords() {
-  return getCurrentBadgeUploadRecords().filter((item) => {
-    const dateMatch = item.date >= badgeUploadFilterState.startDate && item.date <= badgeUploadFilterState.endDate;
-    const statusMatch = badgeUploadFilterState.status === '全部状态' || item.status === badgeUploadFilterState.status;
-    return dateMatch && statusMatch;
-  });
 }
 
 function getCompletedBadgeUploadRecords() {
@@ -522,7 +512,6 @@ function renderBadgeUploadFilters() {
   const container = document.getElementById('badgeUploadFilters');
   if (!container) return;
   const dateOpen = badgeUploadMenuState.openMenu === 'date';
-  const statusOpen = badgeUploadMenuState.openMenu === 'status';
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
   const startDate = badgeUploadFilterState.startDate;
   const endDate = badgeUploadFilterState.endDate;
@@ -545,13 +534,6 @@ function renderBadgeUploadFilters() {
         <strong>${escapeBadgeHtml(formatStoreDateDisplay(startDate))}</strong><em>至</em><strong>${escapeBadgeHtml(formatStoreDateDisplay(endDate))}</strong><span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${datePanel}
-    </div>
-    <div class="session-toolbar-control session-toolbar-menu badge-event-filter-control${statusOpen ? ' is-open' : ''}">
-      <span>上传状态</span>
-      <button type="button" class="session-select-trigger${statusOpen ? ' active' : ''}" data-badge-upload-status-trigger aria-haspopup="listbox" aria-expanded="${statusOpen}">
-        <strong>${escapeBadgeHtml(badgeUploadFilterState.status)}</strong><i class="session-select-caret" aria-hidden="true"></i>
-      </button>
-      ${statusOpen ? `<div class="session-menu-panel" role="listbox"><div class="session-menu-option-list">${badgeUploadStatusOptions.map((status) => `<button type="button" class="session-menu-option${badgeUploadFilterState.status === status ? ' active' : ''}" data-badge-upload-status-value="${status}" role="option" aria-selected="${badgeUploadFilterState.status === status}"><span>${status}</span></button>`).join('')}</div></div>` : ''}
     </div>
     <button class="btn session-reset-btn badge-event-filter-reset" type="button" data-badge-upload-filter-reset>重置筛选</button>`;
 }
@@ -578,11 +560,13 @@ function renderBadgeRecordHeader() {
   const storeName = document.getElementById('badgeRecordStoreName');
   const sn = document.getElementById('badgeRecordSn');
   const drawerAdvisorName = document.getElementById('badgeRecordDrawerAdvisorName');
+  const drawerStoreName = document.getElementById('badgeRecordDrawerStoreName');
   const drawerSn = document.getElementById('badgeRecordDrawerSn');
   if (advisorName) advisorName.textContent = profile.advisorName;
   if (storeName) storeName.textContent = profile.storeName;
   if (sn) sn.textContent = profile.sn;
   if (drawerAdvisorName) drawerAdvisorName.textContent = profile.advisorName;
+  if (drawerStoreName) drawerStoreName.textContent = profile.storeName;
   if (drawerSn) drawerSn.textContent = profile.sn;
 }
 
@@ -601,12 +585,63 @@ function getCurrentBadgeUploadRecords() {
   return records;
 }
 
+function getBadgeRecordPaginationItems(state, totalPages) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const items = [1];
+  if (state.page > 3) items.push('left');
+  for (let page = Math.max(2, state.page - 1); page <= Math.min(totalPages - 1, state.page + 1); page += 1) items.push(page);
+  if (state.page < totalPages - 2) items.push('right');
+  items.push(totalPages);
+  return items;
+}
+
+function getBadgeRecordPaginationState(key) {
+  if (key === 'daily') return badgeUploadDailyPaginationState;
+  return badgeUploadModalPaginationState;
+}
+
+function renderBadgeRecordPagination(containerId, totalItems, key) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const state = getBadgeRecordPaginationState(key);
+  const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+  state.page = Math.min(state.page, totalPages);
+  container.innerHTML = `
+    <div class="dashboard-pagination">
+      <span class="session-pagination-total">共 ${totalItems} 条</span>
+      <div class="dashboard-pagination-controls">
+        <div class="custom-select-container page-select page-size-select">
+          <button type="button" class="custom-select-trigger page-size-trigger" data-badge-record-page-size-trigger="${key}"><span>${state.pageSize} 条/页</span></button>
+          <div class="custom-select-options page-size-options">${[10, 20, 50].map((size) => `<button type="button" class="custom-option page-size-option${size === state.pageSize ? ' active' : ''}" data-badge-record-page-size="${key}" data-page-size="${size}"><span>${size} 条/页</span></button>`).join('')}</div>
+        </div>
+        <div class="page-group">
+          <button type="button" class="page-arrow" data-badge-record-page-action="${key}" data-page-action="prev" aria-label="上一页" ${state.page === 1 ? 'disabled' : ''}>‹</button>
+          ${getBadgeRecordPaginationItems(state, totalPages).map((item) => typeof item === 'number' ? `<button type="button" class="page-num${item === state.page ? ' active' : ''}" data-badge-record-page="${key}" data-page="${item}" aria-label="第 ${item} 页" ${item === state.page ? 'aria-current="page"' : ''}>${item}</button>` : '<span class="page-ellipsis">…</span>').join('')}
+          <button type="button" class="page-arrow" data-badge-record-page-action="${key}" data-page-action="next" aria-label="下一页" ${state.page === totalPages ? 'disabled' : ''}>›</button>
+        </div>
+        <div class="page-group page-jump-group"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input type="number" min="1" max="${totalPages}" value="${state.page}" data-badge-record-page-jump="${key}" /></label><span class="session-page-jump-suffix">页</span></div>
+      </div>
+    </div>`;
+}
+
+function renderBadgeUploadModal() {
+  const tbody = document.getElementById('badgeUploadTableBody');
+  if (!tbody) return;
+  const totalPages = Math.max(1, Math.ceil(badgeUploadModalState.records.length / badgeUploadModalPaginationState.pageSize));
+  badgeUploadModalPaginationState.page = Math.min(badgeUploadModalPaginationState.page, totalPages);
+  const start = (badgeUploadModalPaginationState.page - 1) * badgeUploadModalPaginationState.pageSize;
+  const visibleRecords = badgeUploadModalState.records.slice(start, start + badgeUploadModalPaginationState.pageSize);
+  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
+    <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
+    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
+    <td>${escapeBadgeHtml(item.completedAt)}</td>
+  </tr>`).join('') : `<tr><td colspan="7" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
+  renderBadgeRecordPagination('badgeUploadPagination', badgeUploadModalState.records.length, 'modal');
+}
+
 function renderBadgeUploads() {
   const dailyTbody = document.getElementById('badgeUploadDailyTableBody');
-  const logTbody = document.getElementById('badgeUploadLogTableBody');
-  const modalTbody = document.getElementById('badgeUploadTableBody');
-  if (!dailyTbody || !logTbody || !modalTbody) return;
-  const records = getFilteredBadgeUploadRecords();
+  if (!dailyTbody) return;
   const completedRecords = getCompletedBadgeUploadRecords();
   const dates = getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate);
   if (!dates.includes(badgeUploadSelectedDate)) badgeUploadSelectedDate = getLatestBadgeUploadDate(completedRecords, badgeUploadFilterState.endDate);
@@ -615,42 +650,18 @@ function renderBadgeUploads() {
     result[completedDate] = (result[completedDate] || 0) + 1;
     return result;
   }, {});
-  const detailRecords = completedRecords.filter((item) => getBadgeUploadCompletedDate(item) === badgeUploadSelectedDate);
-  const completed = records.filter((item) => item.status === '已上传').length;
-  const pending = records.length - completed;
   const dailySummary = document.getElementById('badgeUploadDailySummary');
-  const detailTitle = document.getElementById('badgeUploadDetailTitle');
-  const paginationTotal = document.getElementById('badgeUploadPaginationTotal');
-  const logPaginationTotal = document.getElementById('badgeUploadLogPaginationTotal');
-  const summary = {
-    badgeUploadTotal: records.length,
-    badgeUploadCompleted: completed,
-    badgeUploadPending: pending,
-    badgeUploadRate: records.length ? `${(completed / records.length * 100).toFixed(1)}%` : '—'
-  };
-  Object.entries(summary).forEach(([id, value]) => {
-    const node = document.getElementById(id);
-    if (node) node.textContent = value;
-  });
   if (dailySummary) dailySummary.textContent = `${badgeUploadFilterState.startDate} 至 ${badgeUploadFilterState.endDate} · 共 ${completedRecords.length} 条上传完成录音 · 点击数量查看明细`;
-  if (detailTitle) detailTitle.textContent = `${badgeUploadSelectedDate} 录音上传明细`;
-  if (paginationTotal) paginationTotal.textContent = `共 ${detailRecords.length} 条`;
-  if (logPaginationTotal) logPaginationTotal.textContent = `共 ${records.length} 条`;
-  dailyTbody.innerHTML = dates.length ? [...dates].reverse().map((date) => {
+  const orderedDates = [...dates].reverse();
+  const dailyTotalPages = Math.max(1, Math.ceil(orderedDates.length / badgeUploadDailyPaginationState.pageSize));
+  badgeUploadDailyPaginationState.page = Math.min(badgeUploadDailyPaginationState.page, dailyTotalPages);
+  const dailyStart = (badgeUploadDailyPaginationState.page - 1) * badgeUploadDailyPaginationState.pageSize;
+  const visibleDates = orderedDates.slice(dailyStart, dailyStart + badgeUploadDailyPaginationState.pageSize);
+  dailyTbody.innerHTML = dates.length ? visibleDates.map((date) => {
     const count = countsByDate[date] || 0;
     return `<tr class="${date === badgeUploadSelectedDate ? 'is-selected' : ''}"><td>${escapeBadgeHtml(date)}</td><td><button class="badge-upload-count-button" type="button" data-badge-upload-day="${escapeBadgeHtml(date)}" aria-label="查看 ${escapeBadgeHtml(date)} 的 ${count} 条录音上传明细">${count}</button></td></tr>`;
   }).join('') : '<tr><td colspan="2" class="badge-record-empty">请选择有效的日期范围。</td></tr>';
-  logTbody.innerHTML = records.length ? records.map((item) => `<tr>
-    <td>${escapeBadgeHtml(item.date)}</td><td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
-    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
-    <td><span class="status ${item.status === '已上传' ? 'success' : 'waiting'}">${escapeBadgeHtml(item.status)}</span></td>
-    <td class="${item.status === '已上传' ? '' : 'muted-text'}">${escapeBadgeHtml(item.completedAt)}</td>
-  </tr>`).join('') : '<tr><td colspan="9" class="badge-record-empty">当前工牌暂无录音上传记录。</td></tr>';
-  modalTbody.innerHTML = detailRecords.length ? detailRecords.map((item) => `<tr>
-    <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
-    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
-    <td>${escapeBadgeHtml(item.completedAt)}</td>
-  </tr>`).join('') : '<tr><td colspan="7" class="badge-record-empty">当前日期没有上传完成的录音。</td></tr>';
+  renderBadgeRecordPagination('badgeUploadDailyPagination', dates.length, 'daily');
 }
 
 function selectBadgeRecord(sn, advisorName) {
@@ -662,7 +673,8 @@ function selectBadgeRecord(sn, advisorName) {
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
   badgeEventFilterState.date = eventRecord?.date || detailRecord?.queryDate || badgeEventDefaultFilters.date;
   resetBadgeUploadDateRange();
-  badgeUploadFilterState.status = '全部状态';
+  badgeUploadDailyPaginationState.page = 1;
+  badgeUploadModalPaginationState.page = 1;
   syncBadgeEventDateView();
   renderBadgeEventFilters();
   syncBadgeUploadDateDraft();
@@ -679,18 +691,18 @@ function renderVisitUploadDetail(record) {
     && item.date === record.date
     && (isPendingDetail ? item.status !== '已上传' : item.status === '已上传'));
   const detailTitle = document.getElementById('badgeUploadDetailTitle');
-  const paginationTotal = document.getElementById('badgeUploadPaginationTotal');
-  const tbody = document.getElementById('badgeUploadTableBody');
   detailTitle.textContent = `${record.date} 录音上传明细`;
   badgeUploadDetailDescription.textContent = isFailedDetail
     ? `${record.status} · ${record.detailText}`
     : `${record.status} · ${record.advisor} · ${record.badgeSn} · ${isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : record.date}`;
-  paginationTotal.textContent = `共 ${detailRecords.length} 条`;
-  tbody.innerHTML = detailRecords.length ? detailRecords.map((item, index) => `<tr>
-    <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(isPendingDetail ? String(index + 1) : item.sequence)}</td>
-    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
-    <td>${escapeBadgeHtml(isPendingDetail ? '未上传' : item.completedAt)}</td>
-  </tr>`).join('') : `<tr><td colspan="7" class="badge-record-empty">${isFailedDetail ? '当前暂无录音上传数据。' : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。'}</td></tr>`;
+  badgeUploadModalState.records = detailRecords.map((item, index) => ({
+    ...item,
+    sequence: isPendingDetail ? String(index + 1) : item.sequence,
+    completedAt: isPendingDetail ? '未上传' : item.completedAt
+  }));
+  badgeUploadModalState.emptyText = isFailedDetail ? '当前暂无录音上传数据。' : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。';
+  badgeUploadModalPaginationState.page = 1;
+  renderBadgeUploadModal();
 }
 
 function renderVisitEventDetail(record) {
@@ -736,6 +748,158 @@ function syncBadgeRecordTabs(route) {
   document.querySelectorAll('[data-badge-record-content]').forEach((content) => {
     content.hidden = content.dataset.badgeRecordContent !== activeTab;
   });
+  syncBadgeRecordDrawerFilter(activeTab);
+}
+
+function badgeEventTimeToSeconds(time) {
+  const [hours = 0, minutes = 0, seconds = 0] = String(time || '').split(':').map(Number);
+  return (hours * 60 * 60) + (minutes * 60) + seconds;
+}
+
+function formatBadgeEventDuration(startTime, endTime) {
+  if (!startTime || !endTime) return '—';
+  const duration = Math.max(0, badgeEventTimeToSeconds(endTime) - badgeEventTimeToSeconds(startTime));
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  const seconds = duration % 60;
+  if (hours > 0) return `${hours}小时${String(minutes).padStart(2, '0')}分`;
+  return `${minutes}分${String(seconds).padStart(2, '0')}秒`;
+}
+
+function buildBadgeEventGroups(events) {
+  const groups = [];
+  let activeSession = null;
+  let activeRecording = null;
+  let activeCharging = null;
+  let sessionNumber = 0;
+
+  events.forEach((event) => {
+    if (event.type === 'power-on') {
+      sessionNumber += 1;
+      activeSession = {
+        kind: 'session',
+        number: sessionNumber,
+        start: event,
+        end: null,
+        recordings: [],
+        warnings: [],
+        types: new Set(['power-on'])
+      };
+      activeRecording = null;
+      groups.push(activeSession);
+      return;
+    }
+
+    if (event.type === 'recording-start' && activeSession) {
+      activeRecording = { start: event, end: null };
+      activeSession.recordings.push(activeRecording);
+      activeSession.types.add(event.type);
+      return;
+    }
+
+    if (event.type === 'recording-end' && activeSession) {
+      if (activeRecording && !activeRecording.end) activeRecording.end = event;
+      activeSession.types.add(event.type);
+      activeRecording = null;
+      return;
+    }
+
+    if (event.type === 'low-battery' && activeSession) {
+      activeSession.warnings.push(event);
+      activeSession.types.add(event.type);
+      return;
+    }
+
+    if (event.type === 'power-off' && activeSession) {
+      activeSession.end = event;
+      activeSession.types.add(event.type);
+      activeSession = null;
+      activeRecording = null;
+      return;
+    }
+
+    if (event.type === 'charging-start') {
+      activeCharging = {
+        kind: 'charging',
+        start: event,
+        end: null,
+        types: new Set(['charging-start'])
+      };
+      groups.push(activeCharging);
+      return;
+    }
+
+    if (event.type === 'charging-end' && activeCharging) {
+      activeCharging.end = event;
+      activeCharging.types.add(event.type);
+      activeCharging = null;
+      return;
+    }
+
+    groups.push({ kind: 'standalone', event, types: new Set([event.type]) });
+  });
+
+  return groups;
+}
+
+function renderBadgeEventGroup(group, activeType) {
+  if (group.kind === 'charging') {
+    const endTime = group.end?.time || '进行中';
+    return `
+      <article class="event-group-card event-charge-card">
+        <div class="event-group-row event-charge-row">
+          <span class="event-dot green"><img src="../assets/device-event-icons/charging.svg" alt="" aria-hidden="true" /></span>
+          <div class="event-group-copy"><strong>充电</strong><p>${escapeBadgeHtml(group.start.time)} — ${escapeBadgeHtml(endTime)}</p></div>
+          <em>${group.end ? escapeBadgeHtml(formatBadgeEventDuration(group.start.time, group.end.time)) : '进行中'}</em>
+        </div>
+      </article>`;
+  }
+
+  if (group.kind === 'session') {
+    const endTime = group.end?.time || '进行中';
+    const showSessionDetails = activeType === 'all' || activeType === 'session';
+    const showRecordings = showSessionDetails || activeType === 'recording';
+    const showWarnings = showSessionDetails || activeType === 'low-battery';
+    const recordingRows = showRecordings ? group.recordings.map((recording) => {
+      const recordingEndTime = recording.end?.time || '进行中';
+      return `
+        <div class="event-group-row event-detail-row">
+          <span class="event-dot blue"><img src="../assets/device-event-icons/recording.svg" alt="" aria-hidden="true" /></span>
+          <div class="event-group-copy"><strong>录音</strong><p>${escapeBadgeHtml(recording.start.time)} — ${escapeBadgeHtml(recordingEndTime)}</p></div>
+          <em>${recording.end ? escapeBadgeHtml(formatBadgeEventDuration(recording.start.time, recording.end.time)) : '进行中'}</em>
+        </div>`;
+    }).join('') : '';
+    const warningRows = showWarnings ? group.warnings.map((warning) => `
+      <div class="event-group-row event-detail-row event-warning-row">
+        <span class="event-dot red"><img src="../assets/device-event-icons/low-battery.svg" alt="" aria-hidden="true" /></span>
+        <div class="event-group-copy"><strong>电量预警</strong><p>${escapeBadgeHtml(warning.time)}</p></div>
+        <em>${escapeBadgeHtml(warning.note || '请及时充电')}</em>
+      </div>`).join('') : '';
+    const detailDivider = recordingRows && warningRows
+      ? '<div class="event-detail-divider" aria-hidden="true"><img src="../assets/device-event-icons/detail-divider.svg" alt="" /></div>'
+      : '';
+    return `
+      <article class="event-group-card event-session-card">
+        <div class="event-session-head">
+          <div class="event-session-main">
+            <span class="event-session-status" aria-hidden="true"></span>
+            <div class="event-group-copy"><strong>工牌事件${group.number}</strong><p>${escapeBadgeHtml(group.start.time)} — ${escapeBadgeHtml(endTime)}</p></div>
+          </div>
+          <div class="event-session-duration"><span>持续时长</span><strong>${group.end ? escapeBadgeHtml(formatBadgeEventDuration(group.start.time, group.end.time)) : '进行中'}</strong></div>
+        </div>
+        ${recordingRows || warningRows ? `<div class="event-session-details">${recordingRows}${detailDivider}${warningRows}</div>` : ''}
+      </article>`;
+  }
+
+  const item = group.event;
+  return `
+    <article class="event-group-card event-standalone-card">
+      <div class="event-group-row">
+        <span class="event-dot ${item.color}">${escapeBadgeHtml(item.icon)}</span>
+        <div class="event-group-copy"><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
+        ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
+      </div>
+    </article>`;
 }
 
 function renderBadgeEvents() {
@@ -748,26 +912,32 @@ function renderBadgeEvents() {
     && (!normalizedSn || item.sn.toLowerCase() === normalizedSn));
 
   if (!record) {
-    summary.textContent = `${badgeEventFilterState.date || '未选择日期'} · 共 0 条`;
+    summary.textContent = '共 0 组记录';
+    timeline.classList.remove('event-timeline-grouped');
     timeline.innerHTML = '<div class="event-empty-state">当前日期和工牌 SN 下暂无事件，请检查 SN 是否完整或调整查询日期。</div>';
     return;
   }
 
-  const visibleEvents = (badgeEventFilterState.type === 'all'
-    ? record.events
-    : record.events.filter((item) => item.type === badgeEventFilterState.type))
-    .slice()
-    .sort((left, right) => left.time.localeCompare(right.time));
   const emptyMessage = badgeEventFilterState.type === 'all'
     ? '当前工牌在所选日期没有工牌事件。'
     : '当前工牌在所选日期没有该类型事件。';
-  summary.textContent = `${record.date} · 共 ${visibleEvents.length} 条`;
-  timeline.innerHTML = visibleEvents.length ? visibleEvents.map((item) => `
-    <article class="${badgeSecondaryEventTypes.has(item.type) ? 'event-secondary' : 'event-primary'}${item.note ? ' event-wide' : ''}">
-      <span class="event-dot ${item.color}">${escapeBadgeHtml(item.icon)}</span>
-      <div><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
-      ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
-    </article>`).join('') : `<div class="event-empty-state">${emptyMessage}</div>`;
+  const groupedEvents = buildBadgeEventGroups(record.events.slice().sort((left, right) => left.time.localeCompare(right.time)))
+    .filter((group) => {
+      if (badgeEventFilterState.type === 'all') return true;
+      if (badgeEventFilterState.type === 'session') return group.kind === 'session';
+      if (badgeEventFilterState.type === 'recording') return group.kind === 'session' && group.recordings.length > 0;
+      if (badgeEventFilterState.type === 'charging') return group.kind === 'charging';
+      if (badgeEventFilterState.type === 'low-battery') {
+        return (group.kind === 'session' && group.warnings.length > 0)
+          || (group.kind === 'standalone' && group.event.type === 'low-battery');
+      }
+      return false;
+    });
+  summary.textContent = `共 ${groupedEvents.length} 组记录`;
+  timeline.classList.toggle('event-timeline-grouped', groupedEvents.length > 0);
+  timeline.innerHTML = groupedEvents.length
+    ? groupedEvents.map((group) => renderBadgeEventGroup(group, badgeEventFilterState.type)).join('')
+    : `<div class="event-empty-state">${emptyMessage}</div>`;
 }
 
 const detailData = {
@@ -884,6 +1054,7 @@ const topActions = document.getElementById('topActions');
 const toast = document.getElementById('toast');
 const importModal = document.getElementById('importModal');
 const badgeUploadDetailModal = document.getElementById('badgeUploadDetailModal');
+const badgeUploadDetailTitle = document.getElementById('badgeUploadDetailTitle');
 const badgeUploadDetailDescription = document.getElementById('badgeUploadDetailDescription');
 const visitEventDetailModal = document.getElementById('visitEventDetailModal');
 const visitEventDetailTitle = document.getElementById('visitEventDetailTitle');
@@ -903,6 +1074,8 @@ const badgeRecordPageContent = document.getElementById('badgeRecordPageContent')
 const badgeRecordDrawer = document.getElementById('badgeRecordDrawer');
 const badgeRecordDrawerBackdrop = document.getElementById('badgeRecordDrawerBackdrop');
 const badgeRecordDrawerBody = document.getElementById('badgeRecordDrawerBody');
+const badgeRecordDrawerFilterHost = document.getElementById('badgeRecordDrawerFilterHost');
+const badgeRecordDrawerContentHost = document.getElementById('badgeRecordDrawerContentHost');
 let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
 
@@ -1813,6 +1986,26 @@ function moveBadgeRecordContents(host) {
   document.querySelectorAll('[data-badge-record-content]').forEach((content) => host.appendChild(content));
 }
 
+function restoreBadgeRecordFilterToolbars() {
+  const toolbarByTab = {
+    events: document.getElementById('badgeEventFilters'),
+    uploads: document.getElementById('badgeUploadFilters')
+  };
+  Object.entries(toolbarByTab).forEach(([tab, toolbar]) => {
+    const slot = document.querySelector(`[data-badge-record-filter-slot="${tab}"]`);
+    if (toolbar && slot && toolbar.previousElementSibling !== slot) slot.insertAdjacentElement('afterend', toolbar);
+  });
+}
+
+function syncBadgeRecordDrawerFilter(activeTab) {
+  restoreBadgeRecordFilterToolbars();
+  if (!badgeRecordDrawerContentHost?.querySelector('[data-badge-record-content]')) return;
+  const toolbar = activeTab === 'uploads'
+    ? document.getElementById('badgeUploadFilters')
+    : document.getElementById('badgeEventFilters');
+  if (toolbar && badgeRecordDrawerFilterHost) badgeRecordDrawerFilterHost.appendChild(toolbar);
+}
+
 function isBadgeRecordDrawerOpen() {
   return badgeRecordDrawer?.classList.contains('open');
 }
@@ -1831,11 +2024,11 @@ function getBadgeRecordDrawerFocusableElements() {
 }
 
 function openBadgeRecordDrawer(tab, trigger) {
-  if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeRecordDrawerBody) return;
+  if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeRecordDrawerContentHost) return;
   window.clearTimeout(badgeRecordDrawerCloseTimer);
   badgeRecordDrawerTrigger = trigger || null;
   selectBadgeRecord(trigger?.dataset.badgeSn, trigger?.dataset.advisorName);
-  moveBadgeRecordContents(badgeRecordDrawerBody);
+  moveBadgeRecordContents(badgeRecordDrawerContentHost);
   syncBadgeRecordTabs(tab);
   badgeRecordDrawerBackdrop.hidden = false;
   badgeRecordDrawer.setAttribute('aria-hidden', 'false');
@@ -1857,6 +2050,7 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
 
   const finishClose = () => {
     badgeRecordDrawerBackdrop.hidden = true;
+    restoreBadgeRecordFilterToolbars();
     moveBadgeRecordContents(badgeRecordPageContent);
     if (restoreFocus && trigger?.isConnected) trigger.focus();
     badgeRecordDrawerTrigger = null;
@@ -1978,8 +2172,54 @@ document.addEventListener('click', (event) => {
   if (badgeUploadDayButton) {
     badgeUploadSelectedDate = badgeUploadDayButton.dataset.badgeUploadDay;
     renderBadgeUploads();
+    badgeUploadDetailTitle.textContent = `${badgeUploadSelectedDate} 录音上传明细`;
     badgeUploadDetailDescription.textContent = '仅展示当前顾问、当前工牌在所选日期上传完成的录音';
+    badgeUploadModalState.records = getCompletedBadgeUploadRecords().filter((item) => getBadgeUploadCompletedDate(item) === badgeUploadSelectedDate);
+    badgeUploadModalState.emptyText = '当前日期没有上传完成的录音。';
+    badgeUploadModalPaginationState.page = 1;
+    renderBadgeUploadModal();
     openModal(badgeUploadDetailModal);
+    return;
+  }
+
+  const badgeRecordPageSizeTrigger = event.target.closest('[data-badge-record-page-size-trigger]');
+  if (badgeRecordPageSizeTrigger) {
+    const options = badgeRecordPageSizeTrigger.parentElement.querySelector('.page-size-options');
+    const willOpen = !options.classList.contains('open');
+    document.querySelectorAll('.badge-record-pagination .page-size-options.open').forEach((node) => node.classList.remove('open'));
+    document.querySelectorAll('.badge-record-pagination .page-size-trigger.is-open').forEach((node) => node.classList.remove('is-open'));
+    options.classList.toggle('open', willOpen);
+    badgeRecordPageSizeTrigger.classList.toggle('is-open', willOpen);
+    return;
+  }
+
+  const badgeRecordPageSize = event.target.closest('[data-badge-record-page-size]');
+  if (badgeRecordPageSize) {
+    const key = badgeRecordPageSize.dataset.badgeRecordPageSize;
+    const state = getBadgeRecordPaginationState(key);
+    state.pageSize = Number(badgeRecordPageSize.dataset.pageSize);
+    state.page = 1;
+    if (key === 'modal') renderBadgeUploadModal();
+    else renderBadgeUploads();
+    return;
+  }
+
+  const badgeRecordPage = event.target.closest('[data-badge-record-page]');
+  if (badgeRecordPage) {
+    const key = badgeRecordPage.dataset.badgeRecordPage;
+    getBadgeRecordPaginationState(key).page = Number(badgeRecordPage.dataset.page);
+    if (key === 'modal') renderBadgeUploadModal();
+    else renderBadgeUploads();
+    return;
+  }
+
+  const badgeRecordPageAction = event.target.closest('[data-badge-record-page-action]');
+  if (badgeRecordPageAction && !badgeRecordPageAction.disabled) {
+    const key = badgeRecordPageAction.dataset.badgeRecordPageAction;
+    const state = getBadgeRecordPaginationState(key);
+    state.page += badgeRecordPageAction.dataset.pageAction === 'next' ? 1 : -1;
+    if (key === 'modal') renderBadgeUploadModal();
+    else renderBadgeUploads();
     return;
   }
 
@@ -2090,22 +2330,9 @@ document.addEventListener('click', (event) => {
   if (event.target.closest('[data-badge-upload-date-apply]')) {
     badgeUploadFilterState.startDate = badgeUploadMenuState.dateDraftStartDate;
     badgeUploadFilterState.endDate = badgeUploadMenuState.dateDraftEndDate;
-    badgeUploadSelectedDate = getLatestBadgeUploadDate(getFilteredBadgeUploadRecords(), badgeUploadFilterState.endDate);
-    badgeUploadMenuState.openMenu = null;
-    renderBadgeUploadFilters();
-    renderBadgeUploads();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-upload-status-trigger]')) {
-    badgeUploadMenuState.openMenu = badgeUploadMenuState.openMenu === 'status' ? null : 'status';
-    renderBadgeUploadFilters();
-    return;
-  }
-
-  const badgeUploadStatusValue = event.target.closest('[data-badge-upload-status-value]');
-  if (badgeUploadStatusValue) {
-    badgeUploadFilterState.status = badgeUploadStatusValue.dataset.badgeUploadStatusValue;
+    badgeUploadSelectedDate = getLatestBadgeUploadDate(getCompletedBadgeUploadRecords(), badgeUploadFilterState.endDate);
+    badgeUploadDailyPaginationState.page = 1;
+    badgeUploadModalPaginationState.page = 1;
     badgeUploadMenuState.openMenu = null;
     renderBadgeUploadFilters();
     renderBadgeUploads();
@@ -2114,9 +2341,10 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-upload-filter-reset]')) {
     resetBadgeUploadDateRange();
-    badgeUploadFilterState.status = '全部状态';
     badgeUploadMenuState.openMenu = null;
     badgeUploadMenuState.activeDateField = 'startDate';
+    badgeUploadDailyPaginationState.page = 1;
+    badgeUploadModalPaginationState.page = 1;
     syncBadgeUploadDateDraft();
     renderBadgeUploadFilters();
     if (!badgeUploadDetailModal.hidden) closeModal(badgeUploadDetailModal);
@@ -2549,6 +2777,18 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
+  if (event.target.matches('[data-badge-record-page-jump]')) {
+    const key = event.target.dataset.badgeRecordPageJump;
+    const state = getBadgeRecordPaginationState(key);
+    const totalItems = key === 'daily'
+      ? getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate).length
+      : badgeUploadModalState.records.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+    state.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
+    if (key === 'modal') renderBadgeUploadModal();
+    else renderBadgeUploads();
+    return;
+  }
   if (event.target.matches('[data-badge-page-jump]')) {
     const totalPages = Math.max(1, Math.ceil(getFilteredBadgeRecords().length / badgePaginationState.pageSize));
     badgePaginationState.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20260818-store-sort-icon-v54" />
+  <link rel="stylesheet" href="./page.css?v=20260819-charge-card-white-v87" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -61,8 +61,8 @@
           <div class="nav-group">
             <div class="nav-label">工牌</div>
             <div class="nav-menu">
-              <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><span class="nav-icon nav-device-symbol" aria-hidden="true">◇</span><span class="nav-text">工牌总览</span></button>
-              <button class="nav-item nav-button device-nav" data-page="device-badges" data-href="../device-management/index.html#badges" data-route="badges"><span class="nav-icon nav-device-symbol" aria-hidden="true">▣</span><span class="nav-text">工牌明细</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 5.625H2.25a.75.75 0 0 0-.75.75v8.25c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-8.25a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="m9 2.625-3 3h6l-3-3ZM4.5 9h6.75M4.5 12h3" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌总览</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-badges" data-href="../device-management/index.html#badges" data-route="badges"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 3H2.25a.75.75 0 0 0-.75.75v10.5c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M6.375 9.375a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M8.625 11.625a2.25 2.25 0 0 0-4.5 0M10.5 7.5h3M11.25 10.5h2.25" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌明细</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-visits" data-href="../device-management/index.html#visits" data-route="visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访明细</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-dashboard" data-href="../device-management/index.html#dashboard" data-route="dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">录音排查</span></button>
             </div>
@@ -187,29 +187,21 @@
 
             <div id="badgeRecordPageContent">
             <div data-badge-record-content="events">
+              <span data-badge-record-filter-slot="events" hidden></span>
               <div class="badge-event-filter-toolbar" id="badgeEventFilters"></div>
-              <section class="card table-card">
-                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="badgeEventResultSummary">2026-08-11 · 共 11 条</span></div>
+              <section class="card table-card badge-event-record-card">
+                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="badgeEventResultSummary">共 3 组记录</span></div>
                 <div class="event-timeline" id="badgeEventTimeline"></div>
               </section>
             </div>
 
             <div data-badge-record-content="uploads" hidden>
-              <div class="notice warning-notice"><span class="notice-icon">i</span><div><strong>待上传明细来源</strong><p><code>recnu</code> 提供未上传数量，<code>reclist</code> 提供逐条明细，收到 <code>rec</code> 回调后更新为已上传。</p></div></div>
+              <span data-badge-record-filter-slot="uploads" hidden></span>
               <div class="badge-event-filter-toolbar badge-upload-filter-toolbar" id="badgeUploadFilters"></div>
-              <div class="summary-row three-cols store-overview-metrics badge-upload-metrics">
-                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>录音片段</small><strong id="badgeUploadTotal">0</strong></div><em>当前工牌</em></article>
-                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>已上传</small><strong id="badgeUploadCompleted">0</strong></div><em class="positive" id="badgeUploadRate">—</em></article>
-                <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png" alt="" aria-hidden="true" /><div><small>未上传</small><strong id="badgeUploadPending">0</strong></div><em>来自 reclist</em></article>
-              </div>
               <section class="card table-card badge-upload-daily-card">
                 <div class="card-head"><div><h2>每日录音上传数量</h2><p id="badgeUploadDailySummary">当前日期范围内共 0 条上传完成录音</p></div></div>
                 <div class="table-scroll"><table class="data-table badge-upload-daily-table"><thead><tr><th>日期</th><th>录音上传数量</th></tr></thead><tbody id="badgeUploadDailyTableBody"></tbody></table></div>
-              </section>
-              <section class="card table-card">
-                <div class="card-head"><div><h2>录音上传日志</h2><p>仅展示当前顾问、当前工牌的录音上传记录</p></div></div>
-                <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>日期</th><th>顾问姓名</th><th>工牌 SN</th><th>片段序号</th><th>音频时间</th><th>片段时长</th><th>文件大小</th><th>上传状态</th><th>上传完成时间</th></tr></thead><tbody id="badgeUploadLogTableBody"></tbody></table></div>
-                <div class="pagination"><span id="badgeUploadLogPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+                <div class="session-pagination badge-record-pagination" id="badgeUploadDailyPagination"></div>
               </section>
             </div>
             </div>
@@ -281,15 +273,15 @@
       </section>
     </div>
 
-    <div class="modal-backdrop" id="badgeUploadDetailModal" hidden>
+    <div class="modal-backdrop badge-record-detail-modal-backdrop" id="badgeUploadDetailModal" hidden>
       <section class="modal badge-upload-modal" role="dialog" aria-modal="true" aria-labelledby="badgeUploadDetailTitle">
         <div class="modal-head"><div><h2 id="badgeUploadDetailTitle">录音上传明细</h2><p id="badgeUploadDetailDescription">仅展示当前顾问、当前工牌在所选日期上传完成的录音</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
         <div class="badge-upload-modal-body"><div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>顾问姓名</th><th>工牌 SN</th><th>录音片段</th><th>音频时间</th><th>音频时长</th><th>文件大小</th><th>录音上传时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div></div>
-        <div class="pagination badge-upload-modal-pagination"><span id="badgeUploadPaginationTotal">共 0 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+        <div class="session-pagination badge-record-pagination badge-upload-modal-pagination" id="badgeUploadPagination"></div>
       </section>
     </div>
 
-    <div class="modal-backdrop" id="visitEventDetailModal" hidden>
+    <div class="modal-backdrop badge-record-detail-modal-backdrop" id="visitEventDetailModal" hidden>
       <section class="modal badge-upload-modal visit-event-modal" role="dialog" aria-modal="true" aria-labelledby="visitEventDetailTitle">
         <div class="modal-head"><div><h2 id="visitEventDetailTitle">工牌事件明细</h2><p id="visitEventDetailDescription"></p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
         <div class="visit-event-modal-body">
@@ -322,24 +314,46 @@
         <div class="badge-record-drawer-title-row">
           <div>
             <h2 id="badgeRecordDrawerTitle">工牌记录</h2>
-            <p><span id="badgeRecordDrawerAdvisorName">陈佳</span><span aria-hidden="true"> · </span><span id="badgeRecordDrawerSn">MN-BDG-004821</span></p>
+            <p>查看当前顾问工牌的设备事件和录音上传记录</p>
           </div>
           <button class="icon-btn badge-record-drawer-close" type="button" data-badge-record-drawer-close aria-label="关闭工牌记录抽屉">×</button>
         </div>
-        <div class="badge-record-drawer-tabs session-toolbar-control session-toolbar-segment-control">
-          <div class="todo-filter-tabs" role="tablist" aria-label="工牌记录类型">
-            <button class="todo-filter-tab active" type="button" role="tab" aria-selected="true" data-badge-record-tab="events">工牌事件</button>
-            <button class="todo-filter-tab" type="button" role="tab" aria-selected="false" data-badge-record-tab="uploads">录音上传日志</button>
-          </div>
-        </div>
       </div>
-      <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody"></div>
+      <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody">
+        <section class="card badge-record-profile-card" aria-label="当前顾问工牌信息">
+          <div class="badge-record-profile-name">
+            <img src="../assets/device-record-profile/advisor-avatar.png" alt="" aria-hidden="true" />
+            <strong id="badgeRecordDrawerAdvisorName">陈佳</strong>
+          </div>
+          <div class="badge-record-profile-meta">
+            <span class="badge-record-profile-chip">
+              <img src="../assets/device-record-profile/store.svg" alt="" aria-hidden="true" />
+              <span>所属门店：<strong id="badgeRecordDrawerStoreName">上海浦东体验中心</strong></span>
+            </span>
+            <span class="badge-record-profile-chip">
+              <img src="../assets/device-record-profile/badge-sn.svg" alt="" aria-hidden="true" />
+              <span>SN 设备号：<strong id="badgeRecordDrawerSn">MN-BDG-004821</strong></span>
+            </span>
+          </div>
+        </section>
+        <section class="badge-record-drawer-controls" aria-label="工牌记录查看与筛选">
+          <div class="badge-record-drawer-tabs">
+            <div class="todo-filter-tabs" role="tablist" aria-label="工牌记录类型">
+              <button class="todo-filter-tab active" type="button" role="tab" aria-selected="true" data-badge-record-tab="events">工牌事件</button>
+              <button class="todo-filter-tab" type="button" role="tab" aria-selected="false" data-badge-record-tab="uploads">录音上传日志</button>
+            </div>
+          </div>
+          <div class="badge-record-drawer-controls-divider" aria-hidden="true"></div>
+          <div class="badge-record-drawer-filter-host" id="badgeRecordDrawerFilterHost"></div>
+        </section>
+        <div class="badge-record-drawer-content-host" id="badgeRecordDrawerContentHost"></div>
+      </div>
     </aside>
 
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260818-store-sort-icon-v15"></script>
+    <script src="./page.js?v=20260819-badge-event-group-filter-v25"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

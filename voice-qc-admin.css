@@ -270,40 +270,6 @@ body::before {
   font-weight: 700;
 }
 
-/* Figma 637:1048 补充的统一菜单图标。使用 mask 保留菜单悬停与选中态颜色。 */
-.nav-button[data-page="customer-insight"] .nav-icon {
-  --nav-menu-icon: url('./assets/nav-customer-insight-figma.svg');
-}
-
-.nav-button[data-page="factory-dashboard"] .nav-icon {
-  --nav-menu-icon: url('./assets/nav-factory-dashboard-figma.svg');
-}
-
-.nav-button[data-page="device-stores"] .nav-icon {
-  --nav-menu-icon: url('./assets/nav-store-overview-figma.svg');
-}
-
-.nav-button[data-page="device-badges"] .nav-icon {
-  --nav-menu-icon: url('./assets/nav-badge-detail-figma.svg');
-}
-
-.nav-button[data-page="customer-insight"] .nav-icon,
-.nav-button[data-page="factory-dashboard"] .nav-icon,
-.nav-button[data-page="device-stores"] .nav-icon,
-.nav-button[data-page="device-badges"] .nav-icon {
-  display: block;
-  font-size: 0;
-  background-color: currentColor;
-  -webkit-mask-image: var(--nav-menu-icon);
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: 18px 18px;
-  mask-image: var(--nav-menu-icon);
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: 18px 18px;
-}
-
 .nav-button[data-page="customer-insight"] .nav-icon path,
 .nav-button[data-page="factory-dashboard"] .nav-icon path {
   display: none;

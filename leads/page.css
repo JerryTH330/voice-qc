@@ -2413,8 +2413,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 }
 
 #leadsDataTable.customer-aggregate-table {
-  min-width: 2342px !important;
-  width: 2342px !important;
+  min-width: 2512px !important;
+  width: 2512px !important;
   table-layout: fixed !important;
   border-collapse: collapse !important;
 }
