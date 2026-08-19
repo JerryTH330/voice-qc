@@ -1,5 +1,5 @@
 /* 销售看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260814-sales-followup-alert-v2");
+@import url("../voice-qc-admin.css?v=20260819-pagination-font-v3");
 @import url("../app-inline.css?v=20260811-figma-panels-v19");
 
 .sales-role-dashboard-page .hm-label--ellipsis {
@@ -287,7 +287,7 @@
   align-items: stretch;
   gap: 16px;
   top: 0;
-  transition: gap 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .sales-role-dashboard-page .role-page-switch {
@@ -296,7 +296,7 @@
   overflow: hidden;
   opacity: 1;
   transform: translateY(0);
-  transition: max-height 160ms ease, opacity 120ms ease, transform 160ms ease;
+  transition: opacity 120ms ease, transform 160ms ease;
 }
 
 .sales-role-dashboard-page .sales-role-nav-divider {
@@ -307,7 +307,7 @@
   overflow: hidden;
   opacity: 1;
   background: rgba(217, 226, 239, 0.92);
-  transition: max-height 160ms ease, opacity 120ms ease;
+  transition: opacity 120ms ease;
 }
 
 .sales-role-dashboard-page .sales-role-nav-filters {

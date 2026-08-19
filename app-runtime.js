@@ -11247,8 +11247,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (kpiSection) kpiSection.hidden = viewMode !== 'customers'
         if (titleEl) titleEl.textContent = viewMode === 'customers' ? '客户列表' : '线索总览'
         if (summaryLabelEl) summaryLabelEl.innerHTML = viewMode === 'customers'
-          ? `当前匹配 <strong id="leadsFilterCount">${displayRecords.length.toLocaleString()}</strong> 位客户`
-          : `当前匹配 <strong id="leadsFilterCount">0</strong> 条线索`
+          ? `<span>当前匹配 <strong id="leadsFilterCount">${displayRecords.length.toLocaleString()}</strong> 位客户</span>`
+          : `<span>当前匹配 <strong id="leadsFilterCount">0</strong> 条线索</span>`
         totalCount = document.getElementById('leadsFilterCount')
 
         // Update KPI cards for customer view

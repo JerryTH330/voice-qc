@@ -1326,6 +1326,31 @@ body::before {
   border-color: var(--blue);
 }
 
+/* 全系统分页器统一字号。 */
+:where(
+  .pagination,
+  .dashboard-pagination,
+  .session-pagination,
+  .issue-rule-pagination,
+  .advisor-pagination,
+  .matrix-pagination,
+  .store-pagination
+) {
+  font-size: 14px !important;
+}
+
+:where(
+  .pagination,
+  .dashboard-pagination,
+  .session-pagination,
+  .issue-rule-pagination,
+  .advisor-pagination,
+  .matrix-pagination,
+  .store-pagination
+) :where(button, input, select, label, span) {
+  font-size: 14px !important;
+}
+
 .jump-box {
   height: 36px;
   padding: 0 8px;

@@ -525,12 +525,13 @@ function renderBadgeUploadFilters() {
     endLabel: formatStoreDateDisplay(badgeUploadMenuState.dateDraftEndDate),
     cells: getBadgeUploadDateCells(),
     summaryText: `已选择 ${draftRangeText}`,
-    title: '录音时间范围'
+    panelClassName: 'session-menu-panel session-menu-panel-date badge-upload-date-panel',
+    title: '上传完成日期范围'
   }) : '';
   container.innerHTML = `
     <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-event-filter-control${dateOpen ? ' is-open' : ''}">
-      <span>录音时间</span>
-      <button type="button" class="session-date-trigger${dateOpen ? ' active' : ''}" data-badge-upload-date-trigger aria-label="录音时间筛选" aria-haspopup="dialog" aria-expanded="${dateOpen}">
+      <span>上传完成日期</span>
+      <button type="button" class="session-date-trigger${dateOpen ? ' active' : ''}" data-badge-upload-date-trigger aria-label="上传完成日期筛选" aria-haspopup="dialog" aria-expanded="${dateOpen}">
         <strong>${escapeBadgeHtml(formatStoreDateDisplay(startDate))}</strong><em>至</em><strong>${escapeBadgeHtml(formatStoreDateDisplay(endDate))}</strong><span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${datePanel}
@@ -1785,6 +1786,79 @@ function renderStoreOverviewPagination(totalItems) {
     </div>`;
 }
 
+const storeOverviewMetricFrames = new Map();
+
+function formatStoreOverviewMetricValue(value, decimals = 0, suffix = '') {
+  return `${Number(value).toLocaleString('zh-CN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  })}${suffix}`;
+}
+
+function setStoreOverviewMetricValue(node, value, decimals = 0, suffix = '') {
+  node.textContent = formatStoreOverviewMetricValue(value, decimals, suffix);
+}
+
+function animateStoreOverviewMetric(node, target, options = {}) {
+  if (!node) return;
+  const activeFrame = storeOverviewMetricFrames.get(node);
+  if (activeFrame) window.cancelAnimationFrame(activeFrame);
+
+  if (!Number.isFinite(target)) {
+    storeOverviewMetricFrames.delete(node);
+    delete node.dataset.storeOverviewMetricValue;
+    node.textContent = '—';
+    return;
+  }
+
+  const decimals = options.decimals || 0;
+  const suffix = options.suffix || '';
+  const previousValue = Number(node.dataset.storeOverviewMetricValue);
+  const startValue = Number.isFinite(previousValue) ? previousValue : 0;
+  node.dataset.storeOverviewMetricValue = String(target);
+
+  if (startValue === target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    storeOverviewMetricFrames.delete(node);
+    setStoreOverviewMetricValue(node, target, decimals, suffix);
+    return;
+  }
+
+  const duration = options.duration ?? 920;
+  const delay = options.delay ?? 0;
+  let animationStart = null;
+  const step = (timestamp) => {
+    if (animationStart === null) animationStart = timestamp + delay;
+    if (timestamp < animationStart) {
+      storeOverviewMetricFrames.set(node, window.requestAnimationFrame(step));
+      return;
+    }
+
+    const progress = Math.min((timestamp - animationStart) / duration, 1);
+    const eased = 1 - ((1 - progress) ** 3);
+    setStoreOverviewMetricValue(node, startValue + ((target - startValue) * eased), decimals, suffix);
+    if (progress < 1) {
+      storeOverviewMetricFrames.set(node, window.requestAnimationFrame(step));
+      return;
+    }
+    storeOverviewMetricFrames.delete(node);
+    setStoreOverviewMetricValue(node, target, decimals, suffix);
+  };
+
+  setStoreOverviewMetricValue(node, startValue, decimals, suffix);
+  storeOverviewMetricFrames.set(node, window.requestAnimationFrame(step));
+}
+
+function animateStoreOverviewMetrics(metrics) {
+  metrics.forEach((metric, index) => {
+    animateStoreOverviewMetric(document.getElementById(metric.id), metric.value, {
+      decimals: metric.decimals,
+      suffix: metric.suffix,
+      delay: 80 + (index * 55),
+      duration: 920
+    });
+  });
+}
+
 function renderStoreOverview() {
   const tbody = document.getElementById('storeOverviewTableBody');
   if (!tbody) return;
@@ -1798,12 +1872,14 @@ function renderStoreOverview() {
   const bindingCount = sumStoreMetric(records, 'bindings');
   const bindingRate = badgeAssetCount ? bindingCount / badgeAssetCount * 100 : null;
 
-  document.getElementById('storeMetricStoreCount').textContent = records.length.toLocaleString('zh-CN');
-  document.getElementById('storeMetricEmployeeCount').textContent = sumStoreMetric(records, 'employees').toLocaleString('zh-CN');
-  document.getElementById('storeMetricBadgeAssetCount').textContent = badgeAssetCount === null ? '—' : badgeAssetCount.toLocaleString('zh-CN');
-  document.getElementById('storeMetricBoundEmployeeCount').textContent = sumStoreMetric(records, 'boundEmployees').toLocaleString('zh-CN');
-  document.getElementById('storeMetricBindingCount').textContent = bindingCount.toLocaleString('zh-CN');
-  document.getElementById('storeMetricBindingRate').textContent = formatStoreBindingRate(bindingRate);
+  animateStoreOverviewMetrics([
+    { id: 'storeMetricStoreCount', value: records.length },
+    { id: 'storeMetricBadgeAssetCount', value: badgeAssetCount },
+    { id: 'storeMetricBindingCount', value: bindingCount },
+    { id: 'storeMetricBindingRate', value: bindingRate, decimals: 1, suffix: '%' },
+    { id: 'storeMetricEmployeeCount', value: sumStoreMetric(records, 'employees') },
+    { id: 'storeMetricBoundEmployeeCount', value: sumStoreMetric(records, 'boundEmployees') }
+  ]);
   document.getElementById('storeFilteredCount').textContent = records.length.toLocaleString('zh-CN');
   document.getElementById('storeBrandFilterText').textContent = storeOverviewState.brand;
   document.getElementById('storeOrganizationFilterText').textContent = formatStoreOrganizationPath(storeOverviewState.organization);
@@ -2749,7 +2825,6 @@ document.addEventListener('click', (event) => {
       || storeOverviewRecords.find((item) => item.name === storeDrilldown.dataset.storeName);
     applyStoreDrilldown(store, { captureReturnState: true });
     setRoute('store-badges');
-    showToast(`已展示${storeDrilldown.dataset.storeName}的工牌明细`);
     return;
   }
 
