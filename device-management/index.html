@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>工牌管理 · AI质检平台</title>
+    <title>工牌管理 · AI全链路客户洞察平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260824-dock-pagination-v9" />
+  <link rel="stylesheet" href="./page.css?v=20260824-dock-merge-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -14,7 +14,7 @@
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-mark"><img src="../assets/ds-logo.png" alt="DS logo" /></div>
-          <div class="brand-copy"><strong>AI质检平台</strong></div>
+          <div class="brand-copy"><strong>AI全链路客户洞察平台</strong></div>
         </div>
 
         <div class="nav-scroll">
@@ -63,8 +63,8 @@
             <div class="nav-menu">
               <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 5.625H2.25a.75.75 0 0 0-.75.75v8.25c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-8.25a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="m9 2.625-3 3h6l-3-3ZM4.5 9h6.75M4.5 12h3" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌总览</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-badges" data-href="../device-management/index.html#badges" data-route="badges"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 3H2.25a.75.75 0 0 0-.75.75v10.5c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M6.375 9.375a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M8.625 11.625a2.25 2.25 0 0 0-4.5 0M10.5 7.5h3M11.25 10.5h2.25" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌明细</span></button>
-              <button class="nav-item nav-button device-nav" data-page="device-visits" data-href="../device-management/index.html#visits" data-route="visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访明细</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-dashboard" data-href="../device-management/index.html#dashboard" data-route="dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">录音排查</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-visits" data-href="../device-management/index.html#visits" data-route="visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访明细</span></button>
             </div>
           </div>
 
@@ -92,6 +92,7 @@
       <main class="main">
         <header class="topbar">
           <div class="topbar-copy">
+            <button class="visit-origin-back" type="button" data-visits-back-matching hidden><span aria-hidden="true">‹</span> 返回录音排查</button>
             <h1 id="pageTitle">到访明细</h1>
             <p id="pageDescription">查看销售助手到访数据与工牌录音的完整处理状态</p>
           </div>
@@ -209,55 +210,52 @@
 
           <section class="page-panel active" data-page="visits">
             <div class="filter-card filter-grid visits-filter-grid" data-visit-filter-card>
-              <label class="field span-2"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" data-visit-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-visit-filter="endDateTime" /></span></label>
-              <label class="field"><span>组织</span><select data-visit-filter="organization"><option>全部组织</option><option>华东大区</option><option>上海战区</option></select></label>
-              <label class="field"><span>销售顾问</span><select data-visit-filter="advisor"><option>全部销售顾问</option><option>韩如臣</option><option>陈佳</option></select></label>
+              <label class="field"><span>组织／门店</span><select data-visit-filter="organization"><option>全部组织</option><option>华东大区</option><option>上海战区</option><option>浙江战区</option><option>江苏战区</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option><option>苏州园区体验中心</option></select></label>
               <label class="field"><span>到访来源</span><select data-visit-filter="source"><option>全部来源</option><option>销售助手</option><option>模板导入</option></select></label>
-              <label class="field"><span>匹配状态</span><select data-visit-filter="status"><option>全部状态</option><option>已匹配</option><option>匹配失败</option><option>无录音</option><option>录音上传中</option><option>待匹配</option><option>匹配超时</option><option>录音转写中</option><option>模型分析中</option><option>客户不同意录音</option><option>无效录音</option></select></label>
-              <label class="field span-2"><span>客户信息</span><input type="search" placeholder="businessId / 客户 ID / 姓名 / 电话" data-visit-filter="query" /></label>
-              <div class="filter-actions"><button class="btn ghost" type="button" data-visit-filter-reset>重置</button><button class="btn primary" type="button" data-visit-filter-apply>查询</button></div>
-            </div>
-            <div class="summary-row five-cols">
-              <article class="summary-card mini"><span class="summary-icon blue">访</span><div><small>到访数</small><strong id="visitMetricTotal">1,286</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon green">✓</span><div><small>已匹配</small><strong id="visitMetricMatched">1,142</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon amber">⇧</span><div><small>录音上传中</small><strong id="visitMetricUploading">67</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon violet">析</span><div><small>转写/分析中</small><strong id="visitMetricProcessing">43</strong></div></article>
-              <article class="summary-card mini"><span class="summary-icon red">!</span><div><small>问题到访</small><strong id="visitMetricProblems">34</strong></div></article>
+              <label class="field"><span>匹配状态</span><select data-visit-filter="status"><option>全部状态</option><option>全部未匹配</option><option value="异常需处理">无录音、匹配失败</option><option>已匹配</option><option>匹配失败</option><option>无录音</option><option>录音上传中</option><option>待匹配</option><option>录音转写中</option><option>模型分析中</option></select></label>
+              <label class="field visit-time-field"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" data-visit-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-visit-filter="endDateTime" /></span></label>
+              <div class="visit-search-grid" data-visit-advanced-search aria-label="到访明细输入查询" hidden>
+                <label class="visit-search-control"><span>业务 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入业务 ID" autocomplete="off" data-visit-filter="businessId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                <label class="visit-search-control"><span>录音 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入录音 ID" autocomplete="off" data-visit-filter="recordingId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                <label class="visit-search-control"><span>客户 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入客户 ID" autocomplete="off" data-visit-filter="customerId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                <label class="visit-search-control"><span>客户姓名</span><span class="visit-search-field"><input type="search" placeholder="请输入客户姓名" autocomplete="off" data-visit-filter="customerName" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                <label class="visit-search-control"><span>客户电话</span><span class="visit-search-field"><input type="search" placeholder="请输入客户电话" autocomplete="off" data-visit-filter="customerPhone" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                <label class="visit-search-control"><span>顾问姓名</span><span class="visit-search-field"><input type="search" placeholder="请输入顾问姓名" autocomplete="off" data-visit-filter="advisorName" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+              </div>
+              <div class="filter-actions visits-filter-actions"><button class="btn ghost visit-advanced-toggle" type="button" data-visit-advanced-toggle aria-expanded="false"><span>更多查询</span><i aria-hidden="true">⌄</i></button><button class="btn ghost" type="button" data-visit-filter-reset>重置</button><button class="btn primary" type="button" data-visit-filter-apply>查询</button></div>
             </div>
             <section class="card table-card">
-              <div class="card-head"><div><h2>到访明细</h2><p id="visitResultSummary">共 1,286 条 · 匹配状态按当前最新处理状态展示</p></div></div>
-              <div class="table-scroll visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>businessId</th><th>客户 ID</th><th>客户姓名</th><th>客户电话</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配完成时间</th><th>员工姓名</th><th>所属门店</th><th>门店编码</th><th>到访来源</th><th>数据更新时间</th><th>业务场景</th><th>意向车系</th></tr></thead><tbody id="visitTableBody">
-                <tr><td>BIZ-20260812-0136</td><td>C202608120315</td><td>王先生</td><td>138****0628</td><td>2026-08-12</td><td>13:04:00</td><td>13:28:00</td><td><span class="status success">已匹配</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0136">已匹配完成5段录音</button></td><td>13:36:10</td><td>陈佳</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>13:36:10</td><td>进店接待</td><td>星海 S7</td></tr>
-                <tr><td>BIZ-20260812-0148</td><td>C202608120342</td><td>赵女士</td><td>159****8312</td><td>2026-08-12</td><td>13:22:45</td><td>13:56:08</td><td><span class="status waiting">录音上传中</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0148">可能存在未上传录音</button></td><td>—</td><td>李洋</td><td>上海浦东体验中心</td><td>SH-PD-001</td><td><span class="source-tag api">销售助手</span></td><td>14:14:02</td><td>试乘试驾</td><td>星海 L9</td></tr>
-                <tr><td>BIZ-20260811-0831</td><td>C202608110922</td><td>刘先生</td><td>186****1045</td><td>2026-08-11</td><td>18:31:35</td><td>18:31:55</td><td><span class="status danger">无录音</span></td><td><button class="text-btn" data-visit-detail-type="events" data-business-id="BIZ-20260811-0831">工牌未录音</button></td><td>—</td><td>韩如臣</td><td>杭州滨江体验中心</td><td>HZ-BJ-003</td><td><span class="source-tag api">销售助手</span></td><td>18:32:06</td><td>进店接待</td><td>星海 S7</td></tr>
-                <tr><td>BIZ-20260811-0772</td><td>C202608110861</td><td>周女士</td><td>135****2776</td><td>2026-08-11</td><td>16:23:41</td><td>17:08:02</td><td><span class="status danger">匹配失败</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260811-0772">未绑定工牌</button></td><td>—</td><td>周宁</td><td>苏州园区体验中心</td><td>SZ-YQ-006</td><td><span class="source-tag api">销售助手</span></td><td>17:09:11</td><td>进店接待</td><td>星海 V6</td></tr>
+              <div class="card-head"><div><h2>到访明细</h2><p id="visitResultSummary">共 1,286 条 · 已匹配 1,142 条 · 处理中 112 条 · 异常需处理 32 条</p></div></div>
+              <div class="table-scroll visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>客户姓名</th><th>客户电话</th><th>顾问姓名</th><th>所属门店</th><th>业务场景</th><th>意向车系</th><th>匹配完成时间</th><th>到访来源</th><th>数据更新时间</th><th>客户 ID</th><th>门店编码</th><th>业务 ID</th></tr></thead><tbody id="visitTableBody">
+                <tr><td>2026-08-12</td><td>13:04:00</td><td>13:28:00</td><td><span class="status success">已匹配</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0136">已匹配完成5段录音</button></td><td>王先生</td><td>138****0628</td><td>陈佳</td><td>上海浦东体验中心</td><td>进店接待</td><td>星海 S7</td><td>13:36:10</td><td><span class="source-tag api">销售助手</span></td><td>13:36:10</td><td>C202608120315</td><td>SH-PD-001</td><td>BIZ-20260812-0136</td></tr>
+                <tr><td>2026-08-12</td><td>13:22:45</td><td>13:56:08</td><td><span class="status waiting">录音上传中</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260812-0148">可能存在未上传录音</button></td><td>赵女士</td><td>159****8312</td><td>李洋</td><td>上海浦东体验中心</td><td>试乘试驾</td><td>星海 L9</td><td>—</td><td><span class="source-tag api">销售助手</span></td><td>14:14:02</td><td>C202608120342</td><td>SH-PD-001</td><td>BIZ-20260812-0148</td></tr>
+                <tr><td>2026-08-11</td><td>18:31:35</td><td>18:31:55</td><td><span class="status danger">无录音</span></td><td><button class="text-btn" data-visit-detail-type="events" data-business-id="BIZ-20260811-0831">工牌未录音</button></td><td>刘先生</td><td>186****1045</td><td>韩如臣</td><td>杭州滨江体验中心</td><td>进店接待</td><td>星海 S7</td><td>—</td><td><span class="source-tag api">销售助手</span></td><td>18:32:06</td><td>C202608110922</td><td>HZ-BJ-003</td><td>BIZ-20260811-0831</td></tr>
+                <tr><td>2026-08-11</td><td>16:23:41</td><td>17:08:02</td><td><span class="status danger">匹配失败</span></td><td><button class="text-btn" data-visit-detail-type="uploads" data-business-id="BIZ-20260811-0772">未绑定工牌</button></td><td>周女士</td><td>135****2776</td><td>周宁</td><td>苏州园区体验中心</td><td>进店接待</td><td>星海 V6</td><td>—</td><td><span class="source-tag api">销售助手</span></td><td>17:09:11</td><td>C202608110861</td><td>SZ-YQ-006</td><td>BIZ-20260811-0772</td></tr>
               </tbody></table></div>
-              <div class="pagination"><span id="visitPaginationTotal">共 1,286 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button><select><option>20 条/页</option><option>50 条/页</option></select></div>
+              <div class="session-pagination" id="visitPagination"></div>
             </section>
           </section>
 
           <section class="page-panel" data-page="dashboard">
             <div class="filter-card filter-grid dashboard-filter-grid" data-matching-filter-card>
+              <label class="field"><span>品牌</span><select data-matching-filter="brand"><option>全部品牌</option><option>星海汽车</option></select></label>
+              <label class="field"><span>大区</span><select data-matching-filter="region"><option>全部大区</option><option>华东大区</option></select></label>
+              <label class="field"><span>战区</span><select data-matching-filter="zone"><option>全部战区</option><option>上海战区</option><option>浙江战区</option><option>江苏战区</option></select></label>
+              <label class="field"><span>门店</span><select data-matching-filter="store"><option>全部门店</option><option>上海浦东体验中心</option><option>杭州滨江体验中心</option><option>苏州园区体验中心</option></select></label>
               <label class="field span-2"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" data-matching-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-matching-filter="endDateTime" /></span></label>
-              <label class="field"><span>组织</span><select data-matching-filter="organization"><option>全国</option><option>华东大区</option><option>上海战区</option></select></label>
-              <label class="field"><span>销售顾问</span><select data-matching-filter="advisor"><option>全部销售顾问</option><option>韩如臣</option><option>陈佳</option></select></label>
               <div class="filter-actions"><button class="btn ghost" type="button" data-matching-filter-reset>重置</button><button class="btn primary" type="button" data-matching-filter-apply>查询</button></div>
             </div>
             <div class="metric-grid five-metrics">
-              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong id="matchingMetricVisits">1,286</strong><p>按 businessId 去重</p></article>
-              <article class="metric-card"><div class="metric-top"><span>已匹配</span><i class="metric-icon green">✓</i></div><strong id="matchingMetricMatched">1,142</strong><p>整个处理流程最终成功</p></article>
+              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong id="matchingMetricVisits">1,286</strong><p>按业务 ID 去重</p></article>
+              <article class="metric-card"><div class="metric-top"><span>已匹配到访</span><i class="metric-icon green">✓</i></div><strong id="matchingMetricMatched">1,142</strong><p>已完成录音关联的到访</p></article>
               <article class="metric-card featured"><div class="metric-top"><span>录音匹配率 <button class="help" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数">?</button></span><i class="metric-icon violet">%</i></div><strong id="matchingMetricRate">88.8%</strong><p id="matchingMetricRateNote">1,142 ÷ 1,286</p></article>
-              <article class="metric-card"><div class="metric-top"><span>处理中</span><i class="metric-icon amber">…</i></div><strong id="matchingMetricProcessing">110</strong><p>上传中、转写中、分析中</p></article>
-              <article class="metric-card"><div class="metric-top"><span>问题到访</span><i class="metric-icon red">!</i></div><strong id="matchingMetricProblems">34</strong><p>未绑定、未开机、无录音等</p></article>
+              <article class="metric-card"><div class="metric-top"><span>处理中</span><i class="metric-icon amber">…</i></div><strong id="matchingMetricProcessing">112</strong><p>待匹配、上传、转写、分析</p></article>
+              <article class="metric-card"><div class="metric-top"><span>异常需处理</span><i class="metric-icon red">!</i></div><strong id="matchingMetricProblems">32</strong><p>无录音、匹配失败</p></article>
             </div>
             <section class="card table-card dashboard-table-card">
-              <div class="card-head"><div><h2>到访录音匹配率明细</h2><p>支持按门店和员工查看到访录音问题</p></div><div class="segmented"><button class="active" type="button" data-matching-dimension="store">门店</button><button type="button" data-matching-dimension="advisor">员工</button></div></div>
-              <div class="table-scroll"><table class="data-table matching-table"><thead id="matchingTableHead"><tr><th>日期</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>到访数</th><th>已匹配</th><th>录音上传中</th><th>转写/分析中</th><th>员工未绑定工牌</th><th>到访时段未开机</th><th>到访时段无录音</th><th>其他失败</th><th>录音匹配率</th><th>问题分类</th></tr></thead><tbody id="matchingTableBody">
-                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>上海战区</td><td><strong>上海浦东体验中心</strong></td><td>186</td><td>174</td><td>4</td><td>3</td><td>1</td><td>1</td><td>2</td><td>1</td><td><span class="rate-cell good-rate"><strong>93.5%</strong><i><b style="width:93.5%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 5 条问题</button></td></tr>
-                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>浙江战区</td><td><strong>杭州滨江体验中心</strong></td><td>148</td><td>132</td><td>7</td><td>4</td><td>1</td><td>1</td><td>2</td><td>1</td><td><span class="rate-cell good-rate"><strong>89.2%</strong><i><b style="width:89.2%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 5 条问题</button></td></tr>
-                <tr><td>2026-08-12</td><td>星海汽车</td><td>华东大区</td><td>江苏战区</td><td><strong>苏州园区体验中心</strong></td><td>126</td><td>104</td><td>10</td><td>5</td><td>2</td><td>2</td><td>2</td><td>1</td><td><span class="rate-cell bad-rate"><strong>82.5%</strong><i><b style="width:82.5%"></b></i></span></td><td><button class="text-btn route-target" data-target="visits">查看 7 条问题</button></td></tr>
-              </tbody></table></div>
-              <div class="pagination"><span id="matchingPaginationTotal">共 36 条</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+              <div class="card-head matching-workbench-head"><div><h2 id="matchingTableTitle">门店汇总</h2><p id="matchingTableDescription">按“异常需处理数从高到低、匹配率从低到高”排序</p></div></div>
+              <div class="table-scroll"><table class="data-table matching-table"><thead id="matchingTableHead"><tr><th>门店</th><th>到访数</th><th>已匹配到访</th><th>处理中</th><th>异常需处理</th><th>录音匹配率</th><th>操作</th></tr></thead><tbody id="matchingTableBody"></tbody></table></div>
+              <div class="pagination"><span id="matchingPaginationTotal">共 3 家门店</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
             </section>
           </section>
         </div>
@@ -267,9 +265,18 @@
     <div class="modal-backdrop" id="importModal" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
         <div class="modal-head"><div><h2 id="importTitle">导入到访明细</h2><p>仅用于销售顾问手动补传到访数据。</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
-        <div class="upload-zone"><span class="upload-icon">⇧</span><strong>点击或拖拽 Excel 文件到这里</strong><p>系统校验门店、员工和到访时间后生成到访记录</p><button class="btn ghost toast-action">选择文件</button></div>
-        <div class="template-row"><span><strong>请使用固定模板</strong><small>模板字段需与销售助手到访数据保持同一口径。</small></span><button class="text-btn toast-action">下载模板</button></div>
-        <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary toast-action">开始校验</button></div>
+        <div class="upload-zone" id="visitImportDropzone">
+          <input id="visitImportFileInput" type="file" accept=".xlsx,.xls" hidden />
+          <span class="upload-icon">⇧</span>
+          <strong id="visitImportFileName">点击或拖拽 Excel 文件到这里</strong>
+          <p id="visitImportFileHint">支持 .xlsx、.xls，单个文件不超过 10 MB</p>
+          <button class="btn ghost" type="button" data-visit-import-select>选择文件</button>
+        </div>
+        <div class="template-row"><span><strong>请使用固定模板</strong><small>10 个字段均为必填，列名和顺序请勿修改。</small></span><button class="text-btn" type="button" data-visit-template-download>下载模板</button></div>
+        <div class="visit-template-fields" aria-label="上传模板必填字段">
+          <span>客户姓名</span><span>客户电话</span><span>到访日期</span><span>开始时间</span><span>结束时间</span><span>顾问姓名</span><span>所属门店</span><span>门店编码</span><span>业务场景</span><span>意向车系</span>
+        </div>
+        <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary" type="button" data-visit-import-submit disabled>开始上传</button></div>
       </section>
     </div>
 
@@ -389,7 +396,7 @@
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260824-dock-pagination-v9"></script>
+    <script src="./page.js?v=20260824-dock-merge-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

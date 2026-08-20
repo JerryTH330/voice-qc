@@ -34,7 +34,7 @@ const pageMeta = {
   },
   dashboard: {
     title: '录音排查',
-    description: '按组织和员工查看已匹配到访占全部到访的比例',
+    description: '按门店发现未匹配到访、查看具体原因并进入处理',
     actions: [{ label: '导出报表', style: 'ghost', action: 'export' }]
   }
 };
@@ -171,50 +171,75 @@ const visitDefaultFilters = {
   startDateTime: '2026-08-11T00:00:00',
   endDateTime: '2026-08-12T23:59:59',
   organization: '全部组织',
-  advisor: '全部销售顾问',
   source: '全部来源',
   status: '全部状态',
-  query: ''
+  businessId: '',
+  recordingId: '',
+  customerId: '',
+  customerName: '',
+  customerPhone: '',
+  advisorName: ''
 };
 const visitFilterState = { ...visitDefaultFilters };
-const visitProcessingStatuses = new Set(['录音转写中', '模型分析中']);
-const visitWaitingStatuses = new Set(['录音上传中', '待匹配', ...visitProcessingStatuses]);
+const visitProcessingStatuses = new Set(['待匹配', '录音上传中', '录音转写中', '模型分析中']);
+const visitWaitingStatuses = new Set(visitProcessingStatuses);
 const visitUploadDetailStatuses = new Set(['已匹配', '匹配失败', '录音上传中']);
 const visitEventDetailStatuses = new Set(['无录音']);
-const visitRecords = [
-  { businessId: 'BIZ-20260812-0136', customerId: 'C202608120315', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配完成5段录音', completedAt: '13:36:10', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '进店接待', carSeries: '星海 S7', detailKey: 'matched', weight: 1142 },
+const visitRecordTemplates = [
+  { businessId: 'BIZ-20260812-0136', recordingId: 'REC-20260812-0136', customerId: 'C202608120315', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配完成5段录音', completedAt: '13:36:10', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '进店接待', carSeries: '星海 S7', detailKey: 'matched', weight: 450 },
+  { businessId: 'BIZ-20260811-0735', recordingId: 'REC-20260811-0735', customerId: 'C202608110816', customerName: '郑女士', customerPhone: '137****3091', date: '2026-08-11', startTime: '15:18:20', endTime: '15:52:46', status: '已匹配', detailText: '已匹配完成4段录音', completedAt: '16:01:22', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '16:01:22', scene: '试乘试驾', carSeries: '星海 S7', detailKey: 'matched', weight: 372 },
+  { businessId: 'BIZ-20260811-0712', recordingId: 'REC-20260811-0712', customerId: 'C202608110793', customerName: '吴女士', customerPhone: '136****5826', date: '2026-08-11', startTime: '14:36:08', endTime: '15:06:41', status: '已匹配', detailText: '已匹配完成3段录音', completedAt: '15:14:09', advisor: '周宁', badgeSn: 'MN-BDG-004867', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '销售助手', updatedAt: '15:14:09', scene: '进店接待', carSeries: '星海 V6', detailKey: 'matched', weight: 320 },
   { businessId: 'BIZ-20260812-0148', customerId: 'C202608120342', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004836', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
   { businessId: 'BIZ-20260812-0154', customerId: 'C202608120354', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '录音转写中', detailText: '—', completedAt: '—', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
   { businessId: 'BIZ-20260812-0162', customerId: 'C202608120368', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '模型分析中', detailText: '—', completedAt: '—', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
-  { businessId: 'BIZ-20260812-0171', customerId: 'C202608120377', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 5 },
+  { businessId: 'BIZ-20260812-0171', customerId: 'C202608120377', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 9 },
   { businessId: 'BIZ-20260812-0183', customerId: 'C202608120389', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '进店接待', carSeries: '星海 L9', weight: 5 },
   { businessId: 'BIZ-20260811-0831', customerId: 'C202608110922', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
   { businessId: 'BIZ-20260811-0816', customerId: 'C202608110907', customerName: '钱女士', customerPhone: '189****4036', date: '2026-08-11', startTime: '17:42:08', endTime: '18:05:20', status: '待匹配', detailText: '到访记录已接收，等待录音匹配', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:06:03', scene: '试乘试驾', carSeries: '星海 S7', weight: 2 },
-  { businessId: 'BIZ-20260811-0804', customerId: 'C202608110895', customerName: '许先生', customerPhone: '187****9541', date: '2026-08-11', startTime: '17:08:36', endTime: '17:38:57', status: '匹配超时', detailText: '超过匹配等待时限仍未完成', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:38:57', scene: '进店接待', carSeries: '星海 L9', weight: 4 },
-  { businessId: 'BIZ-20260811-0793', customerId: 'C202608110884', customerName: '沈女士', customerPhone: '139****7272', date: '2026-08-11', startTime: '16:46:15', endTime: '17:03:40', status: '客户不同意录音', detailText: '客户明确不同意录音，本次未采集', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:04:12', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
-  { businessId: 'BIZ-20260811-0785', customerId: 'C202608110876', customerName: '顾先生', customerPhone: '150****3864', date: '2026-08-11', startTime: '16:35:02', endTime: '16:41:17', status: '无效录音', detailText: '录音时长过短或音频不可用', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '16:45:09', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
-  { businessId: 'BIZ-20260811-0772', customerId: 'C202608110861', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '匹配失败', detailText: '未绑定工牌', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '进店接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 6 }
+  { businessId: 'BIZ-20260811-0793', customerId: 'C202608110884', customerName: '沈女士', customerPhone: '139****7272', date: '2026-08-11', startTime: '16:46:15', endTime: '17:03:40', status: '无录音', detailText: '客户明确不同意录音，本次未采集', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:04:12', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
+  { businessId: 'BIZ-20260811-0772', customerId: 'C202608110861', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '匹配失败', detailText: '未绑定工牌', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '进店接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 9 }
 ];
+
+function expandVisitRecordTemplates(templates) {
+  const remaining = templates.map((item) => Number(item.weight ?? 1));
+  const copyIndexes = templates.map(() => 0);
+  const records = [];
+  let hasRemaining = true;
+  while (hasRemaining) {
+    hasRemaining = false;
+    templates.forEach((template, templateIndex) => {
+      if (remaining[templateIndex] <= 0) return;
+      hasRemaining = true;
+      const copyIndex = copyIndexes[templateIndex];
+      const suffix = copyIndex ? `-${String(copyIndex + 1).padStart(4, '0')}` : '';
+      records.push({
+        ...template,
+        businessId: `${template.businessId}${suffix}`,
+        customerId: `${template.customerId}${suffix}`,
+        recordingId: template.recordingId ? `${template.recordingId}${suffix}` : undefined,
+        weight: 1
+      });
+      copyIndexes[templateIndex] += 1;
+      remaining[templateIndex] -= 1;
+    });
+  }
+  return records;
+}
+
+const visitRecords = expandVisitRecordTemplates(visitRecordTemplates);
+const visitPaginationState = { page: 1, pageSize: 20 };
+let visitReturnToMatching = window.location.hash.startsWith('#visits?')
+  && new URLSearchParams(window.location.hash.split('?')[1] || '').get('from') === 'dashboard';
 
 const matchingDefaultFilters = {
   startDateTime: '2026-08-11T00:00:00',
   endDateTime: '2026-08-12T23:59:59',
-  organization: '全国',
-  advisor: '全部销售顾问',
-  dimension: 'store'
+  brand: '全部品牌',
+  region: '全部大区',
+  zone: '全部战区',
+  store: '全部门店'
 };
 const matchingFilterState = { ...matchingDefaultFilters };
-const matchingStoreRecords = [
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '上海战区', name: '上海浦东体验中心', advisors: ['陈佳', '李洋'], visits: 186, matched: 174, uploading: 4, processing: 3, unbound: 1, powerOff: 1, noRecord: 2, other: 1 },
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '浙江战区', name: '杭州滨江体验中心', advisors: ['韩如臣'], visits: 148, matched: 132, uploading: 7, processing: 4, unbound: 1, powerOff: 1, noRecord: 2, other: 1 },
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '江苏战区', name: '苏州园区体验中心', advisors: ['周宁'], visits: 126, matched: 104, uploading: 10, processing: 5, unbound: 2, powerOff: 2, noRecord: 2, other: 1 }
-];
-const matchingAdvisorRecords = [
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '上海战区', name: '陈佳', visits: 100, matched: 95, uploading: 2, processing: 1, unbound: 0, powerOff: 0, noRecord: 1, other: 1 },
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '上海战区', name: '李洋', visits: 86, matched: 79, uploading: 2, processing: 2, unbound: 1, powerOff: 1, noRecord: 1, other: 0 },
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '浙江战区', name: '韩如臣', visits: 148, matched: 132, uploading: 7, processing: 4, unbound: 1, powerOff: 1, noRecord: 2, other: 1 },
-  { date: '2026-08-12', brand: '星海汽车', region: '华东大区', zone: '江苏战区', name: '周宁', visits: 126, matched: 104, uploading: 10, processing: 5, unbound: 2, powerOff: 2, noRecord: 2, other: 1 }
-];
 
 function syncFilterControls(selector, state) {
   document.querySelectorAll(selector).forEach((control) => {
@@ -278,19 +303,36 @@ function normalizeDeviceQuery(value) {
   return String(value || '').trim().toLocaleLowerCase('zh-CN').replace(/\s+/g, '');
 }
 
+function getVisitRecordingId(record) {
+  return record.status === '已匹配' ? record.recordingId || '' : '';
+}
+
 function getFilteredVisitRecords() {
-  const query = normalizeDeviceQuery(visitFilterState.query);
+  const queryFields = {
+    businessId: 'businessId',
+    recordingId: 'recordingId',
+    customerId: 'customerId',
+    customerName: 'customerName',
+    customerPhone: 'customerPhone',
+    advisorName: 'advisor'
+  };
   return visitRecords.filter((item) => {
     const dateMatch = isWithinDateTimeRange(getRecordDateTime(item.date, item.startTime), visitFilterState.startDateTime, visitFilterState.endDateTime);
     const organizationMatch = visitFilterState.organization === '全部组织'
       || item.region === visitFilterState.organization
-      || item.zone === visitFilterState.organization;
-    const advisorMatch = visitFilterState.advisor === '全部销售顾问' || item.advisor === visitFilterState.advisor;
+      || item.zone === visitFilterState.organization
+      || item.store === visitFilterState.organization;
     const sourceMatch = visitFilterState.source === '全部来源' || item.source === visitFilterState.source;
-    const statusMatch = visitFilterState.status === '全部状态' || item.status === visitFilterState.status;
-    const queryMatch = !query || [item.businessId, item.customerId, item.customerName, item.customerPhone]
-      .some((value) => normalizeDeviceQuery(value).includes(query));
-    return dateMatch && organizationMatch && advisorMatch && sourceMatch && statusMatch && queryMatch;
+    const statusMatch = visitFilterState.status === '全部状态'
+      || (visitFilterState.status === '全部未匹配' && item.status !== '已匹配')
+      || (visitFilterState.status === '异常需处理' && (item.status === '匹配失败' || item.status === '无录音'))
+      || item.status === visitFilterState.status;
+    const queryMatch = Object.entries(queryFields).every(([filterKey, recordKey]) => {
+      const query = normalizeDeviceQuery(visitFilterState[filterKey]);
+      const recordValue = filterKey === 'recordingId' ? getVisitRecordingId(item) : item[recordKey];
+      return !query || normalizeDeviceQuery(recordValue).includes(query);
+    });
+    return dateMatch && organizationMatch && sourceMatch && statusMatch && queryMatch;
   });
 }
 
@@ -306,74 +348,171 @@ function getVisitStatusClass(status) {
 
 function getVisitDetailType(record) {
   if (visitUploadDetailStatuses.has(record.status)) return 'uploads';
-  if (visitEventDetailStatuses.has(record.status)) return 'events';
+  if (visitEventDetailStatuses.has(record.status) && record.badgeSn) return 'events';
   return '';
+}
+
+function getUniqueVisitRecordsByBusinessId(records) {
+  const uniqueRecords = new Map();
+  records.forEach((item) => {
+    if (item.businessId && !uniqueRecords.has(item.businessId)) uniqueRecords.set(item.businessId, item);
+  });
+  return [...uniqueRecords.values()];
+}
+
+function getVisitMetricCategory(status) {
+  if (status === '已匹配') return 'matched';
+  if (visitProcessingStatuses.has(status)) return 'processing';
+  if (status === '匹配失败') return 'failed';
+  if (status === '无录音') return 'noRecording';
+  return '';
+}
+
+function getVisitPaginationItems(totalPages) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const items = [1];
+  if (visitPaginationState.page > 3) items.push('left');
+  for (let page = Math.max(2, visitPaginationState.page - 1); page <= Math.min(totalPages - 1, visitPaginationState.page + 1); page += 1) items.push(page);
+  if (visitPaginationState.page < totalPages - 2) items.push('right');
+  items.push(totalPages);
+  return items;
+}
+
+function renderVisitPagination(totalItems) {
+  const container = document.getElementById('visitPagination');
+  if (!container) return;
+  const totalPages = Math.max(1, Math.ceil(totalItems / visitPaginationState.pageSize));
+  visitPaginationState.page = Math.min(visitPaginationState.page, totalPages);
+  container.innerHTML = `
+    <div class="dashboard-pagination">
+      <span class="session-pagination-total">共 ${formatDeviceCount(totalItems)} 条</span>
+      <div class="dashboard-pagination-controls">
+        <label class="page-select store-page-size"><select data-visit-page-size aria-label="每页条数"><option value="20"${visitPaginationState.pageSize === 20 ? ' selected' : ''}>20 条/页</option><option value="50"${visitPaginationState.pageSize === 50 ? ' selected' : ''}>50 条/页</option></select></label>
+        <div class="page-group">
+          <button type="button" class="page-arrow" data-visit-page-action="prev" ${visitPaginationState.page === 1 ? 'disabled' : ''}>‹</button>
+          ${getVisitPaginationItems(totalPages).map((item) => typeof item === 'number' ? `<button type="button" class="page-num${item === visitPaginationState.page ? ' active' : ''}" data-visit-page="${item}">${item}</button>` : '<span class="page-ellipsis">…</span>').join('')}
+          <button type="button" class="page-arrow" data-visit-page-action="next" ${visitPaginationState.page === totalPages ? 'disabled' : ''}>›</button>
+        </div>
+        <div class="page-group page-jump-group"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input type="number" min="1" max="${totalPages}" value="${visitPaginationState.page}" data-visit-page-jump aria-label="跳转页码" /></label><span class="session-page-jump-suffix">页</span></div>
+      </div>
+    </div>`;
 }
 
 function renderVisits() {
   const tbody = document.getElementById('visitTableBody');
   if (!tbody) return;
   const records = getFilteredVisitRecords();
-  const sumWeight = (predicate = () => true) => records.filter(predicate).reduce((total, item) => total + item.weight, 0);
+  const totalPages = Math.max(1, Math.ceil(records.length / visitPaginationState.pageSize));
+  visitPaginationState.page = Math.min(visitPaginationState.page, totalPages);
+  const start = (visitPaginationState.page - 1) * visitPaginationState.pageSize;
+  const visibleRecords = records.slice(start, start + visitPaginationState.pageSize);
+  const metricRecords = getUniqueVisitRecordsByBusinessId(records);
+  const sumWeight = (predicate = () => true) => metricRecords.filter(predicate).reduce((total, item) => total + Number(item.weight ?? 1), 0);
   const total = sumWeight();
-  const matched = sumWeight((item) => item.status === '已匹配');
-  const uploading = sumWeight((item) => item.status === '录音上传中');
-  const processing = sumWeight((item) => visitProcessingStatuses.has(item.status));
-  const problems = total - matched - uploading - processing;
-  const metrics = {
-    visitMetricTotal: total,
-    visitMetricMatched: matched,
-    visitMetricUploading: uploading,
-    visitMetricProcessing: processing,
-    visitMetricProblems: problems
-  };
-  Object.entries(metrics).forEach(([id, value]) => {
-    const node = document.getElementById(id);
-    if (node) node.textContent = formatDeviceCount(value);
-  });
+  const countCategory = (category) => sumWeight((item) => getVisitMetricCategory(item.status) === category);
+  const matched = countCategory('matched');
+  const processing = countCategory('processing');
+  const failed = countCategory('failed');
+  const noRecording = countCategory('noRecording');
   const resultSummary = document.getElementById('visitResultSummary');
-  const paginationTotal = document.getElementById('visitPaginationTotal');
-  if (resultSummary) resultSummary.textContent = `共 ${formatDeviceCount(total)} 条 · 匹配状态按当前最新处理状态展示`;
-  if (paginationTotal) paginationTotal.textContent = `共 ${formatDeviceCount(total)} 条`;
-  tbody.innerHTML = records.length ? records.map((item) => {
+  if (resultSummary) resultSummary.textContent = `共 ${formatDeviceCount(total)} 条 · 已匹配 ${formatDeviceCount(matched)} 条 · 处理中 ${formatDeviceCount(processing)} 条 · 异常需处理 ${formatDeviceCount(failed + noRecording)} 条`;
+  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => {
     const tone = getVisitStatusClass(item.status);
     const detailType = getVisitDetailType(item);
     const detailControl = detailType
       ? `<button class="text-btn" data-visit-detail-type="${detailType}" data-business-id="${escapeBadgeHtml(item.businessId)}">${escapeBadgeHtml(item.detailText)}</button>`
       : '<span class="visit-detail-disabled">—</span>';
     return `<tr>
-      <td>${escapeBadgeHtml(item.businessId)}</td><td>${escapeBadgeHtml(item.customerId)}</td><td>${escapeBadgeHtml(item.customerName)}</td><td>${escapeBadgeHtml(item.customerPhone)}</td>
       <td>${escapeBadgeHtml(item.date)}</td><td>${escapeBadgeHtml(item.startTime)}</td><td>${escapeBadgeHtml(item.endTime)}</td><td><span class="status ${tone}">${escapeBadgeHtml(item.status)}</span></td>
-      <td>${detailControl}</td><td>${escapeBadgeHtml(item.completedAt)}</td>
-      <td>${escapeBadgeHtml(item.advisor)}</td><td>${escapeBadgeHtml(item.store)}</td><td>${escapeBadgeHtml(item.storeCode)}</td><td><span class="source-tag ${item.source === '销售助手' ? 'api' : 'excel'}">${escapeBadgeHtml(item.source)}</span></td>
-      <td>${escapeBadgeHtml(item.updatedAt)}</td><td>${escapeBadgeHtml(item.scene)}</td><td>${escapeBadgeHtml(item.carSeries)}</td>
+      <td>${detailControl}</td><td>${escapeBadgeHtml(item.customerName)}</td><td>${escapeBadgeHtml(item.customerPhone)}</td><td>${escapeBadgeHtml(item.advisor)}</td><td>${escapeBadgeHtml(item.store)}</td>
+      <td>${escapeBadgeHtml(item.scene)}</td><td>${escapeBadgeHtml(item.carSeries)}</td><td>${escapeBadgeHtml(item.completedAt)}</td><td><span class="source-tag ${item.source === '销售助手' ? 'api' : 'excel'}">${escapeBadgeHtml(item.source)}</span></td>
+      <td>${escapeBadgeHtml(item.updatedAt)}</td><td>${escapeBadgeHtml(item.customerId)}</td><td>${escapeBadgeHtml(item.storeCode)}</td><td>${escapeBadgeHtml(item.businessId)}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="17" class="badge-record-empty">当前筛选条件下暂无到访记录。</td></tr>';
+  renderVisitPagination(records.length);
 }
 
-function getFilteredMatchingRecords() {
-  const source = matchingFilterState.dimension === 'advisor' ? matchingAdvisorRecords : matchingStoreRecords;
-  return source.filter((item) => {
-    const dateMatch = isWithinDateTimeRange(getRecordDateTime(item.date), matchingFilterState.startDateTime, matchingFilterState.endDateTime);
-    const organizationMatch = matchingFilterState.organization === '全国'
-      || item.region === matchingFilterState.organization
-      || item.zone === matchingFilterState.organization;
-    const advisorMatch = matchingFilterState.advisor === '全部销售顾问'
-      || (matchingFilterState.dimension === 'advisor' ? item.name === matchingFilterState.advisor : item.advisors.includes(matchingFilterState.advisor));
-    return dateMatch && organizationMatch && advisorMatch;
+function sumVisitWeights(records) {
+  return records.reduce((total, record) => total + Number(record.weight ?? 1), 0);
+}
+
+function getMatchingRecordCategory(record) {
+  if (visitProcessingStatuses.has(record.status)) return 'processing';
+  if (record.status === '匹配失败' || record.status === '无录音') return 'action';
+  return 'matched';
+}
+
+function getFilteredMatchingVisitRecords() {
+  return getUniqueVisitRecordsByBusinessId(visitRecords).filter((record) => {
+    const dateMatch = isWithinDateTimeRange(getRecordDateTime(record.date, record.startTime), matchingFilterState.startDateTime, matchingFilterState.endDateTime);
+    const brandMatch = matchingFilterState.brand === '全部品牌' || matchingFilterState.brand === '星海汽车';
+    const regionMatch = matchingFilterState.region === '全部大区' || record.region === matchingFilterState.region;
+    const zoneMatch = matchingFilterState.zone === '全部战区' || record.zone === matchingFilterState.zone;
+    const storeMatch = matchingFilterState.store === '全部门店' || record.store === matchingFilterState.store;
+    return dateMatch && brandMatch && regionMatch && zoneMatch && storeMatch;
   });
 }
 
-function renderMatchingDashboard() {
+function getMatchingStoreSummaries(records) {
+  const stores = new Map();
+  records.forEach((record) => {
+    if (!stores.has(record.store)) {
+      stores.set(record.store, {
+        store: record.store,
+        region: record.region,
+        zone: record.zone,
+        visits: 0,
+        matched: 0,
+        processing: 0,
+        action: 0
+      });
+    }
+    const summary = stores.get(record.store);
+    const count = Number(record.weight ?? 1);
+    const category = getMatchingRecordCategory(record);
+    summary.visits += count;
+    summary[category] += count;
+  });
+  return [...stores.values()].sort((left, right) => {
+    if (right.action !== left.action) return right.action - left.action;
+    const leftRate = left.visits ? left.matched / left.visits : 0;
+    const rightRate = right.visits ? right.matched / right.visits : 0;
+    return leftRate - rightRate;
+  });
+}
+
+function renderMatchingStoreTable(records) {
   const tbody = document.getElementById('matchingTableBody');
   const thead = document.getElementById('matchingTableHead');
-  if (!tbody || !thead) return;
-  const records = getFilteredMatchingRecords();
-  const sum = (key) => records.reduce((total, item) => total + item[key], 0);
-  const visits = sum('visits');
-  const matched = sum('matched');
-  const processing = sum('uploading') + sum('processing');
-  const problems = sum('unbound') + sum('powerOff') + sum('noRecord') + sum('other');
+  const pagination = document.getElementById('matchingPaginationTotal');
+  const summaries = getMatchingStoreSummaries(records);
+  thead.innerHTML = '<tr><th>门店</th><th>到访数</th><th>已匹配到访</th><th>处理中</th><th>异常需处理</th><th>录音匹配率</th><th>操作</th></tr>';
+  tbody.innerHTML = summaries.length ? summaries.map((item) => {
+    const rate = item.visits ? item.matched / item.visits * 100 : 0;
+    const rateTone = rate >= 88 ? 'good-rate' : 'bad-rate';
+    const processingControl = item.processing
+      ? `<span class="amber-text">${formatDeviceCount(item.processing)}</span>`
+      : '<span class="muted-text">0</span>';
+    const actionControl = item.action
+      ? `<span class="danger-text">${formatDeviceCount(item.action)}</span>`
+      : '<span class="muted-text">0</span>';
+    return `<tr>
+      <td><span class="matching-store-cell"><strong>${escapeBadgeHtml(item.store)}</strong><small>${escapeBadgeHtml(item.region)} · ${escapeBadgeHtml(item.zone)}</small></span></td>
+      <td>${formatDeviceCount(item.visits)}</td><td>${formatDeviceCount(item.matched)}</td>
+      <td>${processingControl}</td><td>${actionControl}</td>
+      <td><span class="rate-cell ${rateTone}"><strong>${rate.toFixed(1)}%</strong><i><b style="width:${rate.toFixed(1)}%"></b></i></span></td>
+      <td><button class="text-btn" type="button" data-matching-drilldown="action" data-matching-store="${escapeBadgeHtml(item.store)}">查看异常需处理</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="badge-record-empty">当前筛选条件下暂无门店数据。</td></tr>';
+  if (pagination) pagination.textContent = `共 ${summaries.length} 家门店`;
+}
+
+function renderMatchingDashboard() {
+  const records = getFilteredMatchingVisitRecords();
+  const visits = sumVisitWeights(records);
+  const matched = sumVisitWeights(records.filter((record) => getMatchingRecordCategory(record) === 'matched'));
+  const processing = sumVisitWeights(records.filter((record) => getMatchingRecordCategory(record) === 'processing'));
+  const problems = sumVisitWeights(records.filter((record) => getMatchingRecordCategory(record) === 'action'));
   const rate = visits ? matched / visits * 100 : 0;
   const metricValues = {
     matchingMetricVisits: formatDeviceCount(visits),
@@ -381,27 +520,33 @@ function renderMatchingDashboard() {
     matchingMetricRate: `${rate.toFixed(1)}%`,
     matchingMetricProcessing: formatDeviceCount(processing),
     matchingMetricProblems: formatDeviceCount(problems),
-    matchingMetricRateNote: `${formatDeviceCount(matched)} ÷ ${formatDeviceCount(visits)}`,
-    matchingPaginationTotal: `共 ${records.length} 条`
+    matchingMetricRateNote: `${formatDeviceCount(matched)} ÷ ${formatDeviceCount(visits)}`
   };
   Object.entries(metricValues).forEach(([id, value]) => {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
   });
-  document.querySelectorAll('[data-matching-dimension]').forEach((button) => {
-    button.classList.toggle('active', button.dataset.matchingDimension === matchingFilterState.dimension);
+  renderMatchingStoreTable(records);
+}
+
+function openVisitsFromMatching(store, status) {
+  const organization = store
+    || (matchingFilterState.store !== '全部门店' ? matchingFilterState.store : '')
+    || (matchingFilterState.zone !== '全部战区' ? matchingFilterState.zone : '')
+    || (matchingFilterState.region !== '全部大区' ? matchingFilterState.region : '全部组织');
+  Object.assign(visitFilterState, {
+    ...visitDefaultFilters,
+    startDateTime: matchingFilterState.startDateTime,
+    endDateTime: matchingFilterState.endDateTime,
+    organization,
+    status
   });
-  const dimensionLabel = matchingFilterState.dimension === 'advisor' ? '销售顾问' : '门店';
-  thead.innerHTML = `<tr><th>日期</th><th>品牌</th><th>大区</th><th>战区</th><th>${dimensionLabel}</th><th>到访数</th><th>已匹配</th><th>录音上传中</th><th>转写/分析中</th><th>员工未绑定工牌</th><th>到访时段未开机</th><th>到访时段无录音</th><th>其他失败</th><th>录音匹配率</th><th>问题分类</th></tr>`;
-  tbody.innerHTML = records.length ? records.map((item) => {
-    const itemRate = item.visits ? item.matched / item.visits * 100 : 0;
-    const issueCount = item.unbound + item.powerOff + item.noRecord + item.other;
-    const rateTone = itemRate >= 88 ? 'good-rate' : 'bad-rate';
-    return `<tr><td>${item.date}</td><td>${item.brand}</td><td>${item.region}</td><td>${item.zone}</td><td><strong>${item.name}</strong></td>
-      <td>${item.visits}</td><td>${item.matched}</td><td>${item.uploading}</td><td>${item.processing}</td><td>${item.unbound}</td><td>${item.powerOff}</td><td>${item.noRecord}</td><td>${item.other}</td>
-      <td><span class="rate-cell ${rateTone}"><strong>${itemRate.toFixed(1)}%</strong><i><b style="width:${itemRate.toFixed(1)}%"></b></i></span></td>
-      <td><button class="text-btn route-target" data-target="visits">查看 ${issueCount} 条问题</button></td></tr>`;
-  }).join('') : '<tr><td colspan="15" class="badge-record-empty">当前筛选条件下暂无匹配数据。</td></tr>';
+  visitPaginationState.page = 1;
+  visitReturnToMatching = true;
+  syncFilterControls('[data-visit-filter]', visitFilterState);
+  renderVisits();
+  setRoute('visits');
+  showToast('已带入录音排查条件');
 }
 
 function syncBadgeEventDateView() {
@@ -686,6 +831,12 @@ function selectBadgeRecord(sn, advisorName) {
   renderBadgeUploads();
 }
 
+function getVisitFailedUploadMessage(record) {
+  if (record.detailText === '未绑定工牌') return '未匹配到录音，请绑定工牌';
+  if (record.detailText === '到访和结束日期非同一天') return '未匹配到录音，请确认并更新到访日期';
+  return '未匹配到录音，请检查匹配失败原因';
+}
+
 function renderVisitUploadDetail(record) {
   const isPendingDetail = record.status === '录音上传中';
   const isFailedDetail = record.status === '匹配失败';
@@ -695,14 +846,14 @@ function renderVisitUploadDetail(record) {
   const detailTitle = document.getElementById('badgeUploadDetailTitle');
   detailTitle.textContent = `${record.date} 录音上传明细`;
   badgeUploadDetailDescription.textContent = isFailedDetail
-    ? `${record.status} · ${record.detailText}`
+    ? `${record.status} · ${record.advisor} · 到访日期 ${record.date} · ${record.detailText}`
     : `${record.status} · ${record.advisor} · ${record.badgeSn} · ${isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : record.date}`;
   badgeUploadModalState.records = detailRecords.map((item, index) => ({
     ...item,
     sequence: isPendingDetail ? String(index + 1) : item.sequence,
     completedAt: isPendingDetail ? '未上传' : item.completedAt
   }));
-  badgeUploadModalState.emptyText = isFailedDetail ? '当前暂无录音上传数据。' : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。';
+  badgeUploadModalState.emptyText = isFailedDetail ? getVisitFailedUploadMessage(record) : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。';
   badgeUploadModalPaginationState.page = 1;
   renderBadgeUploadModal();
 }
@@ -1085,7 +1236,7 @@ const detailData = {
     html: `
       <section class="detail-section">
         <h3>到访信息</h3>
-        <div class="detail-grid"><span><small>客户姓名</small><strong>周女士</strong></span><span><small>到访时间</small><strong>2026-08-11 16:23:41—17:08:02</strong></span><span><small>员工姓名</small><strong>周宁（A01362）</strong></span><span><small>所属门店</small><strong>苏州园区体验中心</strong></span></div>
+        <div class="detail-grid"><span><small>客户姓名</small><strong>周女士</strong></span><span><small>到访时间</small><strong>2026-08-11 16:23:41—17:08:02</strong></span><span><small>顾问姓名</small><strong>周宁（A01362）</strong></span><span><small>所属门店</small><strong>苏州园区体验中心</strong></span></div>
       </section>
       <section class="detail-section">
         <h3>匹配证据</h3>
@@ -1108,7 +1259,7 @@ function createVisitRecordDetail(record) {
     html: `
       <section class="detail-section">
         <h3>到访信息</h3>
-        <div class="detail-grid"><span><small>客户姓名</small><strong>${escapeBadgeHtml(record.customerName)}</strong></span><span><small>客户 ID</small><strong>${escapeBadgeHtml(record.customerId)}</strong></span><span><small>到访时间</small><strong>${escapeBadgeHtml(`${record.date} ${record.startTime}—${record.endTime}`)}</strong></span><span><small>员工姓名</small><strong>${escapeBadgeHtml(record.advisor)}</strong></span><span><small>所属门店</small><strong>${escapeBadgeHtml(record.store)}</strong></span><span><small>到访来源</small><strong>${escapeBadgeHtml(record.source)}</strong></span></div>
+        <div class="detail-grid"><span><small>客户姓名</small><strong>${escapeBadgeHtml(record.customerName)}</strong></span><span><small>客户 ID</small><strong>${escapeBadgeHtml(record.customerId)}</strong></span><span><small>到访时间</small><strong>${escapeBadgeHtml(`${record.date} ${record.startTime}—${record.endTime}`)}</strong></span><span><small>顾问姓名</small><strong>${escapeBadgeHtml(record.advisor)}</strong></span><span><small>所属门店</small><strong>${escapeBadgeHtml(record.store)}</strong></span><span><small>到访来源</small><strong>${escapeBadgeHtml(record.source)}</strong></span></div>
       </section>
       <section class="detail-section">
         <h3>匹配结果</h3>
@@ -1120,8 +1271,14 @@ function createVisitRecordDetail(record) {
 const title = document.getElementById('pageTitle');
 const description = document.getElementById('pageDescription');
 const topActions = document.getElementById('topActions');
+const visitOriginBackButton = document.querySelector('[data-visits-back-matching]');
 const toast = document.getElementById('toast');
 const importModal = document.getElementById('importModal');
+const visitImportDropzone = document.getElementById('visitImportDropzone');
+const visitImportFileInput = document.getElementById('visitImportFileInput');
+const visitImportFileName = document.getElementById('visitImportFileName');
+const visitImportFileHint = document.getElementById('visitImportFileHint');
+const visitImportSubmitButton = document.querySelector('[data-visit-import-submit]');
 const badgeUploadDetailModal = document.getElementById('badgeUploadDetailModal');
 const badgeUploadDetailTitle = document.getElementById('badgeUploadDetailTitle');
 const badgeUploadDetailDescription = document.getElementById('badgeUploadDetailDescription');
@@ -1156,6 +1313,7 @@ const badgeDockRefreshBtn = document.getElementById('badgeDockRefreshBtn');
 const badgeDockDateControl = document.getElementById('badgeDockDateControl');
 let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
+let visitImportFile = null;
 
 const storeOverviewRecords = [
   { brand: '广汽传祺', organization: '华东大区', zone: '上海战区', code: 'SH-PD-001', name: '上海浦东体验中心', employees: 36, badges: 30, boundEmployees: 28, bindings: 28, syncedAt: '2026-08-12 14:18:32' },
@@ -2151,11 +2309,16 @@ function setRoute(route, updateHash = true) {
   if (detailRoute) syncBadgeRecordTabs(safeRoute);
   title.textContent = storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title;
   description.textContent = pageMeta[safeRoute].description;
-  document.title = `${storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title} · AI质检平台`;
+  if (visitOriginBackButton) visitOriginBackButton.hidden = safeRoute !== 'visits' || !visitReturnToMatching;
+  document.title = `${storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title} · AI全链路客户洞察平台`;
   const drilldownActions = document.querySelector('[data-store-drilldown-actions]');
   if (drilldownActions) drilldownActions.hidden = !storeDrilldownRoute;
   renderActions(safeRoute);
-  const nextHash = storeDrilldownRoute ? getStoreDrilldownHash() : `#${safeRoute}`;
+  const nextHash = storeDrilldownRoute
+    ? getStoreDrilldownHash()
+    : safeRoute === 'visits' && visitReturnToMatching
+      ? '#visits?from=dashboard'
+      : `#${safeRoute}`;
   if (updateHash && window.location.hash !== nextHash) window.location.hash = nextHash;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2165,6 +2328,45 @@ function showToast(message) {
   toast.classList.add('show');
   window.clearTimeout(showToast.timer);
   showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function resetVisitImport() {
+  visitImportFile = null;
+  if (visitImportFileInput) visitImportFileInput.value = '';
+  if (visitImportFileName) visitImportFileName.textContent = '点击或拖拽 Excel 文件到这里';
+  if (visitImportFileHint) visitImportFileHint.textContent = '支持 .xlsx、.xls，单个文件不超过 10 MB';
+  if (visitImportSubmitButton) visitImportSubmitButton.disabled = true;
+  visitImportDropzone?.classList.remove('has-file', 'is-dragover');
+}
+
+function selectVisitImportFile(file) {
+  if (!file) return;
+  const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+  if (!isExcel) {
+    resetVisitImport();
+    showToast('请选择 .xlsx 或 .xls 文件');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    resetVisitImport();
+    showToast('文件不能超过 10 MB');
+    return;
+  }
+  visitImportFile = file;
+  if (visitImportFileName) visitImportFileName.textContent = file.name;
+  if (visitImportFileHint) visitImportFileHint.textContent = `${(file.size / 1024).toFixed(1)} KB · 文件已选择，可开始上传`;
+  if (visitImportSubmitButton) visitImportSubmitButton.disabled = false;
+  visitImportDropzone?.classList.add('has-file');
+}
+
+function downloadVisitTemplate() {
+  const link = document.createElement('a');
+  link.href = './templates/到访明细上传模板.xlsx';
+  link.download = '到访明细上传模板.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  showToast('到访明细模板已下载');
 }
 
 function moveBadgeRecordContents(host) {
@@ -2432,8 +2634,35 @@ function openModal(modal) {
 
 function closeModal(modal) {
   modal.hidden = true;
+  if (modal === importModal) resetVisitImport();
   syncBodyScrollLock();
 }
+
+document.querySelector('[data-visit-import-select]')?.addEventListener('click', () => visitImportFileInput?.click());
+document.querySelector('[data-visit-template-download]')?.addEventListener('click', downloadVisitTemplate);
+visitImportFileInput?.addEventListener('change', () => selectVisitImportFile(visitImportFileInput.files?.[0]));
+visitImportSubmitButton?.addEventListener('click', () => {
+  if (!visitImportFile) return;
+  const fileName = visitImportFile.name;
+  closeModal(importModal);
+  showToast(`${fileName} 已上传并进入校验`);
+});
+visitImportDropzone?.addEventListener('click', (event) => {
+  if (!event.target.closest('button')) visitImportFileInput?.click();
+});
+['dragenter', 'dragover'].forEach((eventName) => {
+  visitImportDropzone?.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    visitImportDropzone.classList.add('is-dragover');
+  });
+});
+['dragleave', 'drop'].forEach((eventName) => {
+  visitImportDropzone?.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    visitImportDropzone.classList.remove('is-dragover');
+    if (eventName === 'drop') selectVisitImportFile(event.dataTransfer?.files?.[0]);
+  });
+});
 
 function openDrawer(type) {
   const record = visitRecords.find((item) => item.businessId === type);
@@ -2459,6 +2688,7 @@ function closeDrawer() {
 
 routeButtons.forEach((button) => button.addEventListener('click', () => {
   closeBadgeRecordDrawer({ restoreFocus: false, immediate: true });
+  visitReturnToMatching = false;
   if (storeDrilldownState.active) {
     if (button.dataset.route === 'badges') {
       leaveStoreDrilldown('badges');
@@ -2480,6 +2710,7 @@ document.querySelectorAll('.nav-button[data-href]:not(.device-nav)').forEach((bu
 window.addEventListener('hashchange', () => {
   closeBadgeRecordDrawer({ restoreFocus: false, immediate: true });
   const routeState = getRouteState();
+  visitReturnToMatching = routeState.route === 'visits' && routeState.params.get('from') === 'dashboard';
   if (routeState.route === 'store-badges') {
     if (!applyStoreDrilldownFromRoute(routeState.params)) {
       leaveStoreDrilldown('stores');
@@ -2497,6 +2728,12 @@ window.addEventListener('hashchange', () => {
 });
 
 document.addEventListener('click', (event) => {
+  if (event.target.closest('[data-visits-back-matching]')) {
+    visitReturnToMatching = false;
+    setRoute('dashboard');
+    return;
+  }
+
   if (event.target.closest('[data-store-drilldown-back]')) {
     leaveStoreDrilldown('stores');
     return;
@@ -2848,6 +3085,7 @@ document.addEventListener('click', (event) => {
       return;
     }
     Object.assign(visitFilterState, nextFilters);
+    visitPaginationState.page = 1;
     renderVisits();
     showToast('已按当前条件更新到访明细');
     return;
@@ -2855,9 +3093,41 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-visit-filter-reset]')) {
     Object.assign(visitFilterState, visitDefaultFilters);
+    visitPaginationState.page = 1;
     syncFilterControls('[data-visit-filter]', visitFilterState);
+    const advancedSearch = document.querySelector('[data-visit-advanced-search]');
+    const advancedToggle = document.querySelector('[data-visit-advanced-toggle]');
+    if (advancedSearch) advancedSearch.hidden = true;
+    if (advancedToggle) {
+      advancedToggle.setAttribute('aria-expanded', 'false');
+      advancedToggle.querySelector('span').textContent = '更多查询';
+    }
     renderVisits();
     showToast('筛选条件已重置');
+    return;
+  }
+
+  const visitAdvancedToggle = event.target.closest('[data-visit-advanced-toggle]');
+  if (visitAdvancedToggle) {
+    const advancedSearch = document.querySelector('[data-visit-advanced-search]');
+    const opening = Boolean(advancedSearch?.hidden);
+    if (advancedSearch) advancedSearch.hidden = !opening;
+    visitAdvancedToggle.setAttribute('aria-expanded', String(opening));
+    visitAdvancedToggle.querySelector('span').textContent = opening ? '收起精确查询' : '更多查询';
+    return;
+  }
+
+  const visitPage = event.target.closest('[data-visit-page]');
+  if (visitPage) {
+    visitPaginationState.page = Number(visitPage.dataset.visitPage);
+    renderVisits();
+    return;
+  }
+
+  const visitPageAction = event.target.closest('[data-visit-page-action]');
+  if (visitPageAction && !visitPageAction.disabled) {
+    visitPaginationState.page += visitPageAction.dataset.visitPageAction === 'next' ? 1 : -1;
+    renderVisits();
     return;
   }
 
@@ -2882,10 +3152,9 @@ document.addEventListener('click', (event) => {
     return;
   }
 
-  const matchingDimension = event.target.closest('[data-matching-dimension]');
-  if (matchingDimension) {
-    matchingFilterState.dimension = matchingDimension.dataset.matchingDimension || 'store';
-    renderMatchingDashboard();
+  const matchingDrilldown = event.target.closest('[data-matching-drilldown]');
+  if (matchingDrilldown) {
+    openVisitsFromMatching(matchingDrilldown.dataset.matchingStore || '', '异常需处理');
     return;
   }
 
@@ -3242,7 +3511,10 @@ document.addEventListener('click', (event) => {
   if (!event.target.closest('[data-store-filter-root]')) closeStoreFilterMenus();
 
   const action = event.target.closest('[data-action]')?.dataset.action;
-  if (action === 'import') openModal(importModal);
+  if (action === 'import') {
+    resetVisitImport();
+    openModal(importModal);
+  }
   if (action === 'export') showToast('导出任务已创建');
 
   const routeTargetButton = event.target.closest('.route-target');
@@ -3287,6 +3559,18 @@ document.addEventListener('change', (event) => {
     state.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
     if (key === 'modal') renderBadgeUploadModal();
     else renderBadgeUploads();
+    return;
+  }
+  if (event.target.matches('[data-visit-page-size]')) {
+    visitPaginationState.pageSize = Number(event.target.value);
+    visitPaginationState.page = 1;
+    renderVisits();
+    return;
+  }
+  if (event.target.matches('[data-visit-page-jump]')) {
+    const totalPages = Math.max(1, Math.ceil(getFilteredVisitRecords().length / visitPaginationState.pageSize));
+    visitPaginationState.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
+    renderVisits();
     return;
   }
   if (event.target.matches('[data-badge-page-jump]')) {
@@ -3350,6 +3634,10 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key === 'Enter' && event.target.matches('[data-badge-dock-page-jump]')) {
+    event.target.blur();
+    return;
+  }
+  if (event.key === 'Enter' && event.target.matches('[data-visit-page-jump]')) {
     event.target.blur();
     return;
   }
