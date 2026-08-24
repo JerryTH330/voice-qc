@@ -48,7 +48,7 @@ const badgeEventRecords = [
     powerOnDuration: '06:42:00',
     uploadedRecordingDuration: '05:55:00',
     events: [
-      { type: 'power-on', label: '工牌开机', time: '08:03:32', icon: '开', color: 'green' },
+      { type: 'power-on', label: '工牌开机', time: '08:03:32', icon: '开', color: 'green', iconAsset: 'power-on' },
       { type: 'recording-start', label: '开始录音', time: '08:05:00', icon: '录', color: 'blue' },
       { type: 'recording-end', label: '结束录音', time: '10:36:57', icon: '停', color: 'red' },
       { type: 'power-off', label: '工牌关机', time: '10:36:57', icon: '关', color: 'neutral' },
@@ -114,7 +114,8 @@ const badgeEventDefaultFilters = {
 const badgeEventFilterState = { ...badgeEventDefaultFilters };
 const badgeEventTypeOptions = [
   ['all', '全部事件'],
-  ['session', '工牌事件'],
+  ['power-on', '工牌开机'],
+  ['power-off', '工牌关机'],
   ['recording', '录音'],
   ['charging', '充电'],
   ['low-battery', '电量预警']
@@ -774,24 +775,42 @@ function buildBadgeEventGroups(events) {
   let activeCharging = null;
   let sessionNumber = 0;
 
+  function startSession(event) {
+    sessionNumber += 1;
+    activeSession = {
+      kind: 'session',
+      number: sessionNumber,
+      start: event,
+      end: null,
+      endReason: null,
+      powerOns: [],
+      powerOffs: [],
+      recordings: [],
+      warnings: [],
+      types: new Set()
+    };
+    groups.push(activeSession);
+  }
+
   events.forEach((event) => {
     if (event.type === 'power-on') {
-      sessionNumber += 1;
-      activeSession = {
-        kind: 'session',
-        number: sessionNumber,
-        start: event,
-        end: null,
-        recordings: [],
-        warnings: [],
-        types: new Set(['power-on'])
-      };
+      if (!activeSession && !activeCharging) startSession(event);
+      if (!activeSession) {
+        groups.push({ kind: 'standalone', event, types: new Set([event.type]) });
+        return;
+      }
+      activeSession.powerOns.push(event);
+      activeSession.types.add(event.type);
       activeRecording = null;
-      groups.push(activeSession);
       return;
     }
 
-    if (event.type === 'recording-start' && activeSession) {
+    if (event.type === 'recording-start') {
+      if (!activeSession && !activeCharging) startSession(event);
+      if (!activeSession) {
+        groups.push({ kind: 'standalone', event, types: new Set([event.type]) });
+        return;
+      }
       activeRecording = { start: event, end: null };
       activeSession.recordings.push(activeRecording);
       activeSession.types.add(event.type);
@@ -812,7 +831,9 @@ function buildBadgeEventGroups(events) {
     }
 
     if (event.type === 'power-off' && activeSession) {
+      activeSession.powerOffs.push(event);
       activeSession.end = event;
+      activeSession.endReason = 'power-off';
       activeSession.types.add(event.type);
       activeSession = null;
       activeRecording = null;
@@ -820,6 +841,12 @@ function buildBadgeEventGroups(events) {
     }
 
     if (event.type === 'charging-start') {
+      if (activeSession) {
+        activeSession.end = event;
+        activeSession.endReason = 'charging-start';
+        activeSession = null;
+        activeRecording = null;
+      }
       activeCharging = {
         kind: 'charging',
         start: event,
@@ -857,38 +884,72 @@ function renderBadgeEventGroup(group, activeType) {
   }
 
   if (group.kind === 'session') {
-    const endTime = group.end?.time || '进行中';
-    const showSessionDetails = activeType === 'all' || activeType === 'session';
-    const showRecordings = showSessionDetails || activeType === 'recording';
-    const showWarnings = showSessionDetails || activeType === 'low-battery';
-    const recordingRows = showRecordings ? group.recordings.map((recording) => {
+    const showAllDetails = activeType === 'all';
+    const detailRows = [];
+
+    if (showAllDetails || activeType === 'power-on') {
+      group.powerOns.forEach((event) => detailRows.push({
+        time: event.time,
+        html: `
+          <div class="event-group-row event-detail-row event-power-row">
+            <span class="event-dot green" aria-hidden="true">${event.iconAsset === 'power-on' ? '<img src="../assets/device-event-icons/power-on.svg" alt="" />' : escapeBadgeHtml(event.icon || '开')}</span>
+            <div class="event-group-copy"><strong>工牌开机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
+          </div>`
+      }));
+    }
+
+    if (showAllDetails || activeType === 'recording') {
+      group.recordings.forEach((recording) => {
       const recordingEndTime = recording.end?.time || '进行中';
-      return `
-        <div class="event-group-row event-detail-row">
-          <span class="event-dot blue"><img src="../assets/device-event-icons/recording.svg" alt="" aria-hidden="true" /></span>
-          <div class="event-group-copy"><strong>录音</strong><p>${escapeBadgeHtml(recording.start.time)} — ${escapeBadgeHtml(recordingEndTime)}</p></div>
-          <em>${recording.end ? escapeBadgeHtml(formatBadgeEventDuration(recording.start.time, recording.end.time)) : '进行中'}</em>
-        </div>`;
-    }).join('') : '';
-    const warningRows = showWarnings ? group.warnings.map((warning) => `
-      <div class="event-group-row event-detail-row event-warning-row">
-        <span class="event-dot red"><img src="../assets/device-event-icons/low-battery.svg" alt="" aria-hidden="true" /></span>
-        <div class="event-group-copy"><strong>电量预警</strong><p>${escapeBadgeHtml(warning.time)}</p></div>
-        <em>${escapeBadgeHtml(warning.note || '请及时充电')}</em>
-      </div>`).join('') : '';
-    const detailDivider = recordingRows && warningRows
-      ? '<div class="event-detail-divider" aria-hidden="true"><img src="../assets/device-event-icons/detail-divider.svg" alt="" /></div>'
-      : '';
+        detailRows.push({
+          time: recording.start.time,
+          html: `
+            <div class="event-group-row event-detail-row">
+              <span class="event-dot blue"><img src="../assets/device-event-icons/recording.svg" alt="" aria-hidden="true" /></span>
+              <div class="event-group-copy"><strong>录音</strong><p>${escapeBadgeHtml(recording.start.time)} — ${escapeBadgeHtml(recordingEndTime)}</p></div>
+              <em>${recording.end ? escapeBadgeHtml(formatBadgeEventDuration(recording.start.time, recording.end.time)) : '进行中'}</em>
+            </div>`
+        });
+      });
+    }
+
+    if (showAllDetails || activeType === 'low-battery') {
+      group.warnings.forEach((warning) => detailRows.push({
+        time: warning.time,
+        html: `
+          <div class="event-group-row event-detail-row event-warning-row">
+            <span class="event-dot red"><img src="../assets/device-event-icons/low-battery.svg" alt="" aria-hidden="true" /></span>
+            <div class="event-group-copy"><strong>电量预警</strong><p>${escapeBadgeHtml(warning.time)}</p></div>
+            <em>${escapeBadgeHtml(warning.note || '请及时充电')}</em>
+          </div>`
+      }));
+    }
+
+    if (showAllDetails || activeType === 'power-off') {
+      group.powerOffs.forEach((event) => detailRows.push({
+        time: event.time,
+        html: `
+          <div class="event-group-row event-detail-row event-power-row">
+            <span class="event-dot neutral" aria-hidden="true"><img src="../assets/device-event-icons/power-off.svg" alt="" /></span>
+            <div class="event-group-copy"><strong>工牌关机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
+          </div>`
+      }));
+    }
+
+    const detailMarkup = detailRows
+      .sort((left, right) => left.time.localeCompare(right.time))
+      .map((row) => row.html)
+      .join('');
     return `
       <article class="event-group-card event-session-card">
         <div class="event-session-head">
           <div class="event-session-main">
-            <span class="event-session-status" aria-hidden="true"></span>
-            <div class="event-group-copy"><strong>工牌事件${group.number}</strong><p>${escapeBadgeHtml(group.start.time)} — ${escapeBadgeHtml(endTime)}</p></div>
+            <span class="event-session-status${group.end ? ' is-ended' : ''}" aria-hidden="true"></span>
+            <div class="event-group-copy"><strong>工牌事件${group.number}</strong></div>
           </div>
           <div class="event-session-duration"><span>持续时长</span><strong>${group.end ? escapeBadgeHtml(formatBadgeEventDuration(group.start.time, group.end.time)) : '进行中'}</strong></div>
         </div>
-        ${recordingRows || warningRows ? `<div class="event-session-details">${recordingRows}${detailDivider}${warningRows}</div>` : ''}
+        ${detailMarkup ? `<div class="event-session-details">${detailMarkup}</div>` : ''}
       </article>`;
   }
 
@@ -925,7 +986,14 @@ function renderBadgeEvents() {
   const groupedEvents = buildBadgeEventGroups(record.events.slice().sort((left, right) => left.time.localeCompare(right.time)))
     .filter((group) => {
       if (badgeEventFilterState.type === 'all') return true;
-      if (badgeEventFilterState.type === 'session') return group.kind === 'session';
+      if (badgeEventFilterState.type === 'power-on') {
+        return (group.kind === 'session' && group.powerOns.length > 0)
+          || (group.kind === 'standalone' && group.event.type === 'power-on');
+      }
+      if (badgeEventFilterState.type === 'power-off') {
+        return (group.kind === 'session' && group.powerOffs.length > 0)
+          || (group.kind === 'standalone' && group.event.type === 'power-off');
+      }
       if (badgeEventFilterState.type === 'recording') return group.kind === 'session' && group.recordings.length > 0;
       if (badgeEventFilterState.type === 'charging') return group.kind === 'charging';
       if (badgeEventFilterState.type === 'low-battery') {
@@ -1077,6 +1145,15 @@ const badgeRecordDrawerBackdrop = document.getElementById('badgeRecordDrawerBack
 const badgeRecordDrawerBody = document.getElementById('badgeRecordDrawerBody');
 const badgeRecordDrawerFilterHost = document.getElementById('badgeRecordDrawerFilterHost');
 const badgeRecordDrawerContentHost = document.getElementById('badgeRecordDrawerContentHost');
+const badgeRecordDrawerTitle = document.getElementById('badgeRecordDrawerTitle');
+const badgeRecordDrawerSubtitle = document.getElementById('badgeRecordDrawerSubtitle');
+const badgeDockDrawerView = document.getElementById('badgeDockDrawerView');
+const badgeDockSubdeviceTableBody = document.getElementById('badgeDockSubdeviceTableBody');
+const badgeDockLogTableBody = document.getElementById('badgeDockLogTableBody');
+const badgeDockSubdevicePagination = document.getElementById('badgeDockSubdevicePagination');
+const badgeDockLogPagination = document.getElementById('badgeDockLogPagination');
+const badgeDockRefreshBtn = document.getElementById('badgeDockRefreshBtn');
+const badgeDockDateControl = document.getElementById('badgeDockDateControl');
 let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
 
@@ -1169,6 +1246,39 @@ const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ 
     syncedAt: connected ? `2026-08-13 14:${String(59 - (index % 48)).padStart(2, '0')}:${String((index * 7) % 60).padStart(2, '0')}` : '2026-08-13 11:18:06'
   };
 }));
+
+const dockSubdeviceRecords = [
+  { port: '端口 1', sn: 'RAGPW19JSK1TABDB', availableSpace: '12.4 GB', battery: 86, capturedAt: '2026/08/20 14:11:02' },
+  { port: '端口 2', sn: 'RAGPW19JS8SKASF2', availableSpace: '28.1 GB', battery: 73, capturedAt: '2026/08/20 14:09:32' },
+  { port: '端口 3', sn: 'RAGPW19JS5KXPL9Q', availableSpace: '5.6 GB', battery: 41, capturedAt: '2026/08/20 13:58:17' },
+  { port: '端口 4', sn: 'RAGPW19JS2MNC7VH', availableSpace: '19.8 GB', battery: 92, capturedAt: '2026/08/20 13:47:50' }
+];
+
+const dockLogRecords = [
+  { time: '2026/08/20 14:26:42', event: '工牌下线', sn: 'RAGPW19JSK1TABDB', employee: '卢金荣' },
+  { time: '2026/08/20 14:19:28', event: '设备日志上传完成', sn: 'RAGPW19JS8SKASF2', employee: '俞万炜' },
+  { time: '2026/08/20 14:18:11', event: '设备日志上传完成', sn: 'RAGPW19JSK1TABDB', employee: '卢金荣' },
+  { time: '2026/08/20 14:11:13', event: '工牌下线', sn: 'RAGPW19JSK1TABDB', employee: '卢金荣' },
+  { time: '2026/08/20 14:11:02', event: '充电坞上线', sn: '-', employee: '-' },
+  { time: '2026/08/20 14:11:02', event: '工牌下线', sn: 'RAGPW19JSK1TABDB', employee: '卢金荣' },
+  { time: '2026/08/20 14:10:21', event: '充电坞下线', sn: '-', employee: '-' },
+  { time: '2026/08/20 14:09:32', event: '设备日志上传完成', sn: 'RAGPW19JS8SKASF2', employee: '俞万炜' }
+];
+
+const badgeDockDateDefaultFilters = { startDate: '2026-08-14', endDate: '2026-08-20' };
+const badgeDockDateFilterState = { ...badgeDockDateDefaultFilters };
+const badgeDockDateMenuState = {
+  open: false,
+  dateDraftStartDate: badgeDockDateDefaultFilters.startDate,
+  dateDraftEndDate: badgeDockDateDefaultFilters.endDate,
+  activeDateField: 'startDate',
+  dateViewYear: 2026,
+  dateViewMonth: 8
+};
+const badgeDockPaginationStates = {
+  subdevices: { page: 1, pageSize: 10 },
+  logs: { page: 1, pageSize: 10 }
+};
 
 const badgeDefaultFilters = {
   brand: '全部',
@@ -2099,13 +2209,187 @@ function getBadgeRecordDrawerFocusableElements() {
     .filter((element) => !element.hidden && !element.closest('[hidden]') && element.getAttribute('aria-hidden') !== 'true');
 }
 
+function isDockBadgeType(sn) {
+  const detailRecord = badgeDetailRecords.find((item) => item.sn === sn);
+  return detailRecord?.badgeType === '充电坞版本工牌';
+}
+
+function getDockBadgeStoreName(sn) {
+  const detailRecord = badgeDetailRecords.find((item) => item.sn === sn);
+  return detailRecord?.store || '—';
+}
+
+function renderBadgeDockSubdeviceTable() {
+  if (!badgeDockSubdeviceTableBody) return;
+  const state = badgeDockPaginationStates.subdevices;
+  const totalPages = Math.max(1, Math.ceil(dockSubdeviceRecords.length / state.pageSize));
+  state.page = Math.min(state.page, totalPages);
+  const start = (state.page - 1) * state.pageSize;
+  const visibleRecords = dockSubdeviceRecords.slice(start, start + state.pageSize);
+  if (visibleRecords.length) {
+    badgeDockSubdeviceTableBody.innerHTML = visibleRecords.map((item) => `<tr>
+      <td>${escapeBadgeHtml(item.port)}</td>
+      <td><span class="cell-main">${escapeBadgeHtml(item.sn)}</span></td>
+      <td>${escapeBadgeHtml(item.availableSpace)}</td>
+      <td><span class="battery"><i style="width:${item.battery}%"></i></span><strong>${item.battery}%</strong></td>
+      <td>${escapeBadgeHtml(item.capturedAt)}</td>
+    </tr>`).join('');
+  } else {
+    badgeDockSubdeviceTableBody.innerHTML = `<tr><td colspan="5" class="badge-dock-empty-cell"><div class="badge-dock-empty-state"><div class="badge-dock-empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#E2E8F0" d="M24 6a18 18 0 0 0-18 18c0 9.941 8.059 18 18 18s18-8.059 18-18A18 18 0 0 0 24 6Zm-9 16h18v4H15v-4Z" /><path fill="#94A3B8" d="M24 30a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm0-14a2 2 0 0 0-2 2v8a2 2 0 0 0 4 0v-8a2 2 0 0 0-2-2Z" /></svg></div><span>暂无设备</span></div></td></tr>`;
+  }
+  renderBadgeDockPagination(badgeDockSubdevicePagination, dockSubdeviceRecords.length, 'subdevices');
+}
+
+function renderBadgeDockPagination(container, totalItems, key) {
+  if (!container) return;
+  const state = badgeDockPaginationStates[key];
+  const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+  state.page = Math.min(state.page, totalPages);
+  container.innerHTML = `
+    <div class="dashboard-pagination">
+      <span class="session-pagination-total">共 ${totalItems} 条</span>
+      <div class="dashboard-pagination-controls">
+        <div class="custom-select-container page-select page-size-select">
+          <button type="button" class="custom-select-trigger page-size-trigger" data-badge-dock-page-size-trigger="${key}"><span>${state.pageSize} 条/页</span></button>
+          <div class="custom-select-options page-size-options">${[10, 20, 50].map((size) => `<button type="button" class="custom-option page-size-option${size === state.pageSize ? ' active' : ''}" data-badge-dock-page-size="${key}" data-page-size="${size}"><span>${size} 条/页</span></button>`).join('')}</div>
+        </div>
+        <div class="page-group">
+          <button type="button" class="page-arrow" data-badge-dock-page-action="${key}" data-page-action="prev" aria-label="上一页" ${state.page === 1 ? 'disabled' : ''}>‹</button>
+          ${getBadgeRecordPaginationItems(state, totalPages).map((item) => typeof item === 'number' ? `<button type="button" class="page-num${item === state.page ? ' active' : ''}" data-badge-dock-page="${key}" data-page="${item}" aria-label="第 ${item} 页" ${item === state.page ? 'aria-current="page"' : ''}>${item}</button>` : '<span class="page-ellipsis">…</span>').join('')}
+          <button type="button" class="page-arrow" data-badge-dock-page-action="${key}" data-page-action="next" aria-label="下一页" ${state.page === totalPages ? 'disabled' : ''}>›</button>
+        </div>
+        <div class="page-group page-jump-group"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input type="number" min="1" max="${totalPages}" value="${state.page}" data-badge-dock-page-jump="${key}" aria-label="跳转页码" /></label><span class="session-page-jump-suffix">页</span></div>
+      </div>
+    </div>`;
+}
+
+function renderBadgeDockTable(key) {
+  if (key === 'subdevices') renderBadgeDockSubdeviceTable();
+  else renderBadgeDockLogTable();
+}
+
+function syncBadgeDockDateView(value) {
+  const parsedDate = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) return;
+  badgeDockDateMenuState.dateViewYear = parsedDate.getFullYear();
+  badgeDockDateMenuState.dateViewMonth = parsedDate.getMonth() + 1;
+}
+
+function syncBadgeDockDateDraft() {
+  badgeDockDateMenuState.dateDraftStartDate = badgeDockDateFilterState.startDate;
+  badgeDockDateMenuState.dateDraftEndDate = badgeDockDateFilterState.endDate;
+  badgeDockDateMenuState.activeDateField = 'startDate';
+  syncBadgeDockDateView(badgeDockDateMenuState.dateDraftStartDate);
+}
+
+function getBadgeDockDateCells() {
+  const cells = [];
+  const { dateViewYear: year, dateViewMonth: month } = badgeDockDateMenuState;
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDate = new Date(year, month, 0).getDate();
+  const leadingSlots = (firstDay.getDay() + 6) % 7;
+  for (let index = 0; index < leadingSlots; index += 1) cells.push(null);
+  for (let day = 1; day <= lastDate; day += 1) {
+    const value = formatStoreDateValue(new Date(year, month - 1, day));
+    cells.push({
+      day,
+      value,
+      inRange: value >= badgeDockDateMenuState.dateDraftStartDate && value <= badgeDockDateMenuState.dateDraftEndDate,
+      isStart: value === badgeDockDateMenuState.dateDraftStartDate,
+      isEnd: value === badgeDockDateMenuState.dateDraftEndDate,
+      isToday: value === storeTodayDateValue
+    });
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+function renderBadgeDockDateControl() {
+  if (!badgeDockDateControl) return;
+  const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
+  const draftRangeText = `${formatStoreDateDisplay(badgeDockDateMenuState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(badgeDockDateMenuState.dateDraftEndDate)}`;
+  const panel = badgeDockDateMenuState.open && panelRenderer ? panelRenderer({
+    dataNamespace: 'badge-dock-date',
+    rangeText: draftRangeText,
+    monthLabel: `${badgeDockDateMenuState.dateViewYear}年${badgeDockDateMenuState.dateViewMonth}月`,
+    activeField: badgeDockDateMenuState.activeDateField,
+    startLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftStartDate),
+    endLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftEndDate),
+    cells: getBadgeDockDateCells(),
+    summaryText: `已选择 ${draftRangeText}`,
+    panelClassName: 'session-menu-panel session-menu-panel-date badge-dock-date-panel',
+    title: '日志日期范围',
+    applyLabel: '确定'
+  }) : '';
+  badgeDockDateControl.classList.toggle('is-open', badgeDockDateMenuState.open);
+  badgeDockDateControl.innerHTML = `
+    <span>日期范围</span>
+    <button type="button" class="session-date-trigger${badgeDockDateMenuState.open ? ' active' : ''}" data-badge-dock-date-trigger aria-label="选择子设备日志日期范围" aria-haspopup="dialog" aria-expanded="${badgeDockDateMenuState.open ? 'true' : 'false'}">
+      <strong>${escapeBadgeHtml(formatStoreDateDisplay(badgeDockDateFilterState.startDate))}</strong>
+      <em>至</em>
+      <strong>${escapeBadgeHtml(formatStoreDateDisplay(badgeDockDateFilterState.endDate))}</strong>
+      <span class="session-date-icon" aria-hidden="true"></span>
+    </button>
+    ${panel}`;
+}
+
+function renderBadgeDockLogTable() {
+  if (!badgeDockLogTableBody) return;
+  const filteredRecords = dockLogRecords.filter((item) => {
+    const date = item.time.slice(0, 10).replaceAll('/', '-');
+    return date >= badgeDockDateFilterState.startDate && date <= badgeDockDateFilterState.endDate;
+  });
+  const state = badgeDockPaginationStates.logs;
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / state.pageSize));
+  state.page = Math.min(state.page, totalPages);
+  const start = (state.page - 1) * state.pageSize;
+  const visibleRecords = filteredRecords.slice(start, start + state.pageSize);
+  badgeDockLogTableBody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
+    <td>${escapeBadgeHtml(item.time)}</td>
+    <td>${escapeBadgeHtml(item.event)}</td>
+    <td><span class="cell-main">${escapeBadgeHtml(item.sn)}</span></td>
+    <td>${escapeBadgeHtml(item.employee)}</td>
+  </tr>`).join('') : '<tr><td colspan="4" class="badge-record-empty">当前日期范围内暂无子设备日志。</td></tr>';
+  renderBadgeDockPagination(badgeDockLogPagination, filteredRecords.length, 'logs');
+}
+
+function renderBadgeDockDrawer(sn) {
+  if (!badgeRecordDrawerTitle || !badgeRecordDrawerSubtitle || !badgeDockDrawerView) return;
+  const storeName = getDockBadgeStoreName(sn);
+  badgeRecordDrawerTitle.textContent = storeName;
+  badgeRecordDrawerSubtitle.textContent = '充电坞工牌 · 子设备状态与日志';
+  Object.assign(badgeDockDateFilterState, badgeDockDateDefaultFilters);
+  badgeDockDateMenuState.open = false;
+  badgeDockPaginationStates.subdevices.page = 1;
+  badgeDockPaginationStates.logs.page = 1;
+  syncBadgeDockDateDraft();
+  renderBadgeDockSubdeviceTable();
+  renderBadgeDockDateControl();
+  renderBadgeDockLogTable();
+}
+
+function setBadgeRecordDrawerMode(isDock) {
+  const normalSections = badgeRecordDrawerBody?.querySelectorAll('.badge-record-profile-card, .badge-record-drawer-controls, .badge-record-drawer-content-host');
+  normalSections?.forEach((section) => { section.hidden = isDock; });
+  if (badgeDockDrawerView) badgeDockDrawerView.hidden = !isDock;
+}
+
 function openBadgeRecordDrawer(tab, trigger) {
   if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeRecordDrawerContentHost) return;
   window.clearTimeout(badgeRecordDrawerCloseTimer);
   badgeRecordDrawerTrigger = trigger || null;
-  selectBadgeRecord(trigger?.dataset.badgeSn, trigger?.dataset.advisorName);
-  moveBadgeRecordContents(badgeRecordDrawerContentHost);
-  syncBadgeRecordTabs(tab);
+  const sn = trigger?.dataset.badgeSn;
+  const isDock = isDockBadgeType(sn);
+  selectBadgeRecord(sn, trigger?.dataset.advisorName);
+  setBadgeRecordDrawerMode(isDock);
+  if (isDock) {
+    renderBadgeDockDrawer(sn);
+  } else {
+    moveBadgeRecordContents(badgeRecordDrawerContentHost);
+    syncBadgeRecordTabs(tab);
+    if (badgeRecordDrawerTitle) badgeRecordDrawerTitle.textContent = '工牌记录';
+    if (badgeRecordDrawerSubtitle) badgeRecordDrawerSubtitle.textContent = '查看当前顾问工牌的设备事件和录音上传记录';
+  }
   badgeRecordDrawerBackdrop.hidden = false;
   badgeRecordDrawer.setAttribute('aria-hidden', 'false');
   window.requestAnimationFrame(() => {
@@ -2121,6 +2405,7 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
   const trigger = badgeRecordDrawerTrigger;
   badgeEventMenuState.openMenu = null;
   badgeUploadMenuState.openMenu = null;
+  badgeDockDateMenuState.open = false;
   badgeRecordDrawer.classList.remove('open');
   badgeRecordDrawer.setAttribute('aria-hidden', 'true');
 
@@ -2128,6 +2413,9 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
     badgeRecordDrawerBackdrop.hidden = true;
     restoreBadgeRecordFilterToolbars();
     moveBadgeRecordContents(badgeRecordPageContent);
+    setBadgeRecordDrawerMode(false);
+    if (badgeRecordDrawerTitle) badgeRecordDrawerTitle.textContent = '工牌记录';
+    if (badgeRecordDrawerSubtitle) badgeRecordDrawerSubtitle.textContent = '查看当前顾问工牌的设备事件和录音上传记录';
     if (restoreFocus && trigger?.isConnected) trigger.focus();
     badgeRecordDrawerTrigger = null;
   };
@@ -2217,6 +2505,129 @@ document.addEventListener('click', (event) => {
   const badgeRecordDrawerOpen = event.target.closest('[data-badge-record-drawer-open]');
   if (badgeRecordDrawerOpen) {
     openBadgeRecordDrawer(badgeRecordDrawerOpen.dataset.badgeRecordDrawerOpen, badgeRecordDrawerOpen);
+    return;
+  }
+
+  if (event.target.closest('#badgeDockRefreshBtn')) {
+    if (badgeDockRefreshBtn) {
+      window.clearTimeout(badgeDockRefreshBtn.refreshTimer);
+      badgeDockRefreshBtn.classList.add('spinning');
+      badgeDockRefreshBtn.setAttribute('aria-busy', 'true');
+      badgeDockRefreshBtn.refreshTimer = window.setTimeout(() => {
+        badgeDockRefreshBtn.classList.remove('spinning');
+        badgeDockRefreshBtn.removeAttribute('aria-busy');
+      }, 700);
+    }
+    renderBadgeDockSubdeviceTable();
+    renderBadgeDockLogTable();
+    showToast('子设备状态已刷新');
+    return;
+  }
+
+  if (!event.target.closest('.badge-dock-pagination')) {
+    document.querySelectorAll('.badge-dock-pagination .page-size-options.open').forEach((node) => node.classList.remove('open'));
+    document.querySelectorAll('.badge-dock-pagination .page-size-trigger.is-open').forEach((node) => node.classList.remove('is-open'));
+  }
+
+  const badgeDockPageSizeTrigger = event.target.closest('[data-badge-dock-page-size-trigger]');
+  if (badgeDockPageSizeTrigger) {
+    const options = badgeDockPageSizeTrigger.parentElement.querySelector('.page-size-options');
+    const willOpen = !options.classList.contains('open');
+    document.querySelectorAll('.badge-dock-pagination .page-size-options.open').forEach((node) => node.classList.remove('open'));
+    document.querySelectorAll('.badge-dock-pagination .page-size-trigger.is-open').forEach((node) => node.classList.remove('is-open'));
+    options.classList.toggle('open', willOpen);
+    badgeDockPageSizeTrigger.classList.toggle('is-open', willOpen);
+    return;
+  }
+
+  const badgeDockPageSize = event.target.closest('[data-badge-dock-page-size]');
+  if (badgeDockPageSize) {
+    const key = badgeDockPageSize.dataset.badgeDockPageSize;
+    const state = badgeDockPaginationStates[key];
+    state.pageSize = Number(badgeDockPageSize.dataset.pageSize);
+    state.page = 1;
+    renderBadgeDockTable(key);
+    return;
+  }
+
+  const badgeDockPage = event.target.closest('[data-badge-dock-page]');
+  if (badgeDockPage) {
+    const key = badgeDockPage.dataset.badgeDockPage;
+    badgeDockPaginationStates[key].page = Number(badgeDockPage.dataset.page);
+    renderBadgeDockTable(key);
+    return;
+  }
+
+  const badgeDockPageAction = event.target.closest('[data-badge-dock-page-action]');
+  if (badgeDockPageAction && !badgeDockPageAction.disabled) {
+    const key = badgeDockPageAction.dataset.badgeDockPageAction;
+    const state = badgeDockPaginationStates[key];
+    state.page += badgeDockPageAction.dataset.pageAction === 'next' ? 1 : -1;
+    renderBadgeDockTable(key);
+    return;
+  }
+
+  if (!event.target.closest('#badgeDockDateControl') && badgeDockDateMenuState.open) {
+    badgeDockDateMenuState.open = false;
+    renderBadgeDockDateControl();
+  }
+
+  if (event.target.closest('[data-badge-dock-date-trigger]')) {
+    badgeDockDateMenuState.open = !badgeDockDateMenuState.open;
+    if (badgeDockDateMenuState.open) syncBadgeDockDateDraft();
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  const badgeDockDateNav = event.target.closest('[data-badge-dock-date-nav]');
+  if (badgeDockDateNav) {
+    const nextMonth = new Date(badgeDockDateMenuState.dateViewYear, badgeDockDateMenuState.dateViewMonth - 1 + Number(badgeDockDateNav.dataset.badgeDockDateNav), 1);
+    badgeDockDateMenuState.dateViewYear = nextMonth.getFullYear();
+    badgeDockDateMenuState.dateViewMonth = nextMonth.getMonth() + 1;
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  const badgeDockDateField = event.target.closest('[data-badge-dock-date-field]');
+  if (badgeDockDateField) {
+    badgeDockDateMenuState.activeDateField = badgeDockDateField.dataset.badgeDockDateField;
+    syncBadgeDockDateView(badgeDockDateMenuState.activeDateField === 'startDate'
+      ? badgeDockDateMenuState.dateDraftStartDate
+      : badgeDockDateMenuState.dateDraftEndDate);
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  const badgeDockDateValue = event.target.closest('[data-badge-dock-date-value]');
+  if (badgeDockDateValue) {
+    const value = badgeDockDateValue.dataset.badgeDockDateValue;
+    if (badgeDockDateMenuState.activeDateField === 'startDate') {
+      badgeDockDateMenuState.dateDraftStartDate = value;
+      if (badgeDockDateMenuState.dateDraftEndDate < value) badgeDockDateMenuState.dateDraftEndDate = value;
+      badgeDockDateMenuState.activeDateField = 'endDate';
+    } else {
+      badgeDockDateMenuState.dateDraftEndDate = value;
+      if (badgeDockDateMenuState.dateDraftStartDate > value) badgeDockDateMenuState.dateDraftStartDate = value;
+      badgeDockDateMenuState.activeDateField = 'startDate';
+    }
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-dock-date-cancel]')) {
+    badgeDockDateMenuState.open = false;
+    syncBadgeDockDateDraft();
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-dock-date-apply]')) {
+    badgeDockDateFilterState.startDate = badgeDockDateMenuState.dateDraftStartDate;
+    badgeDockDateFilterState.endDate = badgeDockDateMenuState.dateDraftEndDate;
+    badgeDockPaginationStates.logs.page = 1;
+    badgeDockDateMenuState.open = false;
+    renderBadgeDockDateControl();
+    renderBadgeDockLogTable();
     return;
   }
 
@@ -2852,6 +3263,20 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
+  if (event.target.matches('[data-badge-dock-page-jump]')) {
+    const key = event.target.dataset.badgeDockPageJump;
+    const state = badgeDockPaginationStates[key];
+    const totalItems = key === 'subdevices'
+      ? dockSubdeviceRecords.length
+      : dockLogRecords.filter((item) => {
+        const date = item.time.slice(0, 10).replaceAll('/', '-');
+        return date >= badgeDockDateFilterState.startDate && date <= badgeDockDateFilterState.endDate;
+      }).length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+    state.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
+    renderBadgeDockTable(key);
+    return;
+  }
   if (event.target.matches('[data-badge-record-page-jump]')) {
     const key = event.target.dataset.badgeRecordPageJump;
     const state = getBadgeRecordPaginationState(key);
@@ -2924,11 +3349,20 @@ document.addEventListener('keydown', (event) => {
     event.target.blur();
     return;
   }
+  if (event.key === 'Enter' && event.target.matches('[data-badge-dock-page-jump]')) {
+    event.target.blur();
+    return;
+  }
   if (event.key === 'Enter' && event.target.matches('[data-store-page-jump]')) {
     event.target.blur();
     return;
   }
   if (event.key !== 'Escape') return;
+  if (badgeDockDateMenuState.open) {
+    badgeDockDateMenuState.open = false;
+    renderBadgeDockDateControl();
+    return;
+  }
   if (closeBadgeEventMenus()) return;
   if (closeBadgeUploadMenus()) return;
   closeStoreFilterMenus();

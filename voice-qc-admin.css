@@ -270,11 +270,6 @@ body::before {
   font-weight: 700;
 }
 
-.nav-button[data-page="customer-insight"] .nav-icon path,
-.nav-button[data-page="factory-dashboard"] .nav-icon path {
-  display: none;
-}
-
 .sidebar-user {
   display: none;
 }
