@@ -15319,19 +15319,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reminderTime: lead.followUpTime || '待确认',
           conversationTags: ['高意向', '价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动'],
           publicProfile: {
-            highlights: [
-              { label: '高意向', tone: 'blue', icon: '../assets/lead-tag-public-intent.svg' },
-              { label: '2档消费', tone: 'red', icon: '../assets/lead-tag-public-consumption.svg' },
-              { label: '广东省广州市番禺区', tone: 'green', icon: '../assets/lead-tag-public-location.svg' }
-            ],
-            attributes: [
-              { label: '男', tone: 'blue', icon: '../assets/lead-tag-public-gender.svg' },
-              { label: '年龄', tone: 'red', icon: '../assets/lead-tag-public-age.svg' },
-              { label: '本科', tone: 'green', icon: '../assets/lead-tag-public-education.svg' },
-              { label: '资深白领', tone: 'violet', icon: '../assets/lead-tag-public-career.svg' },
-              { label: '有车', tone: 'amber', icon: '../assets/lead-tag-public-car.svg' },
-              { label: '新能源', tone: 'blue', icon: '../assets/lead-tag-public-new-energy.svg' },
-              { label: '科技爱好者', tone: 'red', icon: '../assets/lead-tag-public-tech.svg' }
+            groups: [
+              [
+                { label: '女', tone: 'blue', icon: '../assets/lead-tag-public-gender.svg' },
+                { label: '18-24岁', tone: 'red', icon: '../assets/lead-tag-public-age-range.svg' },
+                { label: '广东省广州市番禺区', tone: 'green', icon: '../assets/lead-tag-public-location-v2.svg' },
+                { label: '未婚', tone: 'violet', icon: '../assets/lead-tag-public-marital-status.svg' },
+                { label: '高消费', tone: 'amber', icon: '../assets/lead-tag-public-high-consumption.svg' },
+                { label: 'IT行业', tone: 'blue', icon: '../assets/lead-tag-public-industry.svg' }
+              ],
+              [
+                { label: '信用卡高', tone: 'blue', icon: '../assets/lead-tag-public-credit-card.svg' },
+                { label: '无车', tone: 'red', icon: '../assets/lead-tag-public-car-status.svg' },
+                { label: '新能源', tone: 'green', icon: '../assets/lead-tag-public-new-energy-v2.svg' },
+                { label: '空间大', tone: 'violet', icon: '../assets/lead-tag-public-space.svg' },
+                { label: '竞品：比亚迪', tone: 'amber', icon: '../assets/lead-tag-public-competitor.svg' }
+              ]
             ]
           }
         }
@@ -15396,14 +15399,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderLeadDetailPublicProfile(profile) {
-        const highlights = (profile?.highlights || []).map((item) => {
-          return `<div class="lead-public-highlight tone-${escapeHtml(item.tone)}"><img class="lead-public-highlight-icon" src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" /><strong>${escapeHtml(item.label)}</strong></div>`
-        }).join('')
-        const attributes = (profile?.attributes || []).map((item) => {
-          return `<span class="lead-public-attribute tone-${escapeHtml(item.tone)}"><img src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" />${escapeHtml(item.label)}</span>`
-        }).join('')
-
-        return `<div class="lead-public-profile-highlights">${highlights}</div><div class="lead-public-profile-divider" aria-hidden="true"><img src="../assets/lead-tag-public-divider.svg" alt="" /></div><div class="lead-public-profile-attributes">${attributes}</div>`
+        const groups = profile?.groups || [profile?.highlights || [], profile?.attributes || []]
+        return `<div class="public-profile-groups">${groups.map((items, index) => {
+          const tags = items.map((item) => `<span class="public-profile-tag tone-${escapeHtml(item.tone)}"><img src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" />${escapeHtml(item.label)}</span>`).join('')
+          const divider = index < groups.length - 1 ? '<div class="public-profile-divider" aria-hidden="true"><img src="../assets/lead-tag-public-divider.svg" alt="" /></div>' : ''
+          return `<div class="public-profile-tag-group">${tags}</div>${divider}`
+        }).join('')}</div>`
       }
 
       function renderLeadDetailIntentList(value) {

@@ -1692,6 +1692,27 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   border-top: 1px solid #dbeafe;
 }
 
+.lead-detail-tag-section-public,
+.customer-detail-page .customer-insight-tag-group-public {
+  padding: 15px 16px;
+  border-color: rgba(37, 99, 235, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(248, 251, 255, 0.98), rgba(242, 247, 253, 0.94));
+}
+
+.customer-detail-page .customer-insight-tag-group-public {
+  background: transparent;
+}
+
+.lead-detail-tag-section-public .lead-detail-tag-section-header h3,
+.customer-detail-page .customer-insight-tag-group-public .customer-insight-tag-title > span {
+  font-weight: 700;
+}
+
+.lead-detail-tag-section-public .lead-detail-tag-section-header p {
+  margin-top: 8px;
+}
+
 .customer-detail-page .customer-insight-tag-title {
   display: flex;
   align-items: flex-start;
@@ -1759,40 +1780,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 .customer-detail-page .customer-dialogue-tag-map .lead-relationship-chip.position-8 { left: 39.24%; top: 96.31px; }
 
 .customer-detail-page .customer-insight-public-tag-list {
-  align-content: flex-start;
-  align-items: center;
-  gap: 12px;
-}
-
-.customer-detail-page .customer-public-tag-primary {
-  min-height: 76px;
-  flex: 1 1 76px;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 8px;
-  border-radius: 16px;
-  text-align: center;
-}
-
-.customer-detail-page .customer-public-tag-primary:nth-child(3) {
-  flex-grow: 2;
-}
-
-.customer-detail-page .customer-public-tag-primary > img {
-  width: 24px;
-  height: 24px;
-  flex-basis: 24px;
-}
-
-.customer-detail-page .customer-public-tag-divider {
-  width: 100%;
-  height: 1px;
-  flex: 0 0 100%;
-  background: rgba(96, 165, 250, 0.28);
-}
-
-.customer-detail-page .customer-public-tag:not(.customer-public-tag-primary) {
-  padding: 6px 10px;
+  align-items: stretch;
+  align-content: initial;
 }
 
 @media (max-width: 1120px) {
@@ -1952,31 +1941,36 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 
 .lead-relationship-chip.tone-blue,
 .lead-public-highlight.tone-blue,
-.lead-public-attribute.tone-blue {
+.lead-public-attribute.tone-blue,
+.public-profile-tag.tone-blue {
   --lead-tag-tone-rgb: 33, 95, 208;
   --lead-tag-text: #215fd0;
 }
 .lead-relationship-chip.tone-red,
 .lead-public-highlight.tone-red,
-.lead-public-attribute.tone-red {
+.lead-public-attribute.tone-red,
+.public-profile-tag.tone-red {
   --lead-tag-tone-rgb: 202, 48, 37;
   --lead-tag-text: #ca3025;
 }
 .lead-relationship-chip.tone-green,
 .lead-public-highlight.tone-green,
-.lead-public-attribute.tone-green {
+.lead-public-attribute.tone-green,
+.public-profile-tag.tone-green {
   --lead-tag-tone-rgb: 20, 132, 76;
   --lead-tag-text: #14844c;
 }
 .lead-relationship-chip.tone-violet,
 .lead-public-highlight.tone-violet,
-.lead-public-attribute.tone-violet {
+.lead-public-attribute.tone-violet,
+.public-profile-tag.tone-violet {
   --lead-tag-tone-rgb: 104, 64, 218;
   --lead-tag-text: #6840da;
 }
 .lead-relationship-chip.tone-amber,
 .lead-public-highlight.tone-amber,
-.lead-public-attribute.tone-amber {
+.lead-public-attribute.tone-amber,
+.public-profile-tag.tone-amber {
   --lead-tag-tone-rgb: 176, 111, 5;
   --lead-tag-text: #b06f05;
 }
@@ -1986,84 +1980,65 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 }
 
 .lead-public-profile {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.lead-public-profile-highlights {
-  display: grid;
-  grid-template-columns: 1fr 1fr 2fr;
+.public-profile-groups {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.public-profile-tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
   gap: 12px;
 }
 
-.lead-public-highlight {
-  min-width: 0;
-  min-height: 76px;
-  padding: 10px 8px;
-  color: var(--lead-tag-text);
-  border: 1px solid rgba(var(--lead-tag-tone-rgb), 0.2);
-  border-radius: 16px;
-  background: rgba(var(--lead-tag-tone-rgb), 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-align: center;
-}
-
-.lead-public-highlight-icon {
-  display: block;
-  width: 24px;
-  height: 24px;
-}
-
-.lead-public-highlight strong {
-  max-width: 100%;
-  font-size: 13px;
-  line-height: 18px;
-  overflow-wrap: anywhere;
-}
-
-.lead-public-profile-divider {
+.public-profile-divider {
+  width: 100%;
   height: 1px;
-  margin: 16px 0;
+  flex: 0 0 1px;
 }
 
-.lead-public-profile-divider img {
+.public-profile-divider img {
   display: block;
   width: 100%;
   height: 1px;
 }
 
-.lead-public-profile-attributes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.lead-public-attribute {
-  color: #1e293b;
+.public-profile-tag {
   min-height: 30px;
-  padding: 5px 12px;
+  padding: 7px 13px;
+  overflow: hidden;
   border: 1px solid rgba(var(--lead-tag-tone-rgb), 0.1);
   border-radius: 8px;
   background: rgba(var(--lead-tag-tone-rgb), 0.05);
+  color: #1e293b;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
 }
 
-.lead-public-profile-attributes .lead-public-attribute {
-  color: #1e293b;
-}
-
-.lead-public-attribute > img {
+.public-profile-tag > img {
   display: block;
   width: 16px;
   height: 16px;
+  flex: 0 0 16px;
+}
+
+.customer-detail-page .customer-insight-public-tag-list.public-profile-groups {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  padding: 0;
 }
 
 @container lead-tag-panel (max-width: 520px) {
@@ -2073,16 +2048,6 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 
   .lead-detail-tag-section {
     min-height: 344px;
-  }
-}
-
-@container lead-tag-panel (max-width: 430px) {
-  .lead-public-profile-highlights {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .lead-public-highlight:last-child {
-    grid-column: 1 / -1;
   }
 }
 
