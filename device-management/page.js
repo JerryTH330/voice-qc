@@ -2310,7 +2310,7 @@ function setRoute(route, updateHash = true) {
   title.textContent = storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title;
   description.textContent = pageMeta[safeRoute].description;
   if (visitOriginBackButton) visitOriginBackButton.hidden = safeRoute !== 'visits' || !visitReturnToMatching;
-  document.title = `${storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title} · AI全链路客户洞察平台`;
+  document.title = `${storeDrilldownRoute ? `${storeDrilldownState.storeName} · 工牌明细` : pageMeta[safeRoute].title} · AI质检平台`;
   const drilldownActions = document.querySelector('[data-store-drilldown-actions]');
   if (drilldownActions) drilldownActions.hidden = !storeDrilldownRoute;
   renderActions(safeRoute);
