@@ -816,7 +816,7 @@ function selectBadgeRecord(sn, advisorName) {
   badgeRecordState.advisorName = advisorName || badgeRecordState.advisorName;
   badgeEventFilterState.sn = badgeRecordState.sn;
   badgeEventFilterState.type = 'all';
-  const eventRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
+  const eventRecord = getBadgeEventRecord(badgeRecordState.sn);
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
   badgeEventFilterState.date = eventRecord?.date || detailRecord?.queryDate || badgeEventDefaultFilters.date;
   resetBadgeUploadDateRange();
@@ -1120,9 +1120,7 @@ function renderBadgeEvents() {
   const summary = document.getElementById('badgeEventResultSummary');
   if (!timeline || !summary) return;
 
-  const normalizedSn = badgeEventFilterState.sn.trim().toLowerCase();
-  const record = badgeEventRecords.find((item) => item.date === badgeEventFilterState.date
-    && (!normalizedSn || item.sn.toLowerCase() === normalizedSn));
+  const record = getBadgeEventRecord(badgeEventFilterState.sn, badgeEventFilterState.date);
 
   if (!record) {
     summary.textContent = '共 0 组记录';
@@ -1404,6 +1402,68 @@ const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ 
     syncedAt: connected ? `2026-08-13 14:${String(59 - (index % 48)).padStart(2, '0')}:${String((index * 7) % 60).padStart(2, '0')}` : '2026-08-13 11:18:06'
   };
 }));
+
+function formatGeneratedBadgeEventTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.min((24 * 60 * 60) - 1, totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function buildGeneratedBadgeEvents(detailRecord) {
+  const seed = Number(String(detailRecord.sn).replace(/\D/g, '').slice(-6)) || 0;
+  const startAt = (8 * 60 * 60) + ((seed % 43) * 60) + (seed % 47);
+  const at = (offsetSeconds) => formatGeneratedBadgeEventTime(startAt + offsetSeconds);
+  const events = [
+    { type: 'power-on', label: '工牌开机', time: at(0), icon: '开', color: 'green', iconAsset: 'power-on' },
+    { type: 'recording-start', label: '开始录音', time: at(18 * 60), icon: '录', color: 'blue' },
+    { type: 'recording-end', label: '结束录音', time: at(54 * 60), icon: '停', color: 'red' }
+  ];
+
+  if (seed % 3 === 0) {
+    events.push(
+      { type: 'recording-start', label: '开始录音', time: at(3 * 60 * 60 + 12 * 60), icon: '录', color: 'blue' },
+      { type: 'recording-end', label: '结束录音', time: at(4 * 60 * 60 + 6 * 60), icon: '停', color: 'red' },
+      { type: 'low-battery', label: '工牌电量预警', time: at(7 * 60 * 60 + 8 * 60), icon: '低', color: 'red', note: `剩余电量 ${14 + (seed % 6)}%` },
+      { type: 'power-off', label: '工牌关机', time: at(7 * 60 * 60 + 22 * 60), icon: '关', color: 'neutral' }
+    );
+  } else if (seed % 3 === 1) {
+    events.push(
+      { type: 'recording-start', label: '开始录音', time: at(4 * 60 * 60 + 35 * 60), icon: '录', color: 'blue' },
+      { type: 'recording-end', label: '结束录音', time: at(5 * 60 * 60 + 28 * 60), icon: '停', color: 'red' },
+      { type: 'power-off', label: '工牌关机', time: at(7 * 60 * 60 + 5 * 60), icon: '关', color: 'neutral' },
+      { type: 'charging-start', label: '开始充电', time: at(7 * 60 * 60 + 8 * 60), icon: '充', color: 'violet' },
+      { type: 'charging-end', label: '结束充电', time: at(8 * 60 * 60 + 2 * 60), icon: '满', color: 'neutral' }
+    );
+  } else {
+    events.push(
+      { type: 'recording-start', label: '开始录音', time: at(5 * 60 * 60 + 16 * 60), icon: '录', color: 'blue' },
+      { type: 'recording-end', label: '结束录音', time: at(6 * 60 * 60 + 3 * 60), icon: '停', color: 'red' }
+    );
+  }
+
+  return events;
+}
+
+function getBadgeEventRecord(sn, date = '') {
+  const normalizedSn = String(sn || '').trim().toLowerCase();
+  const fixedRecord = badgeEventRecords.find((item) => item.sn.toLowerCase() === normalizedSn
+    && (!date || item.date === date));
+  if (fixedRecord) return fixedRecord;
+
+  const detailRecord = badgeDetailRecords.find((item) => item.sn.toLowerCase() === normalizedSn);
+  if (!detailRecord || detailRecord.badgeType === '充电坞版本工牌' || (date && detailRecord.queryDate !== date)) return null;
+  return {
+    date: detailRecord.queryDate,
+    sn: detailRecord.sn,
+    employeeName: detailRecord.advisorName,
+    storeName: detailRecord.store,
+    powerOnDuration: detailRecord.uptime,
+    uploadedRecordingDuration: '—',
+    events: buildGeneratedBadgeEvents(detailRecord)
+  };
+}
 
 const dockSubdeviceRecords = [
   { port: '端口 1', sn: 'RAGPW19JSK1TABDB', availableSpace: '12.4 GB', battery: 86, capturedAt: '2026/08/20 14:11:02' },
