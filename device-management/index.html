@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260824-dock-merge-v1" />
+  <link rel="stylesheet" href="./page.css?v=20260825-dock-figma-icon-v5" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -63,6 +63,7 @@
             <div class="nav-menu">
               <button class="nav-item nav-button device-nav" data-page="device-stores" data-href="../device-management/index.html#stores" data-route="stores"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 5.625H2.25a.75.75 0 0 0-.75.75v8.25c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-8.25a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="m9 2.625-3 3h6l-3-3ZM4.5 9h6.75M4.5 12h3" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌总览</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-badges" data-href="../device-management/index.html#badges" data-route="badges"><svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 3H2.25a.75.75 0 0 0-.75.75v10.5c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M6.375 9.375a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M8.625 11.625a2.25 2.25 0 0 0-4.5 0M10.5 7.5h3M11.25 10.5h2.25" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nav-text">工牌明细</span></button>
+              <button class="nav-item nav-button device-nav" data-page="device-docks" data-href="../device-management/index.html#docks" data-route="docks"><span class="nav-icon nav-icon-mask nav-icon-charging-dock-detail" aria-hidden="true"></span><span class="nav-text">充电坞明细</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-dashboard" data-href="../device-management/index.html#dashboard" data-route="dashboard"><span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span><span class="nav-text">录音排查</span></button>
               <button class="nav-item nav-button device-nav" data-page="device-visits" data-href="../device-management/index.html#visits" data-route="visits"><span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span><span class="nav-text">到访明细</span></button>
             </div>
@@ -166,6 +167,27 @@
                   </table>
                 </div>
                 <div class="session-pagination" id="badgeDetailPagination"></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="page-panel" data-page="docks">
+            <section class="card session-filter-card badge-session-filter-card dock-detail-filter-card">
+              <div class="session-filter-toolbar" id="dockDetailFilterControls"></div>
+            </section>
+            <section class="card table-card badge-detail-table-card dock-detail-table-card">
+              <div class="table-shell">
+                <div class="table-headbar session-list-table-headbar">
+                  <div class="panel-title"><h3>充电坞明细</h3></div>
+                  <div class="session-filter-summary"><span>当前匹配 <strong id="dockFilterCount">0</strong> 个充电坞</span></div>
+                </div>
+                <div class="table-wrap badge-list-table-wrap dock-list-table-wrap">
+                  <table class="data-table session-data-table dock-data-table">
+                    <thead><tr><th>充电坞 SN</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>操作</th></tr></thead>
+                    <tbody id="dockDetailTableBody"></tbody>
+                  </table>
+                </div>
+                <div class="session-pagination" id="dockDetailPagination"></div>
               </div>
             </section>
           </section>
@@ -323,7 +345,7 @@
             <h2 id="badgeRecordDrawerTitle">工牌记录</h2>
             <p id="badgeRecordDrawerSubtitle">查看当前顾问工牌的设备事件和录音上传记录</p>
           </div>
-          <button class="icon-btn badge-record-drawer-close" type="button" data-badge-record-drawer-close aria-label="关闭工牌记录抽屉">×</button>
+          <button class="icon-btn badge-record-drawer-close" type="button" data-badge-record-drawer-close aria-label="关闭详情抽屉">×</button>
         </div>
       </div>
       <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody">
@@ -396,7 +418,7 @@
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260824-nondock-events-v2"></script>
+    <script src="./page.js?v=20260825-dock-date-system-v3"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
