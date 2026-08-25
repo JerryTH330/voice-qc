@@ -6512,9 +6512,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           noteText: '先用表格完成快速筛查，再通过单条详情进入播放、转写和评分联动页面。',
           userName: '门店主管 · 陈星',
           userMeta: '待人工复检 7 条',
-          actions: [
-            { label: '批量导出', primary: true }
-          ],
+          actions: [],
           filters: [],
           templateId: 'tpl-session-list'
         },
@@ -6544,9 +6542,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           noteText: '',
           userName: '销售经理 · 刘青',
           userMeta: '今日新增高意向 26 条',
-          actions: [
-            { label: '导出线索', primary: true }
-          ],
+          actions: [],
           filters: [],
           templateId: 'tpl-leads-list'
         },

@@ -2,17 +2,17 @@ const pageMeta = {
   stores: {
     title: '工牌总览',
     description: '按查询日期、品牌、组织和门店名称查看员工与工牌绑定情况',
-    actions: [{ label: '导出门店', style: 'recording-primary', action: 'export' }]
+    actions: []
   },
   badges: {
     title: '工牌明细',
     description: '查看当前绑定员工的录音、连接、剩余电量、剩余内存与上传状态',
-    actions: [{ label: '导出明细', style: 'recording-primary', action: 'export' }]
+    actions: []
   },
   docks: {
     title: '充电坞明细',
     description: '按品牌、组织和查询日期查看门店充电坞资产与子设备状态',
-    actions: [{ label: '导出明细', style: 'recording-primary', action: 'export' }]
+    actions: []
   },
   'store-badges': {
     title: '门店工牌明细',
