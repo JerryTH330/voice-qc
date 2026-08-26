@@ -2832,6 +2832,11 @@ function renderBadgeDockLogTimeline() {
   badgeDockLogTimeline.classList.toggle('event-timeline-grouped', filteredRecords.length > 0);
   badgeDockLogTimeline.innerHTML = filteredRecords.length ? filteredRecords.map((item) => {
     const visual = getBadgeDockLogEventVisual(item.event);
+    const employee = String(item.employee || '').trim();
+    const badgeSn = String(item.sn || '').trim();
+    const employeeHtml = employee && employee !== '-' && employee !== '—' ? `<strong>${escapeBadgeHtml(employee)}</strong>` : '';
+    const badgeSnHtml = badgeSn && badgeSn !== '-' && badgeSn !== '—' ? `<span>${escapeBadgeHtml(badgeSn)}</span>` : '';
+    const metaHtml = employeeHtml || badgeSnHtml ? `<div class="badge-dock-log-event-meta">${employeeHtml}${badgeSnHtml}</div>` : '';
     return `<article class="event-group-card event-standalone-card badge-dock-log-event">
       <div class="event-group-row">
         <span class="event-dot ${visual.tone}" aria-hidden="true"><img src="${visual.icon}" alt="" width="16" height="16"></span>
@@ -2839,10 +2844,7 @@ function renderBadgeDockLogTimeline() {
           <strong>${escapeBadgeHtml(item.event)}</strong>
           <p>${escapeBadgeHtml(item.time)}</p>
         </div>
-        <div class="badge-dock-log-event-meta">
-          <span><small>工牌 SN</small><strong>${escapeBadgeHtml(item.sn)}</strong></span>
-          <span><small>员工</small><strong>${escapeBadgeHtml(item.employee)}</strong></span>
-        </div>
+        ${metaHtml}
       </div>
     </article>`;
   }).join('') : '<div class="event-empty-state">当前筛选条件下暂无子设备日志。</div>';
