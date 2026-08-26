@@ -17,6 +17,7 @@
     leads: '<svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" d="M640 384v64H448a128 128 0 0 0-128 128v128a128 128 0 0 0 128 128h320a128 128 0 0 0 128-128V576a128 128 0 0 0-64-110.848V394.88c74.56 26.368 128 97.472 128 181.056v128a192 192 0 0 1-192 192H448a192 192 0 0 1-192-192V576a192 192 0 0 1 192-192z"/><path fill="currentColor" d="M384 640v-64h192a128 128 0 0 0 128-128V320a128 128 0 0 0-128-128H256a128 128 0 0 0-128 128v128a128 128 0 0 0 64 110.848v70.272A192.06 192.06 0 0 1 64 448V320a192 192 0 0 1 192-192h320a192 192 0 0 1 192 192v128a192 192 0 0 1-192 192z"/></svg>',
     badgeOverview: '<svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 5.625H2.25a.75.75 0 0 0-.75.75v8.25c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-8.25a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="m9 2.625-3 3h6l-3-3ZM4.5 9h6.75M4.5 12h3" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     badgeDetail: '<svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.75 3H2.25a.75.75 0 0 0-.75.75v10.5c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M6.375 9.375a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" stroke-width="1.125" stroke-linejoin="round"/><path d="M8.625 11.625a2.25 2.25 0 0 0-4.5 0M10.5 7.5h3M11.25 10.5h2.25" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    chargingDock: '<svg class="nav-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 4.605A.105.105 0 0 1 4.605 4.5h8.79a.105.105 0 0 1 .105.105V9a4.5 4.5 0 0 1-9 0V4.605Z" stroke="currentColor" stroke-width="1.125"/><path d="M7.5 4.5v-3M10.5 4.5v-3M8.25 10.125h1.5M9 13.5v1.875A1.125 1.125 0 0 0 10.125 16.5h4.125" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     config: '<svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" d="M600.704 64a32 32 0 0 1 30.464 22.208l35.2 109.376c14.784 7.232 28.928 15.36 42.432 24.512l112.384-24.192a32 32 0 0 1 34.432 15.36L944.32 364.8a32 32 0 0 1-4.032 37.504l-77.12 85.12a357 357 0 0 1 0 49.024l77.12 85.248a32 32 0 0 1 4.032 37.504l-88.704 153.6a32 32 0 0 1-34.432 15.296L708.8 803.904c-13.44 9.088-27.648 17.28-42.368 24.512l-35.264 109.376A32 32 0 0 1 600.704 960H423.296a32 32 0 0 1-30.464-22.208L357.696 828.48a352 352 0 0 1-42.56-24.64l-112.32 24.256a32 32 0 0 1-34.432-15.36L79.68 659.2a32 32 0 0 1 4.032-37.504l77.12-85.248a357 357 0 0 1 0-48.896l-77.12-85.248A32 32 0 0 1 79.68 364.8l88.704-153.6a32 32 0 0 1 34.432-15.296l112.32 24.256c13.568-9.152 27.776-17.408 42.56-24.64l35.2-109.312A32 32 0 0 1 423.232 64H600.64zm-23.424 64H446.72l-36.352 113.088-24.512 11.968a294 294 0 0 0-34.816 20.096l-22.656 15.36-116.224-25.088-65.28 113.152 79.68 88.192-1.92 27.136a293 293 0 0 0 0 40.192l1.92 27.136-79.808 88.192 65.344 113.152 116.224-25.024 22.656 15.296a294 294 0 0 0 34.816 20.096l24.512 11.968L446.72 896h130.688l36.48-113.152 24.448-11.904a288 288 0 0 0 34.752-20.096l22.592-15.296 116.288 25.024 65.28-113.152-79.744-88.192 1.92-27.136a293 293 0 0 0 0-40.256l-1.92-27.136 79.808-88.128-65.344-113.152-116.288 24.96-22.592-15.232a288 288 0 0 0 34.752-20.096l-24.448-11.904L577.344 128zM512 320a192 192 0 1 1 0 384 192 192 0 0 1 0-384m0 64a128 128 0 1 0 0 256 128 128 0 0 0 0-256"/></svg>',
     system: '<svg class="nav-icon" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" d="M544 768v128h192a32 32 0 1 1 0 64H288a32 32 0 1 1 0-64h192V768H192A128 128 0 0 1 64 640V256a128 128 0 0 1 128-128h640a128 128 0 0 1 128 128v384a128 128 0 0 1-128 128zM192 192a64 64 0 0 0-64 64v384a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64z"/></svg>'
   };
@@ -36,7 +37,7 @@
     { label: '工牌', items: [
       { page: 'device-stores', route: 'stores', label: '工牌总览', path: 'device-management/index.html#stores', icon: icons.badgeOverview },
       { page: 'device-badges', route: 'badges', label: '工牌明细', path: 'device-management/index.html#badges', icon: icons.badgeDetail },
-      { page: 'device-docks', route: 'docks', label: '充电坞明细', path: 'device-management/index.html#docks', icon: '<span class="nav-icon nav-icon-mask nav-icon-charging-dock-detail" aria-hidden="true"></span>' },
+      { page: 'device-docks', route: 'docks', label: '充电坞', path: 'device-management/index.html#docks', icon: icons.chargingDock },
       { page: 'device-dashboard', route: 'dashboard', label: '录音排查', path: 'device-management/index.html#dashboard', icon: '<span class="nav-icon nav-device-symbol" aria-hidden="true">▥</span>' },
       { page: 'device-visits', route: 'visits', label: '到访明细', path: 'device-management/index.html#visits', icon: '<span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span>' }
     ] },
@@ -100,12 +101,6 @@
       </div>
     `).join('');
 
-    const dockIcon = navigationRoot.querySelector('.nav-icon-charging-dock-detail');
-    if (dockIcon) {
-      const iconUrl = new URL('assets/nav-charging-dock-detail-figma.svg', appRootUrl).href;
-      dockIcon.style.webkitMaskImage = `url("${iconUrl}")`;
-      dockIcon.style.maskImage = `url("${iconUrl}")`;
-    }
   }
 
   ensureUnifiedNavigationStyles();

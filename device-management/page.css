@@ -1,4 +1,4 @@
-@import url("../voice-qc-admin.css?v=20260824-nav-icon-fix-v1");
+@import url("../voice-qc-admin.css?v=20260825-sidebar-padding-v2");
 
 :root {
   --blue: #2563eb;
@@ -560,7 +560,7 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .event-detail-divider { width: 100%; height: 0; flex: 0 0 0; position: relative; }
 .event-detail-divider img { width: 100%; height: 1px; display: block; position: absolute; top: -1px; left: 0; }
 .event-warning-row em { color: #ff435b; }
-.event-charge-card { border-color: #cfe7dc !important; background: #fff !important; }
+.event-charge-card { border-color: #cfe7dc !important; background: #f3fbf7 !important; }
 .event-charge-row { min-height: 0; padding: 16px; }
 .event-charge-row em { color: var(--green); }
 .event-standalone-card .event-group-row { padding: 16px; }
@@ -844,12 +844,93 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .badge-dock-date-range { width: auto; min-width: 306px; flex: 0 0 auto; }
 .badge-dock-date-range .session-date-trigger { flex: 1 1 auto; }
 .badge-dock-date-range .session-menu-panel-date { left: auto; right: 0; }
-.badge-dock-section:has(.badge-dock-date-range.is-open) { z-index: 20; overflow: visible; }
-.badge-dock-subdevice-table { min-width: 720px; }
-.badge-dock-log-table { min-width: 620px; }
-.badge-dock-pagination { overflow: visible; }
-.badge-dock-section:has(.badge-dock-pagination .page-size-options.open) { z-index: 20; overflow: visible; }
-.badge-dock-empty-cell { padding: 0; }
+.badge-dock-log-filters { width: min(460px, 100%); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 10px; min-width: 0; margin-left: auto; }
+.badge-dock-log-filters .badge-dock-date-range,
+.badge-dock-event-control { width: 100%; min-width: 0; max-width: none; flex: none; }
+.badge-dock-event-control .session-select-trigger strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge-dock-event-menu { right: 0; left: auto; width: 228px; min-width: 228px; }
+.badge-dock-event-option { justify-content: flex-start; }
+.badge-dock-event-option > span:last-child { flex: 1 1 auto; }
+.badge-dock-event-option .badge-dock-event-check { box-sizing: border-box; width: 16px; height: 16px; min-width: 16px; flex: 0 0 16px; position: relative; border: 1px solid #b8c4d6; border-radius: 4px; background: #fff; }
+.badge-dock-event-option.active .badge-dock-event-check,
+.badge-dock-event-option.is-indeterminate .badge-dock-event-check { border-color: var(--blue); background: var(--blue); }
+.badge-dock-event-option.active .badge-dock-event-check::after { content: ''; position: absolute; left: 4px; top: 1px; width: 5px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg); }
+.badge-dock-event-option.is-indeterminate .badge-dock-event-check::after { content: ''; position: absolute; left: 3px; right: 3px; top: 6px; height: 2px; border-radius: 999px; background: #fff; }
+.badge-dock-section:has(.badge-dock-date-range.is-open),
+.badge-dock-section:has(.badge-dock-event-control.is-open) { z-index: 20; overflow: visible; }
+.badge-dock-device-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0 20px 20px; }
+.badge-dock-device-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid #e1e8f3;
+  border-radius: 14px;
+  background: #f8faff;
+}
+.badge-dock-device-identity { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.badge-dock-device-port { flex: 0 0 auto; padding: 5px 9px; border-radius: 7px; background: #e9f2ff; color: #1767d4; font-size: 14px; font-weight: 600; }
+.badge-dock-device-sn { min-width: 0; overflow: hidden; color: var(--text); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.badge-dock-device-battery { display: flex; align-items: center; justify-content: flex-end; align-self: center; padding-right: 5px; white-space: nowrap; }
+.badge-dock-device-battery .battery,
+.badge-data-table .battery {
+  box-sizing: border-box;
+  width: 40px;
+  height: 20px;
+  padding: 2px;
+  overflow: visible;
+  position: relative;
+  border: 1.5px solid #9aa8bc;
+  border-radius: 4px;
+  background: #fff;
+}
+.badge-dock-device-battery .battery { margin-right: 0; flex: 0 0 40px; }
+.badge-data-table .battery { margin-right: 0; }
+.badge-dock-device-battery .battery::after,
+.badge-data-table .battery::after {
+  content: '';
+  width: 3px;
+  height: 10px;
+  position: absolute;
+  top: 4px;
+  right: -5px;
+  border-radius: 0 2px 2px 0;
+  background: #9aa8bc;
+}
+.badge-dock-device-battery .battery i,
+.badge-data-table .battery i { border-radius: 2px; }
+.badge-dock-device-battery .battery-with-value strong,
+.badge-data-table .battery-with-value strong {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #172033;
+  background: linear-gradient(90deg, #fff 0 var(--battery-level), #172033 var(--battery-level) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 1px rgba(23, 32, 51, .18);
+}
+.badge-dock-device-meta { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(72px, .6fr) minmax(0, 1.4fr); gap: 12px; padding-top: 14px; border-top: 1px solid #e4eaf3; }
+.badge-dock-device-fact { min-width: 0; display: grid; gap: 5px; }
+.badge-dock-device-fact:last-child { justify-items: end; text-align: right; }
+.badge-dock-device-fact span { color: #728098; font-size: 14px; }
+.badge-dock-device-fact strong { overflow: hidden; color: var(--text); font-size: 14px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.badge-dock-log-timeline.event-timeline-grouped { padding: 0 20px 20px; gap: 10px; }
+.badge-dock-log-timeline .badge-dock-log-event { background: #f8faff; }
+.badge-dock-log-timeline .badge-dock-log-event .event-group-row { padding: 14px 16px; }
+.badge-dock-log-timeline .badge-dock-log-event .event-dot { padding: 0; font-size: 14px; }
+.badge-dock-log-event-meta { min-width: 190px; margin-left: auto; display: grid; grid-template-columns: minmax(118px, 1fr) minmax(52px, auto); gap: 18px; text-align: right; }
+.badge-dock-log-event-meta > span { min-width: 0; display: grid; gap: 4px; }
+.badge-dock-log-event-meta small { color: #8797ad; font-size: 14px; font-weight: 400; line-height: 17px; }
+.badge-dock-log-event-meta strong { overflow: hidden; color: #172033; font-size: 14px; font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
 .badge-dock-empty-state { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #94a3b8; font-size: 14px; }
 .badge-dock-empty-icon { width: 64px; height: 64px; }
 .badge-dock-empty-icon svg { width: 100%; height: 100%; }
@@ -1220,26 +1301,18 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   gap: 12px;
   isolation: isolate;
 }
-.dock-detail-filter-card #dockDetailFilterControls .session-filter-row-segment {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(217, 226, 239, .72);
-}
 .dock-detail-filter-card #dockDetailFilterControls .dock-filter-row-main {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
-  padding-top: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
 }
 .dock-detail-filter-card #dockDetailFilterControls .dock-filter-row-main > .session-toolbar-control,
 .dock-detail-filter-card #dockDetailFilterControls .dock-filter-row-main > .session-reset-btn { width: 100%; min-width: 0; max-width: none; }
-.dock-detail-filter-card .dock-organization-menu { width: min(720px, calc(100vw - 340px)); }
-.dock-detail-filter-card .dock-cascader-headings,
-.dock-detail-filter-card .dock-cascader-columns { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
-.dock-query-date-control { width: 100%; min-width: 0; }
-.dock-query-date-control .session-date-trigger { width: 100%; }
-.dock-query-date-panel { left: 0; right: auto; }
+.dock-store-menu { width: 100%; min-width: 300px; padding: 10px; }
+.dock-store-options { max-height: 280px; display: grid; gap: 4px; overflow-y: auto; }
+.dock-store-options .session-menu-option { width: 100%; min-height: 38px; padding: 0 12px; border-radius: 9px; text-align: left; }
+.dock-store-empty { padding: 24px 12px; color: var(--soft); font-size: 14px; text-align: center; }
+.dock-status-control { align-self: stretch; }
+.dock-status-menu { width: 100%; min-width: 0; }
 .dock-filter-reset { align-self: end; }
 .dock-data-table { min-width: 980px; border-collapse: collapse; }
 .dock-data-table thead th,
@@ -1333,7 +1406,6 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   .store-overview-metrics { grid-template-columns: repeat(3, 1fr); }
   .badge-organization-menu { width: min(820px, calc(100vw - 280px)); }
   .dock-detail-filter-card #dockDetailFilterControls .dock-filter-row-main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dock-detail-filter-card .dock-organization-menu { width: min(680px, calc(100vw - 280px)); }
   .dock-filter-reset { justify-self: start; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .chart-card, .health-card { min-height: auto; }
@@ -1347,7 +1419,6 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   .store-filter-reset { grid-column: 3; grid-row: 2; }
   .store-overview-metrics { grid-template-columns: repeat(3, 1fr); }
   .badge-organization-menu { width: min(720px, calc(100vw - 80px)); }
-  .dock-detail-filter-card .dock-organization-menu { width: min(640px, calc(100vw - 80px)); }
   .badge-cascader-headings, .badge-cascader-columns { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
   .store-pagination-layout { align-items: flex-start; flex-direction: column; }
   .store-pagination-controls { flex-wrap: wrap; }
@@ -1404,13 +1475,19 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   .badge-session-filter-card #sessionFilterControls.is-store-drilldown .store-drilldown-reset { width: 100%; justify-self: stretch; }
   .badge-session-filter-card #sessionFilterControls .session-filter-row-search > .session-filter-inline-actions-search { grid-column: auto; }
   .dock-detail-filter-card #dockDetailFilterControls .dock-filter-row-main { grid-template-columns: 1fr; }
-  .dock-detail-filter-card .dock-organization-menu { width: min(540px, calc(100vw - 48px)); }
+  .dock-store-menu { width: min(100%, calc(100vw - 48px)); min-width: 0; }
   .dock-filter-reset { width: 100%; justify-self: stretch; }
 }
 @media (max-width: 700px) {
   .badge-record-profile-card { flex-wrap: wrap; }
   .badge-record-profile-meta { width: 100%; margin-left: 0; justify-content: flex-start; }
   .badge-dock-section > .card-head { align-items: stretch; flex-direction: column; }
-  .badge-dock-date-range { width: 100%; min-width: 0; }
+  .badge-dock-log-filters { width: 100%; margin-left: 0; }
   .badge-dock-refresh-btn { align-self: flex-start; }
+}
+@media (max-width: 560px) {
+  .badge-dock-device-list { grid-template-columns: minmax(0, 1fr); }
+  .badge-dock-device-meta { grid-template-columns: minmax(0, 1fr); }
+  .badge-dock-log-event .event-group-row { align-items: flex-start; flex-wrap: wrap; }
+  .badge-dock-log-event-meta { width: calc(100% - 44px); min-width: 0; margin-left: 44px; }
 }

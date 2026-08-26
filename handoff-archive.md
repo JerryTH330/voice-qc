@@ -1,5 +1,205 @@
 # 交接日志归档
 
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 提升电池内部数字对比度
+- 用户想做什么：解决高电量填充状态下黑色百分比文字看不清的问题。
+- 已经完成了什么：电池组件写入真实电量 CSS 变量；数字使用与填充边界一致的双色文字，绿色填充区域为白色、未填充区域为深色，并增加轻微文字阴影；不采用单一阈值整体切色，避免中间电量出现一半清晰一半模糊。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 与 9 项专项检查通过；确认两个入口继续共用电池组件、无障碍属性保留、CSS/JS 缓存版本同步。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认 7%、63%、98% 等不同填充比例的实际文字清晰度；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 电量数字移入电池内部
+- 用户想做什么：取消电池外侧的百分比数字，将数字结合到电池图形内部。
+- 已经完成了什么：新增统一 `renderBatteryIndicator` 渲染组件；工牌明细和充电坞子设备卡片都改为使用该组件；电池调整为 56×22px以容纳 `100%`，电量填充在底层，百分比文字居中覆盖在电池内部，并保留右侧凸点与进度语义。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 与 10 项专项检查通过；确认旧外置数字结构已删除、两个入口共用组件、数字居中且无障碍属性保留。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认不同电量比例下的文字可读性；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 工牌明细同步粗短电池外形
+- 用户想做什么：将工牌明细表格的剩余电量同步为充电坞卡片中的粗短电池样式。
+- 已经完成了什么：工牌表格复用同一套 38×16px 电池主体、1.5px 外框、圆角、右侧凸点和内部百分比填充；为表格电池和百分比文字保留 8px 间距，原电量数据与表格结构不变。
+- 改动了哪些文件：`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 与 7 项专项检查通过；确认样式仅作用于 `.badge-data-table .battery` 和 `.badge-dock-device-battery .battery`。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认表格内电池的实际比例与对齐；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 子设备电量改为粗短电池外形
+- 用户想做什么：将子设备卡片右上角细长的电量进度条改为粗短的电池外形进度条。
+- 已经完成了什么：把充电坞卡片电池改为 38×16px，增加 1.5px 外框、圆角、白色底和右侧电池凸点；内部继续按真实百分比填充，并与百分比文字保持 8px 间距。
+- 改动了哪些文件：`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 与 7 项专项检查通过；确认样式只覆盖 `.badge-dock-device-battery`，不会影响其他页面和工牌明细电量。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认电池粗细和比例；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 充电坞品牌、日志事件流与导航图标调整
+- 用户想做什么：充电坞品牌只保留埃安；事件名称和日期筛选等宽；子设备日志改成工牌事件同类的逐条时间展示；修复浏览器中充电坞导航图标不可见。
+- 已经完成了什么：所有充电坞演示数据品牌统一为广汽埃安；两个日志筛选框使用两列等宽网格；旧日志表格替换为逐条独立事件卡片并保留时间、工牌 SN、员工、组合筛选与日志分页，按时间倒序；充电坞导航图标从外部 SVG 遮罩改为公共内联 SVG，并更新全部导航消费者缓存版本。
+- 改动了哪些文件：`device-management/index.html`、`device-management/page.css`、`device-management/page.js`、`unified-navigation-shell.js`、9 个其他页面的导航脚本版本引用；新增 `scripts/check-dock-navigation-icon.js`。
+- 做过哪些验证：`node --check`、`git diff --check`、14 项品牌/事件流/等宽/缓存检查和 4 项导航图标回归检查通过；外部遮罩节点、运行时图标地址和旧日志表格渲染无残留。
+- 还有哪些待办或风险：内置浏览器安全策略阻止自动操作 `file://` 页面，需用户手动硬刷新确认最终视觉；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 按截图更新子设备日志事件名称
+- 用户想做什么：将子设备日志的事件名称按参考截图修改。
+- 已经完成了什么：事件名称及顺序统一为充电坞上线、充电坞下线、工牌上线、工牌下线、录音上传完成、当天录音上传完成、设备日志上传完成、定位日志上传完成；演示日志生成规则同步复用该配置。
+- 改动了哪些文件：`device-management/page.js`、`device-management/index.html`。
+- 做过哪些验证：JavaScript 语法、代码格式、门店中文搜索回归通过；专项检查确认 8 项名称、顺序及演示数据覆盖正确。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认下拉选项和表格事件名称；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 充电坞状态改为公共圆点样式
+- 用户想做什么：将列表中的离线状态改为前置圆点样式，并使用其他页面的公共样式。
+- 已经完成了什么：状态单元格从胶囊标签替换为公共 `status-inline` / `status-inline-dot` 结构；在线映射绿色，离线映射灰色。
+- 改动了哪些文件：`device-management/page.js`、`device-management/index.html`。
+- 做过哪些验证：JavaScript 语法、代码格式、门店中文搜索回归通过；专项检查确认公共样式存在、颜色映射正确且旧胶囊结构不再使用。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认圆点和文字对齐；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 子设备日志事件名称多选
+- 用户想做什么：在子设备日志标题区增加事件名称筛选，支持下拉多选。
+- 已经完成了什么：新增事件名称多选控件，包含全部事件、工牌上线/下线、设备日志上传完成、充电坞上线/下线；支持全选、取消全选、逐项勾选和“已选 N 项”回显；与日期范围组合筛选并重置日志页码。
+- 改动了哪些文件：`device-management/index.html`、`device-management/page.js`、`device-management/page.css`。
+- 做过哪些验证：JavaScript 语法、代码格式、门店中文搜索回归、事件多选渲染、日期与事件组合筛选及响应式布局检查通过。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新，确认标题区宽度、下拉勾选和分页数量；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 移除子设备状态分页
+- 用户想做什么：子设备状态卡片不需要分页。
+- 已经完成了什么：删除子设备分页 DOM、分页状态、分页渲染调用和子设备事件分支；卡片改为一次性渲染全部数据；下方子设备日志分页保持原样。
+- 改动了哪些文件：`device-management/index.html`、`device-management/page.js`。
+- 做过哪些验证：JavaScript 语法、代码格式、门店中文搜索回归通过；专项扫描确认子设备分页无残留，日志分页 DOM 和状态仍存在。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认分页栏消失且三张卡片全部显示；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 子设备卡片电量与时间对齐
+- 用户想做什么：将子设备电量放到卡片右上角，样式与工牌明细剩余电量一致；设备获取时间右对齐。
+- 已经完成了什么：卡片首行改为左侧端口/SN、右侧电量；电池直接复用工牌明细 `.battery` 样式；设备获取时间标题和值整组右对齐，窄屏仍保持电量在右上角。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：JavaScript 语法、代码格式、门店中文搜索回归和子设备卡片结构/样式检查通过；旧电量轨道结构已清理。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认两张卡片的视觉对齐；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 修复门店中文输入搜索不生效
+- 用户想做什么：修复在门店主框输入“北京”后，下拉列表没有过滤的问题。
+- 已经完成了什么：确认普通输入和中文匹配算法正常，根因是组合输入期间的事件被忽略且结束后未同步；新增 `compositionend` 处理，统一更新搜索词、刷新列表并恢复输入焦点。
+- 改动了哪些文件：`device-management/page.js`、`device-management/index.html`，新增 `scripts/check-dock-store-search-ime.js` 回归检查。
+- 做过哪些验证：回归检查修改前稳定失败、修改后通过；`node --check`、`git diff --check` 通过；无调试日志残留。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新后用中文输入法实际输入确认；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 充电坞筛选项等宽
+- 用户想做什么：让门店、充电坞SN、状态三个筛选项宽度等分。
+- 已经完成了什么：桌面端前三个筛选项改为三等分，重置按钮保持自身宽度；中等屏幕两列、窄屏单列规则不变。
+- 改动了哪些文件：`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 和等宽/响应式规则脚本测试通过。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认实际视觉；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 状态筛选改为下拉单选
+- 用户想做什么：把筛选区平铺的“全部、在线、离线”状态按钮改成下拉。
+- 已经完成了什么：状态主框显示当前值；点击展开三个单选项；选择后立即筛选并收起；右侧箭头同步展示展开状态。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 和状态下拉渲染脚本测试通过；确认旧平铺按钮已从充电坞筛选区移除。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新确认下拉宽度和操作体验；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 门店搜索移入主选择框
+- 用户想做什么：取消下拉层里的独立门店搜索框，改为在顶部“全部门店”主控件中直接搜索。
+- 已经完成了什么：主控件改为可搜索下拉；点击、聚焦或右侧箭头可展开；输入时实时筛选门店；选择后回显；下拉层只保留选项。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`、`device-management/index.html`。
+- 做过哪些验证：`node --check`、`git diff --check` 通过；关闭态、展开态、搜索匹配和选择回显的脚本测试通过。
+- 还有哪些待办或风险：需在 `file://` 页面硬刷新后确认视觉与键鼠操作；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 增加充电坞状态列与状态筛选
+- 用户想做什么：在充电坞 SN 后增加状态列，并在筛选区增加全部、在线、离线筛选。
+- 已经完成了什么：列表增加状态列和状态标签；筛选区增加状态分段按钮；演示充电坞设为离线，其余数据稳定分配在线/离线。
+- 改动了哪些文件：`device-management/index.html`、`device-management/page.js`、`device-management/page.css`。
+- 做过哪些验证：JavaScript 语法、筛选结果和代码格式检查通过。
+- 还有哪些待办或风险：需手动刷新页面确认视觉；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 精简充电坞筛选并改为门店搜索下拉
+- 用户想做什么：删除品牌、查询日期和独立门店名称筛选；组织只保留门店层级，并支持搜索和下拉选择。
+- 已经完成了什么：筛选区收敛为门店、充电坞 SN、状态和重置；门店数据从现有充电坞记录生成。
+- 改动了哪些文件：`device-management/page.js`、`device-management/page.css`。
+- 做过哪些验证：语法检查、无旧筛选残留扫描和筛选逻辑检查通过。
+- 还有哪些待办或风险：需手动刷新页面确认响应式布局；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 子设备卡片调整为一行两张
+- 用户想做什么：充电坞详情抽屉的子设备卡片在桌面端一行展示两张。
+- 已经完成了什么：卡片列表改为两列网格；560px 以下自动回到单列，沿用抽屉现有响应式规则。
+- 改动了哪些文件：`device-management/page.css`。
+- 做过哪些验证：样式断点和代码格式检查通过。
+- 还有哪些待办或风险：需手动刷新抽屉确认实际宽度下的视觉；尚未提交。
+
+## 2026-08-26 从最近记录迁移
+
+### 2026-08-26 实施子设备状态卡片展示
+- 用户想做什么：把充电坞详情中的子设备状态表格改成卡片展示。
+- 已经完成了什么：每张卡展示端口、SN、电量、可用空间和设备获取时间；保留刷新、分页和空状态能力。
+- 改动了哪些文件：`device-management/index.html`、`device-management/page.js`、`device-management/page.css`。
+- 做过哪些验证：JavaScript 语法、DOM 引用和代码格式检查通过。
+- 还有哪些待办或风险：需在浏览器中确认卡片密度和长文本表现；尚未提交。
+
+## 2026-08-26 从最近记录迁移的 2026-08-07 工作记录
+
+### 2026-08-07 三端看板筛选区吸顶
+- 用户想做什么：厂端看板、门店看板、销售看板在页面上滑时，顶部的筛选板块吸顶；吸顶位置距离顶部 24px，不要直接贴在最上方；吸顶后通过背景/阴影变化给出视觉反馈。其中厂端看板仅下方的筛选区（品牌/组织/业务场景/时间/车系）吸顶，上方的「SOP执行质检 / SOP策略洞察」两个 tab 不吸顶。
+- 已经完成了什么：① 为门店看板 `.store-dashboard-page .global-filter-bar.session-filter-card`、销售看板 `.sales-role-dashboard-page .sales-role-nav` 增加 `position: sticky; top: 0; z-index: 50`；② 厂端看板将外层 `<section>` 改为透明容器，把 tab 栏与筛选区主体拆分为同级子元素，仅对筛选区主体 `<div class="factory-filter-sticky-body global-filter-bar session-filter-card">` 应用 sticky、卡片背景/边框/阴影及 `.is-stuck` 状态样式，并移除 tab 栏上的 `sales-role-nav` 类以避免被吸顶逻辑选中；③ 在 `app-runtime.js` 新增 `initStickyFilterBars()`，通过 `IntersectionObserver` + 不可见 sentinel 元素检测吸顶状态，给目标元素动态添加/移除 `.is-stuck`；④ 在 `app-runtime.js` 销售看板初始化、门店看板初始化以及 `factory-dashboard/factory-dashboard.js` 初始化末尾调用 `initStickyFilterBars()`；⑤ 将厂端看板缓存版本 bump 为 `20260807-sticky-filter-v2`，门店/销售看板保持 `20260807-sticky-filter-v1`，同步更新 `factory-dashboard/page.js`/`index.html`/`page.css` 及 4 个厂端测试文件中的版本断言；⑥ 更新 `.trae/documents/sticky-filter-bar-plan.md` 以反映厂端结构调整。
+- 改动了哪些文件：`factory-dashboard/factory-dashboard.css`、`factory-dashboard/factory-dashboard.js`、`.trae/documents/sticky-filter-bar-plan.md`、`store-dashboard/page.css`、`voice-qc-admin.css`、`app-runtime.js`、`factory-dashboard/page.js`、`factory-dashboard/index.html`、`factory-dashboard/page.css`、`store-dashboard/page.js`、`store-dashboard/index.html`、`sales-dashboard/page.js`、`sales-dashboard/index.html`、`sales-dashboard/page.css`，以及 4 个厂端测试文件。
+- 做过哪些验证：`node --check factory-dashboard/factory-dashboard.js && node --check factory-dashboard/page.js && node --check store-dashboard/page.js && node --check sales-dashboard/page.js && node --check app-runtime.js` 通过；`node scripts/check-version-sync.js` 通过；销售看板相关测试 4 个用例全部通过；门店看板相关测试 14 个用例中 12 个通过，`store-core-metrics-figma.test.js` 的 role-icon / 店长文案断言为历史遗留失败；厂端看板相关测试 5 个用例中 4 个通过，`factory-dashboard-panel-spacing.test.js` 的 issue-overview-wrapper padding 断言为历史遗留失败。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后打开厂端看板，重点验证：上滑时两个 tab 正常滚走、仅下方白色筛选卡片在距顶部约 24px 处吸顶并出现背景/阴影变化；门店/销售看板仍按「筛选区整体吸顶」验证；`scripts/sync-versions.js` 本次因把旧 CSS import 版本误当作目标，同步结果需人工校正，已手动将测试文件版本改回对应版本，后续使用同步脚本时需注意目标版本选择。
+
+### 2026-08-07 门店看板 hero section 响应式与厂端看板保持一致
+- 用户想做什么：让门店看板 hero section 的响应式及适配方案与厂端看板保持一致，确保不同屏幕宽度下的布局行为一致。
+- 已经完成了什么：① 对比厂端看板 `factory-dashboard/factory-dashboard.css` 中 `.factory-hero-metrics-layout` 的响应式断点（1500px/1200px/760px）与 grid/flex 行为；② 修改 `store-dashboard/page.css`：将 `.store-hero-metrics .hm-layout-top` 默认 `gap` 从 `16px` 改为 `12px`；在 1500px 断点下将 `.store-hero-metrics`、`.hm-layout-top`、`.hm-layout-bottom` 的 `gap` 统一收紧为 `10px`；在 1200px 断点下将 `.hm-layout-top`/`.hm-layout-bottom` 的 `gap` 改为 `8px`，并将 `.hm-layout-bottom` 的 `grid-template-columns` 从 `repeat(3, ...)` 改为 `repeat(2, ...)`；在 760px 断点下将 `.store-hero-metrics` 的 `gap` 改为 `8px`，并显式设置 `.hm-layout-top { flex-direction: column; }`，底部指标卡片改为单列 `1fr`；③ 同步调整容器查询：`@container (max-width: 1180px)` 下 `.hm-layout-bottom` 改为 `repeat(2, ...)`；`@container store-dashboard (max-width: 720px)` 下 `.hm-layout-bottom` 改为 `1fr`；④ 将门店看板缓存版本从 `20260807-trend-14px` 更新为 `20260807-store-hero-factory`，同步修改 `store-dashboard/index.html`、`store-dashboard/page.js` 及 6 个测试文件中的版本断言；⑤ 顺手修复 `tests/store-dashboard-layout-consistency.test.js` 中两处因 CSS 选择器已改为 `:is(#detail-sop, #detail-sop-analysis)` 而导致匹配失败的正则断言。
+- 改动了哪些文件：`store-dashboard/page.css`、`store-dashboard/index.html`、`store-dashboard/page.js`、`tests/store-dashboard-layout-consistency.test.js`、`tests/store-core-metrics-figma.test.js`、`tests/store-recording-summary-visibility.test.js`、`tests/store-advisor-pagination.test.js`、`tests/store-quality-overview-figma.test.js`、`tests/store-review-sop-toolbar.test.js`。
+- 做过哪些验证：`node --check store-dashboard/page.js` 通过；`node scripts/check-version-sync.js` 通过；`node tests/store-dashboard-layout-consistency.test.js`、`tests/store-recording-summary-visibility.test.js`、`tests/store-advisor-pagination.test.js`、`tests/store-quality-overview-figma.test.js` 均通过；`tests/store-core-metrics-figma.test.js` 与 `tests/store-review-sop-toolbar.test.js` 存在历史遗留失败（role-icon/店长文案、搜索规则文案与 data 属性断言），与本次响应式调整无关。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后验证门店看板在不同窗口宽度（>1200px、1200px~760px、<760px）下 hero section 的顶部卡片与底部 6 个指标卡片的排列、间距、换行行为是否与厂端看板一致。
+
+### 2026-08-07 销售看板 hero section 按 Figma 593:3706 校准样式
+- 用户想做什么：按照 Figma 设计稿（节点 593:3706）调整销售看板云外呼/工牌页面的 hero section 样式，并将设计稿中的指标图标图片下载到项目下调用。
+- 已经完成了什么：① 通过 Figma MCP 读取节点 593:3706，提取 section 背景、边框、阴影、圆角、padding、gap，以及头部头像/姓名/门店职位标签、指标卡片的尺寸与颜色规范；② 修改 `sales-dashboard/index.html` 中 `tpl-sales-dcc` 与 `tpl-sales-advisor` 的 hero 结构：将原来的 `hero-store` 合并标签拆分为独立的 `hero-profile-tags` / `hero-profile-tag`（门店、职位各一个），引用门店看板的 `store-icon.svg` 与 `role-icon.svg`；③ 修改 `app-runtime.js`：更新 `renderDccProfile` / `renderAdvisorProfile` 将 `store` 和 `title` 分别写入 `#profile-store` / `#profile-title`；更新 `renderDccHeroMetrics` / `renderAdvisorHeroMetrics`，将指标卡片内部结构从「图标+标签行 / 数值行」改为「左侧 48px 图标 + 右侧 `.hm-body`（标签 + 数值行）」；④ 使用 Figma MCP `download_figma_images` 下载 4 个 48px 指标图标到 `assets/sales-role-metrics/`，命名为 `metric-call-count.png`（邀约/接待/录音数类）、`metric-hit-rate.png`（话术命中率）、`metric-duration.png`（平均时长）、`metric-risk-count.png`（风险录音）；⑤ 修改 `buildSalesMetric` 调用，为所有指标传入 `iconUrl`；修改 `renderSalesHeroMetricIcon` 优先使用 `iconUrl` 渲染 `<img class="hm-metric-icon">`，无 `iconUrl` 时回退到 CSS 渐变图标；⑥ 修改 `voice-qc-admin.css`：按设计稿更新 section 的渐变背景、边框色、双层阴影、24px 圆角、20px padding、18px gap；更新头部头像尺寸为 40px、姓名字体为 #162033 24px Semibold；新增 `.hero-profile-tags` / `.hero-profile-tag` 样式；更新指标卡片为横向 flex、圆角 14px、半透明蓝色边框、渐变背景、backdrop-filter blur(4px)；新增 `.hm-metric-icon` 48px 图片样式；将标签改为 #52627A 14px Medium、数值改为 #243047 24px Semibold、趋势改为 #16A34A 14px Medium；添加指标之间的 1px 分隔线；补齐 1200px/768px 响应式样式；⑦ 将销售看板缓存版本从 `20260807-sales-scene-tabs-v4` 更新为 `20260807-sales-hero-icons-v5`，并同步 `sales-dashboard/index.html`、`sales-dashboard/page.js`、`sales-dashboard/page.css` 与相关测试文件。
+- 改动了哪些文件：`sales-dashboard/index.html`、`sales-dashboard/page.js`、`sales-dashboard/page.css`、`app-runtime.js`、`voice-qc-admin.css`、`tests/sales-review-sop-toolbar.test.js`、`tests/sales-review-robot-interaction.test.js`，新增 `assets/sales-role-metrics/metric-call-count.png`、`metric-hit-rate.png`、`metric-duration.png`、`metric-risk-count.png`。
+- 做过哪些验证：`node --check app-runtime.js` 通过；`node --check sales-dashboard/page.js` 通过；`node tests/sales-review-sop-toolbar.test.js && node tests/sales-review-robot-interaction.test.js` 通过；`node scripts/check-version-sync.js` 通过；使用 Python HTMLParser 检查两个 template 标签平衡通过。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后验证销售看板两个角色页面的 hero section 与设计稿一致，确认四个指标图片正常显示；未跑全量测试。
+
+### 2026-08-07 销售看板布局重构后版本同步与测试断言修复
+- 用户想做什么：在销售看板页面完成 SOP 执行分析独立卡片与三行布局重构后，同步版本号并运行语法/版本/相关测试验证，确保所有变更一致且测试通过。
+- 已经完成了什么：① 运行 `node --check app-runtime.js` 与 `node --check sales-dashboard/page.js` 确认无语法错误；② 运行 `node scripts/check-version-sync.js` 确认 page.js 版本与测试文件中的版本字符串一致；③ 更新 `tests/sales-review-sop-toolbar.test.js`：将 SOP 工具栏测试从旧的 `data-sales-review-sop-search` / `data-sales-review-sop-sort-trigger` / `data-sales-review-sop-sort-panel` / `data-sales-review-sop-sort` 更新为独立渲染后实际使用的 `data-sales-review-rule-search` / `data-sales-review-rule-sort-trigger` / `data-sales-review-rule-sort-panel` / `data-sales-review-rule-sort`，状态引用从 `state.reviewSopSort` / `state.reviewSopQuery` / `renderSalesReviewToolbar(role, activeTab)` / `event.target.value` 更新为 `state.sopReviewRuleSort` / `state.sopReviewRuleQuery` / `renderSalesSopReview(role)` / `nextQuery`；④ 重新运行销售看板相关测试，全部通过。
+- 改动了哪些文件：`tests/sales-review-sop-toolbar.test.js`。
+- 做过哪些验证：`node --check app-runtime.js` 通过；`node --check sales-dashboard/page.js` 通过；`node scripts/check-version-sync.js` 通过；`node tests/sales-review-sop-toolbar.test.js` 2 个用例全部通过；`node tests/sales-review-robot-interaction.test.js` 2 个用例全部通过。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后验证销售看板两个角色页面的新布局与独立 SOP 卡片交互（搜索/排序/分页/下钻）是否正常；未跑全量测试。
+
+### 2026-08-07 销售看板 SOP 执行分析独立 JS 渲染逻辑
+- 用户想做什么：在 `sales-dashboard/index.html` 已完成 SOP 执行分析独立卡片拆分的前提下，将 `app-runtime.js` 中「顾问行为洞察」里的「SOP 执行分析」tab 拆分为独立渲染逻辑，使其拥有独立的搜索、排序、分页状态和渲染函数。
+- 已经完成了什么：① 在 `app-runtime.js` 中 `renderSalesReviewInsights` 之前新增三个函数：`renderSalesSopReviewToolbar(role)`（渲染目标 `sales-sop-review-toolbar`，固定使用 `SALES_REVIEW_INSIGHT_CONFIG.sop`，独立状态 `sopReviewRuleQuery`/`sopReviewRuleSort`/`sopReviewPage`，事件更新对应状态并重置分页后重新渲染）、`renderSalesSopReviewContent(role)`（渲染目标 `sales-sop-review-list`，固定 tab 为 `sop`，复用原有列表行结构、分页和查看录音逻辑，渲染完成后调用 `autoCollapseSalesReviewSceneTags`）、`renderSalesSopReview(role)`（依次调用前两者）；② 修改 `renderSalesReviewInsights`，将 `activeTab` 限定为 `strength`/`weakness`/`risk`，默认 `strength`，若 `reviewInsightTab` 为 `sop` 则修正为 `strength`；③ 修改 `renderSalesReviewSceneControl` 场景按钮点击回调，重置 `sopReviewPage = 1` 并同步调用 `renderSalesSopReview(role)` 与 `renderSalesReviewInsights(role)`；④ 修改 `bindDccEvents` 与 `bindAdvisorEvents` 中的 `.review-insight-tabs` 事件绑定，过滤 tab 值，仅 `strength`/`weakness`/`risk` 才赋值给 `reviewInsightTab`；⑤ 在 `renderDccReview()` 与 `renderAdvisorReview()` 末尾分别增加 `renderSalesSopReview('dcc')` 与 `renderSalesSopReview('advisor')`。
+- 改动了哪些文件：`app-runtime.js`。
+- 做过哪些验证：`node --check app-runtime.js` 通过，无语法错误。
+- 还有哪些待办或风险：需要在浏览器硬刷新（Cmd+Shift+R）后验证销售看板两个角色页面：SOP 执行分析独立卡片的搜索、排序、分页、查看录音下钻是否正常，顾问行为洞察三个 tab 切换是否仍正常，业务场景筛选变化是否同时刷新两个区域；未跑全量测试。
+
+
 ### 2026-08-05 厂端问题规则列表容器宽度自适应
 - 用户想做什么：选中的 `issue-rule-list-shell` 要做宽度自适应；宽度足够时由规则名称列撑开剩余空间。
 - 已经完成了什么：检查后发现厂端 `.issue-rule-list-shell` 被写死了 `max-width: 654px` 和 `align-self: center`，导致列表容器不能撑满父容器。已移除这两个属性，让容器 `width: 100%` 自适应父容器宽度；并把 grid 第一列从 `minmax(0, 312px)` 改为 `minmax(0, 1fr)`，让规则名称列在宽度足够时撑开剩余空间，标签跟随其后；同步把厂端 `page.js` / `index.html` 的缓存版本从 `20260805-issue-rule-shared` 更新为 `20260805-issue-rule-adaptive` 以便浏览器重新加载 CSS；运行 `scripts/sync-versions.js` 和 `scripts/check-version-sync.js` 确认测试文件版本无需改动、全部一致。

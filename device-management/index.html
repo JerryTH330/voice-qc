@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260825-dock-figma-icon-v5" />
+  <link rel="stylesheet" href="./page.css?v=20260826-dock-log-no-pagination-v27" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -118,7 +118,7 @@
                 </div>
                 <div class="table-wrap badge-list-table-wrap dock-list-table-wrap">
                   <table class="data-table session-data-table dock-data-table">
-                    <thead><tr><th>充电坞 SN</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>操作</th></tr></thead>
+                    <thead><tr><th>充电坞 SN</th><th>状态</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>操作</th></tr></thead>
                     <tbody id="dockDetailTableBody"></tbody>
                   </table>
                 </div>
@@ -323,37 +323,28 @@
                 <span>刷新</span>
               </button>
             </div>
-            <div class="table-scroll">
-              <table class="data-table badge-dock-subdevice-table">
-                <thead><tr><th>端口</th><th>SN号</th><th>可用空间</th><th>电池电量</th><th>设备获取时间</th></tr></thead>
-                <tbody id="badgeDockSubdeviceTableBody"></tbody>
-              </table>
-            </div>
-            <div class="session-pagination badge-dock-pagination" id="badgeDockSubdevicePagination"></div>
+            <div class="badge-dock-device-list" id="badgeDockSubdeviceList"></div>
           </section>
           <section class="card table-card badge-dock-section" aria-label="子设备日志">
             <div class="card-head">
               <div>
                 <h2>子设备日志</h2>
               </div>
-              <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-dock-date-range" id="badgeDockDateControl" aria-label="子设备日志日期范围"></div>
+              <div class="badge-dock-log-filters">
+                <div class="session-toolbar-control session-toolbar-menu badge-dock-event-control" id="badgeDockEventControl" aria-label="子设备日志事件名称"></div>
+                <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-dock-date-range" id="badgeDockDateControl" aria-label="子设备日志日期范围"></div>
+              </div>
             </div>
-            <div class="table-scroll">
-              <table class="data-table badge-dock-log-table">
-                <thead><tr><th>事件时间</th><th>事件名称</th><th>工牌 SN 号</th><th>员工</th></tr></thead>
-                <tbody id="badgeDockLogTableBody"></tbody>
-              </table>
-            </div>
-            <div class="session-pagination badge-dock-pagination" id="badgeDockLogPagination"></div>
+            <div class="event-timeline badge-dock-log-timeline" id="badgeDockLogTimeline"></div>
           </section>
         </div>
       </div>
     </aside>
 
     <div class="toast" id="toast" role="status">操作已完成</div>
-    <script src="../unified-navigation-shell.js?v=20260825-unified-nav-v2"></script>
+    <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260825-remove-page-exports-v2"></script>
+    <script src="./page.js?v=20260826-dock-log-no-pagination-v27"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
