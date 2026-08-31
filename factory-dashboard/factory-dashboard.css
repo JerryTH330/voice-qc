@@ -8234,3 +8234,40 @@
 .factory-dashboard-page #panel-sop-execution .store-trend-content {
   padding: 0;
 }
+
+/* 组织级联树与线索列表保持同一宽度和小屏行为。 */
+.factory-dashboard-page .factory-organization-combined-control { gap: 0; }
+.factory-dashboard-page .factory-organization-combined-main { display: flex; min-width: 0; flex: 1 1 auto; align-items: center; }
+.factory-dashboard-page .factory-organization-combined-main > .session-select-trigger { width: auto; height: 42px; min-height: 42px; }
+.factory-dashboard-page .factory-organization-dimension-trigger { flex: 0 0 auto; max-width: 96px; padding-right: 10px; }
+.factory-dashboard-page .factory-organization-path-trigger { min-width: 0; flex: 1 1 auto; padding-left: 10px; border-left: 1px solid rgba(217, 226, 239, 0.9); }
+.factory-dashboard-page .factory-org-dimension-menu { right: auto; left: 0; min-width: 148px; }
+.factory-dashboard-page .factory-org-control-slot .factory-org-panel {
+  right: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  transform: translateX(var(--factory-org-shift-x, 0));
+}
+.factory-dashboard-page .factory-org-columns {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+.factory-dashboard-page .factory-org-column {
+  flex: 1 0 168px;
+  width: 168px;
+  min-width: 168px;
+  max-width: 208px;
+}
+
+@media (max-width: 760px) {
+  .factory-dashboard-page .factory-org-control-slot .factory-org-panel {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}

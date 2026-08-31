@@ -1,5 +1,5 @@
 /* 录音列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260824-nav-icon-fix-v1");
+@import url("../voice-qc-admin.css?v=20260825-sidebar-padding-v2");
 @import url("../app-inline.css?v=20260812-date-picker-fix-v2");
 
 .session-list-table-wrap {
@@ -17,4 +17,78 @@
   width: 92px;
   min-width: 92px;
   max-width: 92px;
+}
+
+/* 品牌筛选按内容自然宽度显示，不占满整行。 */
+#sessionFilterControls .session-toolbar-control-brand {
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+#sessionFilterControls .session-toolbar-control-brand .todo-filter-tabs {
+  flex: 0 0 auto;
+}
+
+#sessionFilterControls .session-organization-combined-control { gap: 0; }
+#sessionFilterControls .session-organization-combined-main { display: flex; min-width: 0; flex: 1 1 auto; align-items: center; }
+#sessionFilterControls .session-organization-combined-main > .session-select-trigger { width: auto; height: 42px; min-height: 42px; }
+#sessionFilterControls .session-organization-dimension-trigger { flex: 0 0 auto; max-width: 96px; padding-right: 10px; }
+#sessionFilterControls .session-organization-path-trigger { min-width: 0; flex: 1 1 auto; padding-left: 10px; border-left: 1px solid rgba(217, 226, 239, 0.9); }
+#sessionFilterControls .session-organization-dimension-trigger strong,
+#sessionFilterControls .session-organization-path-trigger input { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#sessionFilterControls [data-session-menu-panel="organizationDimension"] { right: auto; left: 0; min-width: 148px; }
+
+/* 组织级联树：与线索列表统一，窄屏通过横向滚动查看后续层级。 */
+.session-organization-cascader {
+  left: 0;
+  right: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  transform: translateX(var(--session-organization-shift-x, 0));
+}
+
+.session-organization-cascader .session-cascader-columns {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+.session-organization-cascader .session-cascader-column {
+  flex: 1 0 168px;
+  width: 168px;
+  min-width: 168px;
+  max-width: 208px;
+}
+
+.session-organization-cascader .session-cascader-option {
+  width: 100%;
+  min-width: 0;
+}
+
+.session-organization-cascader .session-cascader-option > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .session-organization-cascader {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+
+  .session-organization-cascader .session-cascader-top,
+  .session-organization-cascader .session-cascader-footer {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .session-organization-cascader .session-cascader-current {
+    text-align: right;
+  }
 }

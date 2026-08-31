@@ -3044,6 +3044,22 @@
   }
 }
 
+/* 顶部筛选最后一项占满当前行剩余空间。 */
+.store-dashboard-page #store-model-dropdown.store-model-dropdown.session-toolbar-control {
+  width: auto;
+  max-width: none;
+  min-width: 172px;
+  flex: 1 1 172px;
+}
+
+@media (max-width: 768px) {
+  .store-dashboard-page #store-model-dropdown.store-model-dropdown.session-toolbar-control {
+    width: 100%;
+    min-width: 0;
+    flex-basis: 100%;
+  }
+}
+
 /* UAT 顾问行为洞察录音弹窗；仅覆盖洞察入口，不影响 SOP 与人员录音弹窗。 */
 body .uat-review-recording-overlay {
   padding: 24px;

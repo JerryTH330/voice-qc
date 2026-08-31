@@ -1,11 +1,149 @@
 /* 线索列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260824-nav-icon-fix-v1");
+@import url("../voice-qc-admin.css?v=20260825-sidebar-padding-v2");
 @import url("../app-inline.css");
 
 .leads-list-table-wrap {
   box-sizing: border-box;
   width: calc(100% - 40px);
   margin-inline: 20px;
+}
+
+#leadsFilterControls .leads-organization-combined-control {
+  gap: 0;
+}
+
+#leadsFilterControls .leads-organization-combined-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+}
+
+#leadsFilterControls .leads-organization-combined-main .session-select-trigger {
+  width: auto;
+  height: 42px;
+  min-height: 42px;
+}
+
+#leadsFilterControls .leads-organization-dimension-trigger {
+  flex: 0 0 auto;
+  max-width: 96px;
+  padding-right: 10px;
+}
+
+#leadsFilterControls .leads-organization-path-trigger {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-left: 10px;
+  border-left: 1px solid rgba(217, 226, 239, 0.9);
+}
+
+#leadsFilterControls .leads-organization-combined-main .session-select-trigger strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#leadsFilterControls .leads-organization-dimension-menu {
+  right: auto;
+  left: 0;
+  min-width: 148px;
+}
+
+@media (min-width: 1101px) {
+  #leadsFilterControls.leads-filter-toolbar {
+    grid-template-columns: minmax(0, 0.9fr) minmax(220px, 1.25fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  }
+
+  #leadsFilterControls.leads-filter-toolbar.is-collapsed {
+    grid-template-columns: minmax(0, 0.9fr) minmax(220px, 1.25fr) minmax(0, 0.9fr) minmax(0, 0.9fr) auto;
+  }
+}
+
+#leadsFilterControls .leads-organization-cascader {
+  right: auto;
+  left: 0;
+  width: min(560px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  transform: translateX(var(--leads-cascader-shift-x, 0));
+}
+
+#leadsFilterControls .leads-organization-cascader .session-cascader-columns {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+#leadsFilterControls .leads-organization-cascader .session-cascader-column {
+  flex: 1 0 168px;
+  width: 168px;
+  min-width: 168px;
+  max-width: 208px;
+}
+
+#leadsFilterControls .leads-organization-cascader .session-cascader-option {
+  width: 100%;
+  min-width: 0;
+}
+
+#leadsFilterControls .leads-organization-cascader .session-cascader-option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#leadsFilterControls .leads-organization-search {
+  min-height: 40px;
+  margin-top: 12px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(217, 226, 239, 0.9);
+  border-radius: 12px;
+  background: #fff;
+}
+
+#leadsFilterControls .leads-organization-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+#leadsFilterControls .leads-organization-search-results {
+  max-height: 280px;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+}
+
+#leadsFilterControls .leads-organization-search-results .session-cascader-option { width: 100%; }
+#leadsFilterControls .organization-search-result > span { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
+#leadsFilterControls .organization-search-result small { max-width: 100%; overflow: hidden; color: var(--soft); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 820px) {
+  #leadsFilterControls.leads-filter-toolbar.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  #leadsFilterControls.leads-filter-toolbar.is-collapsed .leads-filter-inline-actions {
+    grid-column: auto;
+  }
+
+  #leadsFilterControls .leads-organization-dimension-menu {
+    left: 0;
+  }
+
+  #leadsFilterControls .leads-organization-cascader {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
 }
 
 .leads-data-table thead th:last-child,
@@ -364,7 +502,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   grid-template-rows: auto minmax(0, 1fr);
   gap: 20px;
   align-items: stretch;
-  height: 546.8px;
+  height: auto;
+  min-height: 555px;
   box-sizing: border-box;
   padding: 20px;
   overflow: hidden;
@@ -383,8 +522,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 .lead-recording-summary-card {
   box-sizing: border-box;
   min-width: 0;
-  height: 427.8px;
-  min-height: 427.8px;
+  height: auto;
+  min-height: 436px;
   align-self: stretch;
   border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 16px;
@@ -1845,8 +1984,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 .lead-detail-tag-section {
   display: flex;
   min-width: 0;
-  height: 348.8px;
-  min-height: 348.8px;
+  height: auto;
+  min-height: 357px;
   flex-direction: column;
   padding: 14px 16px;
   overflow: hidden;

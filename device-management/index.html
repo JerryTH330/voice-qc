@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260826-dock-log-empty-meta-v31" />
+  <link rel="stylesheet" href="./page.css?v=20260828-shared-org-v2" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -41,16 +41,22 @@
               <div class="session-filter-toolbar store-filter-toolbar" id="storeFilterControls">
                 <div class="store-filter-control" data-store-filter-root="brand">
                   <span>品牌</span>
-                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="brand" aria-expanded="false"><strong id="storeBrandFilterText">全部品牌</strong><i aria-hidden="true"></i></button>
+                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="brand" aria-expanded="false"><strong id="storeBrandFilterText">全部</strong><i aria-hidden="true"></i></button>
                   <div class="store-filter-menu" data-store-filter-menu="brand" hidden>
-                    <button class="active" type="button" data-store-filter-option="brand" data-value="全部品牌">全部品牌</button>
-                    <button type="button" data-store-filter-option="brand" data-value="广汽传祺">广汽传祺</button>
-                    <button type="button" data-store-filter-option="brand" data-value="广汽埃安">广汽埃安</button>
+                    <button class="active" type="button" data-store-filter-option="brand" data-value="全部">全部</button>
+                    <button type="button" data-store-filter-option="brand" data-value="传祺">传祺</button>
+                    <button type="button" data-store-filter-option="brand" data-value="埃安">埃安</button>
                   </div>
                 </div>
-                <div class="store-filter-control" data-store-filter-root="organization">
-                  <span>组织</span>
-                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="organization" aria-expanded="false"><strong id="storeOrganizationFilterText">全部组织</strong><i aria-hidden="true"></i></button>
+                <div class="store-filter-control store-organization-combined-control" data-store-filter-root="organization">
+                  <div class="store-organization-combined-main">
+                    <button class="store-filter-trigger store-organization-dimension-trigger" type="button" data-store-filter-trigger="organizationDimension" aria-expanded="false"><strong id="storeOrganizationDimensionText">大区维度</strong><i aria-hidden="true"></i></button>
+                    <button class="store-filter-trigger store-organization-path-trigger" type="button" data-store-filter-trigger="organization" aria-expanded="false"><strong id="storeOrganizationFilterText">全部组织</strong><i aria-hidden="true"></i></button>
+                  </div>
+                  <div class="store-filter-menu store-organization-dimension-menu" data-store-filter-menu="organizationDimension" hidden>
+                    <button class="active" type="button" data-store-org-dimension="region">大区维度</button>
+                    <button type="button" data-store-org-dimension="province">省份维度</button>
+                  </div>
                   <div class="store-organization-menu" data-store-filter-menu="organization" hidden></div>
                 </div>
                 <label class="store-filter-control store-name-search">
@@ -344,7 +350,9 @@
     <div class="toast" id="toast" role="status">操作已完成</div>
     <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
     <script src="../date-filter-component-utils.js?v=20260813-badge-low-resource-v10"></script>
-    <script src="./page.js?v=20260826-dock-log-empty-meta-v31"></script>
+    <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
+    <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
+    <script src="./page.js?v=20260828-shared-org-v2"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

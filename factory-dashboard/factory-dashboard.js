@@ -99,8 +99,8 @@
         <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-brand">
           <span class="gf-label">品牌</span>
           <div class="gf-tabs todo-filter-tabs" id="gf-brand" role="group" aria-label="品牌">
-            <button class="gf-tab todo-filter-tab" data-brand="all" aria-pressed="false">全部</button>
-            <button class="gf-tab todo-filter-tab active" data-brand="传祺" aria-pressed="true">传祺</button>
+            <button class="gf-tab todo-filter-tab active" data-brand="all" aria-pressed="true">全部</button>
+            <button class="gf-tab todo-filter-tab" data-brand="传祺" aria-pressed="false">传祺</button>
             <button class="gf-tab todo-filter-tab" data-brand="埃安" aria-pressed="false">埃安</button>
           </div>
         </div>
@@ -459,7 +459,10 @@
     }));
   };
 
-  const factoryOrganizationTree = buildFactoryOrganizationTree();
+  const sharedOrganizationDirectory = window.AIQCOrganization;
+  const getFactoryOrganizationTree = () => sharedOrganizationDirectory
+    ? sharedOrganizationDirectory.getRootNodes(factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand)
+    : buildFactoryOrganizationTree();
 
   const flattenFactoryOrganizationNodes = (nodes, collection = []) => {
     nodes.forEach((node) => {
@@ -471,7 +474,7 @@
     return collection;
   };
 
-  const flatFactoryOrganizationNodes = flattenFactoryOrganizationNodes(factoryOrganizationTree);
+  const getFlatFactoryOrganizationNodes = () => flattenFactoryOrganizationNodes(getFactoryOrganizationTree(), []);
 
   // ══════════════════════════════════════════════════
   // 2. KPI 数据（全国汇总级 — 复用门店看板模式）
@@ -581,13 +584,17 @@
   let currentRole   = 'all';   // 人员角色
   let currentSource = SOURCE_KEYS.all;
   let currentScenes = [SCENE_KEYS.all];
-  let currentBrand  = '传祺';
+  let currentBrand  = 'all';
+  let factoryOrgDimension = 'region';
+  let factorySelectedOrgPath = FACTORY_ALL_ORG_VALUE;
+  let currentAdvisor = 'all';
   let currentTime   = '1';     // 时间: 1=昨日, 7=近7天, 15=近半月, 30=近1月, custom
   let factoryTimeStartDate = '';
   let factoryTimeEndDate = '';
   let currentModel  = 'all';   // 车型
   const factoryOrgMenuState = {
     open: false,
+    dimensionOpen: false,
     draftPath: FACTORY_ALL_ORG_VALUE,
     searchQuery: '',
     searchActive: false
@@ -765,6 +772,9 @@
   };
 
   const getCurrentFactoryOrgPath = () => {
+    if (sharedOrganizationDirectory) {
+      return factorySelectedOrgPath;
+    }
     if (currentStore !== 'all') {
       return `${currentRegion} > ${currentZone} > ${currentStore}`;
     }
@@ -794,7 +804,8 @@
     if (!value || value === FACTORY_ALL_ORG_VALUE) {
       return FACTORY_ALL_ORG_VALUE;
     }
-    return value.replaceAll(' > ', ' / ');
+    return sharedOrganizationDirectory?.formatPath(value, currentBrand === 'all' ? '全部' : currentBrand)
+      || value.replaceAll(' > ', ' / ');
   };
 
   const normalizeFactoryOrganizationSearchText = (value) => {
@@ -807,8 +818,11 @@
   };
 
   const getFactoryOrganizationColumns = (draftPath) => {
+    if (sharedOrganizationDirectory) {
+      return sharedOrganizationDirectory.getColumns(draftPath, factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand);
+    }
     const columns = [];
-    let currentNodes = factoryOrganizationTree;
+    let currentNodes = getFactoryOrganizationTree();
 
     while (currentNodes && currentNodes.length) {
       columns.push(currentNodes);
@@ -823,12 +837,15 @@
   };
 
   const getFactoryOrganizationSearchResults = (keyword) => {
+    if (sharedOrganizationDirectory) {
+      return sharedOrganizationDirectory.search(keyword, factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand);
+    }
     const normalizedKeyword = normalizeFactoryOrganizationSearchText(keyword);
     if (!normalizedKeyword) {
       return [];
     }
 
-    return flatFactoryOrganizationNodes.filter((node) => {
+    return getFlatFactoryOrganizationNodes().filter((node) => {
       const normalizedLabel = normalizeFactoryOrganizationSearchText(node.label);
       const normalizedPath = normalizeFactoryOrganizationSearchText(node.path);
       return normalizedLabel.includes(normalizedKeyword) || normalizedPath.includes(normalizedKeyword);
@@ -839,14 +856,29 @@
     if (!path || path === FACTORY_ALL_ORG_VALUE) {
       return null;
     }
-    return flatFactoryOrganizationNodes.find((node) => node.path === path) || null;
+    return sharedOrganizationDirectory?.findNode(path, factoryOrgDimension)
+      || getFlatFactoryOrganizationNodes().find((node) => node.path === path)
+      || null;
   };
 
   const applyFactoryOrgPath = (path) => {
+    factorySelectedOrgPath = path || FACTORY_ALL_ORG_VALUE;
+    currentAdvisor = 'all';
     if (!path || path === FACTORY_ALL_ORG_VALUE) {
       currentRegion = 'all';
       currentZone = 'all';
       currentStore = 'all';
+      return;
+    }
+
+    if (sharedOrganizationDirectory) {
+      const node = sharedOrganizationDirectory.findNode(path, factoryOrgDimension);
+      if (node?.type === 'advisor') currentAdvisor = node.advisorId;
+      const dealerCode = node?.dealerCode;
+      const dealer = sharedOrganizationDirectory.dealers.find((item) => item.dealerCode === dealerCode);
+      currentRegion = dealer?.area || 'all';
+      currentZone = dealer?.zone || 'all';
+      currentStore = dealer?.dealerName || 'all';
       return;
     }
 
@@ -861,12 +893,7 @@
     const searchQuery = factoryOrgMenuState.searchQuery || '';
     const isSearching = Boolean(searchQuery.trim());
     const searchResults = isSearching ? getFactoryOrganizationSearchResults(searchQuery) : [];
-    const [selectedRegion, selectedZone] = draftPath === FACTORY_ALL_ORG_VALUE ? [] : draftPath.split(' > ');
-    const regionNode = selectedRegion ? getFactoryOrganizationNodeByPath(selectedRegion) : null;
-    const zoneNode = selectedZone && regionNode ? getFactoryOrganizationNodeByPath(`${selectedRegion} > ${selectedZone}`) : null;
-    const regionNodes = factoryOrganizationTree;
-    const zoneNodes = regionNode?.children || [];
-    const storeNodes = zoneNode?.children || [];
+    const columns = getFactoryOrganizationColumns(draftPath);
 
     return `
       <div class="factory-org-panel" data-factory-org-menu-panel="true">
@@ -879,7 +906,7 @@
             <span>${FACTORY_ALL_ORG_VALUE}</span>
           </button>
           <div class="factory-org-current">
-            <span>当前层级</span>
+            <span>${factoryOrgDimension === 'province' ? '省份维度' : '大区维度'}·当前层级</span>
             <strong>${escapeHtml(formatFactoryOrganizationDisplay(draftPath))}</strong>
           </div>
         </div>
@@ -917,69 +944,18 @@
             `
             : `
               <div class="factory-org-columns">
-                <div class="factory-org-column">
-                  <div class="factory-org-column-title">大区</div>
-                  ${regionNodes.map((node) => {
-                    const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : '';
-                    return `
-                      <button
-                        type="button"
-                        class="factory-org-option${active}"
-                        data-factory-org-path="${escapeHtml(node.path)}"
-                        data-factory-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"
-                      >
-                        <span>${escapeHtml(node.label)}</span>
-                        ${node.children && node.children.length ? '<i class="factory-org-arrow" aria-hidden="true"></i>' : ''}
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
-                <div class="factory-org-column">
-                  <div class="factory-org-column-title">战区</div>
-                  ${
-                    zoneNodes.length
-                      ? zoneNodes.map((node) => {
-                        const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : '';
-                        return `
-                          <button
-                            type="button"
-                            class="factory-org-option${active}"
-                            data-factory-org-path="${escapeHtml(node.path)}"
-                            data-factory-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"
-                          >
-                            <span>${escapeHtml(node.label)}</span>
-                            ${node.children && node.children.length ? '<i class="factory-org-arrow" aria-hidden="true"></i>' : ''}
-                          </button>
-                        `;
-                      }).join('')
-                      : '<div class="factory-org-placeholder">请选择大区</div>'
-                  }
-                </div>
-                <div class="factory-org-column">
-                  <div class="factory-org-column-title">门店</div>
-                  ${
-                    storeNodes.length
-                      ? storeNodes.map((node) => {
-                        const active = draftPath === node.path ? ' active' : '';
-                        return `
-                          <button
-                            type="button"
-                            class="factory-org-option${active}"
-                            data-factory-org-path="${escapeHtml(node.path)}"
-                            data-factory-org-has-children="false"
-                          >
-                            <span>${escapeHtml(node.label)}</span>
-                          </button>
-                        `;
-                      }).join('')
-                      : '<div class="factory-org-placeholder">请选择战区</div>'
-                  }
-                </div>
+                ${columns.map((nodes) => `
+                  <div class="factory-org-column">
+                    ${nodes.map((node) => {
+                      const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : '';
+                      return `<button type="button" class="factory-org-option${active}" data-factory-org-path="${escapeHtml(node.path)}" data-factory-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"><span>${escapeHtml(node.label)}</span>${node.children && node.children.length ? '<i class="factory-org-arrow" aria-hidden="true"></i>' : ''}</button>`;
+                    }).join('')}
+                  </div>`).join('')}
               </div>
             `
         }
         <div class="factory-org-footer">
-          <span>筛选将覆盖当前层级及其下属门店</span>
+          <span>筛选将覆盖当前层级及其下属门店与顾问</span>
           <button type="button" class="btn-primary" data-factory-org-apply="${escapeHtml(draftPath)}">应用组织</button>
         </div>
       </div>
@@ -999,16 +975,19 @@
       : getCurrentFactoryOrgPath();
 
     slot.innerHTML = `
-      <div class="store-filter-box session-toolbar-control session-toolbar-menu${open ? ' is-open' : ''} session-toolbar-control-org" data-factory-org-root="true">
-        <span>组织</span>
-        <div class="session-select-trigger session-select-trigger-search${open ? ' active' : ''}">
+      <div class="store-filter-box session-toolbar-control session-toolbar-menu${open || factoryOrgMenuState.dimensionOpen ? ' is-open' : ''} session-toolbar-control-org factory-organization-combined-control" data-factory-org-root="true">
+        <div class="factory-organization-combined-main">
+          <button type="button" class="session-select-trigger factory-organization-dimension-trigger${factoryOrgMenuState.dimensionOpen ? ' active' : ''}" data-factory-org-dimension-toggle="true" aria-expanded="${factoryOrgMenuState.dimensionOpen ? 'true' : 'false'}">
+            <strong>${factoryOrgDimension === 'province' ? '省份维度' : '大区维度'}</strong><span class="session-select-caret" aria-hidden="true"></span>
+          </button>
+          <div class="session-select-trigger session-select-trigger-search factory-organization-path-trigger${open ? ' active' : ''}">
           <div class="session-select-trigger-search-main">
             <input
               type="text"
               class="session-select-trigger-search-input${isSearchActive ? '' : ' is-display-mode'}"
               data-factory-org-trigger-input="true"
               value="${escapeHtml(searchQuery)}"
-              placeholder="${escapeHtml(isSearchActive ? '搜索大区/战区/门店' : formatFactoryOrganizationDisplay(displayValue))}"
+              placeholder="${escapeHtml(isSearchActive ? '搜索组织/门店/顾问' : formatFactoryOrganizationDisplay(displayValue))}"
               aria-label="搜索组织"
             />
           </div>
@@ -1022,7 +1001,9 @@
           >
             <span class="session-select-caret" aria-hidden="true"></span>
           </button>
+          </div>
         </div>
+        ${factoryOrgMenuState.dimensionOpen ? `<div class="session-menu-panel factory-org-dimension-menu"><button type="button" class="session-menu-option${factoryOrgDimension === 'region' ? ' active' : ''}" data-factory-org-dimension="region"><span>大区维度</span></button><button type="button" class="session-menu-option${factoryOrgDimension === 'province' ? ' active' : ''}" data-factory-org-dimension="province"><span>省份维度</span></button></div>` : ''}
         ${open ? renderFactoryOrganizationMenu() : ''}
       </div>
     `;
@@ -1031,6 +1012,7 @@
   const rerenderFactoryOrganizationControl = (keepFocus = false) => {
     renderFactoryOrganizationControl();
     bindFactoryOrganizationControlEvents();
+    syncFactoryOrganizationMenuLayout();
 
     if (!keepFocus) {
       return;
@@ -1044,6 +1026,22 @@
       input.focus();
       const position = input.value.length;
       input.setSelectionRange(position, position);
+    });
+  };
+
+  const syncFactoryOrganizationMenuLayout = () => {
+    window.requestAnimationFrame(() => {
+      const panel = document.querySelector('[data-factory-org-menu-panel="true"]');
+      if (!panel) return;
+      panel.style.setProperty('--factory-org-shift-x', '0px');
+      const rect = panel.getBoundingClientRect();
+      const safeInset = 16;
+      let shiftX = 0;
+      if (rect.right > window.innerWidth - safeInset) shiftX -= rect.right - (window.innerWidth - safeInset);
+      if (rect.left + shiftX < safeInset) shiftX += safeInset - (rect.left + shiftX);
+      panel.style.setProperty('--factory-org-shift-x', `${Math.round(shiftX)}px`);
+      const columns = panel.querySelector('.factory-org-columns');
+      columns?.scrollTo({ left: columns.scrollWidth, behavior: 'smooth' });
     });
   };
 
@@ -1065,13 +1063,38 @@
     if (!root) return;
 
     const toggle = root.querySelector('[data-factory-org-trigger-toggle="true"]');
+    const dimensionToggle = root.querySelector('[data-factory-org-dimension-toggle="true"]');
     const input = root.querySelector('[data-factory-org-trigger-input="true"]');
+
+    dimensionToggle?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      factoryOrgMenuState.dimensionOpen = !factoryOrgMenuState.dimensionOpen;
+      factoryOrgMenuState.open = false;
+      factoryOrgMenuState.searchQuery = '';
+      factoryOrgMenuState.searchActive = false;
+      rerenderFactoryOrganizationControl();
+    });
+
+    root.querySelectorAll('[data-factory-org-dimension]').forEach((node) => {
+      node.addEventListener('click', () => {
+        const nextDimension = node.dataset.factoryOrgDimension || 'region';
+        if (factoryOrgDimension !== nextDimension) {
+          factoryOrgDimension = nextDimension;
+          applyFactoryOrgPath(FACTORY_ALL_ORG_VALUE);
+        }
+        factoryOrgMenuState.dimensionOpen = false;
+        factoryOrgMenuState.draftPath = FACTORY_ALL_ORG_VALUE;
+        rerenderFactoryOrganizationControl();
+        applyGlobalFilter();
+      });
+    });
 
     if (toggle) {
       toggle.addEventListener('click', (event) => {
         event.stopPropagation();
         const willOpen = !factoryOrgMenuState.open;
         factoryOrgMenuState.open = willOpen;
+        factoryOrgMenuState.dimensionOpen = false;
         if (willOpen) {
           factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
         } else {
@@ -1264,8 +1287,12 @@
     tabs.forEach(tab => {
       tab.addEventListener("click", () => {
         if (tab.classList.contains('disabled')) return;
-        tabs.forEach(t => t.classList.remove("active"));
+        tabs.forEach((item) => {
+          item.classList.remove("active");
+          item.setAttribute('aria-pressed', 'false');
+        });
         tab.classList.add("active");
+        tab.setAttribute('aria-pressed', 'true');
         stateUpdater(tab.dataset[dataAttr]);
         // 自定义时间不自动 apply
         if (containerId === 'gf-time' && tab.dataset[dataAttr] === 'custom') return;
@@ -1362,7 +1389,16 @@
   });
 
   bindGlobalFilter("gf-brand", "brand", val => {
+    const changed = currentBrand !== val;
     currentBrand = val;
+    if (changed) {
+      applyFactoryOrgPath(FACTORY_ALL_ORG_VALUE);
+      factoryOrgMenuState.draftPath = FACTORY_ALL_ORG_VALUE;
+      factoryOrgMenuState.open = false;
+      factoryOrgMenuState.dimensionOpen = false;
+      factoryOrgMenuState.searchQuery = '';
+      rerenderFactoryOrganizationControl();
+    }
   });
 
   const shiftFactoryReferenceDate = (date, offsetDays) => {
@@ -2319,6 +2355,43 @@
     ]
   };
 
+  const buildFactorySharedRankRegions = () => {
+    if (!sharedOrganizationDirectory) return RANK_DATA.regions;
+    const records = getFactoryScopedRecordings();
+    const regionMap = new Map();
+    records.forEach((recording) => {
+      const dealer = recording.dealer;
+      if (!regionMap.has(dealer.area)) regionMap.set(dealer.area, new Map());
+      const zoneMap = regionMap.get(dealer.area);
+      if (!zoneMap.has(dealer.zone)) zoneMap.set(dealer.zone, new Map());
+      const storeMap = zoneMap.get(dealer.zone);
+      if (!storeMap.has(dealer.dealerName)) storeMap.set(dealer.dealerName, []);
+      storeMap.get(dealer.dealerName).push(recording);
+    });
+
+    const makeMetricRow = (name, scopedRecords, extra = {}) => {
+      const seed = [...name].reduce((total, character) => total + character.charCodeAt(0), 0);
+      const passRate = Number((78 + (seed % 13) * 0.7).toFixed(1));
+      return {
+        name,
+        validRec: scopedRecords.length,
+        hitRate: Number(Math.max(68, passRate - 3.2).toFixed(1)),
+        passRate,
+        riskRate: Number(Math.max(1.8, 7.2 - (seed % 9) * 0.45).toFixed(1)),
+        trend: seed % 4 === 0 ? 'down' : 'up',
+        ...extra
+      };
+    };
+
+    return [...regionMap.entries()].map(([regionName, zoneMap]) => {
+      const zones = [...zoneMap.entries()].map(([zoneName, storeMap]) => {
+        const stores = [...storeMap.entries()].map(([storeName, storeRecords]) => makeMetricRow(storeName, storeRecords));
+        return makeMetricRow(zoneName, stores.flatMap((store) => Array.from({ length: store.validRec })), { stores });
+      });
+      return makeMetricRow(regionName, zones.flatMap((zone) => Array.from({ length: zone.validRec })), { zones });
+    });
+  };
+
   // ── 排行榜排序状态 ────────────────────────────────
   let rankSortKey = 'passRate';
   let rankSortDesc = true;
@@ -2326,10 +2399,12 @@
 
   const rankRecordingCounts = (r) => {
     const total = Number(r.validRec) || 0;
+    const invitation = r.invitation ?? Math.round(total * 0.34);
+    const testDrive = r.testDrive ?? r.test_drive ?? Math.round(total * 0.24);
     return {
-      invitation: r.invitation ?? Math.max(1, Math.round(total * 0.34)),
-      testDrive: r.testDrive ?? r.test_drive ?? Math.max(1, Math.round(total * 0.24)),
-      reception: r.reception ?? Math.max(1, Math.round(total * 0.42))
+      invitation,
+      testDrive,
+      reception: r.reception ?? Math.max(0, total - invitation - testDrive)
     };
   };
 
@@ -2351,33 +2426,35 @@
     const titleEl = document.getElementById('rank-title');
     const subEl   = document.getElementById('rank-sub');
 
+    const rankRegions = buildFactorySharedRankRegions();
+
     // 决定当前显示哪一级数据
     let rows = [];
     let level = 'region'; // 'region' | 'zone' | 'store'
 
     if (currentStore !== 'all') {
       // 已选门店 → 不再展开，只显示该门店
-      const region = RANK_DATA.regions.find(r => r.name === currentRegion);
+      const region = rankRegions.find(r => r.name === currentRegion);
       const zone   = region?.zones.find(z => z.name === currentZone);
       rows = (zone?.stores || []).filter(s => s.name === currentStore);
       level = 'store';
       if (titleEl) titleEl.textContent = `${currentZone} · 门店详情`;
     } else if (currentZone !== 'all') {
       // 已选战区 → 显示门店列表
-      const region = RANK_DATA.regions.find(r => r.name === currentRegion);
+      const region = rankRegions.find(r => r.name === currentRegion);
       const zone   = region?.zones.find(z => z.name === currentZone);
       rows = zone?.stores || [];
       level = 'store';
       if (titleEl) titleEl.textContent = `${currentZone} · 门店排行`;
     } else if (currentRegion !== 'all') {
       // 已选大区 → 显示战区列表
-      const region = RANK_DATA.regions.find(r => r.name === currentRegion);
+      const region = rankRegions.find(r => r.name === currentRegion);
       rows = region?.zones || [];
       level = 'zone';
       if (titleEl) titleEl.textContent = `${currentRegion} · 战区排行`;
     } else {
       // 全国 → 显示大区（可展开战区）
-      rows = RANK_DATA.regions;
+      rows = rankRegions;
       level = 'region';
       if (titleEl) titleEl.textContent = 'SOP执行排行';
     }
@@ -5894,7 +5971,33 @@
   // ══════════════════════════════════════════════════
   // 全局筛选应用 — 统一调度
   // ══════════════════════════════════════════════════
+  const getFactoryScopedRecordings = () => {
+    if (!sharedOrganizationDirectory?.recordings) return [];
+    return sharedOrganizationDirectory.recordings.filter((recording) => {
+      const brandMatch = currentBrand === 'all' || recording.dealer.brand === currentBrand;
+      const recordPath = sharedOrganizationDirectory.getRecordPath(recording, factoryOrgDimension, true);
+      const organizationMatch = factorySelectedOrgPath === FACTORY_ALL_ORG_VALUE || recordPath.startsWith(factorySelectedOrgPath);
+      return brandMatch && organizationMatch;
+    });
+  };
+
+  const syncFactorySharedKpiCounts = () => {
+    if (!sharedOrganizationDirectory) return;
+    const records = getFactoryScopedRecordings();
+    const invitation = records.filter((_, index) => index % 4 < 2).length;
+    const reception = records.filter((_, index) => index % 4 === 2).length;
+    const testDrive = records.filter((_, index) => index % 4 === 3).length;
+    ALL_KPI_DATA.invitation.num = String(invitation);
+    ALL_KPI_DATA.reception.num = String(reception);
+    ALL_KPI_DATA.test_drive.num = String(testDrive);
+    ALL_KPI_DATA.valid_record.num = String(records.length);
+    ALL_KPI_DATA.qa_pass_count.num = String(Math.round(records.length * 0.82));
+    ALL_KPI_DATA.risk_record.num = String(Math.round(records.length * 0.06));
+    ALL_KPI_DATA.risk_rate.num = records.length ? '6.0' : '0';
+  };
+
   const applyGlobalFilter = () => {
+    syncFactorySharedKpiCounts();
     updateFactoryHeroIdentity();
     renderHeroKPI();
     renderSOPExecutionTab();
@@ -5905,6 +6008,7 @@
   // 初始渲染
   // ══════════════════════════════════════════════════
   syncFactorySceneTabs();
+  syncFactorySharedKpiCounts();
   updateFactoryHeroIdentity();
   renderHeroKPI();
   renderSOPExecutionTab();

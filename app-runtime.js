@@ -7284,7 +7284,46 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return generated.sort((a, b) => parseDateTimeValue(b.uploadTime) - parseDateTimeValue(a.uploadTime))
       }
 
-      const sessionRecords = buildSessionRecords()
+      const sessionRecordTemplates = buildSessionRecords()
+      const sharedOrganizationDirectory = window.AIQCOrganization
+      const sessionRecords = sharedOrganizationDirectory?.recordings?.length
+        ? sharedOrganizationDirectory.recordings.map((recording, index) => {
+            const template = sessionRecordTemplates[index % sessionRecordTemplates.length]
+            const dealer = recording.dealer
+            const brandSeries = dealer.brand === '传祺'
+              ? ['传祺 E9', '传祺 GS8', '传祺 M8', '传祺向往 S7']
+              : ['埃安 Y Plus', '埃安 RT', '埃安 UT', '埃安 V Plus']
+            const recordedAt = recording.recordedAt.slice(0, 16)
+            return {
+              ...template,
+              id: recording.recordingId,
+              brand: dealer.brand,
+              region: dealer.area,
+              zone: dealer.zone,
+              province: dealer.province,
+              city: dealer.city,
+              store: dealer.dealerName,
+              dealerCode: dealer.dealerCode,
+              organizationPath: sharedOrganizationDirectory.getDealerPath(dealer, 'region'),
+              provinceOrganizationPath: sharedOrganizationDirectory.getDealerPath(dealer, 'province'),
+              advisorId: recording.advisorId,
+              advisorName: recording.advisorName,
+              advisorPhone: `13${8 + (index % 2)}****${String(1000 + index).padStart(4, '0')}`,
+              leadId: buildMockLeadId(30000 + index),
+              customerName: `${['王', '李', '陈', '张', '刘', '赵'][index % 6]}${index % 2 ? '女士' : '先生'}`,
+              customerPhone: `13${7 + (index % 3)}****${String(2000 + index).padStart(4, '0')}`,
+              recordStartTime: recordedAt,
+              uploadTime: recordedAt,
+              duration: `${String(5 + (index % 10)).padStart(2, '0')}:${String((index * 13) % 60).padStart(2, '0')}`,
+              status: index % 9 === 0 ? '失败' : '已完成',
+              qualifiedRate: `${60 + (index % 39)}%`,
+              intentLevel: ['高', '中', '低', '无'][index % 4],
+              intentLevelClass: ['red', 'amber', 'blue', 'gray'][index % 4],
+              carSeries: brandSeries[index % brandSeries.length],
+              stage: ['邀约', '试驾PDC', '到店接待', '试驾'][index % 4]
+            }
+          })
+        : sessionRecordTemplates
 
       const leadRecordSeeds = [
         {
@@ -7741,7 +7780,167 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
-      const leadRecords = buildLeadRecords()
+      const leadOrganizationDealerSeeds = Array.isArray(window.__LEADS_ORGANIZATION_DEALERS)
+        ? window.__LEADS_ORGANIZATION_DEALERS
+        : []
+      const leadAdvisorSurnames = ['王', '李', '张', '刘', '陈', '杨', '黄', '赵', '周', '吴', '徐', '孙', '胡', '朱', '高', '林', '何', '郭', '马', '罗', '梁', '宋', '郑', '谢']
+      const leadAdvisorGivenNames = ['子涵', '宇辰', '欣怡', '浩然', '若曦', '梓轩', '雨桐', '嘉怡', '思远', '俊杰', '晨曦', '可欣', '明轩', '诗涵', '睿哲', '依诺', '景行', '安然', '知夏', '沐阳', '清妍', '承泽', '书瑶', '逸凡']
+      const leadDemoCustomerSurnames = ['沈', '顾', '程', '姚', '邵', '蒋', '冯', '钱', '许', '唐', '韩', '彭', '苏', '卢', '曹', '蔡', '丁', '魏', '薛', '叶', '潘', '杜', '戴', '夏']
+      const leadDemoCustomerGivenNames = ['知远', '嘉宁', '慕瑶', '耀锋', '靖宇', '泺西', '若彤', '昱辰', '沐晴', '宇泽', '芮宁', '嘉屹', '可欣', '书言', '明哲', '安歌', '清和', '景行', '宁远', '承宇', '子默', '言希', '浩初', '语桐']
+      const leadBrandCarSeries = {
+        '传祺': ['传祺 E9', '传祺 GS8', '传祺 M8', '传祺 ES9', '传祺向往 S7'],
+        '埃安': ['埃安 Y Plus', '埃安 RT', '埃安 UT', '埃安 V Plus', '埃安 S Plus']
+      }
+
+      function buildStableChineseName(index, surnames, givenNames) {
+        const safeIndex = Math.max(0, Number(index) || 0)
+        return `${surnames[safeIndex % surnames.length]}${givenNames[Math.floor(safeIndex / surnames.length) % givenNames.length]}`
+      }
+
+      function buildLeadOrganizationDealers() {
+        return leadOrganizationDealerSeeds.map((dealer, dealerIndex) => {
+          const brandCode = dealer.brand === '传祺' ? 'GAC' : 'AION'
+          const advisors = Array.from({ length: 5 }, (_, advisorIndex) => {
+            const globalIndex = dealerIndex * 5 + advisorIndex
+            return {
+              advisorId: `${brandCode}-${dealer.dealerCode}-${String(advisorIndex + 1).padStart(2, '0')}`,
+              advisorName: buildStableChineseName(globalIndex, leadAdvisorSurnames, leadAdvisorGivenNames)
+            }
+          })
+
+          return {
+            ...dealer,
+            advisors
+          }
+        })
+      }
+
+      function getLeadDealerOrganizationPath(dealer, dimension = 'region') {
+        const secondLevel = dimension === 'province' ? dealer.province : dealer.area
+        const thirdLevel = dimension === 'province' ? dealer.city : dealer.zone
+        return `${dealer.brand} > ${secondLevel} > ${thirdLevel} > ${dealer.dealerName}`
+      }
+
+      function buildLeadOrganizationTree(dealers, dimension = 'region') {
+        const roots = []
+
+        dealers.forEach((dealer) => {
+          dealer.advisors.forEach((advisor) => {
+            const dealerPath = getLeadDealerOrganizationPath(dealer, dimension)
+            const segments = [...dealerPath.split(' > '), advisor.advisorName]
+            let currentNodes = roots
+            let currentPath = ''
+
+            segments.forEach((segment, index) => {
+              currentPath = currentPath ? `${currentPath} > ${segment}` : segment
+              const isAdvisor = index === segments.length - 1
+              let node = currentNodes.find((entry) => entry.path === currentPath)
+
+              if (!node) {
+                node = {
+                  label: segment,
+                  path: currentPath,
+                  type: isAdvisor ? 'advisor' : 'organization'
+                }
+                if (!isAdvisor) node.children = []
+                currentNodes.push(node)
+              }
+
+              currentNodes = node.children || []
+            })
+          })
+        })
+
+        return roots
+      }
+
+      function buildLeadOrganizationDemoRecords(templates, dealers) {
+        const advisors = dealers.flatMap((dealer) => dealer.advisors.map((advisor) => ({ dealer, advisor })))
+        const leadStages = ['邀约', '试驾PDC', '到店接待', '试驾']
+
+        return advisors.map(({ dealer, advisor }, index) => {
+          const template = templates[index % templates.length]
+          const day = 8 + (index % 5)
+          const hour = 9 + (index % 10)
+          const minute = (index * 7) % 60
+          const contactMinute = (minute + 18) % 60
+          const contactHour = hour + (minute + 18 >= 60 ? 1 : 0)
+          const hasRecording = index % 6 !== 0
+          const regionOrganizationPath = getLeadDealerOrganizationPath(dealer, 'region')
+          const provinceOrganizationPath = getLeadDealerOrganizationPath(dealer, 'province')
+          const carSeriesOptions = leadBrandCarSeries[dealer.brand] || leadBrandCarSeries['传祺']
+
+          return normalizeLeadRecord({
+            ...template,
+            id: buildMockLeadId(20000 + index),
+            brand: dealer.brand,
+            dealerCode: dealer.dealerCode,
+            region: dealer.area,
+            zone: dealer.zone,
+            province: dealer.province,
+            city: dealer.city,
+            store: dealer.dealerName,
+            organizationPath: regionOrganizationPath,
+            regionOrganizationPath,
+            provinceOrganizationPath,
+            advisorId: advisor.advisorId,
+            advisorName: advisor.advisorName,
+            owner: advisor.advisorName,
+            customerPhone: `13${7 + (index % 3)}****${String(1000 + index).padStart(4, '0')}`,
+            customerName: buildStableChineseName(index + 137, leadDemoCustomerSurnames, leadDemoCustomerGivenNames),
+            recordStartTime: `2026-03-${padNumber(day)} ${padNumber(hour)}:${padNumber(minute)}`,
+            leadIssuedAt: `2026-03-${padNumber(day)} 08:${padNumber((index * 11) % 60)}`,
+            lastContact: `2026-03-${padNumber(day)} ${padNumber(contactHour)}:${padNumber(contactMinute)}`,
+            validRecording: hasRecording ? '是' : '否',
+            recordingCount: hasRecording ? 1 + (index % 4) : 0,
+            sopScore: `${38 + (index % 59)}%`,
+            carSeries: carSeriesOptions[index % carSeriesOptions.length],
+            stage: leadStages[index % leadStages.length],
+            intent: leadIntentGradeValues[index % leadIntentGradeValues.length],
+            leadStatus: leadStatusValues[index % leadStatusValues.length],
+            aiLeadValidity: hasRecording ? aiLeadValidityValues[index % 2] : '暂未分析',
+            isMultiNodeJourneyDemo: false,
+            isMultiNodeCustomerDemo: false,
+            isMultiStoreCustomerDemo: false
+          }, index)
+        }).sort((left, right) => parseDateTimeValue(right.recordStartTime) - parseDateTimeValue(left.recordStartTime))
+      }
+
+      const leadOrganizationDealers = buildLeadOrganizationDealers()
+      const leadOrganizationTrees = {
+        region: buildLeadOrganizationTree(leadOrganizationDealers, 'region'),
+        province: buildLeadOrganizationTree(leadOrganizationDealers, 'province')
+      }
+      const leadRecordTemplates = buildLeadRecords()
+      const leadRecords = buildLeadOrganizationDemoRecords(leadRecordTemplates, leadOrganizationDealers)
+
+      function getLeadRecordOrganizationFilterPath(record, dimension = leadsFilterState.organizationDimension) {
+        const dealerPath = dimension === 'province'
+          ? record.provinceOrganizationPath
+          : record.regionOrganizationPath
+        return `${dealerPath} > ${record.advisorName}`
+      }
+
+      function getLeadOrganizationColumns(draftPath) {
+        const dimension = leadsFilterState.organizationDimension || 'region'
+        const fullTree = leadOrganizationTrees[dimension] || leadOrganizationTrees.region
+        const selectedBrand = leadsFilterState.brand
+        const selectedBrandNode = selectedBrand === '全部'
+          ? null
+          : fullTree.find((node) => node.label === selectedBrand)
+        const columns = []
+        let currentNodes = selectedBrandNode?.children || fullTree
+
+        while (currentNodes && currentNodes.length) {
+          columns.push(currentNodes)
+
+          const activeNode = currentNodes.find((node) => draftPath === node.path || draftPath.startsWith(`${node.path} > `))
+          if (!activeNode || !activeNode.children || !activeNode.children.length) break
+          currentNodes = activeNode.children
+        }
+
+        return columns
+      }
 
       function buildSessionOrganizationTree(records) {
         const roots = []
@@ -7781,7 +7980,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return roots
       }
 
-      const sessionOrganizationTree = buildSessionOrganizationTree(sessionRecords)
+      const sessionOrganizationTree = sharedOrganizationDirectory?.trees?.region || buildSessionOrganizationTree(sessionRecords)
       const sessionSearchUtils = (typeof module !== 'undefined' && module.exports)
         ? require('./session-search-utils.js')
         : (window.__sessionSearchUtils || {})
@@ -7866,15 +8065,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const sessionUnknownCarSeriesPrefix = '__unknown_car_series__:'
 
       const sessionDefaultFilters = {
-        organization: '全国',
+        brand: '全部',
+        organizationDimension: 'region',
+        organization: '全部组织',
         stage: '全部',
         source: '全部',
         carSeries: '全部',
         intentLevel: '全部',
         searchQueries: createDefaultSessionSearchQueries(),
-        startDate: '2026-03-11',
-        endDate: '2026-03-13',
-        status: '已完成'
+        startDate: '2026-08-08',
+        endDate: '2026-08-12',
+        status: '全部'
       }
 
       const sessionFilterState = {
@@ -7898,7 +8099,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         dateViewMonth: Number(sessionDefaultFilters.startDate.slice(5, 7))
       }
 
-      const sessionBrandOptions = ['全部', '传祺', '埃安', '昊铂']
+      const sessionBrandOptions = ['全部', '传祺', '埃安']
+      const sessionOrganizationDimensionOptions = [
+        { label: '大区维度', value: 'region' },
+        { label: '省份维度', value: 'province' }
+      ]
+      const leadBrandOptions = ['全部', '传祺', '埃安']
+      const leadOrganizationDimensionOptions = [
+        { label: '大区维度', value: 'region' },
+        { label: '省份维度', value: 'province' }
+      ]
       const leadsStageOptions = ['全部', '邀约', '试驾PDC', '到店接待', '试驾']
       const leadStatusOptions = ['全部', ...leadStatusValues]
       const leadIntentGradeOptions = ['全部', ...leadIntentGradeValues]
@@ -7921,7 +8131,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const leadSourceTypeOptions = ['全部', '实体卡', '虚拟号', '工作号']
       const leadsDefaultFilters = {
         brand: '全部',
-        organization: '全国',
+        organizationDimension: 'region',
+        organization: '全部组织',
         intentGrade: '全部',
         leadStatus: '全部',
         sourceType: '全部',
@@ -7958,6 +8169,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const leadsMenuState = {
         openMenu: null,
         organizationDraftPath: leadsDefaultFilters.organization,
+        organizationSearchQuery: '',
         activeDateField: 'startDate',
         dateDraftStartDate: leadsDefaultFilters.startDate,
         dateDraftEndDate: leadsDefaultFilters.endDate,
@@ -8785,18 +8997,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getSessionOrganizationFilterPath(item) {
-        return `${item.organizationPath} > ${item.advisorName}`
+        const dealerPath = sessionFilterState.organizationDimension === 'province'
+          ? item.provinceOrganizationPath
+          : item.organizationPath
+        return `${dealerPath} > ${item.advisorName}`
       }
 
       function formatSessionOrganizationDisplay(value) {
-        if (value === '全部组织') {
-          return value
-        }
-
-        return value.replaceAll(' > ', ' / ')
+        return sharedOrganizationDirectory?.formatPath(value, sessionFilterState.brand)
+          || (value === '全部组织' ? value : value.replaceAll(' > ', ' / '))
       }
 
       function getSessionDisplayText(filterKey, value) {
+        if (filterKey === 'organizationDimension') {
+          return sessionOrganizationDimensionOptions.find((option) => option.value === value)?.label || '大区维度'
+        }
         if (filterKey === 'organization') {
           return formatSessionOrganizationDisplay(value)
         }
@@ -8826,6 +9041,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getSessionOrganizationColumns(draftPath) {
+        if (sharedOrganizationDirectory) {
+          return sharedOrganizationDirectory.getColumns(draftPath, sessionFilterState.organizationDimension, sessionFilterState.brand)
+        }
         const columns = []
         let currentNodes = sessionOrganizationTree
 
@@ -8866,6 +9084,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const flatSessionOrganizationNodes = flattenSessionOrganizationNodes(sessionOrganizationTree)
 
       function getSessionOrganizationNode(path) {
+        if (sharedOrganizationDirectory) {
+          return sharedOrganizationDirectory.findNode(path, sessionFilterState.organizationDimension)
+        }
         return flatSessionOrganizationNodes.find((node) => node.path === path) || null
       }
 
@@ -8903,6 +9124,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getSessionOrganizationSearchResults(keyword) {
+        if (sharedOrganizationDirectory) {
+          return sharedOrganizationDirectory.search(keyword, sessionFilterState.organizationDimension, sessionFilterState.brand)
+        }
         const normalizedKeyword = normalizeSessionOrganizationSearchText(keyword)
         if (!normalizedKeyword) {
           return []
@@ -9102,7 +9326,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderSessionOrganizationControl() {
-        const open = sessionMenuState.openMenu === 'organization'
+        const dimensionOpen = sessionMenuState.openMenu === 'organizationDimension'
+        const organizationOpen = sessionMenuState.openMenu === 'organization'
+        const open = dimensionOpen || organizationOpen
         const searchQuery = sessionMenuState.organizationSearchQuery || ''
         const hasSearchQuery = Boolean(searchQuery.trim())
         const isSearchActive = sessionMenuState.organizationSearchActive || hasSearchQuery
@@ -9111,16 +9337,27 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           : sessionFilterState.organization
 
         return `
-          <div class="session-toolbar-control session-toolbar-menu${open ? ' is-open' : ''} session-toolbar-control-org" data-session-menu-root="organization">
-            <span>组织</span>
-            <div class="session-select-trigger session-select-trigger-search${open ? ' active' : ''}">
+          <div class="session-toolbar-control session-toolbar-menu${open ? ' is-open' : ''} session-toolbar-control-org session-organization-combined-control" data-session-menu-root="organizationCombined">
+            <div class="session-organization-combined-main">
+              <button
+                type="button"
+                class="session-select-trigger session-organization-dimension-trigger${dimensionOpen ? ' active' : ''}"
+                data-session-menu-trigger="organizationDimension"
+                aria-label="组织维度"
+                aria-haspopup="listbox"
+                aria-expanded="${dimensionOpen ? 'true' : 'false'}"
+              >
+                <strong>${escapeHtml(getSessionDisplayText('organizationDimension', sessionFilterState.organizationDimension))}</strong>
+                <span class="session-select-caret" aria-hidden="true"></span>
+              </button>
+              <div class="session-select-trigger session-select-trigger-search session-organization-path-trigger${organizationOpen ? ' active' : ''}">
               <div class="session-select-trigger-search-main">
                 <input
                   type="text"
                   class="session-select-trigger-search-input${isSearchActive ? '' : ' is-display-mode'}"
                   data-session-org-trigger-input
                   value="${escapeHtml(searchQuery)}"
-                  placeholder="${escapeHtml(isSearchActive ? '搜索门店/顾问' : getSessionDisplayText('organization', displayValue))}"
+                  placeholder="${escapeHtml(isSearchActive ? '搜索组织/门店/顾问' : getSessionDisplayText('organization', displayValue))}"
                   aria-label="搜索组织或顾问"
                 />
               </div>
@@ -9130,12 +9367,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 data-session-org-trigger-toggle
                 aria-label="展开组织筛选"
                 aria-haspopup="listbox"
-                aria-expanded="${open ? 'true' : 'false'}"
+                aria-expanded="${organizationOpen ? 'true' : 'false'}"
               >
                 <span class="session-select-caret" aria-hidden="true"></span>
               </button>
+              </div>
             </div>
-            ${open ? renderSessionOrganizationMenu() : ''}
+            ${dimensionOpen ? renderSessionOptionMenu('organizationDimension', sessionOrganizationDimensionOptions, sessionFilterState.organizationDimension) : ''}
+            ${organizationOpen ? renderSessionOrganizationMenu() : ''}
           </div>
         `
       }
@@ -9324,7 +9563,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const columns = getSessionOrganizationColumns(draftPath)
 
         return `
-          <div class="session-menu-panel session-menu-panel-cascader" data-session-menu-panel="organization">
+          <div class="session-menu-panel session-menu-panel-cascader session-organization-cascader" data-session-menu-panel="organization">
             <div class="session-cascader-top">
               <button
                 type="button"
@@ -9334,7 +9573,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <span>全部组织</span>
               </button>
               <div class="session-cascader-current">
-                <span>当前层级</span>
+                <span>${escapeHtml(getSessionDisplayText('organizationDimension', sessionFilterState.organizationDimension))}·当前层级</span>
                 <strong>${escapeHtml(getSessionDisplayText('organization', draftPath))}</strong>
               </div>
             </div>
@@ -9469,6 +9708,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return sessionRecords
           .filter((item) => {
             const recordDate = item.recordStartTime.slice(0, 10)
+            const brandMatch = sessionFilterState.brand === '全部' || item.brand === sessionFilterState.brand
             const organizationMatch = sessionFilterState.organization === '全部组织' || getSessionOrganizationFilterPath(item).startsWith(sessionFilterState.organization)
             const stageMatch = sessionFilterState.stage === '全部' || item.stage === sessionFilterState.stage
             const sourceMatch = sessionFilterState.source === '全部' || getSessionSource(item.stage) === sessionFilterState.source
@@ -9481,7 +9721,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const statusMatch = sessionFilterState.status === '全部' || item.status === sessionFilterState.status
             const startMatch = !sessionFilterState.startDate || recordDate >= sessionFilterState.startDate
             const endMatch = !sessionFilterState.endDate || recordDate <= sessionFilterState.endDate
-            return organizationMatch && stageMatch && sourceMatch && carSeriesMatch && intentLevelMatch && searchMatch && statusMatch && startMatch && endMatch
+            return brandMatch && organizationMatch && stageMatch && sourceMatch && carSeriesMatch && intentLevelMatch && searchMatch && statusMatch && startMatch && endMatch
           })
           .sort((a, b) => parseDateTimeValue(b.uploadTime) - parseDateTimeValue(a.uploadTime))
       }
@@ -9501,11 +9741,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function rerenderSessionFilters() {
         renderSessionFilters()
         bindSessionFilterEvents()
+        syncSessionOrganizationMenuLayout()
         if (!sessionFilterState.collapsed) {
           pageHost.querySelectorAll('#sessionFilterControls .session-filter-extra').forEach((node) => {
             node.classList.add('is-visible')
           })
         }
+      }
+
+      function syncSessionOrganizationMenuLayout() {
+        window.requestAnimationFrame(() => {
+          const panel = pageHost.querySelector('.session-organization-cascader')
+          if (!panel) return
+
+          panel.style.setProperty('--session-organization-shift-x', '0px')
+          const rect = panel.getBoundingClientRect()
+          const safeInset = 16
+          let shiftX = 0
+          if (rect.right > window.innerWidth - safeInset) {
+            shiftX -= rect.right - (window.innerWidth - safeInset)
+          }
+          if (rect.left + shiftX < safeInset) {
+            shiftX += safeInset - (rect.left + shiftX)
+          }
+          panel.style.setProperty('--session-organization-shift-x', `${Math.round(shiftX)}px`)
+
+          const columns = panel.querySelector('.session-cascader-columns')
+          columns?.scrollTo({ left: columns.scrollWidth, behavior: 'smooth' })
+        })
       }
 
       function renderSessionCollapseActionButton() {
@@ -9542,6 +9805,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         container.innerHTML = `
           <div class="session-filter-row session-filter-row-segment${sessionFilterState.collapsed ? ' is-collapsed' : ''}">
+            ${renderSessionSegmentControl('brand', '品牌', sessionFilterState.brand, sessionBrandOptions, 'session-toolbar-control-brand')}
             ${renderSessionSegmentControl('stage', '质检场景', sessionFilterState.stage, sessionStageOptions, 'session-toolbar-control-stage')}
             ${renderSessionSegmentControl('source', '数据来源', sessionFilterState.source, sessionSourceOptions, 'session-toolbar-control-source')}
             ${renderSessionSegmentControl('intentLevel', 'AI意向等级', sessionFilterState.intentLevel, sessionIntentLevelOptions, 'session-toolbar-control-intent', renderSessionIntentLevelHelp())}
@@ -9787,7 +10051,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-session-select-key]').forEach((node) => {
           node.addEventListener('click', () => {
-            sessionFilterState[node.dataset.sessionSelectKey] = node.dataset.sessionSelectValue
+            const filterKey = node.dataset.sessionSelectKey
+            const nextValue = node.dataset.sessionSelectValue
+            const changed = sessionFilterState[filterKey] !== nextValue
+            sessionFilterState[filterKey] = nextValue
+            if ((filterKey === 'brand' || filterKey === 'organizationDimension') && changed) {
+              sessionFilterState.organization = '全部组织'
+              sessionMenuState.organizationDraftPath = '全部组织'
+            }
             sessionPaginationState.page = 1
             sessionMenuState.openMenu = null
             renderSessionPage()
@@ -9804,6 +10075,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
             const shouldResetPage = sessionFilterState[filterKey] !== filterValue
             sessionFilterState[filterKey] = filterValue
+            if ((filterKey === 'brand' || filterKey === 'organizationDimension') && shouldResetPage) {
+              sessionFilterState.organization = '全部组织'
+              sessionMenuState.organizationDraftPath = '全部组织'
+            }
             if (shouldResetPage) {
               sessionPaginationState.page = 1
             }
@@ -10123,13 +10398,26 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getLeadDisplayText(filterKey, value) {
+        if (filterKey === 'organizationDimension') {
+          return leadOrganizationDimensionOptions.find((option) => option.value === value)?.label || '大区维度'
+        }
         if (filterKey === 'organization') {
-          return value === '全部组织' ? '全部组织' : value.replaceAll(' > ', ' / ')
+          if (value === '全部组织') return '全部组织'
+          const selectedBrand = leadsFilterState.brand
+          const displayValue = selectedBrand === '全部' || !value.startsWith(`${selectedBrand} > `)
+            ? value
+            : value.slice(`${selectedBrand} > `.length)
+          return displayValue.replaceAll(' > ', ' / ')
         }
         if (filterKey === 'carSeries' && isSessionUnknownCarSeriesValue(value)) {
           return `${getSessionUnknownCarSeriesBrand(value)} / 未知`
         }
         return value
+      }
+
+      function getLeadOrganizationTriggerText(value) {
+        if (value === '全部组织') return '全部'
+        return getLeadDisplayText('organization', value).split(' / ').pop() || '全部'
       }
 
       function getLeadMenuOptions(options, selectedValue, filterKey) {
@@ -10168,6 +10456,43 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <span class="session-select-caret" aria-hidden="true"></span>
             </button>
             ${open ? panelMarkup : ''}
+          </div>
+        `
+      }
+
+      function renderLeadsOrganizationControl() {
+        const dimensionOpen = leadsMenuState.openMenu === 'organizationDimension'
+        const organizationOpen = leadsMenuState.openMenu === 'organization'
+        const open = dimensionOpen || organizationOpen
+
+        return `
+          <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-org leads-organization-combined-control${open ? ' is-open' : ''}" data-leads-menu-root="organizationCombined">
+            <div class="leads-organization-combined-main">
+              <button
+                type="button"
+                class="session-select-trigger leads-organization-dimension-trigger${dimensionOpen ? ' active' : ''}"
+                data-leads-menu-trigger="organizationDimension"
+                aria-label="组织维度"
+                aria-haspopup="listbox"
+                aria-expanded="${dimensionOpen ? 'true' : 'false'}"
+              >
+                <strong>${escapeHtml(getLeadDisplayText('organizationDimension', leadsFilterState.organizationDimension))}</strong>
+                <span class="session-select-caret" aria-hidden="true"></span>
+              </button>
+              <button
+                type="button"
+                class="session-select-trigger leads-organization-path-trigger${organizationOpen ? ' active' : ''}"
+                data-leads-menu-trigger="organization"
+                aria-label="组织"
+                aria-haspopup="listbox"
+                aria-expanded="${organizationOpen ? 'true' : 'false'}"
+              >
+                <strong>${escapeHtml(getLeadOrganizationTriggerText(leadsFilterState.organization))}</strong>
+                <span class="session-select-caret" aria-hidden="true"></span>
+              </button>
+            </div>
+            ${dimensionOpen ? renderLeadsOptionMenu('organizationDimension', leadOrganizationDimensionOptions, leadsFilterState.organizationDimension, 'leads-organization-dimension-menu') : ''}
+            ${organizationOpen ? renderLeadsOrganizationMenu() : ''}
           </div>
         `
       }
@@ -10387,10 +10712,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function renderLeadsOrganizationMenu() {
         const draftPath = leadsMenuState.organizationDraftPath || leadsFilterState.organization
-        const columns = getSessionOrganizationColumns(draftPath)
+        const columns = getLeadOrganizationColumns(draftPath)
+        const dimensionLabel = getLeadDisplayText('organizationDimension', leadsFilterState.organizationDimension)
+        const searchQuery = leadsMenuState.organizationSearchQuery || ''
+        const isSearching = Boolean(searchQuery.trim())
+        const searchResults = isSearching && sharedOrganizationDirectory
+          ? sharedOrganizationDirectory.search(searchQuery, leadsFilterState.organizationDimension, leadsFilterState.brand)
+          : []
+        const renderNode = (node, fromSearch = false) => {
+          const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : ''
+          return `<button type="button" class="session-cascader-option${fromSearch ? ' organization-search-result' : ''}${active}" data-leads-org-path="${escapeHtml(node.path)}" data-leads-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"><span>${fromSearch ? `<strong>${escapeHtml(node.label)}</strong><small>${escapeHtml(getLeadDisplayText('organization', node.path))}</small>` : escapeHtml(node.label)}</span>${node.children && node.children.length ? '<i class="session-cascader-arrow" aria-hidden="true"></i>' : ''}</button>`
+        }
 
         return `
-          <div class="session-menu-panel session-menu-panel-cascader" data-leads-menu-panel="organization">
+          <div class="session-menu-panel session-menu-panel-cascader leads-organization-cascader" data-leads-menu-panel="organization" data-leads-organization-dimension="${escapeHtml(leadsFilterState.organizationDimension)}">
             <div class="session-cascader-top">
               <button
                 type="button"
@@ -10400,38 +10735,30 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <span>全部组织</span>
               </button>
               <div class="session-cascader-current">
-                <span>当前层级</span>
+                <span>${escapeHtml(dimensionLabel)}·当前层级</span>
                 <strong>${escapeHtml(getLeadDisplayText('organization', draftPath))}</strong>
               </div>
             </div>
-            <div class="session-cascader-columns">
+            <label class="leads-organization-search"><span aria-hidden="true">⌕</span><input type="search" value="${escapeHtml(searchQuery)}" data-leads-org-search placeholder="搜索组织、门店编码或顾问"></label>
+            ${isSearching
+              ? `<div class="leads-organization-search-results">${searchResults.length ? searchResults.map((node) => renderNode(node, true)).join('') : '<div class="session-cascader-search-empty">未找到匹配结果</div>'}</div>`
+              : `<div class="session-cascader-columns">
               ${columns
                 .map((nodes) => {
                   return `
                     <div class="session-cascader-column">
                       ${nodes
                         .map((node) => {
-                          const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : ''
-                          return `
-                            <button
-                              type="button"
-                              class="session-cascader-option${active}"
-                              data-leads-org-path="${escapeHtml(node.path)}"
-                              data-leads-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"
-                            >
-                              <span>${escapeHtml(node.label)}</span>
-                              ${node.children && node.children.length ? '<i class="session-cascader-arrow" aria-hidden="true"></i>' : ''}
-                            </button>
-                          `
+                          return renderNode(node)
                         })
                         .join('')}
                     </div>
                   `
                 })
                 .join('')}
-            </div>
+            </div>`}
             <div class="session-cascader-footer">
-              <span>筛选将覆盖当前层级及其下属门店</span>
+              <span>筛选将覆盖当前层级及其下属门店与顾问</span>
               <button type="button" class="btn-primary" data-leads-org-apply="${escapeHtml(draftPath)}">应用组织</button>
             </div>
           </div>
@@ -10599,8 +10926,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         return leadRecords.filter((item) => {
           const recordDate = item.recordStartTime.slice(0, 10)
-          const brandMatch = leadsFilterState.brand === '全部' || getSessionBrand(item.carSeries) === leadsFilterState.brand
-          const organizationMatch = leadsFilterState.organization === '全部组织' || item.organizationPath.startsWith(leadsFilterState.organization)
+          const brandMatch = leadsFilterState.brand === '全部' || item.brand === leadsFilterState.brand
+          const organizationPath = getLeadRecordOrganizationFilterPath(item)
+          const organizationMatch = leadsFilterState.organization === '全部组织' || organizationPath.startsWith(leadsFilterState.organization)
           const advisorNameMatch = !advisorNameQuery || normalizeLeadQueryValue(item.advisorName).includes(advisorNameQuery)
           const customerNameMatch = !customerNameQuery || normalizeLeadQueryValue(item.customerName).includes(customerNameQuery)
           const customerPhoneMatch = !customerPhoneQuery || normalizeLeadQueryValue(item.customerPhone).includes(customerPhoneQuery)
@@ -10718,8 +11046,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const latestRecordingDate = String(item.latestRecordingAt || '').slice(0, 10)
           const brandMatch = leadsFilterState.brand === '全部'
             || item.aggregateBrandSet?.has(leadsFilterState.brand)
+          const organizationPathSet = leadsFilterState.organizationDimension === 'province'
+            ? item.aggregateProvinceOrganizationPathSet
+            : item.aggregateRegionOrganizationPathSet
           const organizationMatch = leadsFilterState.organization === '全部组织'
-            || Array.from(item.aggregateOrganizationPathSet || []).some((path) => path.startsWith(leadsFilterState.organization))
+            || Array.from(organizationPathSet || []).some((path) => path.startsWith(leadsFilterState.organization))
           const customerStatusMatch = leadsFilterState.customerStatus === '全部' || item.leadStatus === leadsFilterState.customerStatus
           const leadCoverageMatch = !leadsFilterState.customerRecordCoverage || leadsFilterState.customerRecordCoverage === '全部' || item.recordCoverage === leadsFilterState.customerRecordCoverage
           const storeCoverageMatch = !leadsFilterState.customerStoreRecordCoverage || leadsFilterState.customerStoreRecordCoverage === '全部' || item.storeRecordCoverage === leadsFilterState.customerStoreRecordCoverage
@@ -10947,7 +11278,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             : item.validRecording === '是' ? 1 : 0
           const hasRecord = itemAudioCount > 0
           const dealerCode = getLeadDealerCode(item)
-          const itemBrand = getSessionBrand(item.carSeries)
+          const itemBrand = item.brand || getSessionBrand(item.carSeries)
+          const regionOrganizationFilterPath = getLeadRecordOrganizationFilterPath(item, 'region')
+          const provinceOrganizationFilterPath = getLeadRecordOrganizationFilterPath(item, 'province')
           const statusUpdatedTime = getLeadStatusUpdatedTime(item)
           const leadIssuedTime = parseDateTimeValue(item.leadIssuedAt || item.recordStartTime)
           const firstRecordingTime = hasRecord ? recordTime : 0
@@ -10977,7 +11310,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               aggregateStoreAudioCounts: storeAudioCounts,
               aggregateStoreDetailsMap: storeDetailsMap,
               aggregateBrandSet: new Set([itemBrand]),
-              aggregateOrganizationPathSet: new Set([item.organizationPath]),
+              aggregateOrganizationPathSet: new Set([regionOrganizationFilterPath]),
+              aggregateRegionOrganizationPathSet: new Set([regionOrganizationFilterPath]),
+              aggregateProvinceOrganizationPathSet: new Set([provinceOrganizationFilterPath]),
               aggregateAudioCount: itemAudioCount,
               aggregateLatestTime: recordTime,
               aggregateLatestContactTime: contactTime,
@@ -11002,7 +11337,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           aggregated.aggregateStoreSet.add(dealerCode)
           aggregated.aggregateStoreCount = aggregated.aggregateStoreSet.size
           aggregated.aggregateBrandSet.add(itemBrand)
-          aggregated.aggregateOrganizationPathSet.add(item.organizationPath)
+          aggregated.aggregateOrganizationPathSet.add(regionOrganizationFilterPath)
+          aggregated.aggregateRegionOrganizationPathSet.add(regionOrganizationFilterPath)
+          aggregated.aggregateProvinceOrganizationPathSet.add(provinceOrganizationFilterPath)
           aggregated.aggregateStoreAudioCounts.set(
             item.store,
             (aggregated.aggregateStoreAudioCounts.get(item.store) || 0) + itemAudioCount
@@ -11137,8 +11474,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const cvAudioCountOpts = ['全部', '1条', '2条', '3条', '4条及以上']
 
           container.innerHTML = `
-            ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', sessionBrandOptions, leadsFilterState.brand))}
-            ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
+            ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', leadBrandOptions, leadsFilterState.brand))}
+            ${renderLeadsOrganizationControl()}
             ${renderLeadsMenuControl('customerCrossStore', '是否跨门店', leadsFilterState.customerCrossStore || '全部', renderLeadsOptionMenu('customerCrossStore', cvCrossStoreOpts, leadsFilterState.customerCrossStore || '全部'))}
             ${renderLeadsMenuControl('customerStoreCountRange', '关联门店数', leadsFilterState.customerStoreCountRange || '全部', renderLeadsOptionMenu('customerStoreCountRange', cvStoreCountOpts, leadsFilterState.customerStoreCountRange || '全部'))}
             ${renderLeadsMenuControl('customerMultiLead', '是否多线索', leadsFilterState.customerMultiLead || '全部', renderLeadsOptionMenu('customerMultiLead', cvMultiLeadOpts, leadsFilterState.customerMultiLead || '全部'), 'leads-filter-extra')}
@@ -11162,8 +11499,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const collapsed = leadsFilterState.collapsed
 
         container.innerHTML = `
-          ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', sessionBrandOptions, leadsFilterState.brand))}
-          ${renderLeadsMenuControl('organization', '组织', leadsFilterState.organization, renderLeadsOrganizationMenu(), 'session-toolbar-control-org')}
+          ${renderLeadsMenuControl('brand', '品牌', leadsFilterState.brand, renderLeadsOptionMenu('brand', leadBrandOptions, leadsFilterState.brand))}
+          ${renderLeadsOrganizationControl()}
           ${renderLeadsMenuControl('leadStatus', '线索状态', leadsFilterState.leadStatus, renderLeadsOptionMenu('leadStatus', leadStatusOptions, leadsFilterState.leadStatus))}
           ${renderLeadsMenuControl('intentGrade', '意向级别', leadsFilterState.intentGrade, renderLeadsOptionMenu('intentGrade', leadIntentGradeOptions, leadsFilterState.intentGrade))}
           <div class="leads-filter-extra session-toolbar-control session-toolbar-menu${leadsMenuState.openMenu === 'sourceType' ? ' is-open' : ''}" data-leads-menu-root="sourceType">
@@ -11350,7 +11687,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <td>${escapeHtml(item.customerPhone)}</td>
                 <td><span class="pill-inline intent-grade-pill ${getLeadIntentGradeClass(item.intentGrade)}">${escapeHtml(item.intentGrade)}</span></td>
                 <td>
-                  <span>${escapeHtml(item.leadStatus)}</span>
+                  <span class="status-inline ${getLeadStatusClass(item.leadStatus)}"><span class="status-inline-dot" aria-hidden="true"></span><span>${escapeHtml(item.leadStatus)}</span></span>
                 </td>
                 <td><span class="ai-lead-validity-pill ${getAiLeadValidityClass(item.aiLeadValidity)}">${escapeHtml(item.aiLeadValidity)}</span></td>
                 <td>${escapeHtml(item.lastContact)}</td>
@@ -11423,9 +11760,38 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
+      function syncLeadsOrganizationMenuLayout() {
+        if (leadsMenuState.openMenu !== 'organization') return
+
+        requestAnimationFrame(() => {
+          const panel = pageHost.querySelector('#leadsFilterControls .leads-organization-cascader')
+          if (!panel) return
+
+          panel.style.setProperty('--leads-cascader-shift-x', '0px')
+          const panelRect = panel.getBoundingClientRect()
+          const safeInset = 16
+          let shiftX = 0
+
+          if (panelRect.right > window.innerWidth - safeInset) {
+            shiftX -= panelRect.right - (window.innerWidth - safeInset)
+          }
+          if (panelRect.left + shiftX < safeInset) {
+            shiftX += safeInset - (panelRect.left + shiftX)
+          }
+
+          panel.style.setProperty('--leads-cascader-shift-x', `${Math.round(shiftX)}px`)
+
+          const columns = panel.querySelector('.session-cascader-columns')
+          if (columns) {
+            columns.scrollTo({ left: columns.scrollWidth, behavior: 'smooth' })
+          }
+        })
+      }
+
       function rerenderLeadsFilters() {
         renderLeadsFilters()
         bindLeadsFilterEvents()
+        syncLeadsOrganizationMenuLayout()
         if (!leadsFilterState.collapsed) {
           pageHost.querySelectorAll('#leadsFilterControls .leads-filter-extra').forEach((node) => {
             node.classList.add('is-visible')
@@ -11442,6 +11808,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
             if (nextMenu === 'organization') {
               leadsMenuState.organizationDraftPath = leadsFilterState.organization
+              leadsMenuState.organizationSearchQuery = ''
             }
 
             if (nextMenu === 'date') {
@@ -11472,10 +11839,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           node.addEventListener('click', () => {
             const filterKey = node.dataset.leadsSelectKey
             const nextValue = node.dataset.leadsSelectValue
+            const previousValue = leadsFilterState[filterKey]
             if ((filterKey === 'leadQueryTarget' || filterKey === 'customerQueryTarget') && leadsFilterState[filterKey] !== nextValue) {
               leadsPaginationState.page = 1
             }
             leadsFilterState[filterKey] = nextValue
+            if ((filterKey === 'brand' || filterKey === 'organizationDimension') && previousValue !== nextValue) {
+              leadsFilterState.organization = '全部组织'
+              leadsMenuState.organizationDraftPath = '全部组织'
+              leadsMenuState.organizationSearchQuery = ''
+            }
             if (filterKey === 'customerMultiLead' && nextValue === '是' && leadsFilterState.customerLeadCountRange === '1条') {
               leadsFilterState.customerLeadCountRange = '全部'
             }
@@ -11498,6 +11871,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             leadsFilterState.organization = node.dataset.leadsOrgPath
             leadsMenuState.openMenu = null
             renderLeadsPage()
+          })
+        })
+
+        pageHost.querySelectorAll('[data-leads-org-search]').forEach((node) => {
+          node.addEventListener('input', (event) => {
+            if (event.isComposing) return
+            const value = node.value || ''
+            leadsMenuState.organizationSearchQuery = value
+            rerenderLeadsFilters()
+            requestAnimationFrame(() => {
+              const input = pageHost.querySelector('[data-leads-org-search]')
+              input?.focus()
+              input?.setSelectionRange(value.length, value.length)
+            })
           })
         })
 
@@ -17489,6 +17876,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const isCustom = roleState.recommendRangeTab === 'custom'
         host.innerHTML = `
           <div class="todo-filter-tabs sales-role-quick-range-tabs">
+            <span class="gf-label sales-role-date-label">时间</span>
             ${salesRecommendRangeOptions.map((option) => `
               <button
                 type="button"

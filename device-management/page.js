@@ -1329,20 +1329,22 @@ let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
 let visitImportFile = null;
 
-const storeOverviewRecords = [
-  { brand: '广汽传祺', organization: '华东大区', zone: '上海战区', code: 'SH-PD-001', name: '上海浦东体验中心', employees: 36, badges: 30, boundEmployees: 28, bindings: 28, syncedAt: '2026-08-12 14:18:32' },
-  { brand: '广汽传祺', organization: '华东大区', zone: '浙江战区', code: 'HZ-BJ-003', name: '杭州滨江体验中心', employees: 31, badges: 26, boundEmployees: 24, bindings: 24, syncedAt: '2026-08-12 14:17:46' },
-  { brand: '广汽埃安', organization: '华东大区', zone: '江苏战区', code: 'SZ-YQ-006', name: '苏州园区体验中心', employees: 27, badges: 23, boundEmployees: 21, bindings: 21, syncedAt: '2026-08-12 14:16:58' },
-  { brand: '广汽埃安', organization: '华南大区', zone: '深圳战区', code: 'SZ-NS-008', name: '深圳南山体验中心', employees: 40, badges: 35, boundEmployees: 32, bindings: 32, syncedAt: '2026-08-12 14:15:21' },
-  { brand: '广汽传祺', organization: '华南大区', zone: '广州战区', code: 'GZ-TH-002', name: '广州天河体验中心', employees: 38, badges: 33, boundEmployees: 30, bindings: 31, syncedAt: '2026-08-12 14:14:55' },
-  { brand: '广汽埃安', organization: '华南大区', zone: '佛山战区', code: 'FS-NH-004', name: '佛山南海体验中心', employees: 29, badges: 25, boundEmployees: 23, bindings: 23, syncedAt: '2026-08-12 14:13:42' },
-  { brand: '广汽传祺', organization: '华北大区', zone: '北京战区', code: 'BJ-CY-001', name: '北京朝阳体验中心', employees: 42, badges: 37, boundEmployees: 35, bindings: 35, syncedAt: '2026-08-12 14:12:38' },
-  { brand: '广汽埃安', organization: '华北大区', zone: '天津战区', code: 'TJ-HX-005', name: '天津河西体验中心', employees: 26, badges: 22, boundEmployees: 20, bindings: 20, syncedAt: '2026-08-12 14:11:49' },
-  { brand: '广汽传祺', organization: '华东大区', zone: '南京战区', code: 'NJ-JN-007', name: '南京江宁体验中心', employees: 33, badges: 29, boundEmployees: 27, bindings: 27, syncedAt: '2026-08-12 14:10:26' },
-  { brand: '广汽埃安', organization: '西南大区', zone: '成都战区', code: 'CD-GX-009', name: '成都高新体验中心', employees: 35, badges: 31, boundEmployees: 29, bindings: 29, syncedAt: '2026-08-12 14:09:17' },
-  { brand: '广汽传祺', organization: '西南大区', zone: '重庆战区', code: 'CQ-YB-011', name: '重庆渝北体验中心', employees: 30, badges: 26, boundEmployees: 24, bindings: 25, syncedAt: '2026-08-12 14:08:33' },
-  { brand: '广汽埃安', organization: '华东大区', zone: '合肥战区', code: 'HF-SX-012', name: '合肥蜀山体验中心', employees: 25, badges: 21, boundEmployees: 19, bindings: 19, syncedAt: '2026-08-12 14:07:45' }
-];
+const sharedOrganizationDirectory = window.AIQCOrganization;
+const storeOverviewRecords = (sharedOrganizationDirectory?.dealers || []).map((dealer, index) => ({
+  brand: dealer.brand,
+  organization: dealer.area,
+  zone: dealer.zone,
+  province: dealer.province,
+  city: dealer.city,
+  code: dealer.dealerCode,
+  name: dealer.dealerName,
+  dealer,
+  employees: dealer.advisors.length,
+  badges: dealer.advisors.length,
+  boundEmployees: dealer.advisors.length,
+  bindings: dealer.advisors.length,
+  syncedAt: `2026-08-12 14:${String(59 - (index % 50)).padStart(2, '0')}:${String((index * 7) % 60).padStart(2, '0')}`
+}));
 
 function getStoreRelativeDateValue(offsetDays) {
   const date = new Date();
@@ -1356,9 +1358,11 @@ const storeDefaultQueryDate = getStoreRelativeDateValue(-1);
 const storeDefaultQueryDateObject = parseStoreDateValue(storeDefaultQueryDate);
 
 const storeOverviewState = {
-  brand: '全部品牌',
+  brand: '全部',
+  organizationDimension: 'region',
   organization: '全部组织',
   organizationDraft: '全部组织',
+  organizationSearchQuery: '',
   storeNameQuery: '',
   startDate: storeDefaultQueryDate,
   endDate: storeDefaultQueryDate,
@@ -1374,21 +1378,10 @@ const storeOverviewState = {
   openFilter: ''
 };
 
-const badgeAdvisorNames = [
-  '陈佳', '李洋', '王蕾', '赵强', '孙悦', '周明', '许静', '郑昱辰',
-  '高翔', '林涛', '张华', '王萌', '刘青', '郭芹', '顾承宇', '韩如臣',
-  '周宁', '徐璐', '沈博', '叶晨', '吴桐', '宋妍', '何俊', '方敏',
-  '曹阳', '蒋欣', '谢林', '邹悦', '潘明', '罗倩', '冯磊', '杜欣',
-  '梁浩', '任洁', '袁凯', '陆瑶', '程峰', '戴宁', '孔明', '白露',
-  '邵华', '唐琳', '魏然', '苏晴', '卢晨', '郝悦', '金鹏', '严静'
-];
-
 const badgeTypes = ['充电坞版本工牌', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
 
-let badgeRecordSequence = 0;
-const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ length: store.bindings }, () => {
-  const index = badgeRecordSequence;
-  badgeRecordSequence += 1;
+const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badge, index) => {
+  const store = storeOverviewRecords.find((item) => item.code === badge.dealer.dealerCode);
   const connected = index % 31 !== 0;
   const recording = connected && index % 5 === 0;
   const battery = index === 6 ? 100 : index % 25 === 0 && index < 425 ? 7 + (index % 13) : 56 + ((index * 7) % 43);
@@ -1401,9 +1394,12 @@ const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ 
     zone: store.zone,
     store: store.name,
     queryDate: store.syncedAt.slice(0, 10),
-    advisorName: badgeAdvisorNames[index % badgeAdvisorNames.length],
-    advisorId: `A${String(1728 + index * 17).padStart(5, '0')}`,
-    sn: `MN-BDG-${String(4821 + index * 7).padStart(6, '0')}`,
+    province: store.province,
+    city: store.city,
+    dealer: store.dealer,
+    advisorName: badge.advisorName,
+    advisorId: badge.advisorId,
+    sn: badge.sn,
     badgeType: badgeTypes[index % badgeTypes.length],
     recordingStatus: recording ? '录音中' : '—',
     connectionStatus: connected ? '已连接' : '未连接',
@@ -1417,7 +1413,7 @@ const badgeDetailRecords = storeOverviewRecords.flatMap((store) => Array.from({ 
     pendingUploads,
     syncedAt: connected ? `2026-08-13 14:${String(59 - (index % 48)).padStart(2, '0')}:${String((index * 7) % 60).padStart(2, '0')}` : '2026-08-13 11:18:06'
   };
-}));
+});
 
 function formatGeneratedBadgeEventTime(totalSeconds) {
   const safeSeconds = Math.max(0, Math.min((24 * 60 * 60) - 1, totalSeconds));
@@ -1575,6 +1571,7 @@ const badgeDockDateMenuState = {
 };
 const badgeDefaultFilters = {
   brand: '全部',
+  organizationDimension: 'region',
   organization: '全部组织',
   storeNameQuery: '',
   advisorNameQuery: '',
@@ -1589,6 +1586,7 @@ const badgeFilterState = { ...badgeDefaultFilters };
 const badgeMenuState = {
   openMenu: '',
   organizationDraft: '全部组织',
+  organizationSearchQuery: '',
   dateDraftStartDate: storeDefaultQueryDate,
   dateDraftEndDate: storeDefaultQueryDate,
   activeDateField: 'startDate',
@@ -1778,25 +1776,23 @@ function getBadgeOrganizationColumns(path) {
 
 function renderBadgeOrganizationMenu() {
   const draft = badgeMenuState.organizationDraft || badgeFilterState.organization;
-  const [selectedRegion = '', selectedZone = '', selectedStore = '', selectedAdvisor = ''] = getBadgeOrganizationParts(draft);
-  const { regions, zones, stores, advisors } = getBadgeOrganizationColumns(draft);
-  const renderColumn = (items, emptyText) => `
-    <div class="session-cascader-column">
-      ${items.length ? items.join('') : `<div class="badge-org-empty">${emptyText}</div>`}
-    </div>`;
+  const query = badgeMenuState.organizationSearchQuery || '';
+  const isSearching = Boolean(query.trim());
+  const columns = sharedOrganizationDirectory.getColumns(draft, badgeFilterState.organizationDimension, badgeFilterState.brand);
+  const searchResults = isSearching
+    ? sharedOrganizationDirectory.search(query, badgeFilterState.organizationDimension, badgeFilterState.brand)
+    : [];
+  const renderNode = (node, fromSearch = false) => `<button type="button" class="session-cascader-option${fromSearch ? ' organization-search-result' : ''}${draft === node.path || draft.startsWith(`${node.path} > `) ? ' active' : ''}" data-badge-org-path="${escapeBadgeHtml(node.path)}" data-badge-org-level="${escapeBadgeHtml(node.type)}"${fromSearch ? ' data-badge-org-from-search="true"' : ''}><span>${fromSearch ? `<strong>${escapeBadgeHtml(node.label)}</strong><small>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(node.path, badgeFilterState.brand))}</small>` : escapeBadgeHtml(node.label)}</span>${node.children?.length ? '<i class="session-cascader-arrow"></i>' : ''}</button>`;
   return `
     <div class="session-menu-panel session-menu-panel-cascader badge-organization-menu" data-badge-menu-panel="organization">
       <div class="session-cascader-top">
         <button type="button" class="session-menu-option session-menu-option-clear${draft === '全部组织' ? ' active' : ''}" data-badge-org-clear><span>全部组织</span></button>
-        <div class="session-cascader-current"><span>当前层级</span><strong>${escapeBadgeHtml(formatBadgeOrganizationPath(draft))}</strong></div>
+        <div class="session-cascader-current"><span>${badgeFilterState.organizationDimension === 'province' ? '省份维度' : '大区维度'}·当前层级</span><strong>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(draft, badgeFilterState.brand))}</strong></div>
       </div>
-      <div class="badge-cascader-headings"><span>大区</span><span>战区</span><span>门店</span><span>销售顾问</span></div>
-      <div class="session-cascader-columns badge-cascader-columns">
-        ${renderColumn(regions.map((item) => `<button type="button" class="session-cascader-option${selectedRegion === item ? ' active' : ''}" data-badge-org-path="${escapeBadgeHtml(item)}" data-badge-org-level="region"><span>${escapeBadgeHtml(item)}</span><i class="session-cascader-arrow"></i></button>`), '暂无大区')}
-        ${renderColumn(zones.map((item) => `<button type="button" class="session-cascader-option${selectedZone === item ? ' active' : ''}" data-badge-org-path="${escapeBadgeHtml(`${selectedRegion} > ${item}`)}" data-badge-org-level="zone"><span>${escapeBadgeHtml(item)}</span><i class="session-cascader-arrow"></i></button>`), '请先选择大区')}
-        ${renderColumn(stores.map((item) => `<button type="button" class="session-cascader-option${selectedStore === item ? ' active' : ''}" data-badge-org-path="${escapeBadgeHtml(`${selectedRegion} > ${selectedZone} > ${item}`)}" data-badge-org-level="store"><span>${escapeBadgeHtml(item)}</span><i class="session-cascader-arrow"></i></button>`), '请先选择战区')}
-        ${renderColumn(advisors.map((item) => `<button type="button" class="session-cascader-option${selectedAdvisor === item.advisorId ? ' active' : ''}" data-badge-org-path="${escapeBadgeHtml(`${selectedRegion} > ${selectedZone} > ${selectedStore} > ${item.advisorId}`)}" data-badge-org-level="advisor"><span>${escapeBadgeHtml(item.advisorName)}（${escapeBadgeHtml(item.advisorId)}）</span></button>`), '请先选择门店')}
-      </div>
+      <label class="organization-cascader-search"><span aria-hidden="true">⌕</span><input type="search" value="${escapeBadgeHtml(query)}" data-badge-org-search placeholder="搜索组织、门店编码或顾问"></label>
+      ${isSearching
+        ? `<div class="organization-cascader-search-results">${searchResults.length ? searchResults.map((node) => renderNode(node, true)).join('') : '<div class="badge-org-empty">未找到匹配结果</div>'}</div>`
+        : `<div class="session-cascader-columns badge-cascader-columns">${columns.map((nodes) => `<div class="session-cascader-column">${nodes.map((node) => renderNode(node)).join('')}</div>`).join('')}</div>`}
       <div class="session-cascader-footer"><span>筛选将覆盖当前层级及其下属门店与销售顾问</span><button type="button" class="btn primary" data-badge-org-apply>应用组织</button></div>
     </div>`;
 }
@@ -1806,7 +1802,7 @@ function renderBadgeSegmentControl() {
     <div class="session-toolbar-control session-toolbar-segment-control badge-brand-control">
       <span>品牌</span>
       <div class="todo-filter-tabs">
-        ${['全部', '广汽传祺', '广汽埃安'].map((option) => `<button type="button" class="todo-filter-tab${badgeFilterState.brand === option ? ' active' : ''}" data-badge-brand="${option}">${option}</button>`).join('')}
+        ${['全部', '传祺', '埃安'].map((option) => `<button type="button" class="todo-filter-tab${badgeFilterState.brand === option ? ' active' : ''}" data-badge-brand="${option}">${option}</button>`).join('')}
       </div>
     </div>`;
 }
@@ -1937,10 +1933,14 @@ function renderBadgeFilters() {
     return;
   }
   const organizationOpen = badgeMenuState.openMenu === 'organization';
+  const dimensionOpen = badgeMenuState.openMenu === 'organizationDimension';
   const mainControls = `
-    <div class="session-toolbar-control session-toolbar-control-org session-toolbar-menu${organizationOpen ? ' is-open' : ''}" data-badge-menu-root="organization">
-      <span>组织</span>
-      <button type="button" class="session-select-trigger${organizationOpen ? ' active' : ''}" data-badge-org-trigger><strong>${escapeBadgeHtml(formatBadgeOrganizationPath(badgeFilterState.organization))}</strong><i class="session-select-caret"></i></button>
+    <div class="session-toolbar-control session-toolbar-control-org session-toolbar-menu badge-organization-combined-control${organizationOpen || dimensionOpen ? ' is-open' : ''}" data-badge-menu-root="organization">
+      <div class="badge-organization-combined-main">
+        <button type="button" class="session-select-trigger badge-organization-dimension-trigger${dimensionOpen ? ' active' : ''}" data-badge-org-dimension-trigger><strong>${badgeFilterState.organizationDimension === 'province' ? '省份维度' : '大区维度'}</strong><i class="session-select-caret"></i></button>
+        <button type="button" class="session-select-trigger badge-organization-path-trigger${organizationOpen ? ' active' : ''}" data-badge-org-trigger><strong>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(badgeFilterState.organization, badgeFilterState.brand))}</strong><i class="session-select-caret"></i></button>
+      </div>
+      ${dimensionOpen ? `<div class="session-menu-panel badge-organization-dimension-menu"><button type="button" class="session-menu-option${badgeFilterState.organizationDimension === 'region' ? ' active' : ''}" data-badge-org-dimension="region"><span>大区维度</span></button><button type="button" class="session-menu-option${badgeFilterState.organizationDimension === 'province' ? ' active' : ''}" data-badge-org-dimension="province"><span>省份维度</span></button></div>` : ''}
       ${organizationOpen ? renderBadgeOrganizationMenu() : ''}
     </div>
     ${renderBadgeDateControl()}
@@ -1959,19 +1959,18 @@ function renderBadgeFilters() {
       ${renderBadgeSearchControl('advisorNameQuery', '顾问姓名', badgeFilterState.advisorNameQuery)}
       ${renderBadgeFilterActions()}
     </div>`;
+  syncDeviceOrganizationMenuLayout('.badge-organization-menu', '.badge-cascader-columns', '--badge-org-shift-x');
 }
 
 function getFilteredBadgeRecords() {
-  const [region = '', zone = '', store = '', advisorId = ''] = getBadgeOrganizationParts(badgeFilterState.organization);
   const storeNameQuery = badgeFilterState.storeNameQuery.trim().toLocaleLowerCase('zh-CN');
   const nameQuery = badgeFilterState.advisorNameQuery.trim().toLowerCase();
   const idQuery = badgeFilterState.advisorIdQuery.trim().toLowerCase();
   const snQuery = badgeFilterState.snQuery.trim().toLowerCase();
   return badgeDetailRecords.filter((item) => {
     const brandMatch = badgeFilterState.brand === '全部' || item.brand === badgeFilterState.brand;
-    const organizationMatch = badgeFilterState.organization === '全部组织' || (
-      item.region === region && (!zone || item.zone === zone) && (!store || item.store === store) && (!advisorId || item.advisorId === advisorId)
-    );
+    const organizationPath = sharedOrganizationDirectory.getRecordPath(item, badgeFilterState.organizationDimension, true);
+    const organizationMatch = badgeFilterState.organization === '全部组织' || organizationPath.startsWith(badgeFilterState.organization);
     // 原型数据按查询日期复用同一份快照，保证选择任意日期都有完整工牌数据。
     return brandMatch && organizationMatch
       && (!storeNameQuery || item.store.toLocaleLowerCase('zh-CN').includes(storeNameQuery))
@@ -2194,42 +2193,44 @@ function renderStoreOrganizationMenu() {
   const menu = document.querySelector('[data-store-filter-menu="organization"]');
   if (!menu) return;
   const draft = storeOverviewState.organizationDraft || storeOverviewState.organization;
-  const [selectedArea = '', selectedZone = ''] = getStoreOrganizationParts(draft);
-  const areas = [...new Set(storeOverviewRecords.map((item) => item.organization))];
-  const zones = selectedArea
-    ? [...new Set(storeOverviewRecords.filter((item) => item.organization === selectedArea).map((item) => item.zone))]
+  const query = storeOverviewState.organizationSearchQuery || '';
+  const isSearching = Boolean(query.trim());
+  const columns = sharedOrganizationDirectory.getColumns(draft, storeOverviewState.organizationDimension, storeOverviewState.brand);
+  const searchResults = isSearching
+    ? sharedOrganizationDirectory.search(query, storeOverviewState.organizationDimension, storeOverviewState.brand)
     : [];
-  const stores = selectedArea && selectedZone
-    ? storeOverviewRecords.filter((item) => item.organization === selectedArea && item.zone === selectedZone)
-    : [];
-
-  const renderColumn = (title, items, emptyText) => `
-    <section class="store-org-column">
-      <div class="store-org-column-title">${title}</div>
-      <div class="store-org-options">
-        ${items.length ? items.join('') : `<div class="store-org-empty">${emptyText}</div>`}
-      </div>
-    </section>`;
+  const renderNode = (node, fromSearch = false) => `<button type="button" class="store-org-option${fromSearch ? ' organization-search-result' : ''}${draft === node.path || draft.startsWith(`${node.path} > `) ? ' active' : ''}" data-store-org-path="${escapeBadgeHtml(node.path)}" data-store-org-level="${escapeBadgeHtml(node.type)}"><span>${fromSearch ? `<strong>${escapeBadgeHtml(node.label)}</strong><small>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(node.path, storeOverviewState.brand))}</small>` : escapeBadgeHtml(node.label)}</span>${node.children?.length ? '<i aria-hidden="true"></i>' : ''}</button>`;
 
   menu.innerHTML = `
     <div class="store-org-menu-top">
       <button type="button" class="store-org-clear${draft === '全部组织' ? ' active' : ''}" data-store-org-clear>全部组织</button>
-      <div class="store-org-current"><span>当前层级</span><strong>${formatStoreOrganizationPath(draft)}</strong></div>
+      <div class="store-org-current"><span>${storeOverviewState.organizationDimension === 'province' ? '省份维度' : '大区维度'}·当前层级</span><strong>${sharedOrganizationDirectory.formatPath(draft, storeOverviewState.brand)}</strong></div>
     </div>
-    <div class="store-org-columns">
-      ${renderColumn('大区', areas.map((area) => `
-        <button type="button" class="store-org-option${selectedArea === area ? ' active' : ''}" data-store-org-path="${area}" data-store-org-level="area"><span>${area}</span><i aria-hidden="true"></i></button>`), '暂无大区')}
-      ${renderColumn('战区', zones.map((zone) => `
-        <button type="button" class="store-org-option${selectedZone === zone ? ' active' : ''}" data-store-org-path="${selectedArea} > ${zone}" data-store-org-level="zone"><span>${zone}</span><i aria-hidden="true"></i></button>`), '请先选择大区')}
-      ${renderColumn('门店', stores.map((store) => {
-        const path = `${selectedArea} > ${selectedZone} > ${store.name}`;
-        return `<button type="button" class="store-org-option store-org-store-option${draft === path ? ' active' : ''}" data-store-org-path="${path}" data-store-org-level="store"><span>${store.name}</span></button>`;
-      }), '请先选择战区')}
-    </div>
+    <label class="organization-cascader-search"><span aria-hidden="true">⌕</span><input type="search" value="${escapeBadgeHtml(query)}" data-store-org-search placeholder="搜索组织、门店编码或顾问"></label>
+    ${isSearching
+      ? `<div class="organization-cascader-search-results">${searchResults.length ? searchResults.map((node) => renderNode(node, true)).join('') : '<div class="store-org-empty">未找到匹配结果</div>'}</div>`
+      : `<div class="store-org-columns">${columns.map((nodes) => `<section class="store-org-column"><div class="store-org-options">${nodes.map(renderNode).join('')}</div></section>`).join('')}</div>`}
     <div class="store-org-menu-footer">
-      <span>筛选将覆盖当前层级及其下属门店</span>
+      <span>筛选将覆盖当前层级及其下属门店与顾问</span>
       <button type="button" class="btn primary" data-store-org-apply>应用组织</button>
     </div>`;
+  syncDeviceOrganizationMenuLayout('.store-organization-menu', '.store-org-columns', '--store-org-shift-x');
+}
+
+function syncDeviceOrganizationMenuLayout(panelSelector, columnsSelector, cssVariable) {
+  window.requestAnimationFrame(() => {
+    const panel = document.querySelector(panelSelector);
+    if (!panel || panel.hidden) return;
+    panel.style.setProperty(cssVariable, '0px');
+    const rect = panel.getBoundingClientRect();
+    const safeInset = 16;
+    let shiftX = 0;
+    if (rect.right > window.innerWidth - safeInset) shiftX -= rect.right - (window.innerWidth - safeInset);
+    if (rect.left + shiftX < safeInset) shiftX += safeInset - (rect.left + shiftX);
+    panel.style.setProperty(cssVariable, `${Math.round(shiftX)}px`);
+    const columns = panel.querySelector(columnsSelector);
+    columns?.scrollTo({ left: columns.scrollWidth, behavior: 'smooth' });
+  });
 }
 
 function closeStoreFilterMenus(except = '') {
@@ -2238,28 +2239,33 @@ function closeStoreFilterMenus(except = '') {
     const shouldOpen = key === except;
     menu.hidden = !shouldOpen;
     const root = menu.closest('[data-store-filter-root]');
-    root?.classList.toggle('is-open', shouldOpen);
-    const trigger = root?.querySelector('[data-store-filter-trigger]');
+    const trigger = root?.querySelector(`[data-store-filter-trigger="${key}"]`);
     trigger?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-store-filter-root]').forEach((root) => {
+    root.classList.toggle('is-open', Boolean(root.querySelector('[data-store-filter-menu]:not([hidden])')));
   });
   storeOverviewState.openFilter = except;
   renderStoreDateFilter();
 }
 
 function getFilteredStoreRecords() {
-  const records = storeOverviewRecords.filter((item) => {
-    const brandMatch = storeOverviewState.brand === '全部品牌' || item.brand === storeOverviewState.brand;
+  let records = storeOverviewRecords.filter((item) => {
+    const brandMatch = storeOverviewState.brand === '全部' || item.brand === storeOverviewState.brand;
     const normalizedStoreNameQuery = storeOverviewState.storeNameQuery.trim().toLocaleLowerCase('zh-CN');
     const storeNameMatch = !normalizedStoreNameQuery || item.name.toLocaleLowerCase('zh-CN').includes(normalizedStoreNameQuery);
-    const [area = '', zone = '', store = ''] = getStoreOrganizationParts(storeOverviewState.organization);
-    const organizationMatch = storeOverviewState.organization === '全部组织' || (
-      item.organization === area &&
-      (!zone || item.zone === zone) &&
-      (!store || item.name === store)
-    );
+    const organizationPath = sharedOrganizationDirectory.getDealerPath(item.dealer, storeOverviewState.organizationDimension);
+    const advisorPathMatch = item.dealer.advisors.some((advisor) => `${organizationPath} > ${advisor.advisorName}`.startsWith(storeOverviewState.organization));
+    const organizationMatch = storeOverviewState.organization === '全部组织'
+      || organizationPath.startsWith(storeOverviewState.organization)
+      || advisorPathMatch;
     // 工牌总览是每日快照原型：每个查询日期复用同一份门店数据。
     return item.bindings >= 1 && brandMatch && storeNameMatch && organizationMatch;
   });
+  const selectedNode = sharedOrganizationDirectory.findNode(storeOverviewState.organization, storeOverviewState.organizationDimension);
+  if (selectedNode?.type === 'advisor') {
+    records = records.map((item) => ({ ...item, employees: 1, badges: 1, boundEmployees: 1, bindings: 1 }));
+  }
   if (!storeOverviewState.sortKey) return records;
   return records.sort((left, right) => {
     const sortAccessors = {
@@ -2429,11 +2435,15 @@ function renderStoreOverview() {
   ]);
   document.getElementById('storeFilteredCount').textContent = records.length.toLocaleString('zh-CN');
   document.getElementById('storeBrandFilterText').textContent = storeOverviewState.brand;
-  document.getElementById('storeOrganizationFilterText').textContent = formatStoreOrganizationPath(storeOverviewState.organization);
+  document.getElementById('storeOrganizationDimensionText').textContent = storeOverviewState.organizationDimension === 'province' ? '省份维度' : '大区维度';
+  document.getElementById('storeOrganizationFilterText').textContent = sharedOrganizationDirectory.formatPath(storeOverviewState.organization, storeOverviewState.brand);
   renderStoreDateFilter();
 
   document.querySelectorAll('[data-store-filter-option]').forEach((button) => {
     button.classList.toggle('active', storeOverviewState[button.dataset.storeFilterOption] === button.dataset.value);
+  });
+  document.querySelectorAll('[data-store-org-dimension]').forEach((button) => {
+    button.classList.toggle('active', storeOverviewState.organizationDimension === button.dataset.storeOrgDimension);
   });
   updateStoreSortHeaders();
 
@@ -2489,7 +2499,8 @@ function applyStoreDrilldown(store, { captureReturnState = false } = {}) {
   storeDrilldownState.storeCode = store.code;
   storeDrilldownState.storeName = store.name;
   badgeFilterState.brand = store.brand;
-  badgeFilterState.organization = `${store.organization} > ${store.zone} > ${store.name}`;
+  badgeFilterState.organizationDimension = storeOverviewState.organizationDimension;
+  badgeFilterState.organization = sharedOrganizationDirectory.getDealerPath(store.dealer, badgeFilterState.organizationDimension);
   badgeFilterState.storeNameQuery = '';
   badgeFilterState.advisorNameQuery = '';
   badgeFilterState.advisorIdQuery = '';
@@ -3552,9 +3563,34 @@ document.addEventListener('click', (event) => {
 
   const badgeBrand = event.target.closest('[data-badge-brand]');
   if (badgeBrand) {
-    badgeFilterState.brand = badgeBrand.dataset.badgeBrand;
+    const nextBrand = badgeBrand.dataset.badgeBrand;
+    if (badgeFilterState.brand !== nextBrand) {
+      badgeFilterState.brand = nextBrand;
+      badgeFilterState.organization = '全部组织';
+      badgeMenuState.organizationDraft = '全部组织';
+    }
     badgePaginationState.page = 1;
     badgeMenuState.openMenu = '';
+    renderBadgePage();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-org-dimension-trigger]')) {
+    badgeMenuState.openMenu = badgeMenuState.openMenu === 'organizationDimension' ? '' : 'organizationDimension';
+    renderBadgeFilters();
+    return;
+  }
+
+  const badgeDimension = event.target.closest('[data-badge-org-dimension]');
+  if (badgeDimension) {
+    const nextDimension = badgeDimension.dataset.badgeOrgDimension || 'region';
+    if (badgeFilterState.organizationDimension !== nextDimension) {
+      badgeFilterState.organizationDimension = nextDimension;
+      badgeFilterState.organization = '全部组织';
+      badgeMenuState.organizationDraft = '全部组织';
+    }
+    badgeMenuState.openMenu = '';
+    badgePaginationState.page = 1;
     renderBadgePage();
     return;
   }
@@ -3562,7 +3598,20 @@ document.addEventListener('click', (event) => {
   if (event.target.closest('[data-badge-org-trigger]')) {
     badgeMenuState.openMenu = badgeMenuState.openMenu === 'organization' ? '' : 'organization';
     badgeMenuState.organizationDraft = badgeFilterState.organization;
+    badgeMenuState.organizationSearchQuery = '';
     renderBadgeFilters();
+    return;
+  }
+
+  const badgeOrgSearch = event.target.closest('[data-badge-org-search]');
+  if (badgeOrgSearch && event.type === 'input') {
+    badgeMenuState.organizationSearchQuery = badgeOrgSearch.value || '';
+    renderBadgeFilters();
+    requestAnimationFrame(() => {
+      const input = document.querySelector('[data-badge-org-search]');
+      input?.focus();
+      input?.setSelectionRange(input.value.length, input.value.length);
+    });
     return;
   }
 
@@ -3671,10 +3720,12 @@ document.addEventListener('click', (event) => {
     Object.assign(badgeFilterState, badgeDefaultFilters);
     if (drilldownStore) {
       badgeFilterState.brand = drilldownStore.brand;
-      badgeFilterState.organization = `${drilldownStore.organization} > ${drilldownStore.zone} > ${drilldownStore.name}`;
+      badgeFilterState.organizationDimension = storeOverviewState.organizationDimension;
+      badgeFilterState.organization = sharedOrganizationDirectory.getDealerPath(drilldownStore.dealer, badgeFilterState.organizationDimension);
       badgeFilterState.storeNameQuery = '';
     }
     badgeMenuState.openMenu = '';
+    badgeMenuState.organizationSearchQuery = '';
     badgeMenuState.organizationDraft = badgeFilterState.organization;
     badgeMenuState.dateDraftStartDate = badgeDefaultFilters.queryStartDate;
     badgeMenuState.dateDraftEndDate = badgeDefaultFilters.queryEndDate;
@@ -3799,6 +3850,7 @@ document.addEventListener('click', (event) => {
     const nextFilter = storeOverviewState.openFilter === key ? '' : key;
     if (nextFilter === 'organization') {
       storeOverviewState.organizationDraft = storeOverviewState.organization;
+      storeOverviewState.organizationSearchQuery = '';
       renderStoreOrganizationMenu();
     }
     closeStoreFilterMenus(nextFilter);
@@ -3808,7 +3860,7 @@ document.addEventListener('click', (event) => {
   const storeOrgPath = event.target.closest('[data-store-org-path]');
   if (storeOrgPath) {
     storeOverviewState.organizationDraft = storeOrgPath.dataset.storeOrgPath;
-    if (storeOrgPath.dataset.storeOrgLevel === 'store') {
+    if (storeOrgPath.dataset.storeOrgLevel === 'advisor') {
       storeOverviewState.organization = storeOverviewState.organizationDraft;
       storeOverviewState.page = 1;
       closeStoreFilterMenus();
@@ -3817,6 +3869,21 @@ document.addEventListener('click', (event) => {
       renderStoreOrganizationMenu();
       closeStoreFilterMenus('organization');
     }
+    return;
+  }
+
+  const storeOrgDimension = event.target.closest('[data-store-org-dimension]');
+  if (storeOrgDimension) {
+    const nextDimension = storeOrgDimension.dataset.storeOrgDimension || 'region';
+    if (storeOverviewState.organizationDimension !== nextDimension) {
+      storeOverviewState.organizationDimension = nextDimension;
+      storeOverviewState.organization = '全部组织';
+      storeOverviewState.organizationDraft = '全部组织';
+      storeOverviewState.organizationSearchQuery = '';
+    }
+    storeOverviewState.page = 1;
+    closeStoreFilterMenus();
+    renderStoreOverview();
     return;
   }
 
@@ -3839,7 +3906,14 @@ document.addEventListener('click', (event) => {
 
   const storeFilterOption = event.target.closest('[data-store-filter-option]');
   if (storeFilterOption) {
-    storeOverviewState[storeFilterOption.dataset.storeFilterOption] = storeFilterOption.dataset.value;
+    const filterKey = storeFilterOption.dataset.storeFilterOption;
+    const nextValue = storeFilterOption.dataset.value;
+    if (filterKey === 'brand' && storeOverviewState.brand !== nextValue) {
+      storeOverviewState.organization = '全部组织';
+      storeOverviewState.organizationDraft = '全部组织';
+      storeOverviewState.organizationSearchQuery = '';
+    }
+    storeOverviewState[filterKey] = nextValue;
     storeOverviewState.page = 1;
     closeStoreFilterMenus();
     renderStoreOverview();
@@ -3847,9 +3921,11 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-store-filter-reset]')) {
-    storeOverviewState.brand = '全部品牌';
+    storeOverviewState.brand = '全部';
+    storeOverviewState.organizationDimension = 'region';
     storeOverviewState.organization = '全部组织';
     storeOverviewState.organizationDraft = '全部组织';
+    storeOverviewState.organizationSearchQuery = '';
     storeOverviewState.storeNameQuery = '';
     storeOverviewState.startDate = storeDefaultQueryDate;
     storeOverviewState.endDate = storeDefaultQueryDate;
@@ -3989,6 +4065,29 @@ function syncDockStoreSearchInput(input) {
 }
 
 document.addEventListener('input', (event) => {
+  if (event.target.matches('[data-store-org-search]') && !event.isComposing) {
+    const value = event.target.value || '';
+    storeOverviewState.organizationSearchQuery = value;
+    renderStoreOrganizationMenu();
+    closeStoreFilterMenus('organization');
+    requestAnimationFrame(() => {
+      const input = document.querySelector('[data-store-org-search]');
+      input?.focus();
+      input?.setSelectionRange(value.length, value.length);
+    });
+    return;
+  }
+  if (event.target.matches('[data-badge-org-search]') && !event.isComposing) {
+    const value = event.target.value || '';
+    badgeMenuState.organizationSearchQuery = value;
+    renderBadgeFilters();
+    requestAnimationFrame(() => {
+      const input = document.querySelector('[data-badge-org-search]');
+      input?.focus();
+      input?.setSelectionRange(value.length, value.length);
+    });
+    return;
+  }
   if (event.target.matches('[data-store-name-search]') && !event.isComposing) {
     storeOverviewState.storeNameQuery = event.target.value;
     storeOverviewState.page = 1;
