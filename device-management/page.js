@@ -243,6 +243,18 @@ function expandVisitRecordTemplates(templates) {
   return records;
 }
 
+function getBadgeUploadStartTime(item) {
+  return String(item.audioTime || '').split(/[—-]/)[0] || '—';
+}
+
+function getBadgeUploadMatchTime(item) {
+  const matchingRecord = visitRecordTemplates.find((record) => record.status === '已匹配'
+    && record.date === item.date
+    && record.advisor === item.advisorName
+    && record.badgeSn === item.sn);
+  return matchingRecord ? `${matchingRecord.date} ${matchingRecord.completedAt}` : '—';
+}
+
 const visitRecords = expandVisitRecordTemplates(visitRecordTemplates);
 const visitPaginationState = { page: 1, pageSize: 20 };
 let visitReturnToMatching = window.location.hash.startsWith('#visits?')
@@ -797,9 +809,9 @@ function renderBadgeUploadModal() {
   const visibleRecords = badgeUploadModalState.records.slice(start, start + badgeUploadModalPaginationState.pageSize);
   tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
     <td>${escapeBadgeHtml(item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
-    <td>${escapeBadgeHtml(item.audioTime)}</td><td>${escapeBadgeHtml(item.duration)}</td><td>${escapeBadgeHtml(item.size)}</td>
-    <td>${escapeBadgeHtml(item.completedAt)}</td>
-  </tr>`).join('') : `<tr><td colspan="7" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
+    <td>${escapeBadgeHtml(item.size)}</td><td>${escapeBadgeHtml(getBadgeUploadStartTime(item))}</td><td>${escapeBadgeHtml(item.duration)}</td>
+    <td>${escapeBadgeHtml(item.completedAt)}</td><td>${escapeBadgeHtml(getBadgeUploadMatchTime(item))}</td>
+  </tr>`).join('') : `<tr><td colspan="8" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
   renderBadgeRecordPagination('badgeUploadPagination', badgeUploadModalState.records.length, 'modal');
 }
 
@@ -1319,6 +1331,10 @@ const badgeRecordDrawerFilterHost = document.getElementById('badgeRecordDrawerFi
 const badgeRecordDrawerContentHost = document.getElementById('badgeRecordDrawerContentHost');
 const badgeRecordDrawerTitle = document.getElementById('badgeRecordDrawerTitle');
 const badgeRecordDrawerSubtitle = document.getElementById('badgeRecordDrawerSubtitle');
+const badgeFieldSettingsDrawer = document.getElementById('badgeFieldSettingsDrawer');
+const badgeFieldSettingsBackdrop = document.getElementById('badgeFieldSettingsBackdrop');
+const badgeFieldSettingsList = document.getElementById('badgeFieldSettingsList');
+const badgeFieldSettingsSelectedCount = document.getElementById('badgeFieldSettingsSelectedCount');
 const badgeDockDrawerView = document.getElementById('badgeDockDrawerView');
 const badgeDockSubdeviceList = document.getElementById('badgeDockSubdeviceList');
 const badgeDockLogTimeline = document.getElementById('badgeDockLogTimeline');
@@ -1379,6 +1395,13 @@ const storeOverviewState = {
 };
 
 const badgeTypes = ['充电坞版本工牌', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
+const badgePatrolerNames = ['周明远', '沈嘉禾', '林致远', '顾清扬', '唐若川', '许安澜', '程景行', '韩知远', '罗承宇', '谢予安'];
+const badgeGovernorNames = ['陈昕', '吴越', '赵宁', '刘畅', '孙悦', '郑凯', '黄静', '何宇', '马嘉宁', '宋亦凡', '梁安然', '徐知夏'];
+
+function getStableBadgeOwnerName(value, names) {
+  const seed = Array.from(String(value || '')).reduce((total, character) => total + character.charCodeAt(0), 0);
+  return names[seed % names.length];
+}
 
 const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badge, index) => {
   const store = storeOverviewRecords.find((item) => item.code === badge.dealer.dealerCode);
@@ -1392,10 +1415,12 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
     brand: store.brand,
     region: store.organization,
     zone: store.zone,
+    patroler: getStableBadgeOwnerName(`${store.brand}-${store.zone}`, badgePatrolerNames),
     store: store.name,
     queryDate: store.syncedAt.slice(0, 10),
     province: store.province,
     city: store.city,
+    governor: getStableBadgeOwnerName(`${store.brand}-${store.city}`, badgeGovernorNames),
     dealer: store.dealer,
     advisorName: badge.advisorName,
     advisorId: badge.advisorId,
@@ -1569,17 +1594,85 @@ const badgeDockDateMenuState = {
   dateViewYear: storeDefaultQueryDateObject.getFullYear(),
   dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
+const badgeFieldDefinitions = Object.freeze([
+  { key: 'sn', label: '工牌 SN', filterType: 'text', queryKey: 'snQuery' },
+  { key: 'badgeType', label: '工牌类型', filterType: 'select' },
+  { key: 'brand', label: '品牌', filterType: 'select' },
+  { key: 'region', label: '大区', filterType: 'select', organizationLevel: 0 },
+  { key: 'zone', label: '战区', filterType: 'select', organizationLevel: 1 },
+  { key: 'patroler', label: '巡回员', filterType: 'select', organizationLevel: 2 },
+  { key: 'province', label: '省份', filterType: 'select', organizationLevel: 3 },
+  { key: 'city', label: '城市', filterType: 'select', organizationLevel: 4 },
+  { key: 'governor', label: '治理员', filterType: 'select', organizationLevel: 5 },
+  { key: 'store', label: '门店', filterType: 'select', organizationLevel: 6 },
+  { key: 'advisorId', label: '顾问 ID', filterType: 'text', queryKey: 'advisorIdQuery' },
+  { key: 'advisorName', label: '顾问姓名', filterType: 'text', queryKey: 'advisorNameQuery' },
+  { key: 'recordingStatus', label: '录音状态', filterType: 'select' },
+  { key: 'connectionStatus', label: 'WiFi 连接', filterType: 'select' },
+  { key: 'dockConnected', label: '是否接入充电坞', filterType: 'select' },
+  { key: 'signal', label: '信号', filterType: 'select' },
+  { key: 'battery', label: '剩余电量', filterType: 'numberRange', minKey: 'batteryMin', maxKey: 'batteryMax', unit: '%' },
+  { key: 'remainingMemory', label: '剩余内存', filterType: 'numberRange', minKey: 'memoryMin', maxKey: 'memoryMax', unit: '%' },
+  { key: 'uptime', label: '今日开机时长', filterType: 'numberRange', minKey: 'uptimeMin', maxKey: 'uptimeMax', unit: '小时' },
+  { key: 'pendingUploads', label: '待上传录音', filterType: 'numberRange', minKey: 'pendingMin', maxKey: 'pendingMax', unit: '条' },
+  { key: 'syncedAt', label: '最新数据同步时间', filterType: 'dateTimeRange', minKey: 'syncStart', maxKey: 'syncEnd' }
+]);
+const badgeFieldDefinitionMap = Object.freeze(Object.fromEntries(badgeFieldDefinitions.map((field) => [field.key, field])));
+const badgeDefaultFieldOrder = Object.freeze(badgeFieldDefinitions.map((field) => field.key));
+const badgeFieldSettingsStorageKey = 'aiqc-device-badge-field-settings-v1';
+
+function createDefaultBadgeFieldSettings() {
+  return { order: [...badgeDefaultFieldOrder], visible: [...badgeDefaultFieldOrder] };
+}
+
+function loadBadgeFieldSettings() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(badgeFieldSettingsStorageKey) || 'null');
+    const order = Array.isArray(parsed?.order) ? parsed.order.filter((key) => badgeFieldDefinitionMap[key]) : [];
+    badgeDefaultFieldOrder.forEach((key) => { if (!order.includes(key)) order.push(key); });
+    const visible = Array.isArray(parsed?.visible)
+      ? parsed.visible.filter((key) => badgeFieldDefinitionMap[key] && order.includes(key))
+      : [...badgeDefaultFieldOrder];
+    if (!visible.length) visible.push(order[0]);
+    return { order, visible };
+  } catch (error) {
+    return createDefaultBadgeFieldSettings();
+  }
+}
+
+let badgeFieldSettingsState = loadBadgeFieldSettings();
+let badgeFieldSettingsDraft = null;
+let badgeFieldPointerDrag = null;
+let badgeFieldDragAutoScrollFrame = 0;
+
 const badgeDefaultFilters = {
-  brand: '全部',
-  organizationDimension: 'region',
-  organization: '全部组织',
-  storeNameQuery: '',
-  advisorNameQuery: '',
-  advisorIdQuery: '',
   snQuery: '',
-  queryStartDate: storeDefaultQueryDate,
-  queryEndDate: storeDefaultQueryDate,
-  collapsed: false
+  badgeType: '全部',
+  brand: '全部',
+  region: '全部',
+  zone: '全部',
+  patroler: '全部',
+  province: '全部',
+  city: '全部',
+  governor: '全部',
+  store: '全部',
+  advisorIdQuery: '',
+  advisorNameQuery: '',
+  recordingStatus: '全部',
+  connectionStatus: '全部',
+  dockConnected: '全部',
+  signal: '全部',
+  batteryMin: '',
+  batteryMax: '',
+  memoryMin: '',
+  memoryMax: '',
+  uptimeMin: '',
+  uptimeMax: '',
+  pendingMin: '',
+  pendingMax: '',
+  syncStart: '',
+  syncEnd: '',
+  collapsed: true
 };
 
 const badgeFilterState = { ...badgeDefaultFilters };
@@ -1589,6 +1682,8 @@ const badgeMenuState = {
   organizationSearchQuery: '',
   dateDraftStartDate: storeDefaultQueryDate,
   dateDraftEndDate: storeDefaultQueryDate,
+  dateDraftStartTime: '00:00',
+  dateDraftEndTime: '23:59',
   activeDateField: 'startDate',
   dateViewYear: storeDefaultQueryDateObject.getFullYear(),
   dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
@@ -1874,19 +1969,53 @@ function getBadgeDateCells(year, month) {
   return cells;
 }
 
-function renderBadgeDateControl() {
-  const open = badgeMenuState.openMenu === 'date';
+function getBadgeSyncDateTimeBounds() {
+  const values = badgeDetailRecords.map((item) => item.syncedAt.replace(' ', 'T').slice(0, 16)).sort();
+  return { start: values[0] || `${storeDefaultQueryDate}T00:00`, end: values.at(-1) || `${storeDefaultQueryDate}T23:59` };
+}
+
+function syncBadgeSyncDateTimeDraft() {
+  const bounds = getBadgeSyncDateTimeBounds();
+  const startValue = badgeFilterState.syncStart || bounds.start;
+  const endValue = badgeFilterState.syncEnd || bounds.end;
+  badgeMenuState.dateDraftStartDate = startValue.slice(0, 10);
+  badgeMenuState.dateDraftEndDate = endValue.slice(0, 10);
+  badgeMenuState.dateDraftStartTime = startValue.slice(11, 16) || '00:00';
+  badgeMenuState.dateDraftEndTime = endValue.slice(11, 16) || '23:59';
+  badgeMenuState.activeDateField = 'startDate';
+  syncBadgeDateView(badgeMenuState.dateDraftStartDate);
+}
+
+function normalizeBadgeTime(value, fallback) {
+  const matched = String(value || '').trim().match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!matched) return fallback;
+  const hours = Math.min(23, Math.max(0, Number(matched[1])));
+  const minutes = Math.min(59, Math.max(0, Number(matched[2])));
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function formatBadgeSyncDateTimeLabel(value) {
+  if (!value) return '未选择';
+  const [date = '', time = ''] = value.split('T');
+  return `${formatStoreDateDisplay(date)} ${time.slice(0, 5)}`.trim();
+}
+
+function renderBadgeSyncDateTimeFilter(field) {
+  const open = badgeMenuState.openMenu === 'syncDateTime';
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
-  const startLabel = formatStoreDateDisplay(badgeFilterState.queryStartDate);
-  const endLabel = formatStoreDateDisplay(badgeFilterState.queryEndDate);
-  const draftRangeText = `${formatStoreDateDisplay(badgeMenuState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(badgeMenuState.dateDraftEndDate)}`;
-  const menuHtml = open && panelRenderer ? panelRenderer({
-    dataNamespace: 'badge-query-date',
+  const hasRange = Boolean(badgeFilterState.syncStart || badgeFilterState.syncEnd);
+  const startLabel = formatBadgeSyncDateTimeLabel(badgeFilterState.syncStart);
+  const endLabel = formatBadgeSyncDateTimeLabel(badgeFilterState.syncEnd);
+  const draftStartLabel = `${formatStoreDateDisplay(badgeMenuState.dateDraftStartDate)} ${badgeMenuState.dateDraftStartTime}`;
+  const draftEndLabel = `${formatStoreDateDisplay(badgeMenuState.dateDraftEndDate)} ${badgeMenuState.dateDraftEndTime}`;
+  const draftRangeText = `${draftStartLabel} 至 ${draftEndLabel}`;
+  let menuHtml = open && panelRenderer ? panelRenderer({
+    dataNamespace: 'badge-sync-date',
     rangeText: draftRangeText,
     monthLabel: `${badgeMenuState.dateViewYear}年${badgeMenuState.dateViewMonth}月`,
     activeField: badgeMenuState.activeDateField,
-    startLabel: formatStoreDateDisplay(badgeMenuState.dateDraftStartDate),
-    endLabel: formatStoreDateDisplay(badgeMenuState.dateDraftEndDate),
+    startLabel: draftStartLabel,
+    endLabel: draftEndLabel,
     cells: getBadgeDateCells(badgeMenuState.dateViewYear, badgeMenuState.dateViewMonth),
     shortcuts: [
       { key: 'today', label: '今天' },
@@ -1894,13 +2023,25 @@ function renderBadgeDateControl() {
       { key: 'last7', label: '近7天' }
     ],
     summaryText: `已选择 ${draftRangeText}`,
-    title: '查询日期范围'
+    panelClassName: 'session-menu-panel session-menu-panel-date badge-sync-date-time-panel',
+    title: '最新数据同步时间',
+    startFieldLabel: '开始时间',
+    endFieldLabel: '结束时间',
+    showCancel: false,
+    applyLabel: '应用时间'
   }) : '';
+  if (menuHtml) {
+    const timeFields = `<div class="badge-sync-time-fields">
+      <label><span>开始时分</span><input type="text" inputmode="numeric" maxlength="5" value="${escapeBadgeHtml(badgeMenuState.dateDraftStartTime)}" placeholder="00:00" data-badge-sync-time-input="start" aria-label="开始时分" /></label>
+      <label><span>结束时分</span><input type="text" inputmode="numeric" maxlength="5" value="${escapeBadgeHtml(badgeMenuState.dateDraftEndTime)}" placeholder="23:59" data-badge-sync-time-input="end" aria-label="结束时分" /></label>
+    </div>`;
+    menuHtml = menuHtml.replace('<div class="session-cascader-footer session-date-footer">', `${timeFields}<div class="session-cascader-footer session-date-footer">`);
+  }
   return `
-    <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date${open ? ' is-open' : ''}" data-badge-menu-root="date">
-      <span>查询日期</span>
-      <button type="button" class="session-date-trigger${open ? ' active' : ''}" data-badge-query-date-trigger aria-label="查询日期筛选" aria-haspopup="dialog" aria-expanded="${open ? 'true' : 'false'}">
-        <strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong><span class="session-date-icon" aria-hidden="true"></span>
+    <div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="syncDateTime">
+      <span>${field.label}</span>
+      <button type="button" class="session-date-trigger${open ? ' active' : ''}" data-badge-sync-date-trigger aria-label="${field.label}筛选" aria-haspopup="dialog" aria-expanded="${open ? 'true' : 'false'}">
+        ${hasRange ? `<strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong>` : '<strong>全部时间</strong>'}<span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${menuHtml}
     </div>`;
@@ -1909,7 +2050,7 @@ function renderBadgeDateControl() {
 function renderBadgeFilterActions() {
   return `
     <div class="session-filter-inline-actions session-filter-inline-actions-search">
-      <button type="button" class="btn session-reset-btn" data-badge-reset>重置筛选</button>
+      <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
       <button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}">
         <span>${badgeFilterState.collapsed ? '展开' : '收起'}</span>
         <svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -1920,63 +2061,118 @@ function renderBadgeFilterActions() {
 function renderBadgeFilters() {
   const container = document.getElementById('sessionFilterControls');
   if (!container) return;
+  const visibleFields = getVisibleBadgeFields();
+  const renderedFields = badgeFilterState.collapsed ? visibleFields.slice(0, 4) : visibleFields;
   container.classList.toggle('is-store-drilldown', storeDrilldownState.active);
-  if (storeDrilldownState.active) {
-    container.innerHTML = `
-      <div class="session-filter-row session-filter-row-main store-drilldown-filter-row">
-        ${renderBadgeDateControl()}
-        ${renderBadgeSearchControl('snQuery', '工牌SN', badgeFilterState.snQuery)}
-        ${renderBadgeSearchControl('advisorIdQuery', '顾问ID', badgeFilterState.advisorIdQuery)}
-        ${renderBadgeSearchControl('advisorNameQuery', '顾问姓名', badgeFilterState.advisorNameQuery)}
-        <button type="button" class="btn session-reset-btn store-drilldown-reset" data-badge-reset>重置筛选</button>
-      </div>`;
-    return;
-  }
-  const organizationOpen = badgeMenuState.openMenu === 'organization';
-  const dimensionOpen = badgeMenuState.openMenu === 'organizationDimension';
-  const mainControls = `
-    <div class="session-toolbar-control session-toolbar-control-org session-toolbar-menu badge-organization-combined-control${organizationOpen || dimensionOpen ? ' is-open' : ''}" data-badge-menu-root="organization">
-      <div class="badge-organization-combined-main">
-        <button type="button" class="session-select-trigger badge-organization-dimension-trigger${dimensionOpen ? ' active' : ''}" data-badge-org-dimension-trigger><strong>${badgeFilterState.organizationDimension === 'province' ? '省份维度' : '大区维度'}</strong><i class="session-select-caret"></i></button>
-        <button type="button" class="session-select-trigger badge-organization-path-trigger${organizationOpen ? ' active' : ''}" data-badge-org-trigger><strong>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(badgeFilterState.organization, badgeFilterState.brand))}</strong><i class="session-select-caret"></i></button>
-      </div>
-      ${dimensionOpen ? `<div class="session-menu-panel badge-organization-dimension-menu"><button type="button" class="session-menu-option${badgeFilterState.organizationDimension === 'region' ? ' active' : ''}" data-badge-org-dimension="region"><span>大区维度</span></button><button type="button" class="session-menu-option${badgeFilterState.organizationDimension === 'province' ? ' active' : ''}" data-badge-org-dimension="province"><span>省份维度</span></button></div>` : ''}
-      ${organizationOpen ? renderBadgeOrganizationMenu() : ''}
-    </div>
-    ${renderBadgeDateControl()}
-    ${renderBadgeSearchControl('snQuery', '工牌SN', badgeFilterState.snQuery)}
-    ${renderBadgeSearchControl('storeNameQuery', '门店名称', badgeFilterState.storeNameQuery)}`;
+  container.classList.toggle('is-collapsed', badgeFilterState.collapsed);
   container.innerHTML = `
-    <div class="session-filter-row session-filter-row-segment${badgeFilterState.collapsed ? ' is-collapsed' : ''}">
-      ${renderBadgeSegmentControl()}
-      ${badgeFilterState.collapsed ? renderBadgeFilterActions() : ''}
+    <div class="badge-dynamic-filter-grid">
+      ${renderedFields.map((field) => renderBadgeFieldFilter(field)).join('')}
     </div>
-    <div class="session-filter-row session-filter-row-main session-filter-extra${badgeFilterState.collapsed ? '' : ' is-visible'}">
-      ${mainControls}
-    </div>
-    <div class="session-filter-row session-filter-row-search session-filter-extra${badgeFilterState.collapsed ? '' : ' is-visible'}">
-      ${renderBadgeSearchControl('advisorIdQuery', '顾问ID', badgeFilterState.advisorIdQuery)}
-      ${renderBadgeSearchControl('advisorNameQuery', '顾问姓名', badgeFilterState.advisorNameQuery)}
-      ${renderBadgeFilterActions()}
+    <div class="badge-dynamic-filter-actions">
+      ${storeDrilldownState.active ? `<span class="badge-drilldown-context">当前门店：<strong>${escapeBadgeHtml(storeDrilldownState.storeName)}</strong></span>` : '<span></span>'}
+      <div>
+        <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
+        ${visibleFields.length > 4 ? `<button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}"><span>${badgeFilterState.collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>` : ''}
+      </div>
     </div>`;
-  syncDeviceOrganizationMenuLayout('.badge-organization-menu', '.badge-cascader-columns', '--badge-org-shift-x');
+}
+
+function getVisibleBadgeFields(settings = badgeFieldSettingsState) {
+  const visibleSet = new Set(settings.visible);
+  return settings.order.filter((key) => visibleSet.has(key)).map((key) => badgeFieldDefinitionMap[key]);
+}
+
+function getBadgeOrganizationSource(field) {
+  const organizationKeys = ['region', 'zone', 'patroler', 'province', 'city', 'governor', 'store'];
+  const fieldIndex = organizationKeys.indexOf(field.key);
+  return badgeDetailRecords.filter((item) => {
+    if (storeDrilldownState.active && item.dealer?.dealerCode !== storeDrilldownState.storeCode) return false;
+    if (badgeFilterState.brand !== '全部' && item.brand !== badgeFilterState.brand) return false;
+    return organizationKeys.slice(0, fieldIndex).every((key) => badgeFilterState[key] === '全部' || item[key] === badgeFilterState[key]);
+  });
+}
+
+function getBadgeFieldSelectOptions(field) {
+  if (field.key === 'dockConnected') return [{ value: '已接入', label: '已接入' }, { value: '未接入', label: '未接入' }];
+  const drilldownRecords = storeDrilldownState.active
+    ? badgeDetailRecords.filter((item) => item.dealer?.dealerCode === storeDrilldownState.storeCode)
+    : badgeDetailRecords;
+  const source = Number.isInteger(field.organizationLevel) ? getBadgeOrganizationSource(field) : drilldownRecords;
+  return [...new Set(source.map((item) => item[field.key]))]
+    .filter((value) => value !== undefined && value !== null && value !== '')
+    .map((value) => ({ value: String(value), label: String(value) }))
+    .sort((left, right) => left.label.localeCompare(right.label, 'zh-CN'));
+}
+
+function renderBadgeFieldFilter(field) {
+  if (field.filterType === 'text') {
+    return `<label class="badge-field-filter"><span>${field.label}</span><input type="search" value="${escapeBadgeHtml(badgeFilterState[field.queryKey])}" placeholder="请输入${field.label}" data-badge-search="${field.queryKey}" /></label>`;
+  }
+  if (field.filterType === 'select') {
+    const value = badgeFilterState[field.key];
+    const menuKey = `field:${field.key}`;
+    const open = badgeMenuState.openMenu === menuKey;
+    const options = [{ value: '全部', label: `全部${field.label}` }, ...getBadgeFieldSelectOptions(field)];
+    const selectedLabel = options.find((option) => option.value === value)?.label || `全部${field.label}`;
+    return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
+      <span>${field.label}</span>
+      <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open ? 'true' : 'false'}">
+        <strong>${escapeBadgeHtml(selectedLabel)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      </button>
+      ${open ? `<div class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="${field.label}筛选选项"><div class="session-menu-option-list">${options.map((option) => `<button type="button" class="session-menu-option${value === option.value ? ' active' : ''}" data-badge-field-select-value="${escapeBadgeHtml(option.value)}" data-badge-field-select-key="${field.key}" role="option" aria-selected="${value === option.value ? 'true' : 'false'}"><span>${escapeBadgeHtml(option.label)}</span></button>`).join('')}</div></div>` : ''}
+    </div>`;
+  }
+  if (field.filterType === 'numberRange') {
+    return `<label class="badge-field-filter"><span>${field.label}</span><span class="badge-range-filter"><input type="number" min="0" value="${escapeBadgeHtml(badgeFilterState[field.minKey])}" placeholder="最小" data-badge-range-key="${field.minKey}" /><i>至</i><input type="number" min="0" value="${escapeBadgeHtml(badgeFilterState[field.maxKey])}" placeholder="最大" data-badge-range-key="${field.maxKey}" /><em>${field.unit}</em></span></label>`;
+  }
+  return renderBadgeSyncDateTimeFilter(field);
+}
+
+function applyBadgeFieldSelectValue(key, value) {
+  badgeFilterState[key] = value;
+  const organizationKeys = ['region', 'zone', 'patroler', 'province', 'city', 'governor', 'store'];
+  if (key === 'brand') organizationKeys.forEach((organizationKey) => { badgeFilterState[organizationKey] = '全部'; });
+  const levelIndex = organizationKeys.indexOf(key);
+  if (levelIndex >= 0) organizationKeys.slice(levelIndex + 1).forEach((organizationKey) => { badgeFilterState[organizationKey] = '全部'; });
+  badgeMenuState.openMenu = '';
+  badgePaginationState.page = 1;
+  renderBadgePage();
+}
+
+function getBadgeUptimeHours(value) {
+  const [hours = 0, minutes = 0, seconds = 0] = String(value || '').split(':').map(Number);
+  return hours + (minutes / 60) + (seconds / 3600);
+}
+
+function isBadgeNumberInRange(value, minValue, maxValue) {
+  const min = minValue === '' ? null : Number(minValue);
+  const max = maxValue === '' ? null : Number(maxValue);
+  return (min === null || value >= min) && (max === null || value <= max);
 }
 
 function getFilteredBadgeRecords() {
-  const storeNameQuery = badgeFilterState.storeNameQuery.trim().toLocaleLowerCase('zh-CN');
-  const nameQuery = badgeFilterState.advisorNameQuery.trim().toLowerCase();
-  const idQuery = badgeFilterState.advisorIdQuery.trim().toLowerCase();
-  const snQuery = badgeFilterState.snQuery.trim().toLowerCase();
+  const visibleKeys = new Set(badgeFieldSettingsState.visible);
+  const textMatches = (item, fieldKey, queryKey) => !visibleKeys.has(fieldKey)
+    || !badgeFilterState[queryKey].trim()
+    || String(item[fieldKey]).toLocaleLowerCase('zh-CN').includes(badgeFilterState[queryKey].trim().toLocaleLowerCase('zh-CN'));
+  const selectMatches = (item, key) => !visibleKeys.has(key) || badgeFilterState[key] === '全部' || String(item[key]) === badgeFilterState[key];
   return badgeDetailRecords.filter((item) => {
-    const brandMatch = badgeFilterState.brand === '全部' || item.brand === badgeFilterState.brand;
-    const organizationPath = sharedOrganizationDirectory.getRecordPath(item, badgeFilterState.organizationDimension, true);
-    const organizationMatch = badgeFilterState.organization === '全部组织' || organizationPath.startsWith(badgeFilterState.organization);
-    // 原型数据按查询日期复用同一份快照，保证选择任意日期都有完整工牌数据。
-    return brandMatch && organizationMatch
-      && (!storeNameQuery || item.store.toLocaleLowerCase('zh-CN').includes(storeNameQuery))
-      && (!nameQuery || item.advisorName.toLowerCase().includes(nameQuery))
-      && (!idQuery || item.advisorId.toLowerCase().includes(idQuery))
-      && (!snQuery || item.sn.toLowerCase().includes(snQuery));
+    if (storeDrilldownState.active && item.dealer?.dealerCode !== storeDrilldownState.storeCode) return false;
+    if (!textMatches(item, 'sn', 'snQuery') || !textMatches(item, 'advisorId', 'advisorIdQuery') || !textMatches(item, 'advisorName', 'advisorNameQuery')) return false;
+    if (!['badgeType', 'brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store', 'recordingStatus', 'connectionStatus', 'signal'].every((key) => selectMatches(item, key))) return false;
+    if (visibleKeys.has('dockConnected') && badgeFilterState.dockConnected !== '全部' && (item.dockConnected ? '已接入' : '未接入') !== badgeFilterState.dockConnected) return false;
+    if (visibleKeys.has('battery') && !isBadgeNumberInRange(item.battery, badgeFilterState.batteryMin, badgeFilterState.batteryMax)) return false;
+    if (visibleKeys.has('remainingMemory') && !isBadgeNumberInRange(item.remainingMemory, badgeFilterState.memoryMin, badgeFilterState.memoryMax)) return false;
+    if (visibleKeys.has('uptime') && !isBadgeNumberInRange(getBadgeUptimeHours(item.uptime), badgeFilterState.uptimeMin, badgeFilterState.uptimeMax)) return false;
+    if (visibleKeys.has('pendingUploads') && !isBadgeNumberInRange(item.pendingUploads, badgeFilterState.pendingMin, badgeFilterState.pendingMax)) return false;
+    if (visibleKeys.has('syncedAt')) {
+      const timestamp = new Date(item.syncedAt.replace(' ', 'T')).getTime();
+      const start = badgeFilterState.syncStart ? new Date(badgeFilterState.syncStart).getTime() : null;
+      const end = badgeFilterState.syncEnd ? new Date(badgeFilterState.syncEnd).getTime() : null;
+      if ((start !== null && timestamp < start) || (end !== null && timestamp > end)) return false;
+    }
+    return true;
   });
 }
 
@@ -2018,9 +2214,32 @@ function renderBatteryIndicator(value, ariaLabel = '剩余电量') {
   return `<span class="battery battery-with-value" style="--battery-level:${battery}%" role="progressbar" aria-label="${escapeBadgeHtml(ariaLabel)} ${battery}%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${battery}"><i style="width:${battery}%"></i><strong aria-hidden="true">${battery}%</strong></span>`;
 }
 
+function renderBadgeFieldCell(item, field) {
+  if (field.key === 'sn') return `<span class="cell-main">${escapeBadgeHtml(item.sn)}</span>`;
+  if (field.key === 'recordingStatus') return item.recordingStatus === '录音中'
+    ? '<span class="status-inline green"><span class="status-inline-dot"></span><span>录音中</span></span>'
+    : '<span class="status-inline gray"><span>—</span></span>';
+  if (field.key === 'connectionStatus') return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
+  if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
+  if (field.key === 'battery') return renderBatteryIndicator(item.battery);
+  if (field.key === 'remainingMemory') return `<strong class="${item.remainingMemory < 20 ? 'danger-text' : ''}">${item.remainingMemory}%</strong>`;
+  if (field.key === 'pendingUploads') return `<strong class="${item.pendingUploads >= 5 ? 'danger-text' : item.pendingUploads > 0 ? 'amber-text' : ''}">${item.pendingUploads}</strong>`;
+  return escapeBadgeHtml(item[field.key]);
+}
+
+function renderBadgeTableHead(visibleFields) {
+  const headRow = document.getElementById('badgeDetailTableHeadRow');
+  const table = headRow?.closest('table');
+  if (!headRow || !table) return;
+  headRow.innerHTML = `${visibleFields.map((field) => `<th data-badge-column="${field.key}">${field.label}</th>`).join('')}<th>操作</th>`;
+  table.style.minWidth = `${Math.max(760, (visibleFields.length * 136) + 116)}px`;
+}
+
 function renderBadgeDetail() {
   const tbody = document.getElementById('badgeDetailTableBody');
   if (!tbody) return;
+  const visibleFields = getVisibleBadgeFields();
+  renderBadgeTableHead(visibleFields);
   const records = getFilteredBadgeRecords();
   const totalPages = Math.max(1, Math.ceil(records.length / badgePaginationState.pageSize));
   badgePaginationState.page = Math.min(badgePaginationState.page, totalPages);
@@ -2037,30 +2256,231 @@ function renderBadgeDetail() {
     const node = document.getElementById(id);
     if (node) node.textContent = Number(value).toLocaleString('zh-CN');
   });
-  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => {
-    const memoryTone = item.remainingMemory < 20 ? 'danger-text' : '';
-    const pendingTone = item.pendingUploads >= 5 ? 'danger-text' : item.pendingUploads > 0 ? 'amber-text' : '';
-    return `<tr>
-      <td><span class="cell-main">${escapeBadgeHtml(item.sn)}</span></td>
-      <td>${escapeBadgeHtml(item.badgeType)}</td>
-      <td>${escapeBadgeHtml(item.brand)}</td><td>${escapeBadgeHtml(item.region)}</td><td>${escapeBadgeHtml(item.zone)}</td><td>${escapeBadgeHtml(item.store)}</td>
-      <td>${escapeBadgeHtml(item.advisorId)}</td><td>${escapeBadgeHtml(item.advisorName)}</td>
-      <td>${item.recordingStatus === '录音中' ? '<span class="status-inline green"><span class="status-inline-dot"></span><span>录音中</span></span>' : '<span class="status-inline gray"><span>—</span></span>'}</td>
-      <td><span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${item.connectionStatus}</span></span></td>
-      <td><span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span></td>
-      <td>${escapeBadgeHtml(item.signal)}</td>
-      <td>${renderBatteryIndicator(item.battery)}</td>
-      <td><strong class="${memoryTone}">${item.remainingMemory}%</strong></td><td>${item.uptime}</td>
-      <td><strong class="${pendingTone}">${item.pendingUploads}</strong></td><td>${escapeBadgeHtml(projectDemoTimestampToDate(item.syncedAt, badgeFilterState.queryEndDate))}</td>
-      <td><button class="table-link" type="button" data-badge-record-drawer-open="events" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">事件</button><button class="table-link badge-inline-action" type="button" data-badge-record-drawer-open="uploads" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">日志</button></td>
-    </tr>`;
-  }).join('') : '<tr class="session-empty-row"><td colspan="18">当前筛选条件下暂无工牌，请调整品牌、组织、顾问姓名、顾问ID或工牌SN后重试。</td></tr>';
+  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
+    ${visibleFields.map((field) => `<td data-badge-column="${field.key}">${renderBadgeFieldCell(item, field)}</td>`).join('')}
+    <td><button class="table-link" type="button" data-badge-record-drawer-open="events" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">事件</button><button class="table-link badge-inline-action" type="button" data-badge-record-drawer-open="uploads" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">日志</button></td>
+  </tr>`).join('') : `<tr class="session-empty-row"><td colspan="${visibleFields.length + 1}">当前筛选条件下暂无工牌，请调整筛选条件后重试。</td></tr>`;
   renderBadgePagination(records.length);
 }
 
 function renderBadgePage() {
   renderBadgeFilters();
   renderBadgeDetail();
+}
+
+function renderBadgeFieldSettings() {
+  if (!badgeFieldSettingsList || !badgeFieldSettingsDraft) return;
+  const visibleSet = new Set(badgeFieldSettingsDraft.visible);
+  badgeFieldSettingsSelectedCount.textContent = visibleSet.size;
+  badgeFieldSettingsList.innerHTML = badgeFieldSettingsDraft.order.map((key) => {
+    const field = badgeFieldDefinitionMap[key];
+    const checked = visibleSet.has(key);
+    return `<div class="badge-field-settings-item${checked ? ' is-visible' : ''}" draggable="false" data-badge-field-settings-item="${key}">
+      <span class="badge-field-drag-handle" aria-hidden="true"><i></i><i></i><i></i></span>
+      <label><input type="checkbox" data-badge-field-settings-check="${key}"${checked ? ' checked' : ''} /><span>${field.label}</span></label>
+      <small>${checked ? '已显示' : '已隐藏'}</small>
+    </div>`;
+  }).join('');
+}
+
+function openBadgeFieldSettings() {
+  if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
+  badgeFieldSettingsDraft = { order: [...badgeFieldSettingsState.order], visible: [...badgeFieldSettingsState.visible] };
+  renderBadgeFieldSettings();
+  badgeFieldSettingsBackdrop.hidden = false;
+  badgeFieldSettingsDrawer.setAttribute('aria-hidden', 'false');
+  window.requestAnimationFrame(() => {
+    badgeFieldSettingsDrawer.classList.add('open');
+    badgeFieldSettingsDrawer.querySelector('[data-badge-field-settings-close]')?.focus();
+    syncBodyScrollLock();
+  });
+}
+
+function closeBadgeFieldSettings() {
+  if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
+  cancelBadgeFieldPointerDrag();
+  badgeFieldSettingsDrawer.classList.remove('open');
+  badgeFieldSettingsDrawer.setAttribute('aria-hidden', 'true');
+  window.setTimeout(() => { badgeFieldSettingsBackdrop.hidden = true; }, 220);
+  badgeFieldSettingsDraft = null;
+  syncBodyScrollLock();
+}
+
+function clearBadgeFilterForField(field) {
+  if (field.filterType === 'text') badgeFilterState[field.queryKey] = '';
+  else if (field.filterType === 'select') badgeFilterState[field.key] = '全部';
+  else {
+    badgeFilterState[field.minKey] = '';
+    badgeFilterState[field.maxKey] = '';
+  }
+}
+
+function saveBadgeFieldSettings() {
+  if (!badgeFieldSettingsDraft?.visible.length) {
+    showToast('至少保留一个字段');
+    return;
+  }
+  const nextVisible = new Set(badgeFieldSettingsDraft.visible);
+  badgeFieldSettingsState.visible.filter((key) => !nextVisible.has(key)).forEach((key) => clearBadgeFilterForField(badgeFieldDefinitionMap[key]));
+  badgeFieldSettingsState = { order: [...badgeFieldSettingsDraft.order], visible: [...badgeFieldSettingsDraft.visible] };
+  try { localStorage.setItem(badgeFieldSettingsStorageKey, JSON.stringify(badgeFieldSettingsState)); } catch (error) { /* 本地存储不可用时仍保留当前会话配置。 */ }
+  badgePaginationState.page = 1;
+  closeBadgeFieldSettings();
+  renderBadgePage();
+  showToast('字段设置已保存');
+}
+
+function getBadgeFieldSettingsDomOrder() {
+  return [...badgeFieldSettingsList?.querySelectorAll('[data-badge-field-settings-item]') || []]
+    .map((item) => item.dataset.badgeFieldSettingsItem);
+}
+
+function animateBadgeFieldSettingsReflow(mutate) {
+  const items = [...badgeFieldSettingsList.querySelectorAll('[data-badge-field-settings-item]')];
+  const firstTops = new Map(items.map((item) => [item, item.getBoundingClientRect().top]));
+  mutate();
+  items.forEach((item) => {
+    const deltaY = firstTops.get(item) - item.getBoundingClientRect().top;
+    if (Math.abs(deltaY) < 1) return;
+    item.style.transform = `translateY(${deltaY}px)`;
+    window.requestAnimationFrame(() => {
+      if (item.isConnected) item.style.transform = '';
+    });
+  });
+}
+
+function updateBadgeFieldDragGhostPosition(drag, clientX, clientY) {
+  if (!drag?.ghost) return;
+  const maxLeft = Math.max(8, window.innerWidth - drag.rect.width - 8);
+  const maxTop = Math.max(8, window.innerHeight - drag.rect.height - 8);
+  const left = Math.min(maxLeft, Math.max(8, clientX - drag.grabOffsetX));
+  const top = Math.min(maxTop, Math.max(8, clientY - drag.grabOffsetY));
+  drag.ghost.style.left = `${left}px`;
+  drag.ghost.style.top = `${top}px`;
+}
+
+function updateBadgeFieldDragTarget(drag, clientX, clientY) {
+  if (!drag?.active || !drag.placeholder) return;
+  const target = document.elementFromPoint(clientX, clientY)?.closest('[data-badge-field-settings-item]');
+  if (!target || !badgeFieldSettingsList.contains(target)) return;
+  const targetRect = target.getBoundingClientRect();
+  const insertBefore = clientY < targetRect.top + (targetRect.height / 2);
+  const placeholderBeforeTarget = drag.placeholder.previousElementSibling === target;
+  const placeholderAfterTarget = drag.placeholder.nextElementSibling === target;
+  if ((insertBefore && placeholderBeforeTarget) || (!insertBefore && placeholderAfterTarget)) return;
+  animateBadgeFieldSettingsReflow(() => {
+    if (insertBefore) target.before(drag.placeholder);
+    else target.after(drag.placeholder);
+  });
+}
+
+function stopBadgeFieldDragAutoScroll() {
+  if (!badgeFieldDragAutoScrollFrame) return;
+  window.cancelAnimationFrame(badgeFieldDragAutoScrollFrame);
+  badgeFieldDragAutoScrollFrame = 0;
+}
+
+function runBadgeFieldDragAutoScroll() {
+  const drag = badgeFieldPointerDrag;
+  if (!drag?.active) {
+    badgeFieldDragAutoScrollFrame = 0;
+    return;
+  }
+  const scroller = badgeFieldSettingsDrawer?.querySelector('.badge-field-settings-body');
+  const scrollerRect = scroller?.getBoundingClientRect();
+  if (scroller && scrollerRect && scroller.scrollHeight > scroller.clientHeight) {
+    const edge = 64;
+    const topDistance = scrollerRect.top + edge - drag.lastClientY;
+    const bottomDistance = drag.lastClientY - (scrollerRect.bottom - edge);
+    let delta = 0;
+    if (topDistance > 0) delta = -Math.ceil(Math.min(1, topDistance / edge) ** 2 * 14);
+    else if (bottomDistance > 0) delta = Math.ceil(Math.min(1, bottomDistance / edge) ** 2 * 14);
+    if (delta) {
+      scroller.scrollTop += delta;
+      updateBadgeFieldDragGhostPosition(drag, drag.lastClientX, drag.lastClientY);
+      updateBadgeFieldDragTarget(drag, drag.lastClientX, drag.lastClientY);
+    }
+  }
+  badgeFieldDragAutoScrollFrame = window.requestAnimationFrame(runBadgeFieldDragAutoScroll);
+}
+
+function startBadgeFieldPointerDrag(event) {
+  const drag = badgeFieldPointerDrag;
+  if (!drag || drag.active || !badgeFieldSettingsDraft) return;
+  drag.active = true;
+  drag.rect = drag.item.getBoundingClientRect();
+  drag.grabOffsetX = event.clientX - drag.rect.left;
+  drag.grabOffsetY = event.clientY - drag.rect.top;
+  drag.placeholder = document.createElement('div');
+  drag.placeholder.className = 'badge-field-settings-placeholder';
+  drag.placeholder.setAttribute('aria-hidden', 'true');
+  drag.placeholder.style.height = `${drag.rect.height}px`;
+  drag.placeholder.style.width = `${drag.rect.width}px`;
+  drag.item.parentElement.insertBefore(drag.placeholder, drag.item);
+  drag.item.classList.add('is-drag-source');
+  drag.item.remove();
+  drag.ghost = drag.item.cloneNode(true);
+  drag.ghost.classList.add('badge-field-settings-drag-ghost');
+  drag.ghost.classList.remove('is-drag-source', 'is-drop-hidden');
+  drag.ghost.style.width = `${drag.rect.width}px`;
+  drag.ghost.style.height = `${drag.rect.height}px`;
+  drag.ghost.setAttribute('aria-hidden', 'true');
+  drag.ghost.removeAttribute('draggable');
+  document.body.appendChild(drag.ghost);
+  badgeFieldSettingsList.classList.add('is-dragging');
+  document.body.classList.add('badge-field-settings-dragging');
+  updateBadgeFieldDragGhostPosition(drag, event.clientX, event.clientY);
+  badgeFieldDragAutoScrollFrame = window.requestAnimationFrame(runBadgeFieldDragAutoScroll);
+}
+
+function finishBadgeFieldPointerDrag() {
+  const drag = badgeFieldPointerDrag;
+  if (!drag) return;
+  stopBadgeFieldDragAutoScroll();
+  if (!drag.active) {
+    badgeFieldPointerDrag = null;
+    return;
+  }
+  const item = drag.item;
+  const placeholder = drag.placeholder;
+  if (placeholder?.isConnected) placeholder.replaceWith(item);
+  else if (!item.isConnected) badgeFieldSettingsList.appendChild(item);
+  item.classList.remove('is-drag-source');
+  item.classList.add('is-drop-hidden');
+  badgeFieldSettingsDraft.order = getBadgeFieldSettingsDomOrder();
+  const targetRect = item.getBoundingClientRect();
+  badgeFieldSettingsList.classList.remove('is-dragging');
+  document.body.classList.remove('badge-field-settings-dragging');
+  if (drag.ghost) {
+    drag.ghost.classList.add('is-dropping');
+    drag.ghost.style.left = `${targetRect.left}px`;
+    drag.ghost.style.top = `${targetRect.top}px`;
+    window.setTimeout(() => {
+      drag.ghost?.remove();
+      item.classList.remove('is-drop-hidden');
+    }, 180);
+  } else {
+    item.classList.remove('is-drop-hidden');
+  }
+  badgeFieldPointerDrag = null;
+}
+
+function cancelBadgeFieldPointerDrag() {
+  const drag = badgeFieldPointerDrag;
+  if (!drag) return;
+  stopBadgeFieldDragAutoScroll();
+  if (drag.placeholder?.isConnected) drag.placeholder.replaceWith(drag.item);
+  else if (!drag.item.isConnected) badgeFieldSettingsList.appendChild(drag.item);
+  const itemsByKey = new Map([...badgeFieldSettingsList.querySelectorAll('[data-badge-field-settings-item]')].map((item) => [item.dataset.badgeFieldSettingsItem, item]));
+  drag.originalOrder.forEach((key) => {
+    const item = itemsByKey.get(key);
+    if (item) badgeFieldSettingsList.appendChild(item);
+  });
+  drag.item.classList.remove('is-drag-source', 'is-drop-hidden');
+  drag.ghost?.remove();
+  badgeFieldSettingsList.classList.remove('is-dragging');
+  document.body.classList.remove('badge-field-settings-dragging');
+  badgeFieldPointerDrag = null;
 }
 
 function formatStoreDateDisplay(value) {
@@ -2480,11 +2900,7 @@ function getRoute() {
 }
 
 function getStoreDrilldownHash() {
-  const params = new URLSearchParams({
-    store: storeDrilldownState.storeCode,
-    start: badgeFilterState.queryStartDate,
-    end: badgeFilterState.queryEndDate
-  });
+  const params = new URLSearchParams({ store: storeDrilldownState.storeCode });
   return `#store-badges?${params.toString()}`;
 }
 
@@ -2498,22 +2914,11 @@ function applyStoreDrilldown(store, { captureReturnState = false } = {}) {
   storeDrilldownState.active = true;
   storeDrilldownState.storeCode = store.code;
   storeDrilldownState.storeName = store.name;
+  Object.assign(badgeFilterState, badgeDefaultFilters);
   badgeFilterState.brand = store.brand;
-  badgeFilterState.organizationDimension = storeOverviewState.organizationDimension;
-  badgeFilterState.organization = sharedOrganizationDirectory.getDealerPath(store.dealer, badgeFilterState.organizationDimension);
-  badgeFilterState.storeNameQuery = '';
-  badgeFilterState.advisorNameQuery = '';
-  badgeFilterState.advisorIdQuery = '';
-  badgeFilterState.snQuery = '';
-  badgeFilterState.queryStartDate = storeOverviewState.startDate;
-  badgeFilterState.queryEndDate = storeOverviewState.endDate;
-  badgeFilterState.collapsed = false;
+  badgeFilterState.store = store.name;
+  badgeFilterState.collapsed = true;
   badgeMenuState.openMenu = '';
-  badgeMenuState.organizationDraft = badgeFilterState.organization;
-  badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
-  badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
-  badgeMenuState.activeDateField = 'startDate';
-  syncBadgeDateView(badgeFilterState.queryStartDate);
   badgePaginationState.page = 1;
   renderBadgePage();
   return true;
@@ -2522,21 +2927,9 @@ function applyStoreDrilldown(store, { captureReturnState = false } = {}) {
 function applyStoreDrilldownFromRoute(params) {
   const store = storeOverviewRecords.find((item) => item.code === params.get('store'));
   if (!store) return false;
-  const startDate = params.get('start');
-  const endDate = params.get('end');
   if (storeDrilldownState.active && storeDrilldownState.storeCode === store.code) {
-    if (parseStoreDateValue(startDate) && parseStoreDateValue(endDate)) {
-      badgeFilterState.queryStartDate = startDate;
-      badgeFilterState.queryEndDate = endDate;
-      badgeMenuState.dateDraftStartDate = startDate;
-      badgeMenuState.dateDraftEndDate = endDate;
-    }
     renderBadgePage();
     return true;
-  }
-  if (parseStoreDateValue(startDate) && parseStoreDateValue(endDate)) {
-    storeOverviewState.startDate = startDate;
-    storeOverviewState.endDate = endDate;
   }
   return applyStoreDrilldown(store, { captureReturnState: true });
 }
@@ -2550,9 +2943,6 @@ function restoreOrdinaryBadgeState() {
   Object.assign(badgeFilterState, storeDrilldownState.previousBadgeFilters || badgeDefaultFilters);
   badgePaginationState.page = storeDrilldownState.previousBadgeFilters ? storeDrilldownState.previousBadgePage : 1;
   badgeMenuState.openMenu = '';
-  badgeMenuState.organizationDraft = badgeFilterState.organization;
-  badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
-  badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
   storeDrilldownState.active = false;
   storeDrilldownState.storeCode = '';
   storeDrilldownState.storeName = '';
@@ -2691,6 +3081,7 @@ function isBadgeRecordDrawerOpen() {
 
 function syncBodyScrollLock() {
   const locked = badgeRecordDrawer?.getAttribute('aria-hidden') === 'false'
+    || badgeFieldSettingsDrawer?.getAttribute('aria-hidden') === 'false'
     || visitDrawer.getAttribute('aria-hidden') === 'false'
     || !importModal.hidden;
   document.body.style.overflow = locked ? 'hidden' : '';
@@ -3056,6 +3447,35 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-store-drilldown-back]')) {
     leaveStoreDrilldown('stores');
+    return;
+  }
+
+  if (event.target.closest('[data-badge-field-settings-open]')) {
+    openBadgeFieldSettings();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-field-settings-close]') || event.target === badgeFieldSettingsBackdrop) {
+    closeBadgeFieldSettings();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-field-settings-restore]')) {
+    badgeFieldSettingsDraft = createDefaultBadgeFieldSettings();
+    renderBadgeFieldSettings();
+    showToast('已恢复默认草稿，保存后生效');
+    return;
+  }
+
+  if (event.target.closest('[data-badge-field-settings-select-all]')) {
+    if (!badgeFieldSettingsDraft) return;
+    badgeFieldSettingsDraft.visible = [...badgeFieldSettingsDraft.order];
+    renderBadgeFieldSettings();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-field-settings-save]')) {
+    saveBadgeFieldSettings();
     return;
   }
 
@@ -3561,176 +3981,18 @@ document.addEventListener('click', (event) => {
     renderDockFilters();
   }
 
-  const badgeBrand = event.target.closest('[data-badge-brand]');
-  if (badgeBrand) {
-    const nextBrand = badgeBrand.dataset.badgeBrand;
-    if (badgeFilterState.brand !== nextBrand) {
-      badgeFilterState.brand = nextBrand;
-      badgeFilterState.organization = '全部组织';
-      badgeMenuState.organizationDraft = '全部组织';
-    }
-    badgePaginationState.page = 1;
-    badgeMenuState.openMenu = '';
-    renderBadgePage();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-org-dimension-trigger]')) {
-    badgeMenuState.openMenu = badgeMenuState.openMenu === 'organizationDimension' ? '' : 'organizationDimension';
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeDimension = event.target.closest('[data-badge-org-dimension]');
-  if (badgeDimension) {
-    const nextDimension = badgeDimension.dataset.badgeOrgDimension || 'region';
-    if (badgeFilterState.organizationDimension !== nextDimension) {
-      badgeFilterState.organizationDimension = nextDimension;
-      badgeFilterState.organization = '全部组织';
-      badgeMenuState.organizationDraft = '全部组织';
-    }
-    badgeMenuState.openMenu = '';
-    badgePaginationState.page = 1;
-    renderBadgePage();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-org-trigger]')) {
-    badgeMenuState.openMenu = badgeMenuState.openMenu === 'organization' ? '' : 'organization';
-    badgeMenuState.organizationDraft = badgeFilterState.organization;
-    badgeMenuState.organizationSearchQuery = '';
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeOrgSearch = event.target.closest('[data-badge-org-search]');
-  if (badgeOrgSearch && event.type === 'input') {
-    badgeMenuState.organizationSearchQuery = badgeOrgSearch.value || '';
-    renderBadgeFilters();
-    requestAnimationFrame(() => {
-      const input = document.querySelector('[data-badge-org-search]');
-      input?.focus();
-      input?.setSelectionRange(input.value.length, input.value.length);
-    });
-    return;
-  }
-
-  const badgeOrgPath = event.target.closest('[data-badge-org-path]');
-  if (badgeOrgPath) {
-    badgeMenuState.organizationDraft = badgeOrgPath.dataset.badgeOrgPath;
-    if (badgeOrgPath.dataset.badgeOrgLevel === 'advisor') {
-      badgeFilterState.organization = badgeMenuState.organizationDraft;
-      badgePaginationState.page = 1;
-      badgeMenuState.openMenu = '';
-      renderBadgePage();
-    } else {
-      renderBadgeFilters();
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-badge-org-clear]')) {
-    badgeFilterState.organization = '全部组织';
-    badgeMenuState.organizationDraft = badgeFilterState.organization;
-    badgeMenuState.openMenu = '';
-    badgePaginationState.page = 1;
-    renderBadgePage();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-org-apply]')) {
-    badgeFilterState.organization = badgeMenuState.organizationDraft || '全部组织';
-    badgeMenuState.openMenu = '';
-    badgePaginationState.page = 1;
-    renderBadgePage();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-query-date-trigger]')) {
-    const willOpen = badgeMenuState.openMenu !== 'date';
-    if (willOpen) {
-      badgeMenuState.dateDraftStartDate = badgeFilterState.queryStartDate;
-      badgeMenuState.dateDraftEndDate = badgeFilterState.queryEndDate;
-      badgeMenuState.activeDateField = 'startDate';
-      syncBadgeDateView(badgeMenuState.dateDraftStartDate);
-    }
-    badgeMenuState.openMenu = willOpen ? 'date' : '';
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeDateField = event.target.closest('[data-badge-query-date-field]');
-  if (badgeDateField) {
-    badgeMenuState.activeDateField = badgeDateField.dataset.badgeQueryDateField;
-    syncBadgeDateView(badgeMenuState.activeDateField === 'startDate'
-      ? badgeMenuState.dateDraftStartDate
-      : badgeMenuState.dateDraftEndDate);
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeDateNav = event.target.closest('[data-badge-query-date-nav]');
-  if (badgeDateNav) {
-    shiftBadgeDateView(Number(badgeDateNav.dataset.badgeQueryDateNav));
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeDateValue = event.target.closest('[data-badge-query-date-value]');
-  if (badgeDateValue) {
-    applyBadgeDateDraft(badgeMenuState.activeDateField, badgeDateValue.dataset.badgeQueryDateValue);
-    renderBadgeFilters();
-    return;
-  }
-
-  const badgeDateShortcut = event.target.closest('[data-badge-query-date-shortcut]');
-  if (badgeDateShortcut) {
-    const endDate = parseStoreDateValue(storeTodayDateValue);
-    const startDate = new Date(endDate);
-    if (badgeDateShortcut.dataset.badgeQueryDateShortcut === 'last3') startDate.setDate(startDate.getDate() - 2);
-    if (badgeDateShortcut.dataset.badgeQueryDateShortcut === 'last7') startDate.setDate(startDate.getDate() - 6);
-    badgeMenuState.dateDraftStartDate = formatStoreDateValue(startDate);
-    badgeMenuState.dateDraftEndDate = formatStoreDateValue(endDate);
-    badgeMenuState.activeDateField = 'endDate';
-    syncBadgeDateView(badgeMenuState.dateDraftEndDate);
-    renderBadgeFilters();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-query-date-cancel]')) {
-    badgeMenuState.openMenu = '';
-    renderBadgeFilters();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-query-date-apply]')) {
-    badgeFilterState.queryStartDate = badgeMenuState.dateDraftStartDate;
-    badgeFilterState.queryEndDate = badgeMenuState.dateDraftEndDate;
-    badgeMenuState.openMenu = '';
-    badgePaginationState.page = 1;
-    renderBadgePage();
-    syncStoreDrilldownHash();
-    return;
-  }
-
   if (event.target.closest('[data-badge-reset]')) {
     const drilldownStore = storeDrilldownState.active
       ? storeOverviewRecords.find((item) => item.code === storeDrilldownState.storeCode)
       : null;
+    const collapsed = badgeFilterState.collapsed;
     Object.assign(badgeFilterState, badgeDefaultFilters);
+    badgeFilterState.collapsed = collapsed;
     if (drilldownStore) {
       badgeFilterState.brand = drilldownStore.brand;
-      badgeFilterState.organizationDimension = storeOverviewState.organizationDimension;
-      badgeFilterState.organization = sharedOrganizationDirectory.getDealerPath(drilldownStore.dealer, badgeFilterState.organizationDimension);
-      badgeFilterState.storeNameQuery = '';
+      badgeFilterState.store = drilldownStore.name;
     }
     badgeMenuState.openMenu = '';
-    badgeMenuState.organizationSearchQuery = '';
-    badgeMenuState.organizationDraft = badgeFilterState.organization;
-    badgeMenuState.dateDraftStartDate = badgeDefaultFilters.queryStartDate;
-    badgeMenuState.dateDraftEndDate = badgeDefaultFilters.queryEndDate;
-    badgeMenuState.activeDateField = 'startDate';
-    syncBadgeDateView(badgeDefaultFilters.queryStartDate);
     badgePaginationState.page = 1;
     renderBadgePage();
     syncStoreDrilldownHash();
@@ -3742,6 +4004,86 @@ document.addEventListener('click', (event) => {
     badgeFilterState.collapsed = !badgeFilterState.collapsed;
     badgeMenuState.openMenu = '';
     renderBadgeFilters();
+    return;
+  }
+
+  const badgeFieldSelectTrigger = event.target.closest('[data-badge-field-select-trigger]');
+  if (badgeFieldSelectTrigger) {
+    const key = badgeFieldSelectTrigger.dataset.badgeFieldSelectTrigger;
+    const menuKey = `field:${key}`;
+    badgeMenuState.openMenu = badgeMenuState.openMenu === menuKey ? '' : menuKey;
+    renderBadgeFilters();
+    window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-trigger="${key}"]`)?.focus());
+    return;
+  }
+
+  const badgeFieldSelectValue = event.target.closest('[data-badge-field-select-value]');
+  if (badgeFieldSelectValue) {
+    applyBadgeFieldSelectValue(badgeFieldSelectValue.dataset.badgeFieldSelectKey, badgeFieldSelectValue.dataset.badgeFieldSelectValue);
+    return;
+  }
+
+  if (event.target.closest('[data-badge-sync-date-trigger]')) {
+    const willOpen = badgeMenuState.openMenu !== 'syncDateTime';
+    if (willOpen) syncBadgeSyncDateTimeDraft();
+    badgeMenuState.openMenu = willOpen ? 'syncDateTime' : '';
+    renderBadgeFilters();
+    return;
+  }
+
+  const badgeSyncDateField = event.target.closest('[data-badge-sync-date-field]');
+  if (badgeSyncDateField) {
+    badgeMenuState.activeDateField = badgeSyncDateField.dataset.badgeSyncDateField;
+    syncBadgeDateView(badgeMenuState.activeDateField === 'startDate' ? badgeMenuState.dateDraftStartDate : badgeMenuState.dateDraftEndDate);
+    renderBadgeFilters();
+    return;
+  }
+
+  const badgeSyncDateNav = event.target.closest('[data-badge-sync-date-nav]');
+  if (badgeSyncDateNav) {
+    shiftBadgeDateView(Number(badgeSyncDateNav.dataset.badgeSyncDateNav));
+    renderBadgeFilters();
+    return;
+  }
+
+  const badgeSyncDateValue = event.target.closest('[data-badge-sync-date-value]');
+  if (badgeSyncDateValue) {
+    applyBadgeDateDraft(badgeMenuState.activeDateField, badgeSyncDateValue.dataset.badgeSyncDateValue);
+    renderBadgeFilters();
+    return;
+  }
+
+  const badgeSyncDateShortcut = event.target.closest('[data-badge-sync-date-shortcut]');
+  if (badgeSyncDateShortcut) {
+    const endDate = parseStoreDateValue(storeTodayDateValue);
+    const startDate = new Date(endDate);
+    if (badgeSyncDateShortcut.dataset.badgeSyncDateShortcut === 'last3') startDate.setDate(startDate.getDate() - 2);
+    if (badgeSyncDateShortcut.dataset.badgeSyncDateShortcut === 'last7') startDate.setDate(startDate.getDate() - 6);
+    badgeMenuState.dateDraftStartDate = formatStoreDateValue(startDate);
+    badgeMenuState.dateDraftEndDate = formatStoreDateValue(endDate);
+    badgeMenuState.dateDraftStartTime = '00:00';
+    badgeMenuState.dateDraftEndTime = '23:59';
+    badgeMenuState.activeDateField = 'endDate';
+    syncBadgeDateView(badgeMenuState.dateDraftEndDate);
+    renderBadgeFilters();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-sync-date-cancel]')) {
+    badgeMenuState.openMenu = '';
+    renderBadgeFilters();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-sync-date-apply]')) {
+    const startTime = normalizeBadgeTime(badgeMenuState.dateDraftStartTime, '00:00');
+    const endTime = normalizeBadgeTime(badgeMenuState.dateDraftEndTime, '23:59');
+    badgeFilterState.syncStart = `${badgeMenuState.dateDraftStartDate}T${startTime}`;
+    badgeFilterState.syncEnd = `${badgeMenuState.dateDraftEndDate}T${endTime}`;
+    if (badgeFilterState.syncStart > badgeFilterState.syncEnd) badgeFilterState.syncEnd = badgeFilterState.syncStart;
+    badgeMenuState.openMenu = '';
+    badgePaginationState.page = 1;
+    renderBadgePage();
     return;
   }
 
@@ -4077,17 +4419,6 @@ document.addEventListener('input', (event) => {
     });
     return;
   }
-  if (event.target.matches('[data-badge-org-search]') && !event.isComposing) {
-    const value = event.target.value || '';
-    badgeMenuState.organizationSearchQuery = value;
-    renderBadgeFilters();
-    requestAnimationFrame(() => {
-      const input = document.querySelector('[data-badge-org-search]');
-      input?.focus();
-      input?.setSelectionRange(value.length, value.length);
-    });
-    return;
-  }
   if (event.target.matches('[data-store-name-search]') && !event.isComposing) {
     storeOverviewState.storeNameQuery = event.target.value;
     storeOverviewState.page = 1;
@@ -4125,6 +4456,85 @@ document.addEventListener('compositionend', (event) => {
   syncDockStoreSearchInput(event.target);
 });
 
+document.addEventListener('change', (event) => {
+  const fieldCheck = event.target.closest('[data-badge-field-settings-check]');
+  if (fieldCheck && badgeFieldSettingsDraft) {
+    const key = fieldCheck.dataset.badgeFieldSettingsCheck;
+    const visibleSet = new Set(badgeFieldSettingsDraft.visible);
+    if (fieldCheck.checked) visibleSet.add(key);
+    else if (visibleSet.size === 1) {
+      fieldCheck.checked = true;
+      showToast('至少保留一个字段');
+      return;
+    } else visibleSet.delete(key);
+    badgeFieldSettingsDraft.visible = badgeFieldSettingsDraft.order.filter((fieldKey) => visibleSet.has(fieldKey));
+    renderBadgeFieldSettings();
+    return;
+  }
+
+});
+
+document.addEventListener('input', (event) => {
+  const syncTimeInput = event.target.closest('[data-badge-sync-time-input]');
+  if (syncTimeInput) {
+    if (syncTimeInput.dataset.badgeSyncTimeInput === 'start') badgeMenuState.dateDraftStartTime = syncTimeInput.value;
+    else badgeMenuState.dateDraftEndTime = syncTimeInput.value;
+    return;
+  }
+  const rangeInput = event.target.closest('[data-badge-range-key]');
+  if (!rangeInput || event.isComposing) return;
+  badgeFilterState[rangeInput.dataset.badgeRangeKey] = rangeInput.value;
+  badgePaginationState.page = 1;
+  renderBadgeDetail();
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (event.button !== 0) return;
+  const handle = event.target.closest('.badge-field-drag-handle');
+  const item = handle?.closest('[data-badge-field-settings-item]');
+  if (!item || !badgeFieldSettingsDraft) return;
+  event.preventDefault();
+  badgeFieldPointerDrag = {
+    key: item.dataset.badgeFieldSettingsItem,
+    item,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    lastClientX: event.clientX,
+    lastClientY: event.clientY,
+    originalOrder: getBadgeFieldSettingsDomOrder(),
+    active: false
+  };
+  handle.setPointerCapture?.(event.pointerId);
+});
+
+document.addEventListener('pointermove', (event) => {
+  if (!badgeFieldPointerDrag || event.pointerId !== badgeFieldPointerDrag.pointerId || !badgeFieldSettingsDraft) return;
+  event.preventDefault();
+  const drag = badgeFieldPointerDrag;
+  drag.lastClientX = event.clientX;
+  drag.lastClientY = event.clientY;
+  if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 4) return;
+  if (!drag.active) startBadgeFieldPointerDrag(event);
+  updateBadgeFieldDragGhostPosition(drag, event.clientX, event.clientY);
+  updateBadgeFieldDragTarget(drag, event.clientX, event.clientY);
+});
+
+document.addEventListener('pointerup', (event) => {
+  if (!badgeFieldPointerDrag || event.pointerId !== badgeFieldPointerDrag.pointerId) return;
+  finishBadgeFieldPointerDrag();
+});
+
+document.addEventListener('pointercancel', () => {
+  cancelBadgeFieldPointerDrag();
+});
+
+document.addEventListener('pointerleave', () => {
+  if (badgeFieldPointerDrag?.active) cancelBadgeFieldPointerDrag();
+});
+
+window.addEventListener('blur', () => cancelBadgeFieldPointerDrag());
+
 document.addEventListener('focusin', (event) => {
   if (!event.target.matches('[data-dock-store-search]') || dockMenuState.openMenu === 'store') return;
   dockMenuState.openMenu = 'store';
@@ -4134,6 +4544,10 @@ document.addEventListener('focusin', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && badgeFieldPointerDrag) {
+    cancelBadgeFieldPointerDrag();
+    return;
+  }
   if (event.key === 'Tab' && isBadgeRecordDrawerOpen()) {
     const focusable = getBadgeRecordDrawerFocusableElements();
     if (!focusable.length) return;
@@ -4165,6 +4579,11 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key !== 'Escape') return;
+  if (badgeMenuState.openMenu) {
+    badgeMenuState.openMenu = '';
+    renderBadgeFilters();
+    return;
+  }
   if (dockMenuState.openMenu) {
     dockMenuState.openMenu = '';
     renderDockFilters();

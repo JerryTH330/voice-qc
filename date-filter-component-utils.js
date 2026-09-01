@@ -72,6 +72,7 @@
     startFieldLabel = '开始日期',
     endFieldLabel = '结束日期',
     cancelLabel = '取消',
+    showCancel = true,
     applyLabel = '应用日期'
   }) {
     const safeSummaryText = summaryText || `已选择 ${rangeText}`;
@@ -141,7 +142,7 @@
         <div class="session-cascader-footer session-date-footer">
           <span>${escapeHtml(safeSummaryText)}</span>
           <div class="session-date-actions">
-            <button type="button" class="btn session-date-action-btn" ${getDataAttrName(dataNamespace, 'cancel')}="true">${escapeHtml(cancelLabel)}</button>
+            ${showCancel ? `<button type="button" class="btn session-date-action-btn" ${getDataAttrName(dataNamespace, 'cancel')}="true">${escapeHtml(cancelLabel)}</button>` : ''}
             <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" ${getDataAttrName(dataNamespace, 'apply')}="true">${escapeHtml(applyLabel)}</button>
           </div>
         </div>
