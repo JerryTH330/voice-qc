@@ -782,8 +782,9 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
-/* store-filter-box 内的 gf-label：透明文字标签 */
-.sales-role-dashboard-page .sales-role-scene-host .gf-label {
+/* 顶部筛选标签与前面的业务场景保持同一套规范。 */
+.sales-role-dashboard-page .sales-role-scene-host .gf-label,
+.sales-role-dashboard-page .sales-role-date-host .sales-role-date-label {
   display: inline-block;
   height: auto;
   min-width: 0;
@@ -793,11 +794,17 @@
   background: transparent;
   letter-spacing: 0;
   color: #98A2B3;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 20px;
   white-space: nowrap;
   flex: 0 0 auto;
+}
+
+/* 日期筛选标签不跟随按钮高度拉伸，与同行场景标签保持基线对齐。 */
+.sales-role-dashboard-page .sales-role-date-host .sales-role-quick-range-tabs {
+  align-items: center;
+  padding-left: 14px;
 }
 
 /* 与门店看板一致：场景选项直接排列在外层筛选框内，不再嵌套第二层卡片 */

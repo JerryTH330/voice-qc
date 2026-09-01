@@ -10739,7 +10739,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <strong>${escapeHtml(getLeadDisplayText('organization', draftPath))}</strong>
               </div>
             </div>
-            <label class="leads-organization-search"><span aria-hidden="true">⌕</span><input type="search" value="${escapeHtml(searchQuery)}" data-leads-org-search placeholder="搜索组织、门店编码或顾问"></label>
+            <label class="leads-organization-search"><span class="session-search-icon" aria-hidden="true"></span><input type="search" value="${escapeHtml(searchQuery)}" data-leads-org-search placeholder="搜索组织、门店编码或顾问"></label>
             ${isSearching
               ? `<div class="leads-organization-search-results">${searchResults.length ? searchResults.map((node) => renderNode(node, true)).join('') : '<div class="session-cascader-search-empty">未找到匹配结果</div>'}</div>`
               : `<div class="session-cascader-columns">

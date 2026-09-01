@@ -3044,6 +3044,14 @@
   }
 }
 
+/* 顶部筛选标签与标注规范一致：14px 正常字重。 */
+.store-dashboard-page .store-filter-box .gf-label,
+.store-dashboard-page .store-date-filter-shell .gf-label,
+.store-dashboard-page .store-model-dropdown .gf-label {
+  font-size: 14px;
+  font-weight: 400;
+}
+
 /* 顶部筛选最后一项占满当前行剩余空间。 */
 .store-dashboard-page #store-model-dropdown.store-model-dropdown.session-toolbar-control {
   width: auto;
@@ -3057,6 +3065,16 @@
     width: 100%;
     min-width: 0;
     flex-basis: 100%;
+  }
+}
+
+/* 换行后的车系筛选参照厂端看板保持自然宽度；移动端再整行铺满。 */
+@container store-dashboard (min-width: 769px) and (max-width: 1180px) {
+  .store-dashboard-page #store-model-dropdown.store-model-dropdown.session-toolbar-control {
+    width: auto;
+    max-width: 100%;
+    min-width: 172px;
+    flex: 0 0 auto;
   }
 }
 
