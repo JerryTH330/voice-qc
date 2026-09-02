@@ -6550,7 +6550,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           navKey: 'leads',
           label: '线索管理',
           eyebrow: '03 / Lead Detail',
-          title: '线索详情',
+          title: '客户详情',
           desc: '新版线索详情整合了客户级别、客户标签、沟通表现评分与经营建议，让销售经理能更快完成判断与接续跟进。',
           noteTitle: '排版策略',
           noteText: '新版采用“左侧主信息流 + 右侧经营侧卡片”的排版，把评分、标签和评级总结都收束进更稳定的阅读路径。',

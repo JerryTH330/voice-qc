@@ -1,4 +1,4 @@
-@import url("../voice-qc-admin.css?v=20260825-sidebar-padding-v2");
+@import url("../voice-qc-admin.css?v=20260902-global-brand-v1");
 
 :root {
   --blue: #2563eb;
@@ -34,8 +34,18 @@ a { color: inherit; text-decoration: none; }
   --soft: #8a96ab;
   --line: #d9e2ef;
   --surface: #f6f9fc;
+  overflow-x: hidden;
   font-size: 16px;
 }
+.sidebar > .brand {
+  width: 200px;
+  flex: 0 0 auto;
+  gap: 12px;
+  padding: 16px;
+}
+.sidebar > .brand .brand-mark { flex: 0 0 42px; }
+.sidebar > .brand .brand-copy { min-width: 0; }
+.sidebar > .brand .brand-copy strong { font-size: 14px; line-height: 1.35; }
 .sidebar .nav-button {
   border: 1px solid transparent;
   font: inherit;
@@ -1718,7 +1728,7 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 }
 .badge-drilldown-context { min-width: 0; overflow: hidden; color: #7d899c; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .badge-drilldown-context strong { margin-left: 6px; color: var(--text); font-size: 14px; }
-.badge-table-head-actions { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.badge-field-settings-action { position: relative; display: inline-flex; flex: 0 0 auto; }
 .badge-field-settings-trigger {
   height: 38px;
   padding: 0 14px;
@@ -1732,14 +1742,45 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   font-size: 14px;
   font-weight: 600;
 }
-.badge-field-settings-trigger:hover { border-color: rgba(37, 99, 235, .34); color: var(--blue); background: #f7faff; }
+.badge-field-settings-trigger:hover,
+.badge-field-settings-trigger:focus-visible { border-color: rgba(37, 99, 235, .34); color: var(--blue); background: #f7faff; }
 .badge-field-settings-icon {
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.35;
+  display: block;
+  color: inherit;
+  transition: color .16s ease;
+}
+.badge-field-settings-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  padding: 8px 11px;
+  border: 1px solid rgba(209, 220, 235, .92);
+  border-radius: 9px;
+  background: rgba(31, 41, 55, .96);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .18);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition: opacity .16s ease 0s, transform .16s ease 0s, visibility 0s linear .16s;
+}
+.badge-field-settings-action:hover .badge-field-settings-tooltip,
+.badge-field-settings-action:focus-within .badge-field-settings-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: .3s, .3s, 0s;
 }
 .badge-data-table thead th,
 .badge-data-table tbody td { min-width: 118px; }
@@ -1822,7 +1863,6 @@ body.badge-field-settings-dragging { user-select: none; cursor: grabbing; }
   .badge-session-filter-card #sessionFilterControls.is-collapsed { display: block; }
   .badge-session-filter-card #sessionFilterControls.is-collapsed .badge-dynamic-filter-actions { margin-top: 14px; }
   .badge-dynamic-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .badge-table-head-actions { align-items: flex-end; flex-direction: column; gap: 10px; }
 }
 @media (max-width: 620px) {
   .badge-dynamic-filter-grid > .badge-field-filter-date-time .badge-sync-date-time-panel { left: 0; right: auto; }
@@ -1830,8 +1870,9 @@ body.badge-field-settings-dragging { user-select: none; cursor: grabbing; }
   .badge-dynamic-filter-actions { align-items: stretch; flex-direction: column; }
   .badge-dynamic-filter-actions > div { justify-content: space-between; }
   .badge-detail-table-card .session-list-table-headbar { align-items: flex-start; flex-direction: column; gap: 14px; }
-  .badge-table-head-actions { width: 100%; align-items: stretch; }
-  .badge-field-settings-trigger { align-self: flex-start; }
+  body.device-badge-detail-page .topbar { align-items: stretch; flex-direction: column; gap: 12px; }
+  body.device-badge-detail-page .top-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+  body.device-badge-detail-page .badge-field-settings-action { margin-left: auto; }
   .badge-field-settings-drawer { width: 100vw; max-width: none; }
   .badge-field-settings-footer { align-items: stretch; flex-direction: column; }
   .badge-field-settings-footer > .btn,
