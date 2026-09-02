@@ -17,10 +17,7 @@ const pageMeta = {
   'store-badges': {
     title: '门店工牌明细',
     description: '查看当前门店绑定员工的录音、连接、剩余电量、剩余内存与上传状态',
-    actions: [
-      { label: '字段设置', style: 'badge-field-settings-trigger', action: 'field-settings' },
-      { label: '导出明细', style: 'recording-primary', action: 'export' }
-    ]
+    actions: [{ label: '字段设置', style: 'badge-field-settings-trigger', action: 'field-settings' }]
   },
   events: {
     title: '工牌详情',
@@ -1338,6 +1335,9 @@ const badgeFieldSettingsDrawer = document.getElementById('badgeFieldSettingsDraw
 const badgeFieldSettingsBackdrop = document.getElementById('badgeFieldSettingsBackdrop');
 const badgeFieldSettingsList = document.getElementById('badgeFieldSettingsList');
 const badgeFieldSettingsSelectedCount = document.getElementById('badgeFieldSettingsSelectedCount');
+const badgeDetailRefreshButton = document.getElementById('badgeDetailRefreshButton');
+const badgeDetailRefreshLabel = document.querySelector('[data-badge-detail-refresh-label]');
+const badgeDetailExportButton = document.getElementById('badgeDetailExportButton');
 const badgeDockDrawerView = document.getElementById('badgeDockDrawerView');
 const badgeDockSubdeviceList = document.getElementById('badgeDockSubdeviceList');
 const badgeDockLogTimeline = document.getElementById('badgeDockLogTimeline');
@@ -1346,6 +1346,7 @@ const badgeDockEventControl = document.getElementById('badgeDockEventControl');
 const badgeDockDateControl = document.getElementById('badgeDockDateControl');
 let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
+let badgeDetailRefreshTimer = 0;
 let visitImportFile = null;
 
 const sharedOrganizationDirectory = window.AIQCOrganization;
@@ -1622,6 +1623,20 @@ const badgeFieldDefinitions = Object.freeze([
 ]);
 const badgeFieldDefinitionMap = Object.freeze(Object.fromEntries(badgeFieldDefinitions.map((field) => [field.key, field])));
 const badgeDefaultFieldOrder = Object.freeze(badgeFieldDefinitions.map((field) => field.key));
+const badgeFilterFieldOrder = Object.freeze([
+  'brand',
+  'province',
+  'city',
+  'region',
+  'zone',
+  'store',
+  'patroler',
+  'governor',
+  'sn',
+  'advisorId',
+  'advisorName',
+  'recordingStatus'
+]);
 const badgeFieldSettingsStorageKey = 'aiqc-device-badge-field-settings-v1';
 
 function createDefaultBadgeFieldSettings() {
@@ -2064,7 +2079,7 @@ function renderBadgeFilterActions() {
 function renderBadgeFilters() {
   const container = document.getElementById('sessionFilterControls');
   if (!container) return;
-  const visibleFields = getVisibleBadgeFields();
+  const visibleFields = getVisibleBadgeFilterFields();
   const renderedFields = badgeFilterState.collapsed ? visibleFields.slice(0, 4) : visibleFields;
   container.classList.toggle('is-store-drilldown', storeDrilldownState.active);
   container.classList.toggle('is-collapsed', badgeFilterState.collapsed);
@@ -2086,6 +2101,13 @@ function getVisibleBadgeFields(settings = badgeFieldSettingsState) {
   return settings.order.filter((key) => visibleSet.has(key)).map((key) => badgeFieldDefinitionMap[key]);
 }
 
+function getVisibleBadgeFilterFields(settings = badgeFieldSettingsState) {
+  const visibleSet = new Set(settings.visible);
+  return badgeFilterFieldOrder
+    .filter((key) => visibleSet.has(key))
+    .map((key) => badgeFieldDefinitionMap[key]);
+}
+
 function getBadgeOrganizationSource(field) {
   const organizationKeys = ['region', 'zone', 'patroler', 'province', 'city', 'governor', 'store'];
   const fieldIndex = organizationKeys.indexOf(field.key);
@@ -2098,6 +2120,7 @@ function getBadgeOrganizationSource(field) {
 
 function getBadgeFieldSelectOptions(field) {
   if (field.key === 'dockConnected') return [{ value: '已接入', label: '已接入' }, { value: '未接入', label: '未接入' }];
+  if (field.key === 'recordingStatus') return [{ value: '录音中', label: '录音中' }];
   const drilldownRecords = storeDrilldownState.active
     ? badgeDetailRecords.filter((item) => item.dealer?.dealerCode === storeDrilldownState.storeCode)
     : badgeDetailRecords;
@@ -2116,8 +2139,9 @@ function renderBadgeFieldFilter(field) {
     const value = badgeFilterState[field.key];
     const menuKey = `field:${field.key}`;
     const open = badgeMenuState.openMenu === menuKey;
-    const options = [{ value: '全部', label: `全部${field.label}` }, ...getBadgeFieldSelectOptions(field)];
-    const selectedLabel = options.find((option) => option.value === value)?.label || `全部${field.label}`;
+    const allOptionLabel = field.key === 'recordingStatus' ? '全部' : `全部${field.label}`;
+    const options = [{ value: '全部', label: allOptionLabel }, ...getBadgeFieldSelectOptions(field)];
+    const selectedLabel = options.find((option) => option.value === value)?.label || allOptionLabel;
     return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
       <span>${field.label}</span>
       <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open ? 'true' : 'false'}">
@@ -2155,7 +2179,7 @@ function isBadgeNumberInRange(value, minValue, maxValue) {
 }
 
 function getFilteredBadgeRecords() {
-  const visibleKeys = new Set(badgeFieldSettingsState.visible);
+  const visibleKeys = new Set(getVisibleBadgeFilterFields().map((field) => field.key));
   const textMatches = (item, fieldKey, queryKey) => !visibleKeys.has(fieldKey)
     || !badgeFilterState[queryKey].trim()
     || String(item[fieldKey]).toLocaleLowerCase('zh-CN').includes(badgeFilterState[queryKey].trim().toLocaleLowerCase('zh-CN'));
@@ -2177,6 +2201,84 @@ function getFilteredBadgeRecords() {
     }
     return true;
   });
+}
+
+function getBadgeExportColumnWidth(field) {
+  const widths = {
+    sn: 20,
+    badgeType: 20,
+    brand: 14,
+    region: 18,
+    zone: 18,
+    patroler: 14,
+    province: 14,
+    city: 14,
+    governor: 14,
+    store: 24,
+    advisorId: 22,
+    advisorName: 14,
+    recordingStatus: 14,
+    connectionStatus: 14,
+    dockConnected: 18,
+    signal: 14,
+    battery: 14,
+    remainingMemory: 14,
+    uptime: 18,
+    pendingUploads: 16,
+    syncedAt: 22
+  };
+  return widths[field.key] || 16;
+}
+
+function getBadgeExportCellValue(item, field) {
+  if (field.key === 'dockConnected') return item.dockConnected ? '已接入' : '未接入';
+  if (field.key === 'battery' || field.key === 'remainingMemory') return `${item[field.key]}%`;
+  return item[field.key] ?? '';
+}
+
+function getBadgeExportTimestamp(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+}
+
+function exportBadgeDetailExcel() {
+  const records = getFilteredBadgeRecords();
+  if (!records.length || badgeDetailExportButton?.disabled) return;
+  const visibleFields = getVisibleBadgeFields();
+  const exporter = globalThis.__xlsxExportUtils;
+  if (!exporter?.downloadXlsx) {
+    showToast('Excel 导出功能加载失败，请刷新页面后重试');
+    return;
+  }
+  try {
+    exporter.downloadXlsx({
+      filename: `工牌明细_${getBadgeExportTimestamp()}.xlsx`,
+      sheetName: '工牌明细',
+      columns: visibleFields.map((field) => ({ label: field.label, width: getBadgeExportColumnWidth(field) })),
+      rows: records.map((item) => visibleFields.map((field) => getBadgeExportCellValue(item, field)))
+    });
+    showToast(`已导出 ${records.length.toLocaleString('zh-CN')} 条工牌明细`);
+  } catch (error) {
+    console.error('Excel export failed', error);
+    showToast('导出失败，请稍后重试');
+  }
+}
+
+function refreshBadgeDetailData() {
+  if (!badgeDetailRefreshButton || badgeDetailRefreshButton.disabled) return;
+  window.clearTimeout(badgeDetailRefreshTimer);
+  badgeDetailRefreshButton.disabled = true;
+  badgeDetailRefreshButton.classList.add('is-refreshing');
+  badgeDetailRefreshButton.setAttribute('aria-busy', 'true');
+  if (badgeDetailRefreshLabel) badgeDetailRefreshLabel.textContent = '刷新中';
+  badgeDetailRefreshTimer = window.setTimeout(() => {
+    renderBadgeDetail();
+    badgeDetailRefreshButton.disabled = false;
+    badgeDetailRefreshButton.classList.remove('is-refreshing');
+    badgeDetailRefreshButton.removeAttribute('aria-busy');
+    if (badgeDetailRefreshLabel) badgeDetailRefreshLabel.textContent = '刷新';
+    showToast('数据已刷新');
+  }, 700);
 }
 
 function getBadgePaginationItems(totalPages) {
@@ -2244,6 +2346,7 @@ function renderBadgeDetail() {
   const visibleFields = getVisibleBadgeFields();
   renderBadgeTableHead(visibleFields);
   const records = getFilteredBadgeRecords();
+  if (badgeDetailExportButton) badgeDetailExportButton.disabled = records.length === 0;
   const totalPages = Math.max(1, Math.ceil(records.length / badgePaginationState.pageSize));
   badgePaginationState.page = Math.min(badgePaginationState.page, totalPages);
   const start = (badgePaginationState.page - 1) * badgePaginationState.pageSize;
@@ -3469,6 +3572,16 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-field-settings-open]')) {
     openBadgeFieldSettings();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-detail-refresh]')) {
+    refreshBadgeDetailData();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-detail-export]')) {
+    exportBadgeDetailExcel();
     return;
   }
 

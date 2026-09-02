@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260902-field-icon-inline-v2" />
+  <link rel="stylesheet" href="./page.css?v=20260902-badge-list-actions-v3" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -95,10 +95,26 @@
               <div class="table-shell">
                 <div class="table-headbar session-list-table-headbar">
                   <div class="panel-title"><h3>工牌明细</h3></div>
-                  <div class="session-filter-summary">
-                    <span>当前匹配 <strong id="badgeFilterCount">0</strong> 枚工牌</span>
-                    <span>已连接 <strong id="badgeConnectedCount">0</strong> 枚</span>
-                    <span>录音中 <strong id="badgeRecordingCount">0</strong> 枚</span>
+                  <div class="badge-detail-table-head-tools">
+                    <div class="session-filter-summary">
+                      <span>当前匹配 <strong id="badgeFilterCount">0</strong> 枚工牌</span>
+                      <span>已连接 <strong id="badgeConnectedCount">0</strong> 枚</span>
+                      <span>录音中 <strong id="badgeRecordingCount">0</strong> 枚</span>
+                    </div>
+                    <i class="badge-detail-table-divider" aria-hidden="true"></i>
+                    <div class="badge-detail-table-actions">
+                      <button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" id="badgeDetailRefreshButton" data-badge-detail-refresh>
+                        <span class="badge-detail-refresh-icon" aria-hidden="true"></span>
+                        <span data-badge-detail-refresh-label>刷新</span>
+                      </button>
+                      <div class="badge-detail-export-action">
+                        <button class="btn primary badge-detail-table-action badge-detail-export-btn" type="button" id="badgeDetailExportButton" data-badge-detail-export aria-describedby="badgeDetailExportTooltip" disabled>
+                          <span class="badge-detail-export-icon" aria-hidden="true"></span>
+                          <span>导出</span>
+                        </button>
+                        <span class="badge-detail-export-tooltip" id="badgeDetailExportTooltip" role="tooltip">导出 Excel</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="table-wrap badge-list-table-wrap">
@@ -352,7 +368,7 @@
       <div class="drawer-head badge-field-settings-head">
         <div>
           <h2 id="badgeFieldSettingsTitle">字段设置</h2>
-          <p>勾选字段并拖动调整顺序，表格与筛选区将同步更新</p>
+          <p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p>
         </div>
         <button class="icon-btn" type="button" data-badge-field-settings-close aria-label="关闭字段设置">×</button>
       </div>
@@ -377,7 +393,8 @@
     <script src="../date-filter-component-utils.js?v=20260901-optional-cancel-v1"></script>
     <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
-    <script src="./page.js?v=20260902-field-icon-inline-v2"></script>
+    <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
+    <script src="./page.js?v=20260902-badge-list-actions-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
