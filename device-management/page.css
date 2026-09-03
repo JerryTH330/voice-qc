@@ -134,6 +134,8 @@ body.device-store-overview-page .page-panel[data-page="stores"].active { display
 
 body.device-badge-detail-page { background: #eef3f9; }
 body.device-badge-detail-page .main {
+  display: flex;
+  flex-direction: column;
   padding: 24px;
   background: #f6f9fc;
 }
@@ -164,8 +166,8 @@ body.device-badge-detail-page .top-actions .recording-primary:hover {
   color: #fff;
   background: linear-gradient(135deg, var(--blue-dark), var(--blue-2));
 }
-body.device-badge-detail-page .page-content { max-width: none; margin: 0; padding: 0; }
-body.device-badge-detail-page .page-panel[data-page="badges"].active { display: flex; flex-direction: column; gap: 16px; }
+body.device-badge-detail-page .page-content { max-width: none; min-height: 0; flex: 1 1 auto; margin: 0; padding: 0; display: flex; flex-direction: column; }
+body.device-badge-detail-page .page-panel[data-page="badges"].active { min-height: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 16px; }
 
 body.device-dock-detail-page { background: #eef3f9; }
 body.device-dock-detail-page .main { padding: 24px; background: #f6f9fc; }
@@ -1527,12 +1529,17 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
 .dock-list-table-wrap { border-top: 1px solid rgba(217, 226, 239, .54); }
 
 .badge-detail-table-card {
+  min-height: 360px;
+  flex: 1 1 auto;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   margin-bottom: 0;
   border-radius: 20px;
   border-color: rgba(255, 255, 255, .84);
   box-shadow: 0 14px 36px rgba(22, 32, 51, .08);
 }
+.badge-detail-table-card .table-shell { min-height: 0; flex: 1 1 auto; }
 .badge-detail-table-card .session-list-table-headbar { padding: 20px 20px; }
 .badge-detail-table-card .panel-title h3 { margin: 0; font-size: 18px; }
 .badge-detail-table-head-tools {
@@ -1602,7 +1609,25 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
   mask-repeat: no-repeat;
   mask-size: contain;
 }
-.badge-list-table-wrap { box-sizing: border-box; width: calc(100% - 40px); margin-inline: 20px; }
+.badge-list-table-wrap { box-sizing: border-box; width: calc(100% - 40px); min-height: 280px; flex: 1 1 auto; margin-inline: 20px; position: relative; }
+.badge-list-table-wrap.is-empty { overflow: hidden; }
+.badge-list-empty-state {
+  position: absolute;
+  inset: 41px 0 0;
+  z-index: 3;
+  min-height: 238px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  text-align: center;
+}
+.badge-list-empty-state[hidden] { display: none; }
+.badge-list-empty-illustration { width: 144px; height: auto; margin-bottom: 18px; }
+.badge-list-empty-state strong { color: #8A96A8; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.badge-list-empty-state p { margin: 6px 0 0; color: #435168; font-size: 14px; line-height: 1.5; }
 .badge-data-table { min-width: 2520px; border-collapse: collapse; }
 .badge-data-table thead th {
   height: auto;
@@ -1624,10 +1649,8 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
   font-size: 14px;
   line-height: 1.2;
 }
-.badge-data-table thead th:nth-child(2),
-.badge-data-table tbody td:nth-child(2) { min-width: 150px; }
-.badge-data-table thead th:nth-child(11),
-.badge-data-table tbody td:nth-child(11) { min-width: 132px; }
+.badge-data-table [data-badge-column="badgeType"] { min-width: 150px; }
+.badge-data-table [data-badge-column="store"] { min-width: 132px; }
 .badge-data-table thead th:last-child,
 .badge-data-table tbody td:last-child { width: 108px; min-width: 108px; max-width: 108px; }
 .badge-data-table thead th:last-child {
@@ -1639,8 +1662,6 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
 .badge-data-table tbody tr:hover td:last-child { background: #f8fbff; }
 .badge-inline-action { margin-left: 16px; }
 .badge-detail-table-card .battery + strong { font-size: 14px; }
-#badgeDetailTableBody .session-empty-row td { text-align: left; }
-.badge-empty-message { position: sticky; left: 20px; display: inline-block; }
 .badge-detail-table-card .session-pagination {
   overflow: visible;
   border-top-color: rgba(217, 226, 239, .72);
@@ -1855,8 +1876,12 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
   padding: 0;
 }
 .badge-field-filter-select .session-select-trigger strong {
+  min-width: 0;
+  overflow: hidden;
   font-size: 14px;
   font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .badge-field-filter-advisor .session-select-trigger strong {
   min-width: 0;

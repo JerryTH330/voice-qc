@@ -122,6 +122,19 @@
                     <thead><tr id="badgeDetailTableHeadRow"></tr></thead>
                     <tbody id="badgeDetailTableBody"></tbody>
                   </table>
+                  <div class="badge-list-empty-state" id="badgeDetailEmptyState" role="status" hidden>
+                    <svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true">
+                      <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" />
+                      <path d="M53 27c0-5.5 4.5-10 10-10h54l18 18v61c0 5.5-4.5 10-10 10H63c-5.5 0-10-4.5-10-10V27Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" />
+                      <path d="M117 17v18h18" fill="#E8F0FC" stroke="#CAD7EA" stroke-width="3" stroke-linejoin="round" />
+                      <path d="M70 48h47M70 62h31M70 76h24" stroke="#B7C6DB" stroke-width="5" stroke-linecap="round" />
+                      <circle cx="117" cy="83" r="21" fill="#EEF5FF" stroke="#5B8DEF" stroke-width="4" />
+                      <path d="m132 98 15 15" stroke="#5B8DEF" stroke-width="6" stroke-linecap="round" />
+                      <path d="M108 83h18" stroke="#8EAFE9" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                    <strong>暂无符合条件的工牌</strong>
+                    <p>请调整筛选条件后重试</p>
+                  </div>
                 </div>
                 <div class="session-pagination" id="badgeDetailPagination"></div>
               </div>
@@ -477,7 +490,7 @@
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
     <script src="./organization-data.js?v=20260903-real-stores-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
-    <script src="./page.js?v=20260903-main-sync-v1"></script>
+    <script src="./page.js?v=20260903-store-person-filter-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

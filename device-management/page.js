@@ -1617,8 +1617,6 @@ const badgeDockDateMenuState = {
   dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
 const badgeFieldDefinitions = Object.freeze([
-  { key: 'sn', label: '工牌 SN', filterType: 'text', queryKey: 'snQuery' },
-  { key: 'badgeType', label: '工牌类型', filterType: 'select' },
   { key: 'brand', label: '品牌', filterType: 'select', organizationLevel: 0, idKey: 'brandId', nameKey: 'brand' },
   { key: 'region', label: '大区', filterType: 'select', organizationLevel: 1, idKey: 'regionId', nameKey: 'region' },
   { key: 'zone', label: '战区', filterType: 'select', organizationLevel: 2, idKey: 'zoneId', nameKey: 'zone' },
@@ -1630,6 +1628,8 @@ const badgeFieldDefinitions = Object.freeze([
   { key: 'store', label: '门店', filterType: 'select', organizationLevel: 7, idKey: 'storeId', nameKey: 'store' },
   { key: 'advisorId', label: '顾问 ID', filterType: 'text', queryKey: 'advisorIdQuery' },
   { key: 'advisorName', label: '顾问姓名', filterType: 'text', queryKey: 'advisorNameQuery' },
+  { key: 'sn', label: '工牌 SN', filterType: 'text', queryKey: 'snQuery' },
+  { key: 'badgeType', label: '工牌类型', filterType: 'select' },
   { key: 'bindingStatus', label: '绑定状态', filterType: 'select' },
   { key: 'recordingStatus', label: '录音状态', filterType: 'select' },
   { key: 'connectionStatus', label: 'WiFi 连接', filterType: 'select' },
@@ -1661,9 +1661,10 @@ const badgeFilterFieldOrder = Object.freeze([
   'recordingStatus'
 ]);
 const badgeFieldSettingsStorageKey = 'aiqc-device-badge-field-settings-v1';
+const badgeFieldSettingsOrderVersion = 2;
 
 function createDefaultBadgeFieldSettings() {
-  return { order: [...badgeDefaultFieldOrder], visible: [...badgeDefaultFieldOrder] };
+  return { order: [...badgeDefaultFieldOrder], visible: [...badgeDefaultFieldOrder], orderVersion: badgeFieldSettingsOrderVersion };
 }
 
 function loadBadgeFieldSettings() {
@@ -1676,11 +1677,17 @@ function loadBadgeFieldSettings() {
       const nextKey = badgeDefaultFieldOrder.slice(badgeDefaultFieldOrder.indexOf(key) + 1).find((candidate) => order.includes(candidate));
       order.splice(nextKey ? order.indexOf(nextKey) : order.length, 0, key);
     });
+    if (parsed?.orderVersion !== badgeFieldSettingsOrderVersion) {
+      const movedKeys = ['sn', 'badgeType'].filter((key) => order.includes(key));
+      movedKeys.forEach((key) => order.splice(order.indexOf(key), 1));
+      const advisorNameIndex = order.indexOf('advisorName');
+      order.splice(advisorNameIndex >= 0 ? advisorNameIndex + 1 : order.length, 0, ...movedKeys);
+    }
     const visible = Array.isArray(parsed?.visible)
       ? [...parsed.visible.filter((key) => badgeFieldDefinitionMap[key] && order.includes(key)), ...addedKeys]
       : [...badgeDefaultFieldOrder];
     if (!visible.length) visible.push(order[0]);
-    return { order, visible };
+    return { order, visible, orderVersion: badgeFieldSettingsOrderVersion };
   } catch (error) {
     return createDefaultBadgeFieldSettings();
   }
@@ -2558,16 +2565,16 @@ function isBadgeAdvisorFilterVisible(settings = badgeFieldSettingsState) {
   return visibleSet.has('advisorId') || visibleSet.has('advisorName');
 }
 
-// Organization and geography are parallel branches. Shared downstream filters
-// consume their intersection, but must not restrict either branch in reverse.
+// Organization and geography are parallel branches. Patroler and governor
+// candidates are narrowed only by the selected stores.
 const badgeCandidateDependencies = Object.freeze({
   brand: [],
   region: ['brand'],
   zone: ['brand', 'region'],
-  patroler: ['brand', 'region', 'zone'],
+  patroler: ['store'],
   province: ['brand'],
   city: ['brand', 'province'],
-  governor: ['brand', 'province', 'city'],
+  governor: ['store'],
   store: ['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor'],
   advisor: badgeOrganizationFilterKeys
 });
@@ -2706,9 +2713,8 @@ function getBadgeAdvisorName(advisorId) {
 
 function getBadgeAdvisorFilterLabel() {
   const selectedIds = Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : [];
-  if (!selectedIds.length) return '全部顾问';
-  if (selectedIds.length === 1) return getBadgeAdvisorName(selectedIds[0]);
-  return `已选 ${selectedIds.length} 位`;
+  if (!selectedIds.length) return '全部';
+  return selectedIds.map((advisorId) => getBadgeAdvisorName(advisorId)).join('、');
 }
 
 function renderBadgeAdvisorFilter() {
@@ -2795,8 +2801,9 @@ function renderBadgeRangeFilter(field) {
   const candidates = getBadgeRangeSearchOptions(field);
   const allSelected = candidates.length > 0 && candidates.every((item) => selected.has(item.value));
   const someSelected = candidates.some((item) => selected.has(item.value));
-  const label = selectedValues.length === 0 ? `全部${field.label}`
-    : selectedValues.length === 1 ? getBadgeFieldOptionLabel(field.key, selectedValues[0]) : `已选 ${selectedValues.length} 项`;
+  const label = selectedValues.length === 0
+    ? '全部'
+    : selectedValues.map((value) => getBadgeFieldOptionLabel(field.key, value)).join('、');
   return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
     <span>${field.label}</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeRangeOptions-${field.key}">
@@ -2829,7 +2836,7 @@ function renderBadgeFieldFilter(field) {
     const value = badgeFilterState[field.key];
     const menuKey = `field:${field.key}`;
     const open = badgeMenuState.openMenu === menuKey;
-    const allOptionLabel = ['recordingStatus', 'bindingStatus'].includes(field.key) ? '全部' : `全部${field.label}`;
+    const allOptionLabel = '全部';
     const options = [{ value: '全部', label: allOptionLabel }, ...getBadgeFieldSelectOptions(field)];
     const selectedLabel = options.find((option) => option.value === value)?.label || allOptionLabel;
     return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
@@ -3058,6 +3065,8 @@ function renderBadgeTableHead(visibleFields) {
 function renderBadgeDetail() {
   const tbody = document.getElementById('badgeDetailTableBody');
   if (!tbody) return;
+  const emptyState = document.getElementById('badgeDetailEmptyState');
+  const tableWrap = tbody.closest('.badge-list-table-wrap');
   const visibleFields = getVisibleBadgeFields();
   renderBadgeTableHead(visibleFields);
   const records = getFilteredBadgeRecords();
@@ -3077,10 +3086,13 @@ function renderBadgeDetail() {
     const node = document.getElementById(id);
     if (node) node.textContent = Number(value).toLocaleString('zh-CN');
   });
-  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
+  const hasVisibleRecords = visibleRecords.length > 0;
+  tableWrap?.classList.toggle('is-empty', !hasVisibleRecords);
+  if (emptyState) emptyState.hidden = hasVisibleRecords;
+  tbody.innerHTML = hasVisibleRecords ? visibleRecords.map((item) => `<tr>
     ${visibleFields.map((field) => `<td data-badge-column="${field.key}">${renderBadgeFieldCell(item, field)}</td>`).join('')}
     <td><button class="table-link" type="button" data-badge-record-drawer-open="events" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">事件</button><button class="table-link badge-inline-action" type="button" data-badge-record-drawer-open="uploads" data-badge-sn="${escapeBadgeHtml(item.sn)}" data-advisor-name="${escapeBadgeHtml(item.advisorName)}">日志</button></td>
-  </tr>`).join('') : `<tr class="session-empty-row"><td colspan="${visibleFields.length + 1}"><span class="badge-empty-message">当前筛选条件下暂无工牌，请调整筛选条件后重试。</span></td></tr>`;
+  </tr>`).join('') : '';
   renderBadgePagination(records.length);
 }
 
@@ -3152,7 +3164,7 @@ function saveBadgeFieldSettings() {
   const nextVisible = new Set(badgeFieldSettingsDraft.visible);
   badgeFieldSettingsState.visible.filter((key) => !nextVisible.has(key)).forEach((key) => clearBadgeFilterForField(badgeFieldDefinitionMap[key]));
   if (!nextVisible.has('advisorId') && !nextVisible.has('advisorName')) clearBadgeAdvisorFilter();
-  badgeFieldSettingsState = { order: [...badgeFieldSettingsDraft.order], visible: [...badgeFieldSettingsDraft.visible] };
+  badgeFieldSettingsState = { order: [...badgeFieldSettingsDraft.order], visible: [...badgeFieldSettingsDraft.visible], orderVersion: badgeFieldSettingsOrderVersion };
   try { localStorage.setItem(badgeFieldSettingsStorageKey, JSON.stringify(badgeFieldSettingsState)); } catch (error) { /* 本地存储不可用时仍保留当前会话配置。 */ }
   badgePaginationState.page = 1;
   closeBadgeFieldSettings();
