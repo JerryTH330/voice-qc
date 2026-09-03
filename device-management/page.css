@@ -951,6 +951,168 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
   .badge-dock-log-timeline .badge-dock-log-event { transition: border-color .18s ease, box-shadow .18s ease; }
   .badge-dock-log-timeline .badge-dock-log-event:hover { transform: none; }
 }
+
+/* 工牌管理：换绑、解绑与移除 */
+body.device-badge-management-page { background: #eef3f9; }
+body.device-badge-management-page .main { padding: 24px; background: #f6f9fc; }
+body.device-badge-management-page .topbar {
+  position: static;
+  min-height: auto;
+  padding: 0;
+  margin-bottom: 20px;
+  gap: 24px;
+  border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+body.device-badge-management-page .topbar h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.08; letter-spacing: -.03em; }
+body.device-badge-management-page .topbar p { max-width: 760px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+body.device-badge-management-page .page-content { max-width: none; margin: 0; padding: 0; }
+body.device-badge-management-page .page-panel[data-page="management"].active { display: flex; flex-direction: column; gap: 16px; }
+
+.badge-management-filter-card {
+  min-height: 76px;
+  margin: 0;
+  padding: 15px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.badge-management-store-context { min-width: 250px; display: flex; align-items: center; gap: 12px; }
+.badge-management-store-icon { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border-radius: 11px; color: var(--blue); background: var(--blue-50); }
+.badge-management-store-icon svg { width: 24px; height: 24px; }
+.badge-management-store-context small,
+.badge-management-store-context strong { display: block; }
+.badge-management-store-context small { margin-bottom: 4px; color: #8a96a8; font-size: 12px; }
+.badge-management-store-context strong { color: #27354b; font-size: 15px; }
+.badge-management-filter-controls { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.badge-management-search { width: min(360px, 34vw); height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 1px solid #dfe4ec; border-radius: 8px; background: #fff; }
+.badge-management-search:focus-within { border-color: #8bb2ff; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+.badge-management-search input,
+.badge-management-picker-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: #28364c; background: transparent; }
+.badge-management-search input::placeholder,
+.badge-management-picker-search input::placeholder { color: #9aa5b5; }
+.badge-management-search-icon { width: 16px; height: 16px; flex: 0 0 16px; background: #8a96ab; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Ccircle cx='7' cy='7' r='4.5' stroke='black' stroke-width='1.4'/%3E%3Cpath d='M10.5 10.5L14 14' stroke='black' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Ccircle cx='7' cy='7' r='4.5' stroke='black' stroke-width='1.4'/%3E%3Cpath d='M10.5 10.5L14 14' stroke='black' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.badge-management-status-filter { height: 40px; padding: 0 11px; display: flex; align-items: center; gap: 8px; border: 1px solid #dfe4ec; border-radius: 8px; background: #fff; }
+.badge-management-status-filter > span { color: #8994a5; font-size: 12px; white-space: nowrap; }
+.badge-management-status-filter select { min-width: 84px; border: 0; outline: 0; color: #344258; background: transparent; font-weight: 600; }
+.badge-management-filter-controls .btn { height: 40px; }
+.badge-management-list-card { margin: 0; overflow: hidden; }
+.badge-management-list-head { min-height: 72px; }
+.badge-management-list-head .panel-title h3 { margin: 0; font-size: 16px; }
+.badge-management-list-head .panel-title p { margin: 5px 0 0; color: #8a96a8; font-size: 13px; }
+.badge-management-table-wrap { min-height: 410px; overflow-x: auto; background: #fff; }
+.badge-management-table { min-width: 1050px; table-layout: auto; }
+.badge-management-table th,
+.badge-management-table td { padding: 14px 16px; white-space: nowrap; }
+.badge-management-table th { color: #68758a; font-size: 12px; font-weight: 600; }
+.badge-management-table td { color: #445269; font-size: 13px; }
+.badge-management-table tbody tr { transition: background-color .15s ease; }
+.badge-management-table tbody tr:hover { background: #f8fbff; }
+.badge-management-sn-text { color: #2f4058; font-size: 13px; letter-spacing: .02em; }
+.badge-management-employee-name { color: #27354b; font-weight: 600; }
+.badge-management-employee-name.unbound,
+.badge-management-employee-id { color: #8793a5; }
+.badge-management-bind-tag { min-height: 23px; padding: 3px 8px; display: inline-flex; align-items: center; border-radius: 999px; color: #167554; background: #e8f8f1; font-size: 12px; font-weight: 600; }
+.badge-management-bind-tag.unbound { color: #68758a; background: #eef1f5; }
+.badge-management-connection-status { color: #69768a; }
+.badge-management-connection-status.connected { color: #167554; }
+.badge-management-battery { color: #526075; font-variant-numeric: tabular-nums; }
+.badge-management-sync-time { color: #69768a; font-variant-numeric: tabular-nums; }
+.badge-management-operation-cell { width: 72px; }
+.badge-management-row-menu-wrap { position: relative; display: inline-flex; }
+.badge-management-row-menu-button { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: #66758a; cursor: pointer; font-size: 21px; line-height: 1; }
+.badge-management-row-menu-button:hover,
+.badge-management-row-menu-button[aria-expanded="true"] { color: var(--blue); background: #eef4ff; }
+.badge-management-row-menu { position: absolute; z-index: 20; top: 38px; right: 0; width: 142px; padding: 6px; border: 1px solid #e1e7f0; border-radius: 9px; background: #fff; box-shadow: 0 12px 32px rgba(15,23,42,.14); }
+.badge-management-table tbody tr:nth-child(n + 5) .badge-management-row-menu { top: auto; bottom: 38px; }
+.badge-management-row-menu button { width: 100%; height: 36px; padding: 0 11px; border: 0; border-radius: 6px; display: flex; align-items: center; background: transparent; color: #344258; cursor: pointer; text-align: left; }
+.badge-management-row-menu button:hover { color: var(--blue); background: #f2f6ff; }
+.badge-management-row-menu button.danger { color: var(--red); }
+.badge-management-row-menu button.danger:hover { background: #fff1f3; }
+.badge-management-row-menu button:disabled { color: #b1bac7; background: transparent; cursor: not-allowed; }
+.badge-management-empty-row td { height: 338px; text-align: center; }
+.badge-management-empty-row strong,
+.badge-management-empty-row span { display: block; }
+.badge-management-empty-row strong { color: #6f7c90; font-size: 14px; }
+.badge-management-empty-row span { margin-top: 8px; color: #9aa5b4; font-size: 12px; }
+
+.badge-management-modal-backdrop { z-index: 150; }
+.badge-management-modal { width: min(650px, 94vw); overflow: visible; }
+.badge-management-modal-body { padding: 22px; display: grid; gap: 18px; }
+.badge-management-form-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 12px; }
+.badge-management-form-row > span { color: #526075; font-size: 13px; font-weight: 600; }
+.badge-management-form-row > span b { color: var(--red); }
+.badge-management-form-row > input,
+.badge-management-member-trigger { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #dfe4ec; border-radius: 8px; outline: 0; background: #fff; color: #344258; text-align: left; }
+.badge-management-form-row > input[readonly] { color: #69768a; background: #f5f7fa; }
+.badge-management-member-row { grid-template-columns: 72px minmax(0, 1fr) auto; align-items: start; }
+.badge-management-member-row > span { padding-top: 11px; }
+.badge-management-member-field { position: relative; }
+.badge-management-member-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.badge-management-member-trigger strong { overflow: hidden; color: #8a96a8; font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.badge-management-member-trigger.has-value strong { color: #344258; font-weight: 600; }
+.badge-management-member-trigger i { width: 7px; height: 7px; border-right: 1.5px solid #8895a7; border-bottom: 1.5px solid #8895a7; transform: rotate(45deg) translateY(-2px); transition: transform .15s ease; }
+.badge-management-member-trigger[aria-expanded="true"] { border-color: #8bb2ff; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+.badge-management-member-trigger[aria-expanded="true"] i { transform: rotate(225deg) translate(-1px, -1px); }
+.badge-management-add-member { height: 40px; padding: 0; border: 0; background: transparent; color: var(--blue); cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.badge-management-member-panel { position: absolute; z-index: 170; left: 0; right: 0; top: 46px; padding: 8px; border: 1px solid #dfe6ef; border-radius: 9px; background: #fff; box-shadow: 0 14px 38px rgba(15,23,42,.17); }
+.badge-management-member-panel[hidden] { display: none; }
+.badge-management-picker-search { height: 38px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #e1e6ed; border-radius: 7px; background: #f9fafc; }
+.badge-management-member-options { max-height: 250px; margin-top: 7px; overflow: auto; }
+.badge-management-member-option { width: 100%; min-height: 48px; padding: 8px 10px; border: 0; border-radius: 7px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; cursor: pointer; text-align: left; }
+.badge-management-member-option:hover:not(:disabled) { background: #f2f6ff; }
+.badge-management-member-option.active { background: #edf4ff; }
+.badge-management-member-option:disabled { cursor: not-allowed; }
+.badge-management-member-option span { min-width: 0; }
+.badge-management-member-option strong,
+.badge-management-member-option small { display: block; }
+.badge-management-member-option strong { color: #344258; font-size: 13px; }
+.badge-management-member-option small { margin-top: 3px; color: #94a0b1; font-size: 11px; }
+.badge-management-member-option em { flex: 0 0 auto; color: #178059; font-size: 11px; font-style: normal; }
+.badge-management-member-option:disabled strong { color: #929dad; }
+.badge-management-member-option:disabled em { color: #9aa5b4; }
+.badge-management-option-empty { min-height: 90px; display: grid; place-items: center; color: #9aa5b4; font-size: 12px; }
+
+.badge-management-add-modal { width: min(680px, 94vw); overflow: hidden; }
+.badge-management-add-body { padding: 20px 22px 0; }
+.badge-management-directory-search { height: 42px; background: #fff; }
+.badge-management-select-all-row { min-height: 48px; margin-top: 12px; padding: 0 4px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf0f5; }
+.badge-management-select-all-row label { display: flex; align-items: center; gap: 9px; color: #445269; font-weight: 600; cursor: pointer; }
+.badge-management-select-all-row input,
+.badge-management-directory-item input { width: 16px; height: 16px; accent-color: var(--blue); }
+.badge-management-select-all-row small { color: #8994a5; }
+.badge-management-directory-list { height: 310px; overflow: auto; }
+.badge-management-directory-item { min-height: 62px; padding: 9px 5px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid #f0f2f6; cursor: pointer; }
+.badge-management-directory-item:hover { background: #fafcff; }
+.badge-management-directory-item span { min-width: 0; flex: 1; }
+.badge-management-directory-item strong,
+.badge-management-directory-item small { display: block; }
+.badge-management-directory-item strong { color: #344258; font-size: 13px; }
+.badge-management-directory-item small { margin-top: 4px; color: #929dad; font-size: 11px; }
+.badge-management-directory-item em { color: #8a96a8; font-size: 11px; font-style: normal; }
+
+.badge-management-confirm-modal { width: min(500px, 92vw); }
+.badge-management-confirm-body { padding: 24px 24px 20px; display: flex; align-items: flex-start; gap: 15px; }
+.badge-management-confirm-icon { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 50%; color: #a86700; background: #fff1d6; font-size: 20px; font-weight: 700; }
+.badge-management-confirm-icon.danger { color: #c53c4d; background: #fff0f2; }
+.badge-management-confirm-body h2 { margin: 2px 0 8px; color: #27354b; font-size: 18px; }
+.badge-management-confirm-body p { margin: 0; color: #647187; font-size: 13px; line-height: 1.7; }
+.badge-management-confirm-detail { margin-top: 13px; padding: 10px 12px; border-radius: 8px; color: #556379; background: #f6f8fb; font-size: 12px; line-height: 1.7; }
+.badge-management-confirm-modal .modal-foot .btn { min-width: 84px; }
+.badge-management-confirm-modal .modal-foot .btn.danger { color: #fff; border-color: var(--red); background: var(--red); box-shadow: 0 3px 8px rgba(220,68,85,.16); }
+.badge-management-confirm-modal .modal-foot .btn.danger:hover { background: #c93749; }
+
+@media (max-width: 760px) {
+  body.device-badge-management-page .main { padding: 16px; }
+  .badge-management-filter-card { align-items: stretch; flex-direction: column; }
+  .badge-management-filter-controls { align-items: stretch; flex-wrap: wrap; justify-content: flex-start; }
+  .badge-management-search { width: 100%; }
+  .badge-management-list-head { align-items: flex-start; gap: 12px; }
+  .badge-management-member-row { grid-template-columns: 72px minmax(0, 1fr); }
+  .badge-management-add-member { grid-column: 2; justify-self: start; }
+}
 .badge-dock-log-timeline .badge-dock-log-event .event-group-row { padding: 14px 16px; }
 .badge-dock-log-timeline .badge-dock-log-event .event-dot { padding: 0; font-size: 14px; }
 .badge-dock-log-event-meta { min-width: 150px; margin-left: auto; display: grid; justify-items: end; gap: 3px; text-align: right; }

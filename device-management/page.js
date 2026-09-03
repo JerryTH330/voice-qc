@@ -9,6 +9,11 @@ const pageMeta = {
     description: '查看工牌的绑定、录音、连接、剩余电量、剩余内存与上传状态',
     actions: [{ label: '字段设置', style: 'badge-field-settings-trigger', action: 'field-settings' }]
   },
+  management: {
+    title: '工牌管理',
+    description: '管理当前门店工牌与员工的绑定关系，支持换绑、解绑和移除',
+    actions: []
+  },
   docks: {
     title: '充电坞明细',
     description: '按门店、状态和充电坞 SN 查看充电坞资产与子设备状态',
@@ -1425,6 +1430,9 @@ function getBadgeStoreId(store) {
 }
 
 const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badge, index) => {
+  const hasAdvisorBinding = index % 47 !== 9;
+  const advisorId = hasAdvisorBinding ? badge.advisorId : '';
+  const advisorName = hasAdvisorBinding ? badge.advisorName : '';
   const store = storeOverviewRecords.find((item) => item.brand === badge.dealer.brand && item.code === badge.dealer.dealerCode);
   const organization = badgeOrganizationByStore.get(`${store.brand}|${store.code}`);
   const connected = index % 31 !== 0;
@@ -1436,8 +1444,8 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
   return {
     ...organization,
     queryDate: store.syncedAt.slice(0, 10),
-    advisorName: badge.advisorName,
-    advisorId: badge.advisorId,
+    advisorName,
+    advisorId,
     sn: badge.sn,
     badgeType: badgeTypes[index % badgeTypes.length],
     recordingStatus: recording ? '录音中' : '—',
@@ -1761,6 +1769,383 @@ function escapeBadgeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+const badgeManagementDealer = sharedOrganizationDirectory?.dealers?.[0] || {
+  dealerCode: 'DEMO-001',
+  dealerName: '示例门店',
+  advisors: []
+};
+const badgeManagementDirectoryEmployees = [
+  { employeeId: `AION-${badgeManagementDealer.dealerCode}-06`, employeeName: '陆思远', storeName: badgeManagementDealer.dealerName },
+  { employeeId: `AION-${badgeManagementDealer.dealerCode}-07`, employeeName: '沈嘉怡', storeName: badgeManagementDealer.dealerName },
+  { employeeId: `AION-${badgeManagementDealer.dealerCode}-08`, employeeName: '林知夏', storeName: badgeManagementDealer.dealerName },
+  { employeeId: `AION-${badgeManagementDealer.dealerCode}-09`, employeeName: '许安然', storeName: badgeManagementDealer.dealerName }
+];
+const badgeManagementEmployees = [
+  ...(badgeManagementDealer.advisors || []).map((advisor) => ({
+    employeeId: advisor.advisorId,
+    employeeName: advisor.advisorName,
+    storeName: badgeManagementDealer.dealerName
+  })),
+  { ...badgeManagementDirectoryEmployees[0] }
+];
+const badgeManagementBadges = badgeDetailRecords
+  .filter((item) => item.dealer?.dealerCode === badgeManagementDealer.dealerCode)
+  .slice(0, 5)
+  .map((item) => ({
+    sn: item.sn,
+    employeeId: item.advisorId,
+    connectionStatus: item.connectionStatus,
+    battery: item.battery,
+    syncedAt: item.syncedAt
+  }));
+badgeManagementBadges.push({
+  sn: `MN-BDG-${String(4821 + (badgeManagementDealer.advisors?.length || 5) * 7).padStart(6, '0')}`,
+  employeeId: '',
+  connectionStatus: '未连接',
+  battery: 82,
+  syncedAt: '2026-08-13 13:26:18'
+});
+
+const badgeManagementState = {
+  query: '',
+  status: '全部',
+  openMenuSn: '',
+  activeSn: '',
+  memberOpen: false,
+  memberQuery: '',
+  selectedEmployeeId: '',
+  directoryQuery: '',
+  selectedDirectoryIds: new Set(),
+  confirmAction: '',
+  confirmSn: ''
+};
+
+function getBadgeManagementEmployee(employeeId) {
+  return badgeManagementEmployees.find((employee) => employee.employeeId === employeeId) || null;
+}
+
+function getBadgeManagementBinding(employeeId) {
+  return badgeManagementBadges.find((badge) => badge.employeeId === employeeId) || null;
+}
+
+function getBadgeManagementRecords() {
+  const query = badgeManagementState.query.trim().toLocaleLowerCase('zh-CN');
+  return badgeManagementBadges.filter((badge) => {
+    const employee = getBadgeManagementEmployee(badge.employeeId);
+    const status = employee ? '已绑定' : '未绑定';
+    if (badgeManagementState.status !== '全部' && badgeManagementState.status !== status) return false;
+    if (!query) return true;
+    return `${badge.sn} ${employee?.employeeName || ''} ${employee?.employeeId || ''}`.toLocaleLowerCase('zh-CN').includes(query);
+  });
+}
+
+function renderBadgeManagementPage() {
+  const storeName = document.getElementById('badgeManagementStoreName');
+  const count = document.getElementById('badgeManagementCount');
+  const tableBody = document.getElementById('badgeManagementTableBody');
+  if (!storeName || !count || !tableBody) return;
+  const records = getBadgeManagementRecords();
+  storeName.textContent = badgeManagementDealer.dealerName;
+  count.textContent = records.length;
+  if (badgeManagementState.openMenuSn && !records.some((badge) => badge.sn === badgeManagementState.openMenuSn)) {
+    badgeManagementState.openMenuSn = '';
+  }
+  tableBody.innerHTML = records.length ? records.map((badge) => {
+    const employee = getBadgeManagementEmployee(badge.employeeId);
+    const menuOpen = badgeManagementState.openMenuSn === badge.sn;
+    return `<tr data-badge-management-row="${escapeBadgeHtml(badge.sn)}">
+      <td><strong class="badge-management-sn-text">${escapeBadgeHtml(badge.sn)}</strong></td>
+      <td><span class="badge-management-employee-name${employee ? '' : ' unbound'}">${escapeBadgeHtml(employee?.employeeName || '未绑定员工')}</span></td>
+      <td><span class="badge-management-employee-id">${escapeBadgeHtml(employee?.employeeId || '—')}</span></td>
+      <td><span class="badge-management-bind-tag${employee ? '' : ' unbound'}">${employee ? '已绑定' : '未绑定'}</span></td>
+      <td><span class="badge-management-connection-status${badge.connectionStatus === '已连接' ? ' connected' : ''}">${escapeBadgeHtml(badge.connectionStatus)}</span></td>
+      <td><span class="badge-management-battery">${escapeBadgeHtml(`${badge.battery}%`)}</span></td>
+      <td><span class="badge-management-sync-time">${escapeBadgeHtml(badge.syncedAt)}</span></td>
+      <td class="badge-management-operation-cell">
+        <div class="badge-management-row-menu-wrap">
+          <button class="badge-management-row-menu-button" type="button" data-badge-management-menu="${escapeBadgeHtml(badge.sn)}" aria-label="打开 ${escapeBadgeHtml(badge.sn)} 操作菜单" aria-expanded="${menuOpen}">…</button>
+          ${menuOpen ? `<div class="badge-management-row-menu" role="menu">
+            <button type="button" role="menuitem" data-badge-management-action="rebind" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}">换绑成员</button>
+            <button type="button" role="menuitem" data-badge-management-action="unbind" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}"${employee ? '' : ' disabled title="该工牌当前未绑定员工"'}>解绑成员</button>
+            <button class="danger" type="button" role="menuitem" data-badge-management-action="remove" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}">移除工牌</button>
+          </div>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr class="session-empty-row badge-management-empty-row"><td colspan="8"><strong>未找到符合条件的工牌</strong><span>请调整搜索内容或绑定状态</span></td></tr>';
+}
+
+function renderBadgeManagementMemberOptions() {
+  const options = document.getElementById('badgeManagementMemberOptions');
+  if (!options) return;
+  const query = badgeManagementState.memberQuery.trim().toLocaleLowerCase('zh-CN');
+  const employees = badgeManagementEmployees.filter((employee) => !query
+    || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query));
+  options.innerHTML = employees.length ? employees.map((employee) => {
+    const binding = getBadgeManagementBinding(employee.employeeId);
+    const selected = employee.employeeId === badgeManagementState.selectedEmployeeId;
+    return `<button class="badge-management-member-option${selected ? ' active' : ''}" type="button" data-badge-management-member-option="${escapeBadgeHtml(employee.employeeId)}"${binding ? ` disabled title="已绑定工牌 ${escapeBadgeHtml(binding.sn)}"` : ''}>
+      <span><strong>${escapeBadgeHtml(employee.employeeName)}</strong><small>${escapeBadgeHtml(employee.employeeId)}</small></span>
+      <em>${binding ? `已绑定 · ${escapeBadgeHtml(binding.sn)}` : '未绑定'}</em>
+    </button>`;
+  }).join('') : '<div class="badge-management-option-empty">未找到符合条件的员工</div>';
+}
+
+function renderBadgeManagementMemberModal() {
+  const snInput = document.getElementById('badgeManagementMemberSn');
+  const value = document.getElementById('badgeManagementMemberValue');
+  const trigger = document.querySelector('[data-badge-management-member-trigger]');
+  const panel = document.getElementById('badgeManagementMemberPanel');
+  const submit = document.getElementById('badgeManagementMemberSubmit');
+  const search = document.querySelector('[data-badge-management-member-search]');
+  if (!snInput || !value || !trigger || !panel || !submit) return;
+  const employee = getBadgeManagementEmployee(badgeManagementState.selectedEmployeeId);
+  snInput.value = badgeManagementState.activeSn;
+  value.textContent = employee ? `${employee.employeeName}（${employee.employeeId}）` : '请选择成员';
+  trigger.classList.toggle('has-value', Boolean(employee));
+  trigger.setAttribute('aria-expanded', String(badgeManagementState.memberOpen));
+  panel.hidden = !badgeManagementState.memberOpen;
+  submit.disabled = !employee;
+  if (search) search.value = badgeManagementState.memberQuery;
+  renderBadgeManagementMemberOptions();
+}
+
+function openBadgeManagementMemberModal(sn) {
+  badgeManagementState.openMenuSn = '';
+  badgeManagementState.activeSn = sn;
+  badgeManagementState.selectedEmployeeId = '';
+  badgeManagementState.memberQuery = '';
+  badgeManagementState.memberOpen = false;
+  renderBadgeManagementPage();
+  renderBadgeManagementMemberModal();
+  openModal(document.getElementById('badgeManagementMemberModal'));
+}
+
+function closeBadgeManagementMemberModal() {
+  badgeManagementState.memberOpen = false;
+  closeModal(document.getElementById('badgeManagementMemberModal'));
+}
+
+function renderBadgeManagementDirectory() {
+  const list = document.getElementById('badgeManagementDirectoryList');
+  const submit = document.getElementById('badgeManagementAddSubmit');
+  const selectedCount = document.getElementById('badgeManagementSelectedCount');
+  const selectAll = document.querySelector('[data-badge-management-select-all]');
+  if (!list || !submit || !selectedCount || !selectAll) return;
+  const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
+  const query = badgeManagementState.directoryQuery.trim().toLocaleLowerCase('zh-CN');
+  const available = badgeManagementDirectoryEmployees.filter((employee) => !existingIds.has(employee.employeeId));
+  const visible = available.filter((employee) => !query
+    || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query));
+  list.innerHTML = visible.length ? visible.map((employee) => `<label class="badge-management-directory-item">
+    <input type="checkbox" data-badge-management-directory-option="${escapeBadgeHtml(employee.employeeId)}"${badgeManagementState.selectedDirectoryIds.has(employee.employeeId) ? ' checked' : ''} />
+    <span><strong>${escapeBadgeHtml(employee.employeeName)}</strong><small>${escapeBadgeHtml(employee.employeeId)}</small></span>
+    <em>${escapeBadgeHtml(employee.storeName)}</em>
+  </label>`).join('') : '<div class="badge-management-option-empty">未找到可导入的当前门店员工</div>';
+  const selectedAvailableCount = available.filter((employee) => badgeManagementState.selectedDirectoryIds.has(employee.employeeId)).length;
+  selectedCount.textContent = `已选择 ${selectedAvailableCount} 人`;
+  submit.disabled = selectedAvailableCount === 0;
+  const visibleIds = visible.map((employee) => employee.employeeId);
+  const selectedVisibleCount = visibleIds.filter((id) => badgeManagementState.selectedDirectoryIds.has(id)).length;
+  selectAll.checked = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
+  selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleIds.length;
+}
+
+function openBadgeManagementAddModal() {
+  badgeManagementState.memberOpen = false;
+  badgeManagementState.directoryQuery = '';
+  badgeManagementState.selectedDirectoryIds = new Set();
+  closeModal(document.getElementById('badgeManagementMemberModal'));
+  const search = document.querySelector('[data-badge-management-directory-search]');
+  if (search) search.value = '';
+  renderBadgeManagementDirectory();
+  openModal(document.getElementById('badgeManagementAddModal'));
+}
+
+function closeBadgeManagementAddModal({ returnToMember = true } = {}) {
+  closeModal(document.getElementById('badgeManagementAddModal'));
+  if (returnToMember && badgeManagementState.activeSn) {
+    renderBadgeManagementMemberModal();
+    openModal(document.getElementById('badgeManagementMemberModal'));
+  }
+}
+
+function openBadgeManagementConfirm(action, sn) {
+  const badge = badgeManagementBadges.find((item) => item.sn === sn);
+  if (!badge) return;
+  const employee = getBadgeManagementEmployee(badge.employeeId);
+  const title = document.getElementById('badgeManagementConfirmTitle');
+  const descriptionNode = document.getElementById('badgeManagementConfirmDescription');
+  const detail = document.getElementById('badgeManagementConfirmDetail');
+  const icon = document.getElementById('badgeManagementConfirmIcon');
+  const submit = document.getElementById('badgeManagementConfirmSubmit');
+  badgeManagementState.openMenuSn = '';
+  badgeManagementState.confirmAction = action;
+  badgeManagementState.confirmSn = sn;
+  renderBadgeManagementPage();
+  if (action === 'unbind') {
+    title.textContent = '确认解绑成员';
+    descriptionNode.textContent = '解绑后，该工牌将变为未绑定状态，仍保留在当前工牌列表中。';
+    submit.textContent = '确认解绑';
+    submit.className = 'btn primary';
+    icon.className = 'badge-management-confirm-icon';
+  } else {
+    title.textContent = '确认移除工牌';
+    descriptionNode.textContent = employee
+      ? '移除后将清除该工牌当前数据，并同步解除员工绑定；历史录音、事件和绑定记录不会删除。'
+      : '移除后将清除该工牌当前数据；历史录音、事件和绑定记录不会删除。';
+    submit.textContent = '确认移除';
+    submit.className = 'btn danger';
+    icon.className = 'badge-management-confirm-icon danger';
+  }
+  detail.innerHTML = `<strong>工牌 SN：${escapeBadgeHtml(sn)}</strong><br />当前成员：${escapeBadgeHtml(employee ? `${employee.employeeName}（${employee.employeeId}）` : '未绑定')}`;
+  openModal(document.getElementById('badgeManagementConfirmModal'));
+}
+
+function closeBadgeManagementConfirm() {
+  closeModal(document.getElementById('badgeManagementConfirmModal'));
+  badgeManagementState.confirmAction = '';
+  badgeManagementState.confirmSn = '';
+}
+
+function submitBadgeManagementRebind() {
+  const badge = badgeManagementBadges.find((item) => item.sn === badgeManagementState.activeSn);
+  const employee = getBadgeManagementEmployee(badgeManagementState.selectedEmployeeId);
+  if (!badge || !employee) return;
+  const existingBinding = getBadgeManagementBinding(employee.employeeId);
+  if (existingBinding) {
+    showToast(`该员工已绑定工牌：${existingBinding.sn}`);
+    badgeManagementState.selectedEmployeeId = '';
+    renderBadgeManagementMemberModal();
+    return;
+  }
+  badge.employeeId = employee.employeeId;
+  closeBadgeManagementMemberModal();
+  renderBadgeManagementPage();
+  showToast('换绑成功');
+}
+
+function submitBadgeManagementDirectory() {
+  const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
+  const imported = badgeManagementDirectoryEmployees.filter((employee) => badgeManagementState.selectedDirectoryIds.has(employee.employeeId) && !existingIds.has(employee.employeeId));
+  if (!imported.length) return;
+  badgeManagementEmployees.push(...imported.map((employee) => ({ ...employee })));
+  badgeManagementState.selectedDirectoryIds = new Set();
+  closeBadgeManagementAddModal({ returnToMember: true });
+  renderBadgeManagementMemberModal();
+  showToast(`人员添加成功，共 ${imported.length} 人`);
+}
+
+function submitBadgeManagementConfirm() {
+  const badgeIndex = badgeManagementBadges.findIndex((item) => item.sn === badgeManagementState.confirmSn);
+  if (badgeIndex < 0) {
+    closeBadgeManagementConfirm();
+    showToast('该工牌已被移除');
+    return;
+  }
+  if (badgeManagementState.confirmAction === 'unbind') {
+    badgeManagementBadges[badgeIndex].employeeId = '';
+    closeBadgeManagementConfirm();
+    renderBadgeManagementPage();
+    showToast('解绑成功');
+    return;
+  }
+  badgeManagementBadges.splice(badgeIndex, 1);
+  closeBadgeManagementConfirm();
+  renderBadgeManagementPage();
+  showToast('工牌已移除');
+}
+
+function handleBadgeManagementClick(event) {
+  const menuButton = event.target.closest('[data-badge-management-menu]');
+  if (menuButton) {
+    const sn = menuButton.dataset.badgeManagementMenu;
+    badgeManagementState.openMenuSn = badgeManagementState.openMenuSn === sn ? '' : sn;
+    renderBadgeManagementPage();
+    return true;
+  }
+
+  const actionButton = event.target.closest('[data-badge-management-action]');
+  if (actionButton && !actionButton.disabled) {
+    const { badgeManagementAction: action, badgeManagementSn: sn } = actionButton.dataset;
+    if (action === 'rebind') openBadgeManagementMemberModal(sn);
+    else openBadgeManagementConfirm(action, sn);
+    return true;
+  }
+
+  if (event.target.closest('[data-badge-management-member-trigger]')) {
+    badgeManagementState.memberOpen = !badgeManagementState.memberOpen;
+    renderBadgeManagementMemberModal();
+    if (badgeManagementState.memberOpen) window.requestAnimationFrame(() => document.querySelector('[data-badge-management-member-search]')?.focus());
+    return true;
+  }
+
+  const memberOption = event.target.closest('[data-badge-management-member-option]');
+  if (memberOption && !memberOption.disabled) {
+    badgeManagementState.selectedEmployeeId = memberOption.dataset.badgeManagementMemberOption;
+    badgeManagementState.memberOpen = false;
+    renderBadgeManagementMemberModal();
+    return true;
+  }
+
+  if (event.target.closest('[data-badge-management-open-add]')) {
+    openBadgeManagementAddModal();
+    return true;
+  }
+  if (event.target.closest('[data-badge-management-member-submit]')) {
+    submitBadgeManagementRebind();
+    return true;
+  }
+  if (event.target.closest('.badge-management-modal-close') || event.target === document.getElementById('badgeManagementMemberModal')) {
+    closeBadgeManagementMemberModal();
+    return true;
+  }
+  if (event.target.closest('.badge-management-add-close') || event.target === document.getElementById('badgeManagementAddModal')) {
+    closeBadgeManagementAddModal({ returnToMember: true });
+    return true;
+  }
+  if (event.target.closest('[data-badge-management-select-all]')) {
+    const checkbox = event.target.closest('[data-badge-management-select-all]');
+    const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
+    const query = badgeManagementState.directoryQuery.trim().toLocaleLowerCase('zh-CN');
+    const visibleIds = badgeManagementDirectoryEmployees
+      .filter((employee) => !existingIds.has(employee.employeeId))
+      .filter((employee) => !query || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query))
+      .map((employee) => employee.employeeId);
+    visibleIds.forEach((id) => checkbox.checked ? badgeManagementState.selectedDirectoryIds.add(id) : badgeManagementState.selectedDirectoryIds.delete(id));
+    renderBadgeManagementDirectory();
+    return true;
+  }
+  if (event.target.closest('[data-badge-management-add-submit]')) {
+    submitBadgeManagementDirectory();
+    return true;
+  }
+  if (event.target.closest('.badge-management-confirm-close') || event.target === document.getElementById('badgeManagementConfirmModal')) {
+    closeBadgeManagementConfirm();
+    return true;
+  }
+  if (event.target.closest('[data-badge-management-confirm-submit]')) {
+    submitBadgeManagementConfirm();
+    return true;
+  }
+  if (event.target.closest('[data-badge-management-reset]')) {
+    badgeManagementState.query = '';
+    badgeManagementState.status = '全部';
+    const search = document.querySelector('[data-badge-management-search]');
+    const status = document.querySelector('[data-badge-management-status]');
+    if (search) search.value = '';
+    if (status) status.value = '全部';
+    renderBadgeManagementPage();
+    showToast('筛选条件已重置');
+    return true;
+  }
+  if (badgeManagementState.openMenuSn && !event.target.closest('.badge-management-row-menu')) {
+    badgeManagementState.openMenuSn = '';
+    renderBadgeManagementPage();
+  }
+  return false;
 }
 
 function renderDockStoreMenu() {
@@ -3441,6 +3826,7 @@ function setRoute(route, updateHash = true) {
   const storeDrilldownRoute = safeRoute === 'store-badges';
   document.body.classList.toggle('device-store-overview-page', safeRoute === 'stores');
   document.body.classList.toggle('device-badge-detail-page', safeRoute === 'badges' || storeDrilldownRoute);
+  document.body.classList.toggle('device-badge-management-page', safeRoute === 'management');
   document.body.classList.toggle('device-dock-detail-page', safeRoute === 'docks');
   const detailRoute = safeRoute === 'events' || safeRoute === 'uploads';
   if (detailRoute) {
@@ -3547,7 +3933,9 @@ function syncBodyScrollLock() {
   const locked = badgeRecordDrawer?.getAttribute('aria-hidden') === 'false'
     || badgeFieldSettingsDrawer?.getAttribute('aria-hidden') === 'false'
     || visitDrawer.getAttribute('aria-hidden') === 'false'
-    || !importModal.hidden;
+    || !importModal.hidden
+    || ['badgeManagementMemberModal', 'badgeManagementAddModal', 'badgeManagementConfirmModal']
+      .some((id) => !document.getElementById(id)?.hidden);
   document.body.style.overflow = locked ? 'hidden' : '';
 }
 
@@ -3903,6 +4291,8 @@ window.addEventListener('hashchange', () => {
 });
 
 document.addEventListener('click', (event) => {
+  if (handleBadgeManagementClick(event)) return;
+
   if (event.target.closest('[data-visits-back-matching]')) {
     visitReturnToMatching = false;
     setRoute('dashboard');
@@ -4879,6 +5269,19 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('change', (event) => {
+  if (event.target.matches('[data-badge-management-status]')) {
+    badgeManagementState.status = event.target.value;
+    renderBadgeManagementPage();
+    return;
+  }
+  const directoryOption = event.target.closest('[data-badge-management-directory-option]');
+  if (directoryOption) {
+    const employeeId = directoryOption.dataset.badgeManagementDirectoryOption;
+    if (directoryOption.checked) badgeManagementState.selectedDirectoryIds.add(employeeId);
+    else badgeManagementState.selectedDirectoryIds.delete(employeeId);
+    renderBadgeManagementDirectory();
+    return;
+  }
   if (event.target.matches('[data-dock-page-jump]')) {
     const totalPages = Math.max(1, Math.ceil(getFilteredDockRecords().length / dockPaginationState.pageSize));
     dockPaginationState.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
@@ -4953,6 +5356,21 @@ document.addEventListener('input', (event) => {
       nextInput.focus();
       nextInput.setSelectionRange(cursorStart, cursorEnd);
     });
+    return;
+  }
+  if (event.target.matches('[data-badge-management-search]') && !event.isComposing) {
+    badgeManagementState.query = event.target.value;
+    renderBadgeManagementPage();
+    return;
+  }
+  if (event.target.matches('[data-badge-management-member-search]') && !event.isComposing) {
+    badgeManagementState.memberQuery = event.target.value;
+    renderBadgeManagementMemberOptions();
+    return;
+  }
+  if (event.target.matches('[data-badge-management-directory-search]') && !event.isComposing) {
+    badgeManagementState.directoryQuery = event.target.value;
+    renderBadgeManagementDirectory();
     return;
   }
   if (event.target.matches('[data-store-org-search]') && !event.isComposing) {
@@ -5120,6 +5538,26 @@ document.addEventListener('focusin', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !document.getElementById('badgeManagementConfirmModal')?.hidden) {
+    closeBadgeManagementConfirm();
+    return;
+  }
+  if (event.key === 'Escape' && !document.getElementById('badgeManagementAddModal')?.hidden) {
+    closeBadgeManagementAddModal({ returnToMember: true });
+    return;
+  }
+  if (event.key === 'Escape' && !document.getElementById('badgeManagementMemberModal')?.hidden) {
+    if (badgeManagementState.memberOpen) {
+      badgeManagementState.memberOpen = false;
+      renderBadgeManagementMemberModal();
+    } else closeBadgeManagementMemberModal();
+    return;
+  }
+  if (event.key === 'Escape' && badgeManagementState.openMenuSn) {
+    badgeManagementState.openMenuSn = '';
+    renderBadgeManagementPage();
+    return;
+  }
   if (event.key === 'Escape' && badgeFieldPointerDrag) {
     cancelBadgeFieldPointerDrag();
     return;
@@ -5193,6 +5631,7 @@ if (initialRouteState.route === 'store-badges' && !applyStoreDrilldownFromRoute(
 setRoute(initialRouteState.route, !window.location.hash);
 renderStoreOverview();
 renderBadgePage();
+renderBadgeManagementPage();
 renderDockPage();
 selectBadgeRecord(badgeRecordState.sn, badgeRecordState.advisorName);
 renderVisits();

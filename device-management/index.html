@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-  <link rel="stylesheet" href="./page.css?v=20260903-dealer-binding-v1" />
+  <link rel="stylesheet" href="./page.css?v=20260903-main-sync-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
@@ -124,6 +124,45 @@
                   </table>
                 </div>
                 <div class="session-pagination" id="badgeDetailPagination"></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="page-panel" data-page="management">
+            <section class="card badge-management-filter-card">
+              <div class="badge-management-store-context">
+                <span class="badge-management-store-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5V20h16v-9.5M3 10.5h18L19 4H5l-2 6.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-5h4v5M3.5 10.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <span><small>当前门店</small><strong id="badgeManagementStoreName">—</strong></span>
+              </div>
+              <div class="badge-management-filter-controls">
+                <label class="badge-management-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="搜索工牌号、员工姓名或工号" data-badge-management-search /></label>
+                <label class="badge-management-status-filter"><span>绑定状态</span><select data-badge-management-status><option value="全部">全部</option><option value="已绑定">已绑定</option><option value="未绑定">未绑定</option></select></label>
+                <button class="btn ghost" type="button" data-badge-management-reset>重置</button>
+              </div>
+            </section>
+            <section class="card table-card badge-management-list-card">
+              <div class="table-headbar session-list-table-headbar badge-management-list-head">
+                <div class="panel-title"><h3>工牌列表</h3><p>管理当前门店工牌与员工的绑定关系</p></div>
+                <span class="session-filter-summary">当前展示 <strong id="badgeManagementCount">0</strong> 枚工牌</span>
+              </div>
+              <div class="table-wrap badge-management-table-wrap">
+                <table class="data-table session-data-table badge-management-table">
+                  <thead>
+                    <tr>
+                      <th>工牌 SN</th>
+                      <th>员工姓名</th>
+                      <th>员工工号</th>
+                      <th>绑定状态</th>
+                      <th>连接状态</th>
+                      <th>剩余电量</th>
+                      <th>最新同步</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="badgeManagementTableBody"></tbody>
+                </table>
               </div>
             </section>
           </section>
@@ -288,6 +327,49 @@
       </section>
     </div>
 
+    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementMemberModal" hidden>
+      <section class="modal badge-management-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementMemberTitle">
+        <div class="modal-head"><div><h2 id="badgeManagementMemberTitle">换绑成员</h2><p>仅可选择当前门店内未绑定工牌的员工</p></div><button class="icon-btn badge-management-modal-close" type="button" aria-label="关闭">×</button></div>
+        <div class="badge-management-modal-body">
+          <label class="badge-management-form-row"><span><b>*</b> 工牌</span><input id="badgeManagementMemberSn" type="text" readonly /></label>
+          <div class="badge-management-form-row badge-management-member-row">
+            <span>成员</span>
+            <div class="badge-management-member-field">
+              <button class="badge-management-member-trigger" type="button" data-badge-management-member-trigger aria-expanded="false"><strong id="badgeManagementMemberValue">请选择成员</strong><i aria-hidden="true"></i></button>
+              <div class="badge-management-member-panel" id="badgeManagementMemberPanel" hidden>
+                <label class="badge-management-picker-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="搜索员工姓名或工号" data-badge-management-member-search /></label>
+                <div class="badge-management-member-options" id="badgeManagementMemberOptions"></div>
+              </div>
+            </div>
+            <button class="badge-management-add-member" type="button" data-badge-management-open-add><span aria-hidden="true">＋</span>添加人员</button>
+          </div>
+        </div>
+        <div class="modal-foot"><button class="btn ghost badge-management-modal-close" type="button">取消</button><button class="btn primary" id="badgeManagementMemberSubmit" type="button" data-badge-management-member-submit disabled>确定</button></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementAddModal" hidden>
+      <section class="modal badge-management-modal badge-management-add-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementAddTitle">
+        <div class="modal-head"><div><h2 id="badgeManagementAddTitle">添加人员</h2><p>从当前门店员工目录搜索并导入，不支持手工新建</p></div><button class="icon-btn badge-management-add-close" type="button" aria-label="关闭">×</button></div>
+        <div class="badge-management-add-body">
+          <label class="badge-management-picker-search badge-management-directory-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="支持搜索员工姓名和工号" data-badge-management-directory-search /></label>
+          <div class="badge-management-select-all-row"><label><input type="checkbox" data-badge-management-select-all /><span>全选当前结果</span></label><small id="badgeManagementSelectedCount">已选择 0 人</small></div>
+          <div class="badge-management-directory-list" id="badgeManagementDirectoryList"></div>
+        </div>
+        <div class="modal-foot"><button class="btn ghost badge-management-add-close" type="button">取消</button><button class="btn primary" id="badgeManagementAddSubmit" type="button" data-badge-management-add-submit disabled>确定</button></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementConfirmModal" hidden>
+      <section class="modal badge-management-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="badgeManagementConfirmTitle">
+        <div class="badge-management-confirm-body">
+          <span class="badge-management-confirm-icon" id="badgeManagementConfirmIcon" aria-hidden="true">!</span>
+          <div><h2 id="badgeManagementConfirmTitle">确认操作</h2><p id="badgeManagementConfirmDescription"></p><div class="badge-management-confirm-detail" id="badgeManagementConfirmDetail"></div></div>
+        </div>
+        <div class="modal-foot"><button class="btn ghost badge-management-confirm-close" type="button">取消</button><button class="btn primary" id="badgeManagementConfirmSubmit" type="button" data-badge-management-confirm-submit>确认</button></div>
+      </section>
+    </div>
+
     <div class="drawer-backdrop" id="visitDrawer" hidden></div>
     <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true">
       <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer" aria-label="关闭">×</button></div>
@@ -389,13 +471,13 @@
     </aside>
 
     <div class="toast" id="toast" role="status">操作已完成</div>
-    <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
+    <script src="../unified-navigation-shell.js?v=20260903-badge-management-v1"></script>
     <script src="../date-filter-component-utils.js?v=20260901-optional-cancel-v1"></script>
     <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
     <script src="./organization-data.js?v=20260903-real-stores-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
-  <script src="./page.js?v=20260903-city-province-v1"></script>
+    <script src="./page.js?v=20260903-main-sync-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
