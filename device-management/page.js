@@ -2626,29 +2626,61 @@ function getBadgeFieldOptionMeta(fieldKey, record) {
   return '';
 }
 
-// Bidirectional candidate filtering must not delete cross-dimension selections.
-// Only real parent-child chains may prune invalid downstream selections.
+// Cross-dimension selections stay put: org does not prune geo, geo does not prune org.
+// Store and advisor are intersection children, so any of their parents may prune them.
+// Personnel stay one-way: they prune stores, stores never prune personnel.
 const badgeSelectionPruneChains = Object.freeze([
-  Object.freeze(['brand', 'region', 'zone', 'store']),
-  Object.freeze(['province', 'city', 'store'])
+  Object.freeze(['brand', 'region', 'zone']),
+  Object.freeze(['province', 'city'])
 ]);
 
+function formatBadgePruneLabel(key, id) {
+  return `${badgeFieldDefinitionMap[key].label}：${getBadgeFieldOptionLabel(key, id)}`;
+}
+
+function pruneBadgeSelectedIds(key, validIds) {
+  const selected = getBadgeSelectedValues(key);
+  if (!selected.length) return [];
+  const next = selected.filter((id) => validIds.has(id));
+  if (next.length === selected.length) return [];
+  const removed = selected.filter((id) => !next.includes(id));
+  badgeFilterState[key] = next;
+  return removed.map((id) => formatBadgePruneLabel(key, id));
+}
+
+function pruneBadgeAdvisorSelections() {
+  const selectedIds = (badgeFilterState.advisorIds || []).map(String);
+  if (!selectedIds.length) return [];
+  const validIds = new Set(
+    getBadgeCandidateRecords('advisor')
+      .map((item) => String(item.advisorId || '').trim())
+      .filter(Boolean)
+  );
+  const next = selectedIds.filter((id) => validIds.has(id));
+  if (next.length === selectedIds.length) return [];
+  const removed = selectedIds.filter((id) => !validIds.has(id));
+  badgeFilterState.advisorIds = next;
+  return removed.map((id) => `顾问：${getBadgeAdvisorName(id)}`);
+}
+
 function pruneBadgeSelections(changedKey) {
-  const chain = badgeSelectionPruneChains.find((items) => items.includes(changedKey) && changedKey !== 'store');
-  if (!chain) return false;
   const removed = [];
-  const changedIndex = chain.indexOf(changedKey);
-  chain.slice(changedIndex + 1).forEach((key) => {
-    const selected = getBadgeSelectedValues(key);
-    if (!selected.length) return;
-    const dependencies = chain.slice(0, chain.indexOf(key));
-    const validIds = new Set(getBadgeCandidateRecords(key, dependencies).map((item) => getBadgeRecordFieldValue(item, key)));
-    const next = selected.filter((id) => validIds.has(id));
-    if (next.length !== selected.length) {
-      selected.filter((id) => !next.includes(id)).forEach((id) => removed.push(`${badgeFieldDefinitionMap[key].label}：${getBadgeFieldOptionLabel(key, id)}`));
-      badgeFilterState[key] = next;
-    }
-  });
+  const chain = badgeSelectionPruneChains.find((items) => items.includes(changedKey));
+  if (chain) {
+    const changedIndex = chain.indexOf(changedKey);
+    chain.slice(changedIndex + 1).forEach((key) => {
+      const dependencies = chain.slice(0, chain.indexOf(key));
+      const validIds = new Set(getBadgeCandidateRecords(key, dependencies).map((item) => getBadgeRecordFieldValue(item, key)));
+      removed.push(...pruneBadgeSelectedIds(key, validIds));
+    });
+  }
+  if ((badgeCandidateDependencies.store || []).includes(changedKey)) {
+    const validIds = new Set(getBadgeCandidateRecords('store').map((item) => getBadgeRecordFieldValue(item, 'store')));
+    removed.push(...pruneBadgeSelectedIds('store', validIds));
+  }
+  if (changedKey === 'store' || (badgeCandidateDependencies.advisor || []).includes(changedKey)) {
+    removed.push(...pruneBadgeAdvisorSelections());
+  }
   if (removed.length) showToast(`已清除不匹配的条件：${removed.join('；')}`);
   return removed.length > 0;
 }

@@ -140,7 +140,8 @@ body.device-badge-detail-page .main {
   background: #f6f9fc;
 }
 body.device-badge-detail-page .topbar {
-  position: static;
+  position: relative;
+  z-index: 20;
   min-height: auto;
   padding: 0;
   margin-bottom: 20px;
@@ -2130,6 +2131,8 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
 .badge-drilldown-context { min-width: 0; overflow: hidden; color: #7d899c; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .badge-drilldown-context strong { margin-left: 6px; color: var(--text); font-size: 14px; }
 .badge-field-settings-action { position: relative; display: inline-flex; flex: 0 0 auto; }
+.badge-field-settings-action:hover,
+.badge-field-settings-action:focus-within { z-index: 40; }
 .badge-field-settings-trigger {
   height: 38px;
   padding: 0 14px;
