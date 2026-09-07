@@ -1,8 +1,10 @@
 /* 全站共用组织目录：真实门店 + 稳定演示顾问。 */
 (function initOrganizationDirectory(global) {
-  const dealerSeeds = Array.isArray(global.__LEADS_ORGANIZATION_DEALERS)
-    ? global.__LEADS_ORGANIZATION_DEALERS
-    : [];
+  const dealerSeeds = Array.isArray(global.__DEVICE_ORGANIZATION_DEALERS)
+    ? global.__DEVICE_ORGANIZATION_DEALERS
+    : (Array.isArray(global.__LEADS_ORGANIZATION_DEALERS)
+      ? global.__LEADS_ORGANIZATION_DEALERS
+      : []);
   const surnames = ['王', '李', '张', '刘', '陈', '杨', '黄', '赵', '周', '吴', '徐', '孙', '胡', '朱', '高', '林', '何', '郭', '马', '罗', '梁', '宋', '郑', '谢'];
   const givenNames = ['子涵', '宇辰', '欣怡', '浩然', '若曦', '梓轩', '雨桐', '嘉怡', '思远', '俊杰', '晨曦', '可欣', '明轩', '诗涵', '睿哲', '依诺', '景行', '安然', '知夏', '沐阳', '清妍', '承泽', '书瑶', '逸凡'];
 
