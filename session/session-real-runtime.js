@@ -57,8 +57,8 @@
     return digits.slice(0, 3) + '****' + digits.slice(-4);
   }
 
-  function customerPhone(customerId) {
-    var key = text(customerId);
+  function customerPhone(customerKey) {
+    var key = text(customerKey);
     if (!key) return '—';
     if (!customerPhoneCache.has(key)) {
       customerPhoneCache.set(key, '139****' + key.slice(-4).padStart(4, '0'));
@@ -120,9 +120,10 @@
       var advisorId = text(advisorTuple[3]);
       var advisorName = text(advisorTuple[2]);
       var advisorPhone = maskPhone(advisorTuple[4]);
-      var customerId = text(customerTuple[0]);
+      var customerKey = text(customerTuple[0]);
       var customerName = text(customerTuple[1]);
       var status = Number(row[3]) === 1 ? '已完成' : '失败';
+      if (status === '失败') series = '—';
       var dealerKeyValue = dealerKey ? dealerKey[0] + '::' + dealerKey[1] : '';
       return {
         audioId: text(row[0]),
@@ -147,11 +148,10 @@
         advisorName: advisorName || '—',
         advisorPhone: advisorPhone,
         leadId: text(row[8]) || '—',
-        customerId: customerId,
         customerName: customerName || '—',
         customerNameMasked: maskName(customerName),
-        customerPhone: customerPhone(customerId),
-        qualifiedRate: text(row[11]) || '—',
+        customerPhone: text(customerTuple[2]) || customerPhone(customerKey),
+        qualifiedRate: status === '失败' ? '—' : (text(row[11]) || '—'),
         intentLevel: status === '失败' ? '—' : (text(row[12]) || '无法判断'),
         carSeries: series || '未知',
         scenario: scenario,
@@ -183,6 +183,11 @@
     openMenu: null,
     menuQueries: {},
     menuOrders: {},
+    activeDateField: 'startDate',
+    dateDraftStartDate: defaultStartDate,
+    dateDraftEndDate: defaultEndDate,
+    dateViewYear: Number(defaultStartDate.slice(0, 4)),
+    dateViewMonth: Number(defaultStartDate.slice(5, 7)),
     settingsOpen: false,
     refreshBusy: false,
     columnDragging: '',
@@ -324,13 +329,25 @@
     });
   }
 
+  function carSeriesOptionValue(brand, series) {
+    return text(brand) + '::' + text(series);
+  }
+
+  function matchesCarSeries(record) {
+    var values = selected('carSeries');
+    if (!values.length) return true;
+    return values.some(function (value) {
+      return value === record.carSeries || value === carSeriesOptionValue(record.brand, record.carSeries);
+    });
+  }
+
   function recordMatches(record, options) {
     var ignore = options && options.ignore;
     if ((!ignore || ignore !== 'brand') && !matchesSelection('brand', record.brand)) return false;
     if ((!ignore || ignore !== 'scenario') && !matchesSelection('scenario', record.scenario)) return false;
     if ((!ignore || ignore !== 'source') && !matchesSelection('source', record.source)) return false;
     if ((!ignore || ignore !== 'intentLevel') && !matchesSelection('intentLevel', record.intentLevel)) return false;
-    if ((!ignore || ignore !== 'carSeries') && !matchesSelection('carSeries', record.carSeries)) return false;
+    if ((!ignore || ignore !== 'carSeries') && !matchesCarSeries(record)) return false;
     if (!dealerMatches(record.dealer, { ignore: ignore && ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(ignore) ? ignore : undefined })) return false;
     if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', record.advisorKey)) return false;
     if ((!ignore || ignore !== 'status') && !matchesSelection('status', record.status)) return false;
@@ -431,10 +448,23 @@
     if (key === 'advisor') return advisorOptions();
     if (['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(key)) return dealerOptionsFor(key);
     if (key === 'carSeries') {
-      var series = records.filter(function (record) { return recordMatches(record, { ignore: 'carSeries' }); }).map(function (record) {
-        return { value: record.carSeries, label: record.carSeries, meta: record.brand };
+      var selectedBrands = selected('brand');
+      var brands = selectedBrands.length ? selectedBrands : brandOptions;
+      var seriesOptions = [];
+      brands.forEach(function (brand) {
+        var seriesSet = new Set(records.filter(function (record) {
+          return record.brand === brand && record.carSeries !== '—';
+        }).map(function (record) { return record.carSeries; }));
+        Array.from(seriesSet).sort(function (left, right) { return left.localeCompare(right, 'zh-CN'); }).forEach(function (series) {
+          seriesOptions.push({
+            value: carSeriesOptionValue(brand, series),
+            label: series,
+            meta: brand,
+            search: brand + ' ' + series
+          });
+        });
       });
-      return uniqueOptions(series);
+      return seriesOptions;
     }
     return [];
   }
@@ -494,6 +524,19 @@
     var selectedCurrentCount = options.filter(function (option) { return values.includes(option.value); }).length;
     var allActive = options.length > 0 && selectedCurrentCount === options.length;
     var partiallyActive = selectedCurrentCount > 0 && !allActive;
+    var renderOption = function (option) {
+      var active = values.includes(option.value);
+      return '<button type="button" class="sr-option' + (active ? ' is-selected' : '') + '" role="option" aria-selected="' + (active ? 'true' : 'false') + '" data-sr-option-key="' + escapeHtml(key) + '" data-sr-option-value="' + escapeHtml(option.value) + '">' +
+        '<span class="sr-checkbox' + (active ? ' is-checked' : '') + '" aria-hidden="true">' + (active ? '✓' : '') + '</span>' +
+        '<span class="sr-option-copy">' + optionLabel(key, option) + '</span>' +
+      '</button>';
+    };
+    var optionMarkup = options.length ? (key === 'carSeries'
+      ? ['传祺', '埃安'].map(function (brand) {
+          var group = options.filter(function (option) { return option.meta === brand; });
+          return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
+        }).join('')
+      : options.map(renderOption).join('')) : '<div class="sr-menu-empty">暂无可选项</div>';
     return '<div class="sr-menu" data-sr-menu="' + escapeHtml(key) + '">' +
       '<div class="sr-menu-search-row">' +
         '<span class="sr-menu-search-icon" aria-hidden="true"></span>' +
@@ -504,13 +547,7 @@
         '<button type="button" class="sr-menu-action" data-sr-clear="' + escapeHtml(key) + '">取消全选</button>' +
       '</div>' +
       '<div class="sr-menu-options" data-sr-menu-options="' + escapeHtml(key) + '">' +
-      (options.length ? options.map(function (option) {
-        var active = values.includes(option.value);
-        return '<button type="button" class="sr-option' + (active ? ' is-selected' : '') + '" role="option" aria-selected="' + (active ? 'true' : 'false') + '" data-sr-option-key="' + escapeHtml(key) + '" data-sr-option-value="' + escapeHtml(option.value) + '">' +
-          '<span class="sr-checkbox' + (active ? ' is-checked' : '') + '" aria-hidden="true">' + (active ? '✓' : '') + '</span>' +
-          '<span class="sr-option-copy">' + optionLabel(key, option) + '</span>' +
-        '</button>';
-      }).join('') : '<div class="sr-menu-empty">暂无可选项</div>') +
+      optionMarkup +
       '</div>' +
       '<div class="sr-menu-footer"><span>已选 ' + (allActive ? '全部' : values.length + ' 项') + '</span><button type="button" class="sr-menu-done" data-sr-menu-done="' + escapeHtml(key) + '">完成</button></div>' +
     '</div>';
@@ -535,14 +572,93 @@
     '</label>';
   }
 
+  function formatSessionDateDisplay(value) {
+    if (!value) return '不限';
+    var parts = value.split('-');
+    return parts.join('/');
+  }
+
+  function parseSessionDateValue(value) {
+    if (!value) return null;
+    var parts = value.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(function (part) { return !Number.isFinite(part); })) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function formatSessionDateValue(date) {
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }
+
+  function getSessionDateCells(year, month) {
+    var cells = [];
+    var firstDay = new Date(year, month - 1, 1);
+    var lastDate = new Date(year, month, 0).getDate();
+    var leadingSlots = (firstDay.getDay() + 6) % 7;
+    for (var index = 0; index < leadingSlots; index += 1) cells.push(null);
+    for (var day = 1; day <= lastDate; day += 1) cells.push(new Date(year, month - 1, day));
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }
+
+  function shiftSessionDateView(offset) {
+    var nextYear = state.dateViewYear;
+    var nextMonth = state.dateViewMonth + Number(offset || 0);
+    while (nextMonth < 1) { nextMonth += 12; nextYear -= 1; }
+    while (nextMonth > 12) { nextMonth -= 12; nextYear += 1; }
+    state.dateViewYear = nextYear;
+    state.dateViewMonth = nextMonth;
+  }
+
+  function syncSessionDateView(value) {
+    var date = parseSessionDateValue(value);
+    if (!date) return;
+    state.dateViewYear = date.getFullYear();
+    state.dateViewMonth = date.getMonth() + 1;
+  }
+
+  function applySessionDateDraft(field, value) {
+    if (field === 'startDate') {
+      state.dateDraftStartDate = value;
+      if (!state.dateDraftEndDate || state.dateDraftEndDate < value) state.dateDraftEndDate = value;
+      state.activeDateField = 'endDate';
+      syncSessionDateView(state.dateDraftEndDate);
+      return;
+    }
+    state.dateDraftEndDate = value;
+    if (!state.dateDraftStartDate || state.dateDraftStartDate > value) state.dateDraftStartDate = value;
+  }
+
+  function getSessionDateRangeText(startDate, endDate) {
+    return formatSessionDateDisplay(startDate) + ' 至 ' + formatSessionDateDisplay(endDate);
+  }
+
+  function renderSessionDateMenu() {
+    var startDate = state.dateDraftStartDate;
+    var endDate = state.dateDraftEndDate;
+    var todayValue = formatSessionDateValue(new Date());
+    var cells = getSessionDateCells(state.dateViewYear, state.dateViewMonth);
+    return '<div class="session-menu-panel session-menu-panel-date" data-sr-date-panel>' +
+      '<div class="session-date-panel-head"><div class="session-date-panel-copy"><span>录音开始时间范围</span><strong>' + escapeHtml(getSessionDateRangeText(startDate, endDate)) + '</strong></div>' +
+        '<div class="session-date-nav"><button type="button" class="session-date-nav-btn" data-sr-date-nav="-1" aria-label="上一个月"><i class="session-date-nav-arrow prev" aria-hidden="true"></i></button><strong>' + state.dateViewYear + '年' + state.dateViewMonth + '月</strong><button type="button" class="session-date-nav-btn" data-sr-date-nav="1" aria-label="下一个月"><i class="session-date-nav-arrow next" aria-hidden="true"></i></button></div></div>' +
+      '<div class="session-date-tabs"><button type="button" class="session-date-tab' + (state.activeDateField === 'startDate' ? ' active' : '') + '" data-sr-date-field="startDate"><span>开始日期</span><strong>' + escapeHtml(formatSessionDateDisplay(startDate)) + '</strong></button><button type="button" class="session-date-tab' + (state.activeDateField === 'endDate' ? ' active' : '') + '" data-sr-date-field="endDate"><span>结束日期</span><strong>' + escapeHtml(formatSessionDateDisplay(endDate)) + '</strong></button></div>' +
+      '<div class="session-date-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>' +
+      '<div class="session-date-grid">' + cells.map(function (date) {
+        if (!date) return '<span class="session-date-empty" aria-hidden="true"></span>';
+        var value = formatSessionDateValue(date);
+        var inRange = startDate && endDate && value >= startDate && value <= endDate;
+        return '<button type="button" class="session-date-day' + (inRange ? ' in-range' : '') + (value === startDate ? ' is-start' : '') + (value === endDate ? ' is-end' : '') + (value === todayValue ? ' is-today' : '') + '" data-sr-date-value="' + value + '">' + date.getDate() + '</button>';
+      }).join('') + '</div>' +
+      '<div class="session-date-shortcuts"><button type="button" class="session-date-shortcut" data-sr-date-shortcut="today">今天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last3">近3天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last7">近7天</button></div>' +
+      '<div class="session-cascader-footer session-date-footer"><span>' + escapeHtml('已选择 ' + getSessionDateRangeText(startDate, endDate)) + '</span><div class="session-date-actions"><button type="button" class="btn session-date-action-btn" data-sr-date-cancel>取消</button><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sr-date-apply>应用日期</button></div></div>' +
+    '</div>';
+  }
+
   function renderDateControl() {
-    return '<div class="sr-filter-control sr-date-control">' +
+    var open = state.openMenu === 'date';
+    return '<div class="sr-filter-control sr-date-control' + (open ? ' is-open' : '') + '" data-sr-control="date">' +
       '<span class="sr-filter-label">录音开始时间</span>' +
-      '<span class="sr-date-inputs">' +
-        '<input type="date" data-sr-date="startDate" value="' + escapeHtml(state.startDate) + '" aria-label="录音开始日期">' +
-        '<em>至</em>' +
-        '<input type="date" data-sr-date="endDate" value="' + escapeHtml(state.endDate) + '" aria-label="录音结束日期">' +
-      '</span>' +
+      '<button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-sr-trigger="date" aria-label="录音开始时间筛选" aria-haspopup="dialog" aria-expanded="' + (open ? 'true' : 'false') + '"><strong>' + escapeHtml(formatSessionDateDisplay(state.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatSessionDateDisplay(state.endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
+      (open ? renderSessionDateMenu() : '') +
     '</div>';
   }
 
@@ -801,7 +917,7 @@
 
   function clearDownstreamSelections(changedKey) {
     var affected = [];
-    if (changedKey === 'brand') affected = ['province', 'city', 'store', 'region', 'zone'];
+    if (changedKey === 'brand') affected = ['province', 'city', 'store', 'region', 'zone', 'carSeries'];
     if (changedKey === 'province') affected = ['city', 'store'];
     if (changedKey === 'city') affected = ['store'];
     if (changedKey === 'region') affected = ['zone', 'store'];
@@ -1032,6 +1148,14 @@
           return;
         }
         state.openMenu = key;
+        if (key === 'date') {
+          state.activeDateField = 'startDate';
+          state.dateDraftStartDate = state.startDate;
+          state.dateDraftEndDate = state.endDate;
+          syncSessionDateView(state.dateDraftStartDate);
+          rerender();
+          return;
+        }
         state.menuQueries[key] = '';
         var values = selected(key);
         var options = currentValueOptions(key);
@@ -1132,16 +1256,76 @@
         });
       });
     });
-    document.querySelectorAll('[data-sr-date]').forEach(function (node) {
+    document.querySelectorAll('[data-sr-date-field]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
-      node.addEventListener('change', function () {
-        state[node.dataset.srDate] = node.value;
-        if (state.startDate && state.endDate && state.startDate > state.endDate) {
-          if (node.dataset.srDate === 'startDate') state.endDate = state.startDate;
-          else state.startDate = state.endDate;
+      node.addEventListener('click', function () {
+        state.activeDateField = node.dataset.srDateField;
+        syncSessionDateView(state.activeDateField === 'startDate' ? state.dateDraftStartDate : state.dateDraftEndDate);
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-date-nav]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        shiftSessionDateView(node.dataset.srDateNav);
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-date-value]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        applySessionDateDraft(state.activeDateField, node.dataset.srDateValue);
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-date-shortcut]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        var today = new Date();
+        var endValue = formatSessionDateValue(today);
+        var startValue = endValue;
+        if (node.dataset.srDateShortcut === 'last3') {
+          var last3 = new Date(today);
+          last3.setDate(last3.getDate() - 2);
+          startValue = formatSessionDateValue(last3);
         }
+        if (node.dataset.srDateShortcut === 'last7') {
+          var last7 = new Date(today);
+          last7.setDate(last7.getDate() - 6);
+          startValue = formatSessionDateValue(last7);
+        }
+        state.dateDraftStartDate = startValue;
+        state.dateDraftEndDate = endValue;
+        state.activeDateField = 'endDate';
+        syncSessionDateView(endValue);
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-date-cancel]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        state.openMenu = null;
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-date-apply]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        state.startDate = state.dateDraftStartDate;
+        state.endDate = state.dateDraftEndDate;
         state.page = 1;
+        state.openMenu = null;
         rerender();
       });
     });
@@ -1153,6 +1337,10 @@
         Object.keys(state.queries).forEach(function (key) { state.queries[key] = ''; });
         state.startDate = defaultStartDate;
         state.endDate = defaultEndDate;
+        state.dateDraftStartDate = defaultStartDate;
+        state.dateDraftEndDate = defaultEndDate;
+        state.activeDateField = 'startDate';
+        syncSessionDateView(defaultStartDate);
         state.page = 1;
         state.collapsed = true;
         state.openMenu = null;
@@ -1191,8 +1379,7 @@
         state.settingsOpen = !state.settingsOpen;
         state.openMenu = null;
         columnSettingsDraft = state.settingsOpen ? cloneColumnSettings(columnSettings) : null;
-        renderFieldSettings();
-        bindEvents();
+        rerender();
         syncSettingsButton();
       });
     });
@@ -1202,8 +1389,7 @@
       node.addEventListener('click', function () {
         state.settingsOpen = false;
         columnSettingsDraft = null;
-        renderFieldSettings();
-        bindEvents();
+        rerender();
         syncSettingsButton();
       });
     });
@@ -1264,8 +1450,7 @@
         if (state.settingsOpen && !event.target.closest('.sr-settings-panel') && !event.target.closest('[data-sr-settings]')) {
           state.settingsOpen = false;
           columnSettingsDraft = null;
-          renderFieldSettings();
-          bindEvents();
+          rerender();
           syncSettingsButton();
         }
         document.querySelectorAll('.page-size-options.open').forEach(function (node) {

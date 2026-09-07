@@ -310,6 +310,9 @@
 }
 .sr-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sr-option-copy small { color: #8b9ab0; font-size: 11px; white-space: nowrap; }
+.sr-menu-group { padding-top: 4px; }
+.sr-menu-group + .sr-menu-group { margin-top: 6px; border-top: 1px solid #edf1f6; }
+.sr-menu-group-label { padding: 7px 8px 4px; color: #8090a7; font-size: 11px; font-weight: 600; }
 .sr-menu-empty { padding: 22px 10px; text-align: center; color: #8b9ab0; font-size: 12px; }
 .sr-menu-footer {
   display: flex;
@@ -394,6 +397,59 @@
   font-size: 12px;
 }
 .sr-date-inputs em { color: #95a2b4; font-style: normal; font-size: 12px; }
+.sr-date-control { position: relative; }
+.sr-date-control .session-date-trigger {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d8e2ef;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #172033;
+  cursor: pointer;
+  text-align: left;
+}
+.sr-date-control .session-date-trigger:hover,
+.sr-date-control.is-open .session-date-trigger { border-color: #8fb5ec; box-shadow: 0 0 0 3px rgba(37, 99, 235, .08); }
+.sr-date-control .session-date-trigger strong { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 600; }
+.sr-date-control .session-date-trigger em { color: #95a2b4; font-size: 12px; font-style: normal; }
+.sr-date-control .session-date-icon { flex: 0 0 auto; width: 13px; height: 13px; border: 1.5px solid #8ea0b8; border-radius: 3px; box-sizing: border-box; position: relative; }
+.sr-date-control .session-date-icon::before { content: ''; position: absolute; left: 2px; right: 2px; top: 3px; border-top: 1.5px solid #8ea0b8; }
+.sr-date-control .session-date-icon::after { content: ''; position: absolute; left: 3px; top: -3px; width: 1px; height: 4px; background: #8ea0b8; box-shadow: 5px 0 #8ea0b8; }
+.sr-date-control .session-menu-panel-date { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; width: min(392px, calc(100vw - 80px)); max-width: min(392px, calc(100vw - 80px)); box-sizing: border-box; padding: 14px; border: 1px solid #d8e2ef; border-radius: 14px; background: #fff; box-shadow: 0 20px 40px rgba(33, 59, 99, .16); }
+.sr-date-control .session-date-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sr-date-control .session-date-panel-copy span { display: block; color: #8997aa; font-size: 11px; }
+.sr-date-control .session-date-panel-copy strong { display: block; margin-top: 4px; color: #172033; font-size: 13px; }
+.sr-date-control .session-date-nav { display: inline-flex; align-items: center; gap: 6px; padding: 3px; border-radius: 999px; background: #f3f7fd; }
+.sr-date-control .session-date-nav strong { min-width: 78px; text-align: center; color: #344862; font-size: 12px; line-height: 26px; }
+.sr-date-control .session-date-nav-btn { width: 26px; height: 26px; border: 0; border-radius: 999px; background: #fff; color: #526b8b; cursor: pointer; box-shadow: 0 2px 8px rgba(15,23,42,.06); }
+.sr-date-control .session-date-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.sr-date-control .session-date-tab { padding: 9px 11px; border: 1px solid #d9e2ef; border-radius: 12px; background: #f8fafd; text-align: left; cursor: pointer; }
+.sr-date-control .session-date-tab span { display: block; color: #8997aa; font-size: 11px; }
+.sr-date-control .session-date-tab strong { display: block; margin-top: 5px; color: #344862; font-size: 12px; }
+.sr-date-control .session-date-tab.active { border-color: #8fb5ec; background: #f0f6ff; }
+.sr-date-control .session-date-weekdays,
+.sr-date-control .session-date-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.sr-date-control .session-date-weekdays { margin-top: 14px; }
+.sr-date-control .session-date-weekdays span { text-align: center; color: #8997aa; font-size: 11px; }
+.sr-date-control .session-date-grid { margin-top: 7px; }
+.sr-date-control .session-date-empty,
+.sr-date-control .session-date-day { aspect-ratio: 1 / 1; border-radius: 10px; }
+.sr-date-control .session-date-empty { display: block; }
+.sr-date-control .session-date-day { border: 0; background: transparent; display: grid; place-items: center; color: #344862; font-size: 12px; font-weight: 600; cursor: pointer; }
+.sr-date-control .session-date-day:hover { background: #eef5ff; }
+.sr-date-control .session-date-day.in-range { background: #eef5ff; color: #2563eb; }
+.sr-date-control .session-date-day.is-start,
+.sr-date-control .session-date-day.is-end { background: linear-gradient(135deg, #3e82f6, #2563eb); color: #fff; }
+.sr-date-control .session-date-day.is-today { box-shadow: inset 0 0 0 1px rgba(37,99,235,.28); }
+.sr-date-control .session-date-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.sr-date-control .session-date-shortcut { min-height: 30px; padding: 0 11px; border: 1px solid #d9e2ef; border-radius: 8px; background: #fff; color: #617088; font-size: 12px; cursor: pointer; }
+.sr-date-control .session-date-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #edf1f6; color: #8997aa; font-size: 11px; }
+.sr-date-control .session-date-actions { display: flex; gap: 7px; }
+.sr-date-control .session-date-action-btn { min-height: 30px; padding: 0 10px; border-radius: 7px; font-size: 12px; cursor: pointer; }
 .sr-table-card { position: relative; z-index: 1; }
 .sr-table-headbar { position: relative; }
 .sr-table-actions {
