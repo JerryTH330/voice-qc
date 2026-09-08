@@ -411,11 +411,11 @@
       options = list.map(function (dealer) { return { value: dealer.zone, label: dealer.zone }; });
     } else if (key === 'patroler') {
       options = list.filter(function (dealer) { return dealer.patroler; }).map(function (dealer) {
-        return { value: dealer.patrolerId || dealer.patroler, label: dealer.patroler, meta: dealer.patrolerId };
+        return { value: dealer.patrolerId || dealer.patroler, label: dealer.patroler, meta: dealer.brand };
       });
     } else if (key === 'governor') {
       options = list.filter(function (dealer) { return dealer.governor; }).map(function (dealer) {
-        return { value: dealer.governorId || dealer.governor, label: dealer.governor, meta: dealer.governorId };
+        return { value: dealer.governorId || dealer.governor, label: dealer.governor, meta: dealer.brand };
       });
     }
     return uniqueOptions(options);

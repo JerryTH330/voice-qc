@@ -106,8 +106,8 @@
 .sr-real-table { min-width: 2700px; }
 .sr-menu-group + .sr-menu-group { margin-top: 6px; border-top: 1px solid var(--line); }
 .sr-menu-group-label { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
+.sr-date-control .session-date-trigger { overflow: hidden; }
 .sr-date-control .session-date-trigger strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge-dynamic-filter-grid > .sr-date-control { grid-column: span 2; }
 .sr-date-control .session-menu-panel-date { overflow-y: auto; }
 .sr-date-control .session-menu-panel-date { left: 0; right: auto; min-width: 0; width: min(392px, calc(100vw - 48px)); max-width: min(392px, calc(100vw - 48px)); }
 .sr-settings-panel { box-sizing: border-box; }
@@ -118,6 +118,5 @@ body.sr-settings-open { overflow: hidden; }
   #mainTopbar:has(.badge-field-settings-action) { align-items: stretch; flex-direction: column; gap: 12px; }
   #mainTopbar:has(.badge-field-settings-action) .toolbar { align-items: flex-end; }
   #toolbarActions:has(.badge-field-settings-action) { justify-content: flex-end; }
-  .badge-dynamic-filter-grid > .sr-date-control { grid-column: auto; }
   .session-real-root .session-filter-summary { flex-wrap: wrap; }
 }
