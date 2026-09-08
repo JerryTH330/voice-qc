@@ -469,14 +469,6 @@
     return [];
   }
 
-  function optionLabel(key, option) {
-    if (key === 'store') return '<span class="sr-option-label">' + escapeHtml(option.label) + '</span><small>' + escapeHtml(option.meta || '') + '</small>';
-    if (key === 'advisor') return '<span class="sr-option-label">' + escapeHtml(option.label) + '</span><small>' + escapeHtml(option.meta || '') + '</small>';
-    if (key === 'patroler' || key === 'governor') return '<span class="sr-option-label">' + escapeHtml(option.label) + '</span><small>' + escapeHtml(option.meta || '') + '</small>';
-    if (key === 'carSeries' && option.meta) return '<span class="sr-option-label">' + escapeHtml(option.label) + '</span><small>' + escapeHtml(option.meta) + '</small>';
-    return '<span class="sr-option-label">' + escapeHtml(option.label) + '</span>';
-  }
-
   function getFilterLabel(key) {
     var labels = {
       brand: '品牌',
@@ -505,8 +497,7 @@
       var option = options.find(function (item) { return item.value === value; });
       return option ? option.label : value;
     });
-    if (labels.length <= 2) return labels.join('、');
-    return labels.slice(0, 2).join('、') + ' +' + (labels.length - 2);
+    return labels.join('、');
   }
 
   function filterOptions(key) {
@@ -526,50 +517,35 @@
     var partiallyActive = selectedCurrentCount > 0 && !allActive;
     var renderOption = function (option) {
       var active = values.includes(option.value);
-      return '<button type="button" class="sr-option' + (active ? ' is-selected' : '') + '" role="option" aria-selected="' + (active ? 'true' : 'false') + '" data-sr-option-key="' + escapeHtml(key) + '" data-sr-option-value="' + escapeHtml(option.value) + '">' +
-        '<span class="sr-checkbox' + (active ? ' is-checked' : '') + '" aria-hidden="true">' + (active ? '✓' : '') + '</span>' +
-        '<span class="sr-option-copy">' + optionLabel(key, option) + '</span>' +
-      '</button>';
+      return '<button type="button" class="badge-advisor-option' + (active ? ' is-selected' : '') + '" role="option" aria-selected="' + active + '" data-sr-option-key="' + escapeHtml(key) + '" data-sr-option-value="' + escapeHtml(option.value) + '">' +
+        '<span class="badge-advisor-option-check" aria-hidden="true">' + (active ? '✓' : '') + '</span>' +
+        '<span class="badge-advisor-option-copy"><strong>' + escapeHtml(option.label) + '</strong>' + (option.meta ? '<small>' + escapeHtml(option.meta) + '</small>' : '') + '</span></button>';
     };
     var optionMarkup = options.length ? (key === 'carSeries'
       ? ['传祺', '埃安'].map(function (brand) {
           var group = options.filter(function (option) { return option.meta === brand; });
           return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
-        }).join('')
-      : options.map(renderOption).join('')) : '<div class="sr-menu-empty">暂无可选项</div>';
-    return '<div class="sr-menu" data-sr-menu="' + escapeHtml(key) + '">' +
-      '<div class="sr-menu-search-row">' +
-        '<span class="sr-menu-search-icon" aria-hidden="true"></span>' +
-        '<input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="搜索' + escapeHtml(getFilterLabel(key)) + '" autocomplete="off">' +
-      '</div>' +
-      '<div class="sr-menu-actions">' +
-        '<button type="button" class="sr-menu-action sr-menu-select-all' + (allActive ? ' is-active' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + (allActive ? 'true' : 'false') + '"><span class="sr-menu-action-check" aria-hidden="true">' + (allActive ? '✓' : partiallyActive ? '−' : '') + '</span>全选当前结果</button>' +
-        '<button type="button" class="sr-menu-action" data-sr-clear="' + escapeHtml(key) + '">取消全选</button>' +
-      '</div>' +
-      '<div class="sr-menu-options" data-sr-menu-options="' + escapeHtml(key) + '">' +
-      optionMarkup +
-      '</div>' +
-      '<div class="sr-menu-footer"><span>已选 ' + (allActive ? '全部' : values.length + ' 项') + '</span><button type="button" class="sr-menu-done" data-sr-menu-done="' + escapeHtml(key) + '">完成</button></div>' +
-    '</div>';
+        }).join('') : options.map(renderOption).join('')) : '<div class="badge-advisor-empty">未找到匹配' + escapeHtml(getFilterLabel(key)) + '</div>';
+    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名或 ID' : '搜索' + getFilterLabel(key);
+    return '<div class="session-menu-panel badge-advisor-menu" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
+      '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
+      '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + allActive + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
+      '<div class="badge-advisor-options" data-sr-menu-options="' + escapeHtml(key) + '" role="listbox" aria-label="' + escapeHtml(getFilterLabel(key)) + '候选" aria-multiselectable="true">' + optionMarkup + '</div></div>';
   }
 
-  function renderFilterControl(key, options) {
+  function renderFilterControl(key) {
     var open = state.openMenu === key;
     var label = getFilterLabel(key);
-    return '<div class="sr-filter-control' + (open ? ' is-open' : '') + '" data-sr-control="' + escapeHtml(key) + '">' +
-      '<span class="sr-filter-label">' + escapeHtml(label) + '</span>' +
-      '<button type="button" class="sr-filter-trigger' + (selected(key).length ? ' has-selection' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-haspopup="listbox" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-        '<span>' + escapeHtml(getSelectionText(key)) + '</span><i class="sr-caret" aria-hidden="true"></i>' +
-      '</button>' +
-      (open ? renderOptionMenu(key) : '') +
-    '</div>';
+    return '<div class="badge-field-filter badge-field-filter-select session-toolbar-menu' + (open ? ' is-open' : '') + '" data-sr-control="' + escapeHtml(key) + '">' +
+      '<span>' + escapeHtml(label) + '</span>' +
+      '<button type="button" class="session-select-trigger' + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
+        '<strong>' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
+      (open ? renderOptionMenu(key) : '') + '</div>';
   }
 
   function renderTextControl(key, label, placeholder) {
-    return '<label class="sr-filter-control sr-text-control">' +
-      '<span class="sr-filter-label">' + escapeHtml(label) + '</span>' +
-      '<span class="sr-text-input-wrap"><input type="search" data-sr-query="' + escapeHtml(key) + '" value="' + escapeHtml(state.queries[key] || '') + '" placeholder="' + escapeHtml(placeholder || ('请输入' + label)) + '" autocomplete="off"><i class="sr-search-icon" aria-hidden="true"></i></span>' +
-    '</label>';
+    return '<label class="badge-field-filter"><span>' + escapeHtml(label) + '</span>' +
+      '<input type="search" data-sr-query="' + escapeHtml(key) + '" value="' + escapeHtml(state.queries[key] || '') + '" placeholder="' + escapeHtml(placeholder || ('请输入' + label)) + '" autocomplete="off"></label>';
   }
 
   function formatSessionDateDisplay(value) {
@@ -655,8 +631,8 @@
 
   function renderDateControl() {
     var open = state.openMenu === 'date';
-    return '<div class="sr-filter-control sr-date-control' + (open ? ' is-open' : '') + '" data-sr-control="date">' +
-      '<span class="sr-filter-label">录音开始时间</span>' +
+    return '<div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu sr-date-control' + (open ? ' is-open' : '') + '" data-sr-control="date">' +
+      '<span>录音开始时间</span>' +
       '<button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-sr-trigger="date" aria-label="录音开始时间筛选" aria-haspopup="dialog" aria-expanded="' + (open ? 'true' : 'false') + '"><strong>' + escapeHtml(formatSessionDateDisplay(state.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatSessionDateDisplay(state.endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
       (open ? renderSessionDateMenu() : '') +
     '</div>';
@@ -675,24 +651,30 @@
       { key: 'customerName', label: '客户姓名' },
       { key: 'customerPhone', label: '客户号码' }
     ].filter(function (field) { return isColumnVisible(field.key); });
+    container.classList.toggle('is-collapsed', state.collapsed);
     container.innerHTML =
-      '<div class="sr-filter-row sr-filter-primary">' +
+      '<div class="badge-dynamic-filter-grid">' +
         primary.map(function (key) { return renderFilterControl(key); }).join('') +
-        '<div class="sr-filter-actions">' +
-          '<button type="button" class="sr-btn sr-btn-light" data-sr-reset>重置筛选</button>' +
-          '<button type="button" class="sr-text-action" data-sr-collapse aria-expanded="' + (!state.collapsed ? 'true' : 'false') + '">' + (state.collapsed ? '展开' : '收起') + '<i class="sr-chevron ' + (state.collapsed ? 'is-down' : 'is-up') + '" aria-hidden="true"></i></button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sr-filter-extra' + (state.collapsed ? ' is-collapsed' : '') + '">' +
-        '<div class="sr-filter-row sr-filter-org">' +
-          org.map(function (key) { return renderFilterControl(key); }).join('') +
-        '</div>' +
-        '<div class="sr-filter-row sr-filter-existing">' +
-          existing.map(function (key) { return renderFilterControl(key); }).join('') +
+        (state.collapsed ? '' : org.concat(existing).map(function (key) { return renderFilterControl(key); }).join('') +
           textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
-          (isColumnVisible('startTime') ? renderDateControl() : '') +
-        '</div>' +
-      '</div>';
+          (isColumnVisible('startTime') ? renderDateControl() : '')) +
+      '</div><div class="badge-dynamic-filter-actions"><span></span><div>' +
+        '<button type="button" class="btn session-reset-btn" data-sr-reset>重置</button>' +
+        '<button type="button" class="session-toggle-text-btn" data-sr-collapse aria-expanded="' + !state.collapsed + '"><span>' + (state.collapsed ? '展开' : '收起') + '</span><svg class="session-toggle-text-btn-icon' + (state.collapsed ? ' is-collapsed' : '') + '" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>' +
+      '</div></div>';
+    positionFilterMenu();
+  }
+
+  function positionFilterMenu() {
+    var menu = document.querySelector('#sessionRealFilterControls [data-sr-menu], #sessionRealFilterControls [data-sr-date-panel]');
+    if (!menu) return;
+    menu.style.left = '0px';
+    var bounds = menu.getBoundingClientRect();
+    var shift = Math.min(0, global.innerWidth - 24 - bounds.right);
+    menu.style.left = Math.max(24 - bounds.left, shift) + 'px';
+    if (menu.hasAttribute('data-sr-date-panel')) {
+      menu.style.maxHeight = Math.max(240, global.innerHeight - bounds.top - 24) + 'px';
+    }
   }
 
   function cellValue(record, key) {
@@ -756,9 +738,13 @@
     if ((state.page || 1) > totalPages) state.page = totalPages;
     var start = ((state.page || 1) - 1) * pageSize;
     var pageRecords = recordsForView.slice(start, start + pageSize);
+    var emptyState = document.getElementById('sessionRealEmptyState');
+    if (emptyState) emptyState.hidden = recordsForView.length > 0;
+    table.closest('.session-list-table-wrap').classList.toggle('is-empty', !recordsForView.length);
     if (!recordsForView.length) {
-      body.innerHTML = '<tr class="session-empty-row"><td colspan="' + (visible.length + 1) + '">当前筛选条件下暂无录音，请调整筛选条件后重试。</td></tr>';
-      if (pagination) pagination.innerHTML = '';
+      body.innerHTML = '';
+      if (pagination) renderPagination(pagination, 0, 1);
+      bindTableEvents();
       return;
     }
     body.innerHTML = pageRecords.map(function (record) {
@@ -810,29 +796,33 @@
 
   function renderFieldSettings() {
     var host = document.getElementById('sessionRealFieldSettings');
-    if (!host) return;
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'sessionRealFieldSettings';
+      document.body.appendChild(host);
+    }
+    document.body.classList.toggle('sr-settings-open', state.settingsOpen);
     if (!state.settingsOpen) {
       host.innerHTML = '';
       return;
     }
+    var scrollTop = host.querySelector('.badge-field-settings-body')?.scrollTop || 0;
     var working = getWorkingColumnSettings();
     var ordered = working.order.map(function (key) { return getColumn(key); }).filter(Boolean);
     var visibleCount = ordered.filter(function (column) { return !working.hidden.includes(column.key); }).length;
-    host.innerHTML = '<div class="sr-settings-backdrop" data-sr-settings-close></div>' +
-      '<aside class="sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置">' +
-        '<div class="sr-settings-head"><div><strong>字段设置</strong><p class="sr-settings-hint">勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="sr-settings-close" data-sr-settings-close aria-label="关闭字段设置">×</button></div>' +
-        '<div class="sr-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>全选</button></div>' +
-        '<div class="sr-settings-list" aria-label="可配置字段列表">' + ordered.map(function (column, index) {
+    host.innerHTML = '<div class="drawer-backdrop badge-field-settings-backdrop" data-sr-settings-close></div>' +
+      '<aside class="drawer detail-drawer badge-field-settings-drawer open sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置">' +
+        '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="icon-btn" data-sr-settings-close aria-label="关闭字段设置">×</button></div>' +
+        '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>全选</button></div>' +
+        '<div class="badge-field-settings-list" aria-label="可配置字段列表">' + ordered.map(function (column) {
           var visible = !working.hidden.includes(column.key);
-          return '<div class="sr-settings-item' + (visible ? ' is-visible' : '') + '" draggable="true" data-sr-column-item="' + escapeHtml(column.key) + '">' +
-            '<span class="sr-drag-handle" aria-hidden="true">⠿</span>' +
+          return '<div class="badge-field-settings-item' + (visible ? ' is-visible' : '') + '" draggable="true" data-sr-column-item="' + escapeHtml(column.key) + '">' +
+            '<span class="badge-field-drag-handle" aria-hidden="true"><i></i><i></i><i></i></span>' +
             '<label><input type="checkbox" data-sr-column-visible="' + escapeHtml(column.key) + '" ' + (visible ? 'checked' : '') + '><span>' + escapeHtml(column.label) + '</span></label>' +
-            '<small>' + (visible ? '已显示' : '已隐藏') + '</small>' +
-            '<span class="sr-settings-move"><button type="button" data-sr-column-move="' + escapeHtml(column.key) + '" data-sr-column-direction="-1" ' + (index === 0 ? 'disabled' : '') + ' aria-label="上移">↑</button><button type="button" data-sr-column-move="' + escapeHtml(column.key) + '" data-sr-column-direction="1" ' + (index === ordered.length - 1 ? 'disabled' : '') + ' aria-label="下移">↓</button></span>' +
-          '</div>';
-        }).join('') + '</div>' +
-        '<div class="sr-settings-foot"><button type="button" class="sr-btn sr-btn-light" data-sr-settings-restore>恢复默认</button><div><button type="button" class="sr-btn sr-btn-light" data-sr-settings-close>取消</button><button type="button" class="sr-btn sr-btn-primary" data-sr-settings-save>保存设置</button></div></div>' +
-      '</aside>';
+            '<small>' + (visible ? '已显示' : '已隐藏') + '</small></div>';
+        }).join('') + '</div></div>' +
+        '<div class="badge-field-settings-footer"><button type="button" class="btn ghost" data-sr-settings-restore>恢复默认</button><div><button type="button" class="btn ghost" data-sr-settings-close>取消</button><button type="button" class="btn primary" data-sr-settings-save>保存设置</button></div></div></aside>';
+    host.querySelector('.badge-field-settings-body').scrollTop = scrollTop;
   }
 
   function renderShell() {
@@ -840,17 +830,22 @@
     if (!pageHost || getCurrentRoute() !== 'session') return;
     pageHost.innerHTML =
       '<div class="page-stack session-real-root">' +
-        '<section class="card session-filter-card sr-filter-card"><div id="sessionRealFilterControls"></div></section>' +
-        '<section class="card table-card sr-table-card"><div class="table-shell">' +
+        '<section class="card session-filter-card badge-session-filter-card sr-filter-card"><div id="sessionRealFilterControls"></div></section>' +
+        '<section class="card table-card badge-detail-table-card sr-table-card"><div class="table-shell">' +
           '<div class="table-headbar session-list-table-headbar sr-table-headbar">' +
             '<div class="panel-title"><h3>录音总览</h3></div>' +
-            '<div class="session-filter-summary"><span>当前匹配 <strong id="sessionRealCount">0</strong> 条录音</span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-completed" aria-hidden="true"></span><span>已完成 <strong id="sessionRealCompleted">0</strong> 条</span></span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-failed" aria-hidden="true"></span><span>失败 <strong id="sessionRealFailed">0</strong> 条</span></span></div>' +
-            '<div class="sr-table-actions"><button type="button" class="sr-btn sr-btn-light" data-sr-refresh aria-busy="false"><span class="sr-refresh-icon" aria-hidden="true">↻</span>刷新</button><button type="button" class="sr-btn sr-btn-light" data-sr-settings aria-expanded="false">字段设置</button><button type="button" class="sr-btn sr-btn-primary" data-sr-export disabled>导出</button><div id="sessionRealFieldSettings"></div></div>' +
+            '<div class="badge-detail-table-head-tools"><div class="session-filter-summary"><span>当前匹配 <strong id="sessionRealCount">0</strong> 条录音</span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-completed" aria-hidden="true"></span><span>已完成 <strong id="sessionRealCompleted">0</strong> 条</span></span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-failed" aria-hidden="true"></span><span>失败 <strong id="sessionRealFailed">0</strong> 条</span></span></div>' +
+            '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-sr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action" data-sr-export aria-describedby="sessionRealExportTooltip" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="sessionRealExportTooltip" role="tooltip">导出 Excel</span></div></div></div>' +
           '</div>' +
-          '<div class="table-wrap session-list-table-wrap"><table class="data-table session-data-table sr-real-table" id="sessionRealTable"><thead></thead><tbody></tbody></table></div>' +
+          '<div class="table-wrap session-list-table-wrap"><table class="data-table session-data-table badge-data-table sr-real-table" id="sessionRealTable"><thead></thead><tbody></tbody></table><div class="badge-list-empty-state" id="sessionRealEmptyState" role="status" hidden><svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true"> <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" /> <path d="M53 27c0-5.5 4.5-10 10-10h54l18 18v61c0 5.5-4.5 10-10 10H63c-5.5 0-10-4.5-10-10V27Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" /> <path d="M117 17v18h18" fill="#E8F0FC" stroke="#CAD7EA" stroke-width="3" stroke-linejoin="round" /> <path d="M70 48h47M70 62h31M70 76h24" stroke="#B7C6DB" stroke-width="5" stroke-linecap="round" /> <circle cx="117" cy="83" r="21" fill="#EEF5FF" stroke="#5B8DEF" stroke-width="4" /> <path d="m132 98 15 15" stroke="#5B8DEF" stroke-width="6" stroke-linecap="round" /> <path d="M108 83h18" stroke="#8EAFE9" stroke-width="4" stroke-linecap="round" /> </svg><strong>暂无符合条件的录音</strong><p>请调整筛选条件后重试</p></div></div>' +
           '<div class="session-pagination" id="sessionRealPagination"></div>' +
         '</div></section>' +
       '</div>';
+    var toolbar = document.getElementById('toolbarActions');
+    if (toolbar) {
+      toolbar.innerHTML = '<div class="badge-field-settings-action"><button type="button" class="btn badge-field-settings-trigger" data-sr-settings aria-expanded="false" aria-describedby="sessionRealSettingsTooltip"><svg class="badge-field-settings-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false"> <path d="M6.675 15.75H2.625C2.4 15.75 2.25 15.6 2.25 15.375V2.625C2.25 2.4 2.4 2.25 2.625 2.25H13.425C13.65 2.25 13.8 2.4 13.8 2.625V7.575C13.8 7.95 14.1 8.325 14.55 8.325C15 8.325 15.3 8.025 15.3 7.575V2.625C15.3 1.575 14.475 0.75 13.425 0.75H2.625C1.575 0.75 0.75 1.575 0.75 2.625V15.375C0.75 16.425 1.575 17.25 2.625 17.25H6.675C7.05 17.25 7.425 16.95 7.425 16.5C7.425 16.05 7.125 15.75 6.675 15.75Z" fill="currentColor"/> <path d="M6.67539 11.2502C7.12539 11.2502 7.42539 10.9502 7.42539 10.5002V5.32519H9.07539C9.52539 5.32519 9.82539 5.0252 9.82539 4.5752C9.82539 4.1252 9.52539 3.8252 9.07539 3.8252H4.27539C3.82539 3.8252 3.52539 4.1252 3.52539 4.5752C3.52539 5.0252 3.82539 5.32519 4.27539 5.32519H5.92539V10.5002C5.92539 10.9502 6.30039 11.2502 6.67539 11.2502ZM7.35039 12.5252H4.27539C3.82539 12.5252 3.52539 12.8252 3.52539 13.2752C3.52539 13.7252 3.82539 14.0252 4.27539 14.0252H7.35039C7.80039 14.0252 8.10039 13.7252 8.10039 13.2752C8.10039 12.8252 7.80039 12.5252 7.35039 12.5252ZM9.45039 8.7752H11.7004C12.1504 8.7752 12.4504 8.4752 12.4504 8.0252C12.4504 7.5752 12.1504 7.2752 11.7004 7.2752H9.45039C9.00039 7.2752 8.70039 7.5752 8.70039 8.0252C8.70039 8.4752 9.00039 8.7752 9.45039 8.7752ZM9.90039 11.2502C10.3504 11.2502 10.6504 10.9502 10.6504 10.5002C10.6504 10.0502 10.3504 9.7502 9.90039 9.7502H9.45039C9.00039 9.7502 8.70039 10.0502 8.70039 10.5002C8.70039 10.9502 9.00039 11.2502 9.45039 11.2502H9.90039ZM17.0254 11.2502L15.5254 9.7502C15.2254 9.4502 14.7754 9.4502 14.4754 9.7502L9.52539 14.6252C9.37539 14.7752 9.30039 14.9252 9.30039 15.1502V16.5002C9.30039 16.9502 9.60039 17.2502 10.0504 17.2502H11.7754C12.0004 17.2502 12.1504 17.1752 12.3004 17.0252L17.0254 12.3002C17.1754 12.1502 17.2504 12.0002 17.2504 11.7752C17.2504 11.5502 17.1754 11.4002 17.0254 11.2502ZM11.4754 15.7502H10.8004V15.3752L15.0004 11.2502L15.4504 11.7002L11.4754 15.7502Z" fill="currentColor"/> </svg><span>字段设置</span></button><span class="badge-field-settings-tooltip" id="sessionRealSettingsTooltip" role="tooltip">同步设置表格字段与筛选项</span></div>';
+      toolbar.closest('.toolbar').hidden = false;
+    }
     renderFilters();
     renderTable(getFilteredRecords());
     renderFieldSettings();
@@ -862,7 +857,7 @@
     if (!toast) {
       toast = document.createElement('div');
       toast.id = 'sessionRealToast';
-      toast.className = 'session-feedback-toast';
+      toast.className = 'badge-list-toast';
       toast.setAttribute('role', 'status');
       toast.setAttribute('aria-live', 'polite');
       document.body.appendChild(toast);
@@ -879,9 +874,7 @@
     button.disabled = Boolean(state.refreshBusy);
     button.classList.toggle('is-refreshing', Boolean(state.refreshBusy));
     button.setAttribute('aria-busy', state.refreshBusy ? 'true' : 'false');
-    button.innerHTML = state.refreshBusy
-      ? '<span class="sr-refresh-icon" aria-hidden="true">↻</span>刷新中'
-      : '<span class="sr-refresh-icon" aria-hidden="true">↻</span>刷新';
+    button.innerHTML = '<span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>' + (state.refreshBusy ? '刷新中' : '刷新') + '</span>';
   }
 
   function syncSettingsButton() {
@@ -949,15 +942,11 @@
   function selectAllCurrent(key) {
     var options = filterOptions(key);
     var values = new Set(selected(key));
-    options.forEach(function (option) { values.add(option.value); });
-    state.selections[key] = Array.from(values);
-    clearDownstreamSelections(key);
-    state.page = 1;
-  }
-
-  function clearCurrentSelection(key) {
-    var values = new Set(selected(key));
-    filterOptions(key).forEach(function (option) { values.delete(option.value); });
+    var allSelected = options.length > 0 && options.every(function (option) { return values.has(option.value); });
+    options.forEach(function (option) {
+      if (allSelected) values.delete(option.value);
+      else values.add(option.value);
+    });
     state.selections[key] = Array.from(values);
     clearDownstreamSelections(key);
     state.page = 1;
@@ -972,20 +961,6 @@
     renderFieldSettings();
     bindEvents();
     syncSettingsButton();
-  }
-
-  function moveColumn(key, direction) {
-    if (!columnSettingsDraft) return;
-    var index = columnSettingsDraft.order.indexOf(key);
-    var target = index + Number(direction);
-    if (index < 0 || target < 0 || target >= columnSettingsDraft.order.length) return;
-    var next = columnSettingsDraft.order.slice();
-    var temp = next[index];
-    next[index] = next[target];
-    next[target] = temp;
-    columnSettingsDraft.order = next;
-    renderFieldSettings();
-    bindEvents();
   }
 
   function dragColumn(key, targetKey) {
@@ -1218,25 +1193,6 @@
         rerender();
       });
     });
-    document.querySelectorAll('[data-sr-clear]').forEach(function (node) {
-      if (node.dataset.srBound === 'true') return;
-      node.dataset.srBound = 'true';
-      node.addEventListener('click', function (event) {
-        event.stopPropagation();
-        clearCurrentSelection(node.dataset.srClear);
-        rerender();
-      });
-    });
-    document.querySelectorAll('[data-sr-menu-done]').forEach(function (node) {
-      if (node.dataset.srBound === 'true') return;
-      node.dataset.srBound = 'true';
-      node.addEventListener('click', function (event) {
-        event.stopPropagation();
-        state.openMenu = null;
-        state.menuQueries[node.dataset.srMenuDone] = '';
-        rerender();
-      });
-    });
     document.querySelectorAll('[data-sr-query]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
@@ -1381,6 +1337,7 @@
         columnSettingsDraft = state.settingsOpen ? cloneColumnSettings(columnSettings) : null;
         rerender();
         syncSettingsButton();
+        if (state.settingsOpen) document.querySelector('.sr-settings-panel [data-sr-settings-close]')?.focus();
       });
     });
     document.querySelectorAll('[data-sr-settings-close]').forEach(function (node) {
@@ -1398,13 +1355,6 @@
       node.dataset.srBound = 'true';
       node.addEventListener('change', function () {
         setDraftColumnVisible(node.dataset.srColumnVisible, node.checked);
-      });
-    });
-    document.querySelectorAll('[data-sr-column-move]').forEach(function (node) {
-      if (node.dataset.srBound === 'true') return;
-      node.dataset.srBound = 'true';
-      node.addEventListener('click', function () {
-        moveColumn(node.dataset.srColumnMove, node.dataset.srColumnDirection);
       });
     });
     document.querySelectorAll('[data-sr-settings-restore]').forEach(function (node) {
@@ -1442,6 +1392,17 @@
 
     if (!documentEventsBound) {
       documentEventsBound = true;
+      global.addEventListener('resize', positionFilterMenu);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && (state.settingsOpen || state.openMenu)) {
+          var settingsWasOpen = state.settingsOpen;
+          state.settingsOpen = false;
+          columnSettingsDraft = null;
+          state.openMenu = null;
+          rerender();
+          if (settingsWasOpen) document.querySelector('[data-sr-settings]')?.focus();
+        }
+      });
       document.addEventListener('click', function (event) {
         if (state.openMenu && !event.target.closest('[data-sr-control]')) {
           state.openMenu = null;
