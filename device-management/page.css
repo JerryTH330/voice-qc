@@ -1419,6 +1419,68 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
   background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(243, 247, 253, .95));
   box-shadow: var(--shadow-soft);
 }
+.badge-filter-dimension-bar {
+  box-sizing: border-box;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(217, 226, 239, .82);
+}
+.badge-filter-dimension-main,
+.badge-filter-dimension-tabs,
+.badge-filter-dimension-path { display: flex; align-items: center; }
+.badge-filter-dimension-main { min-width: 0; gap: 12px; }
+.badge-filter-dimension-label,
+.badge-filter-dimension-path span { color: #7d899c; font-size: 13px; white-space: nowrap; }
+.badge-filter-dimension-tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(201, 210, 224, .88);
+  border-radius: 12px;
+  background: #f6f8fc;
+}
+.badge-filter-dimension-tab {
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #62728d;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.badge-filter-dimension-tab:hover { color: #2563eb; }
+.badge-filter-dimension-tab:focus-visible { outline: 2px solid rgba(37, 99, 235, .28); outline-offset: 2px; }
+.badge-filter-dimension-tab.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .12), inset 0 0 0 1px rgba(37, 99, 235, .12);
+}
+.badge-filter-dimension-path { min-width: 0; justify-content: flex-end; gap: 8px; }
+.badge-filter-dimension-path strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #34445f;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body .badge-session-filter-card #sessionFilterControls.is-collapsed {
+  grid-template-areas:
+    "dimension dimension"
+    "filters actions";
+}
+.badge-session-filter-card #sessionFilterControls.is-collapsed .badge-filter-dimension-bar { grid-area: dimension; margin-bottom: 0; }
+.badge-session-filter-card #sessionFilterControls.is-collapsed .badge-dynamic-filter-grid { grid-area: filters; }
+.badge-session-filter-card #sessionFilterControls.is-collapsed .badge-dynamic-filter-actions { grid-area: actions; }
 .badge-session-filter-card .session-reset-btn {
   height: 44px;
   min-height: 44px;
@@ -1667,6 +1729,17 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
 @media (max-width: 760px) {
   .store-organization-menu,
   .badge-organization-menu { width: calc(100vw - 32px); max-width: calc(100vw - 32px); }
+}
+
+@media (max-width: 620px) {
+  .badge-filter-dimension-bar { align-items: stretch; flex-direction: column; gap: 10px; }
+  .badge-filter-dimension-main { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .badge-filter-dimension-tabs { width: 100%; }
+  .badge-filter-dimension-tab { flex: 1 1 0; padding-inline: 10px; }
+  .badge-filter-dimension-path { justify-content: flex-start; }
+  body .badge-session-filter-card #sessionFilterControls.is-collapsed { display: block; }
+  .badge-session-filter-card #sessionFilterControls.is-collapsed .badge-filter-dimension-bar { margin-bottom: 14px; }
+  .badge-session-filter-card #sessionFilterControls.is-collapsed .badge-dynamic-filter-actions { margin-top: 14px; }
 }
 
 /* 工牌明细：字段与筛选项一一联动。 */

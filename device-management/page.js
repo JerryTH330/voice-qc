@@ -1646,16 +1646,10 @@ const badgeDefaultFieldOrder = Object.freeze(badgeFieldDefinitions.map((field) =
 const badgeAdvisorFilterDefinition = Object.freeze({ key: 'advisor', label: '顾问', filterType: 'advisor' });
 const badgeOrganizationFilterKeys = Object.freeze(['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store']);
 const badgeFilterFieldOrder = Object.freeze([
-  'brand',
-  'province',
-  'city',
-  'store',
-  'region',
-  'zone',
-  'patroler',
-  'governor',
   'advisorId',
   'advisorName',
+  'patroler',
+  'governor',
   'sn',
   'bindingStatus',
   'recordingStatus'
@@ -1701,6 +1695,7 @@ let badgeFieldDragAutoScrollFrame = 0;
 const badgeDefaultFilters = {
   snQuery: '',
   badgeType: '全部',
+  dimensionMode: 'organization',
   brand: [],
   region: [],
   zone: [],
@@ -2495,6 +2490,22 @@ function renderBadgeFilterActions() {
     </div>`;
 }
 
+function renderBadgeDimensionSwitcher() {
+  const organizationActive = badgeFilterState.dimensionMode === 'organization';
+  const pathText = organizationActive
+    ? '品牌 → 大区 → 战区 → 门店'
+    : '品牌 → 省份 → 城市 → 门店';
+  return `<div class="badge-filter-dimension-bar">
+    <div class="badge-filter-dimension-main"><span class="badge-filter-dimension-label">筛选维度</span>
+      <div class="badge-filter-dimension-tabs" role="tablist" aria-label="工牌组织筛选维度">
+        <button type="button" class="badge-filter-dimension-tab${organizationActive ? ' active' : ''}" data-badge-dimension="organization" role="tab" aria-selected="${organizationActive}">组织维度</button>
+        <button type="button" class="badge-filter-dimension-tab${organizationActive ? '' : ' active'}" data-badge-dimension="geography" role="tab" aria-selected="${!organizationActive}">地理维度</button>
+      </div>
+    </div>
+    <div class="badge-filter-dimension-path"><span>当前路径</span><strong>${pathText}</strong></div>
+  </div>`;
+}
+
 function renderBadgeFilters({ preserveScroll = false } = {}) {
   const container = document.getElementById('sessionFilterControls');
   if (!container) return;
@@ -2509,10 +2520,12 @@ function renderBadgeFilters({ preserveScroll = false } = {}) {
   }
   if (badgeMenuState.openMenu !== 'field:advisor') badgeMenuState.advisorQuery = '';
   const visibleFields = getVisibleBadgeFilterFields();
-  const renderedFields = badgeFilterState.collapsed ? visibleFields.slice(0, 4) : visibleFields;
+  const primaryFields = getVisibleBadgeDimensionFilterFields();
+  const renderedFields = badgeFilterState.collapsed ? primaryFields : visibleFields;
   container.classList.toggle('is-store-drilldown', storeDrilldownState.active);
   container.classList.toggle('is-collapsed', badgeFilterState.collapsed);
   container.innerHTML = `
+    ${renderBadgeDimensionSwitcher()}
     <div class="badge-dynamic-filter-grid">
       ${renderedFields.map((field) => renderBadgeFieldFilter(field)).join('')}
     </div>
@@ -2520,7 +2533,7 @@ function renderBadgeFilters({ preserveScroll = false } = {}) {
       ${storeDrilldownState.active ? `<span class="badge-drilldown-context">当前门店：<strong>${escapeBadgeHtml(storeDrilldownState.storeName)}</strong></span>` : '<span></span>'}
       <div>
         <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
-        ${visibleFields.length > 4 ? `<button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}"><span>${badgeFilterState.collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>` : ''}
+        ${visibleFields.length > primaryFields.length ? `<button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}"><span>${badgeFilterState.collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>` : ''}
       </div>
     </div>`;
   positionBadgeMultiSelectMenu();
@@ -2547,7 +2560,8 @@ function getVisibleBadgeFields(settings = badgeFieldSettingsState) {
 function getVisibleBadgeFilterFields(settings = badgeFieldSettingsState) {
   const visibleSet = new Set(settings.visible);
   let advisorAdded = false;
-  return badgeFilterFieldOrder.reduce((fields, key) => {
+  const orderedKeys = [...getBadgeDimensionFilterKeys(), ...badgeFilterFieldOrder];
+  return orderedKeys.reduce((fields, key) => {
     if (key === 'advisorId' || key === 'advisorName') {
       if (!advisorAdded) {
         advisorAdded = true;
@@ -2558,6 +2572,19 @@ function getVisibleBadgeFilterFields(settings = badgeFieldSettingsState) {
     if (visibleSet.has(key)) fields.push(badgeFieldDefinitionMap[key]);
     return fields;
   }, []);
+}
+
+function getBadgeDimensionFilterKeys() {
+  return badgeFilterState.dimensionMode === 'geography'
+    ? ['brand', 'province', 'city', 'store']
+    : ['brand', 'region', 'zone', 'store'];
+}
+
+function getVisibleBadgeDimensionFilterFields(settings = badgeFieldSettingsState) {
+  const visibleSet = new Set(settings.visible);
+  return getBadgeDimensionFilterKeys()
+    .filter((key) => visibleSet.has(key))
+    .map((key) => badgeFieldDefinitionMap[key]);
 }
 
 function isBadgeAdvisorFilterVisible(settings = badgeFieldSettingsState) {
@@ -2571,10 +2598,10 @@ const badgeCandidateDependencies = Object.freeze({
   brand: [],
   region: ['brand'],
   zone: ['brand', 'region'],
-  patroler: [],
+  patroler: ['brand'],
   province: ['brand'],
   city: ['brand', 'province'],
-  governor: [],
+  governor: ['brand'],
   store: ['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor'],
   advisor: badgeOrganizationFilterKeys
 });
@@ -2620,18 +2647,21 @@ function getBadgeFieldOptionMeta(fieldKey, record) {
   if (!record) return '';
   if (fieldKey === 'region') return record.brand;
   if (fieldKey === 'zone') return `${record.brand} · ${record.region}`;
-  if (fieldKey === 'patroler' || fieldKey === 'governor') return record.brand;
+  if (fieldKey === 'patroler' || fieldKey === 'governor') {
+    const personnelId = String(record[badgeFieldDefinitionMap[fieldKey].idKey] || '');
+    const code = personnelId.match(/\|(?:patroler|governor):code:([^|]+)/)?.[1] || '';
+    return code ? `${record.brand} · ${code}` : record.brand;
+  }
   if (fieldKey === 'city') return record.province;
   if (fieldKey === 'store') return record.dealerCode;
   return '';
 }
 
-// Cross-dimension selections stay put: org does not prune geo, geo does not prune org.
-// Store and advisor are intersection children, so any of their parents may prune them.
-// Personnel stay one-way: they prune stores, stores never prune personnel.
+// Brand is the common root for both dimension paths. Switching dimensions clears
+// the inactive path; store and advisor remain intersection children.
 const badgeSelectionPruneChains = Object.freeze([
   Object.freeze(['brand', 'region', 'zone']),
-  Object.freeze(['province', 'city'])
+  Object.freeze(['brand', 'province', 'city'])
 ]);
 
 function formatBadgePruneLabel(key, id) {
@@ -2665,12 +2695,17 @@ function pruneBadgeAdvisorSelections() {
 
 function pruneBadgeSelections(changedKey) {
   const removed = [];
-  const chain = badgeSelectionPruneChains.find((items) => items.includes(changedKey));
-  if (chain) {
+  badgeSelectionPruneChains.filter((items) => items.includes(changedKey)).forEach((chain) => {
     const changedIndex = chain.indexOf(changedKey);
     chain.slice(changedIndex + 1).forEach((key) => {
       const dependencies = chain.slice(0, chain.indexOf(key));
       const validIds = new Set(getBadgeCandidateRecords(key, dependencies).map((item) => getBadgeRecordFieldValue(item, key)));
+      removed.push(...pruneBadgeSelectedIds(key, validIds));
+    });
+  });
+  if (changedKey === 'brand') {
+    ['patroler', 'governor'].forEach((key) => {
+      const validIds = new Set(getBadgeCandidateRecords(key).map((item) => getBadgeRecordFieldValue(item, key)));
       removed.push(...pruneBadgeSelectedIds(key, validIds));
     });
   }
@@ -2691,6 +2726,18 @@ function assignBadgeFilterState(nextFilters = badgeDefaultFilters) {
     badgeFilterState[key] = getBadgeSelectedValuesFromValue(nextFilters[key]);
   });
   badgeFilterState.advisorIds = Array.isArray(nextFilters.advisorIds) ? nextFilters.advisorIds.map(String) : [];
+}
+
+function switchBadgeDimensionMode(mode) {
+  if (!['organization', 'geography'].includes(mode) || badgeFilterState.dimensionMode === mode) return;
+  const inactiveKeys = mode === 'organization' ? ['province', 'city'] : ['region', 'zone'];
+  inactiveKeys.forEach((key) => { badgeFilterState[key] = []; });
+  badgeFilterState.store = [];
+  badgeFilterState.dimensionMode = mode;
+  badgeMenuState.openMenu = '';
+  badgeMenuState.fieldQueries = {};
+  pruneBadgeAdvisorSelections();
+  badgePaginationState.page = 1;
 }
 
 function getBadgeSelectedValuesFromValue(value) {
@@ -2754,7 +2801,7 @@ function renderBadgeAdvisorFilter() {
     const storeText = item.stores.length ? item.stores.join('、') : '—';
     return `<button type="button" class="badge-advisor-option${selected ? ' is-selected' : ''}" data-badge-advisor-option="${escapeBadgeHtml(item.id)}" role="option" aria-selected="${selected}">
       <span class="badge-advisor-option-check" aria-hidden="true">${selected ? '✓' : ''}</span>
-      <span class="badge-advisor-option-copy"><strong>${escapeBadgeHtml(item.name)}</strong><small>${escapeBadgeHtml(item.id)}·${escapeBadgeHtml(storeText)}</small></span>
+      <span class="badge-advisor-option-copy"><strong>${escapeBadgeHtml(item.name)}</strong><small>${escapeBadgeHtml(storeText)} · ${escapeBadgeHtml(item.id)}</small></span>
     </button>`;
   }).join('') : '<div class="badge-advisor-empty">未找到匹配顾问</div>';
   return `<div class="badge-field-filter badge-field-filter-advisor session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="advisor">
@@ -4881,6 +4928,13 @@ document.addEventListener('click', (event) => {
   if (!event.target.closest('[data-dock-menu-root]') && dockMenuState.openMenu) {
     dockMenuState.openMenu = '';
     renderDockFilters();
+  }
+
+  const badgeDimension = event.target.closest('[data-badge-dimension]');
+  if (badgeDimension) {
+    switchBadgeDimensionMode(badgeDimension.dataset.badgeDimension);
+    renderBadgePage();
+    return;
   }
 
   if (event.target.closest('[data-badge-reset]')) {
