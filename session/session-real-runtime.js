@@ -23,6 +23,7 @@
   var intentOptions = ['高', '中', '低', '无', '无法判断'];
   var brandOptions = ['传祺', '埃安'];
   var statusOptions = ['已完成', '失败'];
+  var sourceTypeOptions = ['实体卡', '虚拟号', '工作号'];
   var sourceOptions = Array.isArray(data.sources) && data.sources.length
     ? data.sources.filter(function (value) { return value && value !== '未知'; })
     : ['云外呼', '工牌'];
@@ -66,6 +67,15 @@
     if (chars.length === 1) return chars[0];
     if (chars.length === 2) return chars[0] + '*';
     return chars[0] + '*'.repeat(Math.max(1, chars.length - 2)) + chars[chars.length - 1];
+  }
+
+  function inferSourceType(audioId, source) {
+    if (source === '工牌') return '实体卡';
+    var digits = text(audioId).replace(/\D/g, '');
+    var digitSum = Array.from(digits).reduce(function (sum, digit) {
+      return sum + Number(digit);
+    }, 0);
+    return digitSum % 2 === 0 ? '虚拟号' : '工作号';
   }
 
   function maskPhone(value) {
@@ -174,6 +184,7 @@
         leadCarSeries: series || '未知',
         scenario: scenario,
         source: source,
+        sourceType: inferSourceType(row[0], source),
         endTime: text(row[16])
       };
     });
@@ -186,10 +197,11 @@
   var records = hydrateRecords();
   var defaultStartDate = '2026-08-27';
   var defaultEndDate = '2026-09-07';
-  var filterKeys = ['brand', 'scenario', 'intentLevel', 'carSeries', 'leadCarSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'customer', 'status'];
+  var filterKeys = ['brand', 'scenario', 'sourceType', 'intentLevel', 'carSeries', 'leadCarSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'customer', 'status'];
   var state = {
     selections: {},
     queries: {
+      audioId: '',
       leadId: '',
       advisorPhone: '',
       customerName: '',
@@ -214,6 +226,7 @@
     pageSize: 10
   };
   filterKeys.forEach(function (key) { state.selections[key] = []; });
+  state.selections.status = ['已完成'];
 
   var columns = [
     { key: 'audioId', label: '录音ID', width: 22 },
@@ -372,6 +385,7 @@
     var ignore = options && options.ignore;
     if ((!ignore || ignore !== 'brand') && !matchesSelection('brand', record.brand)) return false;
     if ((!ignore || ignore !== 'scenario') && !matchesSelection('scenario', record.scenario)) return false;
+    if ((!ignore || ignore !== 'sourceType') && !matchesSelection('sourceType', record.sourceType)) return false;
     if ((!ignore || ignore !== 'intentLevel') && !matchesSelection('intentLevel', record.intentLevel)) return false;
     if ((!ignore || ignore !== 'carSeries') && !matchesCarSeries(record)) return false;
     if ((!ignore || ignore !== 'leadCarSeries') && !matchesLeadCarSeries(record)) return false;
@@ -385,10 +399,12 @@
       if (state.endDate && recordDate > state.endDate) return false;
     }
     if (!options || !options.ignoreQueries) {
+      var audioIdQuery = normalize(state.queries.audioId);
       var leadQuery = normalize(state.queries.leadId);
       var advisorPhoneQuery = normalizeDigits(state.queries.advisorPhone);
       var customerNameQuery = normalize(state.queries.customerName);
       var customerPhoneQuery = normalizeDigits(state.queries.customerPhone);
+      if (audioIdQuery && !normalize(record.audioId).includes(audioIdQuery)) return false;
       if (leadQuery && !normalize(record.leadId).includes(leadQuery)) return false;
       if (advisorPhoneQuery && !normalizeDigits(record.advisorPhone).includes(advisorPhoneQuery)) return false;
       if (customerNameQuery && !normalize(record.customerName).includes(customerNameQuery) && !normalize(record.customerNameMasked).includes(customerNameQuery)) return false;
@@ -472,8 +488,8 @@
       return {
         value: option.value,
         label: option.label,
-        meta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
-        submeta: stores.length ? stores.join('、') : '—',
+        meta: stores.length ? stores.join('、') : '—',
+        submeta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
         search: option.label + ' ' + option.value + ' ' + phones.join(' '),
         searchDigits: phones.map(normalizeDigits).join(' ')
       };
@@ -492,17 +508,20 @@
         map.set(record.leadId, {
           value: record.leadId,
           label: record.customerName || '—',
-          phones: new Set()
+          phones: new Set(),
+          stores: new Set()
         });
       }
       if (record.customerPhone && record.customerPhone !== '—') map.get(record.leadId).phones.add(record.customerPhone);
+      if (record.store && record.store !== '—') map.get(record.leadId).stores.add(record.store);
     });
     return Array.from(map.values()).map(function (option) {
       var phones = Array.from(option.phones);
+      var stores = Array.from(option.stores);
       return {
         value: option.value,
         label: option.label,
-        meta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
+        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
         search: option.label + ' ' + option.value + ' ' + phones.join(' '),
         searchDigits: phones.map(normalizeDigits).join(' ')
       };
@@ -520,6 +539,7 @@
   function currentValueOptions(key) {
     if (key === 'brand') return brandOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'scenario') return scenarioOptions();
+    if (key === 'sourceType') return sourceTypeOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'intentLevel') return intentOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'status') return statusOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'advisor') return advisorOptions();
@@ -552,6 +572,7 @@
       brand: '品牌',
       scenario: '质检场景',
       source: '数据来源',
+      sourceType: '数据来源类型',
       intentLevel: 'AI意向等级',
       carSeries: 'AI意向车系',
       leadCarSeries: '线索车系',
@@ -769,10 +790,13 @@
     if (isColumnVisible('patroler')) secondary.push('patroler');
     if (isColumnVisible('governor')) secondary.push('governor');
     if (isColumnVisible('leadId') || isColumnVisible('customerName') || isColumnVisible('customerPhone')) secondary.push('customer');
-    secondary = secondary.concat(['scenario', 'intentLevel', 'carSeries'].filter(isColumnVisible));
+    secondary.push('scenario', 'sourceType');
+    secondary = secondary.concat(['intentLevel', 'carSeries'].filter(isColumnVisible));
     if (isColumnVisible('status')) secondary.push('status');
     secondary.push('leadCarSeries');
-    var textControls = [];
+    var textControls = [
+      { key: 'audioId', label: '录音ID' }
+    ].filter(function (field) { return isColumnVisible(field.key); });
     container.classList.toggle('is-collapsed', state.collapsed);
     container.innerHTML =
       renderDimensionSwitcher() +
@@ -1128,6 +1152,7 @@
   function clearFilterForColumn(key) {
     if (filterKeys.includes(key)) state.selections[key] = [];
     var queryKeyByColumn = {
+      audioId: 'audioId',
       leadId: 'leadId',
       advisorPhone: 'advisorPhone',
       customerName: 'customerName',
@@ -1474,6 +1499,7 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function () {
         filterKeys.forEach(function (key) { state.selections[key] = []; });
+        state.selections.status = ['已完成'];
         Object.keys(state.queries).forEach(function (key) { state.queries[key] = ''; });
         state.startDate = defaultStartDate;
         state.endDate = defaultEndDate;
