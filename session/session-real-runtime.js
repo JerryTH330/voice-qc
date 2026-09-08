@@ -13,7 +13,13 @@
     dealerMap.set(String(dealer.brand) + '::' + String(dealer.dealerCode), dealer);
   });
 
-  var scenarioOptions = ['首触跟进', '邀约到店', '排程确认', '销售接待', '试乘试驾'];
+  var scenarioDefinitions = [
+    { value: '首触跟进', label: '首触跟进', source: '云外呼' },
+    { value: '邀约到店', label: '邀约进店', source: '云外呼' },
+    { value: '排程确认', label: '排程确认', source: '云外呼' },
+    { value: '销售接待', label: '进店接待', source: '工牌' },
+    { value: '试乘试驾', label: '试乘试驾', source: '工牌' }
+  ];
   var intentOptions = ['高', '中', '低', '无', '无法判断'];
   var brandOptions = ['传祺', '埃安'];
   var statusOptions = ['已完成', '失败'];
@@ -41,6 +47,17 @@
 
   function normalizeDigits(value) {
     return text(value).replace(/\D/g, '');
+  }
+
+  function getPersonnelCode(value) {
+    var matched = text(value).match(/\|(?:patroler|governor):code:([^|]+)/);
+    return matched ? matched[1] : '';
+  }
+
+  function getPersonnelMeta(dealer, personnelId) {
+    var brand = text(dealer && dealer.brand);
+    var code = getPersonnelCode(personnelId);
+    return code ? brand + ' · ' + code : brand;
   }
 
   function maskName(value) {
@@ -154,6 +171,7 @@
         qualifiedRate: status === '失败' ? '—' : (text(row[11]) || '—'),
         intentLevel: status === '失败' ? '—' : (text(row[12]) || '无法判断'),
         carSeries: series || '未知',
+        leadCarSeries: series || '未知',
         scenario: scenario,
         source: source,
         endTime: text(row[16])
@@ -168,7 +186,7 @@
   var records = hydrateRecords();
   var defaultStartDate = '2026-08-27';
   var defaultEndDate = '2026-09-07';
-  var filterKeys = ['brand', 'scenario', 'source', 'intentLevel', 'carSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'status'];
+  var filterKeys = ['brand', 'scenario', 'intentLevel', 'carSeries', 'leadCarSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'customer', 'status'];
   var state = {
     selections: {},
     queries: {
@@ -179,6 +197,7 @@
     },
     startDate: defaultStartDate,
     endDate: defaultEndDate,
+    dimensionMode: 'organization',
     collapsed: true,
     openMenu: null,
     menuQueries: {},
@@ -308,10 +327,10 @@
     brand: [],
     region: ['brand'],
     zone: ['brand', 'region'],
-    patroler: [],
+    patroler: ['brand'],
     province: ['brand'],
     city: ['brand', 'province'],
-    governor: [],
+    governor: ['brand'],
     store: ['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor']
   };
 
@@ -341,15 +360,24 @@
     });
   }
 
+  function matchesLeadCarSeries(record) {
+    var values = selected('leadCarSeries');
+    if (!values.length) return true;
+    return values.some(function (value) {
+      return value === record.leadCarSeries || value === carSeriesOptionValue(record.brand, record.leadCarSeries);
+    });
+  }
+
   function recordMatches(record, options) {
     var ignore = options && options.ignore;
     if ((!ignore || ignore !== 'brand') && !matchesSelection('brand', record.brand)) return false;
     if ((!ignore || ignore !== 'scenario') && !matchesSelection('scenario', record.scenario)) return false;
-    if ((!ignore || ignore !== 'source') && !matchesSelection('source', record.source)) return false;
     if ((!ignore || ignore !== 'intentLevel') && !matchesSelection('intentLevel', record.intentLevel)) return false;
     if ((!ignore || ignore !== 'carSeries') && !matchesCarSeries(record)) return false;
+    if ((!ignore || ignore !== 'leadCarSeries') && !matchesLeadCarSeries(record)) return false;
     if (!dealerMatches(record.dealer, { ignore: ignore && ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(ignore) ? ignore : undefined })) return false;
-    if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', record.advisorKey)) return false;
+    if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', record.advisorId)) return false;
+    if ((!ignore || ignore !== 'customer') && !matchesSelection('customer', record.leadId)) return false;
     if ((!ignore || ignore !== 'status') && !matchesSelection('status', record.status)) return false;
     if (!options || !options.ignoreDate) {
       var recordDate = text(record.startTime).slice(0, 10);
@@ -411,11 +439,11 @@
       options = list.map(function (dealer) { return { value: dealer.zone, label: dealer.zone }; });
     } else if (key === 'patroler') {
       options = list.filter(function (dealer) { return dealer.patroler; }).map(function (dealer) {
-        return { value: dealer.patrolerId || dealer.patroler, label: dealer.patroler, meta: dealer.brand };
+        return { value: dealer.patrolerId || dealer.patroler, label: dealer.patroler, meta: getPersonnelMeta(dealer, dealer.patrolerId) };
       });
     } else if (key === 'governor') {
       options = list.filter(function (dealer) { return dealer.governor; }).map(function (dealer) {
-        return { value: dealer.governorId || dealer.governor, label: dealer.governor, meta: dealer.brand };
+        return { value: dealer.governorId || dealer.governor, label: dealer.governor, meta: getPersonnelMeta(dealer, dealer.governorId) };
       });
     }
     return uniqueOptions(options);
@@ -427,34 +455,84 @@
       return dealerMatches(record.dealer, { ignore: 'advisor' });
     }).forEach(function (record) {
       if (!record.advisorId || record.advisorId === '—') return;
-      if (!map.has(record.advisorKey)) {
-        map.set(record.advisorKey, {
-          value: record.advisorKey,
+      if (!map.has(record.advisorId)) {
+        map.set(record.advisorId, {
+          value: record.advisorId,
           label: record.advisorName,
-          meta: record.advisorId,
-          search: record.advisorName + ' ' + record.advisorId
+          phones: new Set(),
+          stores: new Set()
         });
       }
+      if (record.advisorPhone && record.advisorPhone !== '—') map.get(record.advisorId).phones.add(record.advisorPhone);
+      if (record.store && record.store !== '—') map.get(record.advisorId).stores.add(record.store);
     });
-    return Array.from(map.values());
+    return Array.from(map.values()).map(function (option) {
+      var phones = Array.from(option.phones);
+      var stores = Array.from(option.stores);
+      return {
+        value: option.value,
+        label: option.label,
+        meta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
+        submeta: stores.length ? stores.join('、') : '—',
+        search: option.label + ' ' + option.value + ' ' + phones.join(' '),
+        searchDigits: phones.map(normalizeDigits).join(' ')
+      };
+    }).sort(function (left, right) {
+      return left.label.localeCompare(right.label, 'zh-CN') || left.value.localeCompare(right.value, 'zh-CN');
+    });
+  }
+
+  function customerOptions() {
+    var map = new Map();
+    records.filter(function (record) {
+      return recordMatches(record, { ignore: 'customer', ignoreQueries: true });
+    }).forEach(function (record) {
+      if (!record.leadId || record.leadId === '—') return;
+      if (!map.has(record.leadId)) {
+        map.set(record.leadId, {
+          value: record.leadId,
+          label: record.customerName || '—',
+          phones: new Set()
+        });
+      }
+      if (record.customerPhone && record.customerPhone !== '—') map.get(record.leadId).phones.add(record.customerPhone);
+    });
+    return Array.from(map.values()).map(function (option) {
+      var phones = Array.from(option.phones);
+      return {
+        value: option.value,
+        label: option.label,
+        meta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
+        search: option.label + ' ' + option.value + ' ' + phones.join(' '),
+        searchDigits: phones.map(normalizeDigits).join(' ')
+      };
+    }).sort(function (left, right) {
+      return left.label.localeCompare(right.label, 'zh-CN') || left.value.localeCompare(right.value, 'zh-CN');
+    });
+  }
+
+  function scenarioOptions() {
+    return scenarioDefinitions.map(function (item) {
+      return { value: item.value, label: item.label, meta: item.source };
+    });
   }
 
   function currentValueOptions(key) {
     if (key === 'brand') return brandOptions.map(function (value) { return { value: value, label: value }; });
-    if (key === 'scenario') return scenarioOptions.map(function (value) { return { value: value, label: value }; });
-    if (key === 'source') return sourceOptions.map(function (value) { return { value: value, label: value }; });
+    if (key === 'scenario') return scenarioOptions();
     if (key === 'intentLevel') return intentOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'status') return statusOptions.map(function (value) { return { value: value, label: value }; });
     if (key === 'advisor') return advisorOptions();
+    if (key === 'customer') return customerOptions();
     if (['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(key)) return dealerOptionsFor(key);
-    if (key === 'carSeries') {
+    if (key === 'carSeries' || key === 'leadCarSeries') {
       var selectedBrands = selected('brand');
       var brands = selectedBrands.length ? selectedBrands : brandOptions;
       var seriesOptions = [];
       brands.forEach(function (brand) {
         var seriesSet = new Set(records.filter(function (record) {
-          return record.brand === brand && record.carSeries !== '—';
-        }).map(function (record) { return record.carSeries; }));
+          return record.brand === brand && record[key] !== '—';
+        }).map(function (record) { return record[key]; }));
         Array.from(seriesSet).sort(function (left, right) { return left.localeCompare(right, 'zh-CN'); }).forEach(function (series) {
           seriesOptions.push({
             value: carSeriesOptionValue(brand, series),
@@ -475,7 +553,8 @@
       scenario: '质检场景',
       source: '数据来源',
       intentLevel: 'AI意向等级',
-      carSeries: '车系',
+      carSeries: 'AI意向车系',
+      leadCarSeries: '线索车系',
       province: '省份',
       city: '城市',
       store: '门店',
@@ -484,6 +563,7 @@
       patroler: '巡回员',
       governor: '治理员',
       advisor: '顾问',
+      customer: '客户',
       status: '录音状态'
     };
     return labels[key] || key;
@@ -492,6 +572,17 @@
   function getSelectionText(key) {
     var values = selected(key);
     if (!values.length) return '全部';
+    if (key === 'scenario') {
+      var allScenarioValues = scenarioDefinitions.map(function (item) { return item.value; });
+      if (allScenarioValues.every(function (value) { return values.includes(value); })) return '全部';
+      var selectedSources = sourceOptions.filter(function (source) {
+        var sourceValues = scenarioDefinitions.filter(function (item) { return item.source === source; }).map(function (item) { return item.value; });
+        return sourceValues.length && sourceValues.every(function (value) { return values.includes(value); });
+      });
+      if (selectedSources.length === 1 && values.length === scenarioDefinitions.filter(function (item) { return item.source === selectedSources[0]; }).length) {
+        return selectedSources[0];
+      }
+    }
     var options = currentValueOptions(key);
     var labels = values.map(function (value) {
       var option = options.find(function (item) { return item.value === value; });
@@ -502,10 +593,13 @@
 
   function filterOptions(key) {
     var query = normalize(state.menuQueries[key]);
+    var queryDigits = normalizeDigits(state.menuQueries[key]);
     var options = currentValueOptions(key);
     if (!query) return sortOptions(options, key);
     return options.filter(function (option) {
-      return normalize(option.label + ' ' + (option.meta || '') + ' ' + (option.search || '')).includes(query);
+      var textMatched = normalize(option.label + ' ' + (option.meta || '') + ' ' + (option.submeta || '') + ' ' + (option.search || '')).includes(query);
+      var phoneMatched = ['advisor', 'customer'].includes(key) && queryDigits && text(option.searchDigits).includes(queryDigits);
+      return textMatched || phoneMatched;
     });
   }
 
@@ -519,14 +613,24 @@
       var active = values.includes(option.value);
       return '<button type="button" class="badge-advisor-option' + (active ? ' is-selected' : '') + '" role="option" aria-selected="' + active + '" data-sr-option-key="' + escapeHtml(key) + '" data-sr-option-value="' + escapeHtml(option.value) + '">' +
         '<span class="badge-advisor-option-check" aria-hidden="true">' + (active ? '✓' : '') + '</span>' +
-        '<span class="badge-advisor-option-copy"><strong>' + escapeHtml(option.label) + '</strong>' + (option.meta ? '<small>' + escapeHtml(option.meta) + '</small>' : '') + '</span></button>';
+        '<span class="badge-advisor-option-copy"><strong>' + escapeHtml(option.label) + '</strong>' + (option.meta && key !== 'scenario' ? '<small>' + escapeHtml(option.meta) + '</small>' : '') + (option.submeta ? '<small>' + escapeHtml(option.submeta) + '</small>' : '') + '</span></button>';
     };
-    var optionMarkup = options.length ? (key === 'carSeries'
+    var optionMarkup = options.length ? (key === 'scenario'
+      ? sourceOptions.map(function (source) {
+          var group = options.filter(function (option) { return option.meta === source; });
+          if (!group.length) return '';
+          var sourceValues = scenarioDefinitions.filter(function (item) { return item.source === source; }).map(function (item) { return item.value; });
+          var selectedCount = sourceValues.filter(function (value) { return values.includes(value); }).length;
+          var groupActive = selectedCount === sourceValues.length;
+          var groupPartial = selectedCount > 0 && !groupActive;
+          return '<div class="sr-menu-group sr-scenario-source-group"><button type="button" class="sr-scenario-group-select' + (groupActive ? ' is-selected' : '') + (groupPartial ? ' is-partial' : '') + '" data-sr-scenario-group="' + escapeHtml(source) + '" aria-pressed="' + groupActive + '"><span class="badge-advisor-option-check" aria-hidden="true">' + (groupActive ? '✓' : '') + '</span><strong>' + escapeHtml(source) + '</strong><small>全选 · ' + sourceValues.length + ' 项</small></button>' + group.map(renderOption).join('') + '</div>';
+        }).join('')
+      : key === 'carSeries' || key === 'leadCarSeries'
       ? ['传祺', '埃安'].map(function (brand) {
           var group = options.filter(function (option) { return option.meta === brand; });
           return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
         }).join('') : options.map(renderOption).join('')) : '<div class="badge-advisor-empty">未找到匹配' + escapeHtml(getFilterLabel(key)) + '</div>';
-    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名或 ID' : '搜索' + getFilterLabel(key);
+    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名、ID或手机号' : key === 'customer' ? '输入客户姓名、线索ID或手机号' : '搜索' + getFilterLabel(key);
     return '<div class="session-menu-panel badge-advisor-menu" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
       '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
       '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + allActive + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
@@ -638,24 +742,43 @@
     '</div>';
   }
 
+  function renderDimensionSwitcher() {
+    var organizationActive = state.dimensionMode === 'organization';
+    var pathText = organizationActive
+      ? '品牌 → 大区 → 战区 → 门店'
+      : '品牌 → 省份 → 城市 → 门店';
+    return '<div class="sr-filter-dimension-bar">' +
+      '<div class="sr-filter-dimension-main"><span class="sr-filter-dimension-label">筛选维度</span>' +
+        '<div class="sr-filter-dimension-tabs" role="tablist" aria-label="录音组织筛选维度">' +
+          '<button type="button" class="sr-filter-dimension-tab' + (organizationActive ? ' active' : '') + '" data-sr-dimension="organization" role="tab" aria-selected="' + organizationActive + '">组织维度</button>' +
+          '<button type="button" class="sr-filter-dimension-tab' + (!organizationActive ? ' active' : '') + '" data-sr-dimension="geography" role="tab" aria-selected="' + !organizationActive + '">地理维度</button>' +
+        '</div></div>' +
+      '<div class="sr-filter-dimension-path"><span>当前路径</span><strong>' + escapeHtml(pathText) + '</strong></div>' +
+    '</div>';
+  }
+
   function renderFilters() {
     var container = document.getElementById('sessionRealFilterControls');
     if (!container) return;
-    var primary = ['brand', 'scenario', 'source', 'intentLevel'].filter(isColumnVisible);
-    var org = ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].filter(isColumnVisible);
-    if (isColumnVisible('advisorId') || isColumnVisible('advisorName')) org.push('advisor');
-    var existing = ['carSeries', 'status'].filter(isColumnVisible);
-    var textControls = [
-      { key: 'leadId', label: '线索ID' },
-      { key: 'advisorPhone', label: '顾问号码' },
-      { key: 'customerName', label: '客户姓名' },
-      { key: 'customerPhone', label: '客户号码' }
-    ].filter(function (field) { return isColumnVisible(field.key); });
+    var dimensionKeys = state.dimensionMode === 'geography'
+      ? ['brand', 'province', 'city', 'store']
+      : ['brand', 'region', 'zone', 'store'];
+    var primary = dimensionKeys.filter(isColumnVisible);
+    var secondary = [];
+    if (isColumnVisible('advisorId') || isColumnVisible('advisorName')) secondary.push('advisor');
+    if (isColumnVisible('patroler')) secondary.push('patroler');
+    if (isColumnVisible('governor')) secondary.push('governor');
+    if (isColumnVisible('leadId') || isColumnVisible('customerName') || isColumnVisible('customerPhone')) secondary.push('customer');
+    secondary = secondary.concat(['scenario', 'intentLevel', 'carSeries'].filter(isColumnVisible));
+    if (isColumnVisible('status')) secondary.push('status');
+    secondary.push('leadCarSeries');
+    var textControls = [];
     container.classList.toggle('is-collapsed', state.collapsed);
     container.innerHTML =
+      renderDimensionSwitcher() +
       '<div class="badge-dynamic-filter-grid">' +
         primary.map(function (key) { return renderFilterControl(key); }).join('') +
-        (state.collapsed ? '' : org.concat(existing).map(function (key) { return renderFilterControl(key); }).join('') +
+        (state.collapsed ? '' : secondary.map(function (key) { return renderFilterControl(key); }).join('') +
           textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
           (isColumnVisible('startTime') ? renderDateControl() : '')) +
       '</div><div class="badge-dynamic-filter-actions"><span></span><div>' +
@@ -910,7 +1033,7 @@
 
   function clearDownstreamSelections(changedKey) {
     var affected = [];
-    if (changedKey === 'brand') affected = ['province', 'city', 'store', 'region', 'zone', 'carSeries'];
+    if (changedKey === 'brand') affected = ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'carSeries', 'leadCarSeries'];
     if (changedKey === 'province') affected = ['city', 'store'];
     if (changedKey === 'city') affected = ['store'];
     if (changedKey === 'region') affected = ['zone', 'store'];
@@ -924,6 +1047,20 @@
     state.selections.advisor = selected('advisor').filter(function (value) {
       return advisorOptions().some(function (option) { return option.value === value; });
     });
+    state.selections.customer = selected('customer').filter(function (value) {
+      return customerOptions().some(function (option) { return option.value === value; });
+    });
+  }
+
+  function switchDimensionMode(mode) {
+    if (!['organization', 'geography'].includes(mode) || state.dimensionMode === mode) return;
+    var inactiveKeys = mode === 'organization' ? ['province', 'city'] : ['region', 'zone'];
+    inactiveKeys.forEach(function (key) { state.selections[key] = []; });
+    state.selections.store = [];
+    state.dimensionMode = mode;
+    state.openMenu = null;
+    state.menuQueries = {};
+    state.page = 1;
   }
 
   function toggleSelection(key, value) {
@@ -949,6 +1086,21 @@
     });
     state.selections[key] = Array.from(values);
     clearDownstreamSelections(key);
+    state.page = 1;
+  }
+
+  function toggleScenarioGroup(source) {
+    var groupValues = scenarioDefinitions.filter(function (item) {
+      return item.source === source;
+    }).map(function (item) { return item.value; });
+    if (!groupValues.length) return;
+    var values = new Set(selected('scenario'));
+    var allSelected = groupValues.every(function (value) { return values.has(value); });
+    groupValues.forEach(function (value) {
+      if (allSelected) values.delete(value);
+      else values.add(value);
+    });
+    state.selections.scenario = Array.from(values);
     state.page = 1;
   }
 
@@ -998,6 +1150,7 @@
     }
     next.hidden.filter(function (key) { return !previousHidden.has(key); }).forEach(clearFilterForColumn);
     if (next.hidden.includes('advisorId') && next.hidden.includes('advisorName')) state.selections.advisor = [];
+    if (next.hidden.includes('leadId') && next.hidden.includes('customerName') && next.hidden.includes('customerPhone')) state.selections.customer = [];
     columnSettings = next;
     persistColumnSettings();
     columnSettingsDraft = null;
@@ -1111,6 +1264,14 @@
   var documentEventsBound = false;
 
   function bindEvents() {
+    document.querySelectorAll('[data-sr-dimension]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function () {
+        switchDimensionMode(node.dataset.srDimension);
+        rerender();
+      });
+    });
     document.querySelectorAll('[data-sr-trigger]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
@@ -1168,7 +1329,8 @@
     document.querySelectorAll('[data-sr-menu-search]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
-      node.addEventListener('input', function () {
+      node.addEventListener('input', function (event) {
+        if (event.isComposing) return;
         var key = node.dataset.srMenuSearch;
         var value = node.value;
         var cursor = node.selectionStart;
@@ -1182,6 +1344,19 @@
           }
         });
       });
+      node.addEventListener('compositionend', function () {
+        var key = node.dataset.srMenuSearch;
+        var value = node.value;
+        state.menuQueries[key] = value;
+        rerender();
+        global.requestAnimationFrame(function () {
+          var input = document.querySelector('[data-sr-menu-search="' + key + '"]');
+          if (input) {
+            input.focus();
+            input.setSelectionRange(value.length, value.length);
+          }
+        });
+      });
     });
 
     document.querySelectorAll('[data-sr-select-all]').forEach(function (node) {
@@ -1190,6 +1365,15 @@
       node.addEventListener('click', function (event) {
         event.stopPropagation();
         selectAllCurrent(node.dataset.srSelectAll);
+        rerender();
+      });
+    });
+    document.querySelectorAll('[data-sr-scenario-group]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
+      node.addEventListener('click', function (event) {
+        event.stopPropagation();
+        toggleScenarioGroup(node.dataset.srScenarioGroup);
         rerender();
       });
     });

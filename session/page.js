@@ -1,7 +1,7 @@
 /* 录音列表 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'session';
 (function loadPageRuntime() {
-  const version = '20260908-patroler-meta-v1';
+  const version = '20260908-filter-dimension-tabs-v15';
   const scripts = [
     `../session-search-utils.js?v=${version}`,
     `../shared/issue-rule-list.js?v=${version}`,
