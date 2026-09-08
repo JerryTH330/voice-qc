@@ -426,6 +426,7 @@
   gap: 6px;
 }
 .badge-field-filter-date-time .session-date-trigger strong { font-size: 13px; font-weight: 500; }
+.badge-field-filter-date-time .session-date-trigger em { font-style: normal; }
 .badge-sync-date-time-panel {
   left: 0;
   right: auto;
