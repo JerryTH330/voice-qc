@@ -152,6 +152,11 @@ body.device-badge-detail-page .topbar {
 }
 body.device-badge-detail-page .topbar h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.08; letter-spacing: -.03em; }
 body.device-badge-detail-page .topbar p { max-width: 720px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+body.device-badge-detail-page .badge-field-filter .session-select-trigger strong.is-placeholder,
+body.device-badge-detail-page .badge-field-filter .session-date-trigger strong.is-placeholder {
+  color: #a0aaba;
+  font-weight: 400;
+}
 body.device-badge-detail-page .top-actions .btn { height: 40px; padding-inline: 16px; border-radius: 999px; }
 body.device-badge-detail-page .top-actions .recording-primary {
   border: 0;

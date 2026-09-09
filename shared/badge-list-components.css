@@ -302,9 +302,13 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid rgba(37, 99, 235, .7);
+  border: 1px solid rgba(201, 210, 224, .88);
   border-radius: 12px;
   background: #fff;
+  box-shadow: none;
+}
+.badge-advisor-search:focus-within {
+  border-color: rgba(37, 99, 235, .7);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
 }
 .badge-advisor-search > span {
@@ -340,9 +344,9 @@
 .badge-advisor-search input::placeholder { color: #a0aaba; }
 .badge-advisor-select-all {
   width: 100%;
-  min-height: 44px;
+  min-height: 36px;
   margin-top: 10px;
-  padding: 0 10px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -369,6 +373,7 @@
   border-radius: 5px;
   background: #fff;
   color: #fff;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -382,7 +387,7 @@
 .badge-advisor-select-all.is-partial .badge-advisor-option-check::before { content: ""; width: 8px; height: 2px; border-radius: 2px; background: var(--blue); }
 .badge-advisor-options {
   max-height: 300px;
-  margin-top: 2px;
+  margin-top: 4px;
   padding-right: 3px;
   display: flex;
   flex-direction: column;

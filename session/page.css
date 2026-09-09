@@ -194,7 +194,7 @@
   cursor: pointer;
 }
 .sr-scenario-group-select:hover { background: transparent; color: var(--blue); }
-.sr-scenario-group-select > strong { font-size: 13px; }
+.sr-scenario-group-select > strong { font-size: 14px; }
 .sr-scenario-group-select > small { margin-left: auto; color: #8a96a8; font-size: 12px; }
 .sr-scenario-group-select.is-selected .badge-advisor-option-check { border-color: var(--blue); background: var(--blue); }
 .sr-scenario-group-select.is-partial .badge-advisor-option-check { border-color: var(--blue); background: rgba(37, 99, 235, .12); }
@@ -206,9 +206,18 @@
   border-top: 1px solid rgba(217, 226, 239, .82);
 }
 .sr-scenario-source-group .badge-advisor-option { padding-left: 39px; }
-.sr-date-control .session-date-trigger strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-real-root .sr-date-control .session-date-trigger strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.session-real-root .badge-field-filter-select .session-select-trigger strong.is-placeholder {
+  color: #a0aaba;
+  font-weight: 400;
+}
 .sr-date-control .session-menu-panel-date { overflow-y: auto; }
 .sr-date-control .session-menu-panel-date { left: 0; right: auto; min-width: 0; width: min(392px, calc(100vw - 48px)); max-width: min(392px, calc(100vw - 48px)); }
+.sr-date-control .session-date-action-btn {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
 .sr-settings-panel { box-sizing: border-box; }
 .sr-settings-panel .badge-field-settings-body { min-height: 0; }
 .sr-settings-panel .is-dragging { opacity: .45; }

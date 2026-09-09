@@ -2474,7 +2474,7 @@ function renderBadgeSyncDateTimeFilter(field) {
     <div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="syncDateTime">
       <span>${field.label}</span>
       <button type="button" class="session-date-trigger${open ? ' active' : ''}" data-badge-sync-date-trigger aria-label="${field.label}筛选" aria-haspopup="dialog" aria-expanded="${open ? 'true' : 'false'}">
-        ${hasRange ? `<strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong>` : '<strong>全部时间</strong>'}<span class="session-date-icon" aria-hidden="true"></span>
+        ${hasRange ? `<strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong>` : `<strong class="is-placeholder">请选择${field.label}</strong>`}<span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${menuHtml}
     </div>`;
@@ -2791,13 +2791,14 @@ function getBadgeAdvisorName(advisorId) {
 
 function getBadgeAdvisorFilterLabel() {
   const selectedIds = Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : [];
-  if (!selectedIds.length) return '全部';
+  if (!selectedIds.length) return '请选择顾问';
   return selectedIds.map((advisorId) => getBadgeAdvisorName(advisorId)).join('、');
 }
 
 function renderBadgeAdvisorFilter() {
   const open = badgeMenuState.openMenu === 'field:advisor';
   const selectedIds = new Set(Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : []);
+  const placeholder = selectedIds.size === 0;
   const candidates = getBadgeAdvisorCandidates();
   const allSelected = candidates.length > 0 && candidates.every((item) => selectedIds.has(item.id));
   const someSelected = candidates.some((item) => selectedIds.has(item.id));
@@ -2812,7 +2813,7 @@ function renderBadgeAdvisorFilter() {
   return `<div class="badge-field-filter badge-field-filter-advisor session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="advisor">
     <span>顾问</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-advisor-trigger aria-label="顾问筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeAdvisorOptions">
-      <strong>${escapeBadgeHtml(getBadgeAdvisorFilterLabel())}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${placeholder ? 'is-placeholder' : ''}">${escapeBadgeHtml(getBadgeAdvisorFilterLabel())}</strong><i class="session-select-caret" aria-hidden="true"></i>
     </button>
     ${open ? `<div class="session-menu-panel badge-advisor-menu" role="dialog" aria-label="顾问筛选">
       <label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" value="${escapeBadgeHtml(badgeMenuState.advisorQuery)}" data-badge-advisor-search placeholder="输入顾问姓名或 ID" autocomplete="off" /></label>
@@ -2886,12 +2887,12 @@ function renderBadgeRangeFilter(field) {
   const allSelected = candidates.length > 0 && candidates.every((item) => selected.has(item.value));
   const someSelected = candidates.some((item) => selected.has(item.value));
   const label = selectedValues.length === 0
-    ? '全部'
+    ? `请选择${field.label}`
     : selectedValues.map((value) => getBadgeFieldOptionLabel(field.key, value)).join('、');
   return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
     <span>${field.label}</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeRangeOptions-${field.key}">
-      <strong>${escapeBadgeHtml(label)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${selectedValues.length === 0 ? 'is-placeholder' : ''}">${escapeBadgeHtml(label)}</strong><i class="session-select-caret" aria-hidden="true"></i>
     </button>
     ${open ? `<div class="session-menu-panel badge-advisor-menu" role="dialog" aria-label="${field.label}筛选">
       <label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" value="${escapeBadgeHtml(badgeMenuState.fieldQueries[field.key] || '')}" data-badge-field-select-search="${field.key}" placeholder="${field.key === 'store' ? '输入店名或店代码' : `搜索${field.label}`}" autocomplete="off" /></label>
@@ -2922,11 +2923,14 @@ function renderBadgeFieldFilter(field) {
     const open = badgeMenuState.openMenu === menuKey;
     const allOptionLabel = '全部';
     const options = [{ value: '全部', label: allOptionLabel }, ...getBadgeFieldSelectOptions(field)];
-    const selectedLabel = options.find((option) => option.value === value)?.label || allOptionLabel;
+    const placeholder = !value || value === '全部';
+    const selectedLabel = placeholder
+      ? `请选择${field.label}`
+      : options.find((option) => option.value === value)?.label || `请选择${field.label}`;
     return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
       <span>${field.label}</span>
       <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open ? 'true' : 'false'}">
-      <strong>${escapeBadgeHtml(selectedLabel)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${placeholder ? 'is-placeholder' : ''}">${escapeBadgeHtml(selectedLabel)}</strong><i class="session-select-caret" aria-hidden="true"></i>
       </button>
       ${open ? `<div class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="${field.label}筛选选项"><div class="session-menu-option-list">${options.map((option) => {
         const selected = value === option.value;

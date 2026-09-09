@@ -604,7 +604,7 @@
 
   function getSelectionText(key) {
     var values = selected(key);
-    if (!values.length) return '全部';
+    if (!values.length) return '请选择' + getFilterLabel(key);
     if (key === 'scenario') {
       var allScenarioValues = scenarioDefinitions.map(function (item) { return item.value; });
       if (allScenarioValues.every(function (value) { return values.includes(value); })) return '全部';
@@ -673,10 +673,11 @@
   function renderFilterControl(key) {
     var open = state.openMenu === key;
     var label = getFilterLabel(key);
+    var placeholder = selected(key).length === 0;
     return '<div class="badge-field-filter badge-field-filter-select session-toolbar-menu' + (open ? ' is-open' : '') + '" data-sr-control="' + escapeHtml(key) + '">' +
       '<span>' + escapeHtml(label) + '</span>' +
       '<button type="button" class="session-select-trigger' + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
-        '<strong>' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
+        '<strong class="' + (placeholder ? 'is-placeholder' : '') + '">' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
       (open ? renderOptionMenu(key) : '') + '</div>';
   }
 
