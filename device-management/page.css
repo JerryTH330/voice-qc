@@ -549,6 +549,29 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .event-dot.neutral { color: #66758a; background: #eef1f5; }
 
 .badge-event-record-card { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+.badge-event-duration-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+#badgeEventTimeline > .badge-event-duration-metrics { padding: 16px 18px 0; }
+.badge-event-duration-card {
+  min-height: 0;
+  height: auto;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(39, 61, 96, .05);
+}
+.badge-event-duration-icon { width: 44px; height: 44px; padding: 11px; display: grid; place-items: center; flex: 0 0 44px; border-radius: 12px; }
+.badge-event-duration-icon.green { background: #e8f8f1; }
+.badge-event-duration-icon.blue { background: #eaf2ff; }
+.badge-event-duration-icon img { width: 22px; height: 22px; display: block; }
+.badge-event-duration-card > div { min-width: 0; }
+.badge-event-duration-card small,
+.badge-event-duration-card strong { display: block; }
+.badge-event-duration-card small { margin-bottom: 8px; color: #728096; font-size: 14px; font-weight: 500; line-height: 20px; }
+.badge-event-duration-card strong { color: #172033; font-size: 18px; font-weight: 500; line-height: 26px; white-space: nowrap; }
 .badge-event-record-card > .card-head { min-height: 64px; padding: 16px 18px; }
 .badge-event-record-card > .card-head h2 { color: #172033; font-size: 18px; font-weight: 600; line-height: 25px; }
 .badge-event-record-card > .card-head p { margin-top: 5px; color: #8994a5; font-size: 14px; font-weight: 400; line-height: 20px; }
@@ -563,7 +586,7 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .event-group-copy { min-width: 0; flex: 1; }
 .event-session-head .event-group-copy strong { color: #172033; font-size: 16px; font-weight: 500; line-height: 21px; }
 .event-group-copy p { margin: 4px 0 0; color: #72839b; font-size: 14px; font-weight: 400; line-height: 17px; }
-.event-session-duration { width: 68px; flex: 0 0 68px; text-align: right; }
+.event-session-duration { min-width: 112px; flex: 0 0 auto; text-align: right; }
 .event-session-duration span { display: block; margin-bottom: 5px; color: #8797ad; font-size: 14px; font-weight: 500; line-height: 17px; }
 .event-session-duration strong { color: #172033; font-size: 14px; font-weight: 500; line-height: 20px; }
 .event-session-details { padding: 16px; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid #e6edf5; background: #fff; }
@@ -1631,6 +1654,7 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
   .badge-record-drawer .badge-upload-filter-grid { grid-template-columns: 1fr; }
   .badge-record-drawer .summary-row.three-cols { grid-template-columns: 1fr; }
   .badge-event-filter-toolbar { grid-template-columns: 1fr; }
+  .badge-event-duration-metrics { grid-template-columns: 1fr; }
   .badge-event-filter-reset { width: 100%; }
   .badge-record-profile-card { padding: 16px; }
   .badge-record-profile-chip { max-width: 100%; justify-content: flex-start; }

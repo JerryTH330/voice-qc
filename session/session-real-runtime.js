@@ -234,7 +234,7 @@
     { key: 'brand', label: '品牌', width: 10 },
     { key: 'startTime', label: '录音开始时间', width: 20 },
     { key: 'uploadTime', label: '录音上传时间', width: 20 },
-    { key: 'status', label: '录音状态', width: 12 },
+    { key: 'status', label: '分析结果', width: 12 },
     { key: 'duration', label: '录音时长', width: 12 },
     { key: 'province', label: '省份', width: 12 },
     { key: 'city', label: '城市', width: 12 },
@@ -597,7 +597,7 @@
       governor: '治理员',
       advisor: '顾问',
       customer: '客户',
-      status: '录音状态'
+      status: '分析结果'
     };
     return labels[key] || key;
   }

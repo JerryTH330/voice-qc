@@ -96,6 +96,19 @@
 /* 录音专属内容；通用筛选、菜单、按钮、抽屉由 badge-list-components.css 统一。 */
 .sr-filter-card { position: relative; z-index: 5; }
 .session-real-root { font-size: 14px; }
+body:has(.session-real-root) .main { display: flex; flex-direction: column; }
+body:has(.session-real-root) #mainTopbar { flex: 0 0 auto; }
+body:has(.session-real-root) #pageHost {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.session-real-root { min-height: 0; flex: 1 1 auto; }
+.session-real-root .sr-filter-card { flex: 0 0 auto; }
+.session-real-root .sr-table-card { min-height: 360px; flex: 1 1 auto; }
+.session-real-root .sr-table-card .table-shell { height: 100%; }
+.session-real-root .session-list-table-wrap { min-height: 0; overflow: auto; }
 .session-real-root :is(.session-select-trigger, .session-date-trigger, .session-filter-summary, .session-date-panel-copy span, .session-date-nav strong, .session-date-tab span, .session-date-tab strong, .session-date-weekdays span, .session-date-day, .session-date-shortcut, .session-date-footer span, .session-pagination button, .session-pagination input, .session-pagination span) { font-size: 14px; }
 .sr-filter-dimension-bar {
   box-sizing: border-box;

@@ -76,7 +76,7 @@ const badgeEventRecords = [
     sn: 'MN-BDG-004836',
     employeeName: '李洋',
     storeName: '上海浦东体验中心',
-    powerOnDuration: '08:40:00',
+    powerOnDuration: '07:55:00',
     uploadedRecordingDuration: '03:15:00',
     events: [
       { type: 'power-on', label: '工牌开机', time: '08:30:00', color: 'green' },
@@ -85,6 +85,7 @@ const badgeEventRecords = [
       { type: 'low-battery', label: '工牌电量预警', time: '16:00:00', icon: '低', color: 'red', note: '剩余电量 18%' },
       { type: 'charging-start', label: '开始充电', time: '16:15:00', icon: '充', color: 'violet' },
       { type: 'charging-end', label: '结束充电', time: '17:00:00', icon: '满', color: 'neutral' },
+      { type: 'power-on', label: '工牌开机', time: '17:00:00', color: 'green' },
       { type: 'power-off', label: '工牌关机', time: '17:10:00', color: 'neutral' }
     ]
   },
@@ -906,7 +907,7 @@ function renderVisitEventDetail(record) {
     <article class="${badgeSecondaryEventTypes.has(item.type) ? 'event-secondary' : 'event-primary'}${item.note ? ' event-wide' : ''}">
       <span class="event-dot ${item.color}" aria-hidden="true">${renderBadgeEventIcon(item)}</span>
       <div><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
-      ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
+      ${item.type === 'power-on' || item.type === 'power-off' ? '<em>/</em>' : (item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : '')}
     </article>`).join('') : `<div class="event-empty-state">${record.detailText === '工牌未开机' ? '到访当天没有开机、关机、录音等工牌事件。' : '当前工牌在所选日期没有工牌事件。'}</div>`;
 }
 
@@ -943,14 +944,87 @@ function badgeEventTimeToSeconds(time) {
   return (hours * 60 * 60) + (minutes * 60) + seconds;
 }
 
+function formatBadgeDurationSeconds(duration) {
+  if (!Number.isFinite(duration) || duration < 0) return '/';
+  const totalSeconds = Math.floor(duration);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours}小时${String(minutes).padStart(2, '0')}分${String(seconds).padStart(2, '0')}秒`;
+}
+
 function formatBadgeEventDuration(startTime, endTime) {
-  if (!startTime || !endTime) return '—';
-  const duration = Math.max(0, badgeEventTimeToSeconds(endTime) - badgeEventTimeToSeconds(startTime));
-  const hours = Math.floor(duration / 3600);
-  const minutes = Math.floor((duration % 3600) / 60);
-  const seconds = duration % 60;
-  if (hours > 0) return `${hours}小时${String(minutes).padStart(2, '0')}分`;
-  return `${minutes}分${String(seconds).padStart(2, '0')}秒`;
+  if (!startTime || !endTime) return '/';
+  let duration = badgeEventTimeToSeconds(endTime) - badgeEventTimeToSeconds(startTime);
+  if (duration < 0) duration += 24 * 60 * 60;
+  return formatBadgeDurationSeconds(duration);
+}
+
+function getBadgeEventTimestamp(recordDate, event) {
+  if (!event?.time) return NaN;
+  return new Date(`${event.date || recordDate}T${event.time}`).getTime();
+}
+
+function getBadgeMetricCutoff(record) {
+  const detailRecord = badgeDetailRecords.find((item) => item.sn === record?.sn);
+  const syncedAt = detailRecord?.syncedAt || record?.syncedAt;
+  if (!syncedAt) return NaN;
+  return new Date(String(syncedAt).replace(' ', 'T')).getTime();
+}
+
+function calculateBadgeMetricDuration(record, metric) {
+  if (!record || !Array.isArray(record.events) || !record.date) return null;
+  const dayStart = new Date(`${record.date}T00:00:00`).getTime();
+  const dayEnd = dayStart + (24 * 60 * 60 * 1000);
+  if (!Number.isFinite(dayStart)) return null;
+  const events = record.events
+    .map((event) => ({ event, timestamp: getBadgeEventTimestamp(record.date, event) }))
+    .filter((item) => Number.isFinite(item.timestamp))
+    .sort((left, right) => left.timestamp - right.timestamp);
+  let activeStart = null;
+  let totalMilliseconds = 0;
+
+  const addInterval = (start, end) => {
+    const visibleStart = Math.max(start, dayStart);
+    const visibleEnd = Math.min(end, dayEnd);
+    if (visibleEnd > visibleStart) totalMilliseconds += visibleEnd - visibleStart;
+  };
+
+  events.forEach(({ event, timestamp }) => {
+    if (metric === 'power') {
+      if (event.type === 'power-on' && activeStart === null) activeStart = timestamp;
+      if ((event.type === 'power-off' || event.type === 'charging-start') && activeStart !== null) {
+        addInterval(activeStart, timestamp);
+        activeStart = null;
+      }
+      return;
+    }
+    if (event.type === 'recording-start' && activeStart === null) activeStart = timestamp;
+    if (['recording-end', 'power-off', 'charging-start'].includes(event.type) && activeStart !== null) {
+      addInterval(activeStart, timestamp);
+      activeStart = null;
+    }
+  });
+
+  if (activeStart !== null) {
+    const syncTimestamp = getBadgeMetricCutoff(record);
+    if (!Number.isFinite(syncTimestamp) || syncTimestamp <= activeStart) return null;
+    addInterval(activeStart, Math.min(syncTimestamp, dayEnd));
+  }
+  return Math.floor(totalMilliseconds / 1000);
+}
+
+function renderBadgeEventDurationMetrics(record) {
+  const isToday = badgeEventFilterState.date === formatStoreDateValue(new Date());
+  const periodLabel = isToday ? '今日' : '当日';
+  const powerLabel = document.getElementById('badgePowerDurationLabel');
+  const recordingLabel = document.getElementById('badgeRecordingDurationLabel');
+  const powerValue = document.getElementById('badgePowerDurationValue');
+  const recordingValue = document.getElementById('badgeRecordingDurationValue');
+  if (powerLabel) powerLabel.textContent = `${periodLabel}开机时长`;
+  if (recordingLabel) recordingLabel.textContent = `${periodLabel}录音时长`;
+  if (powerValue) powerValue.textContent = formatBadgeDurationSeconds(calculateBadgeMetricDuration(record, 'power'));
+  if (recordingValue) recordingValue.textContent = formatBadgeDurationSeconds(calculateBadgeMetricDuration(record, 'recording'));
 }
 
 function buildBadgeEventGroups(events) {
@@ -1079,6 +1153,7 @@ function renderBadgeEventGroup(group, activeType) {
           <div class="event-group-row event-detail-row event-power-row">
             <span class="event-dot green" aria-hidden="true">${renderBadgeEventIcon(event)}</span>
             <div class="event-group-copy"><strong>工牌开机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
+            <em>/</em>
           </div>`
       }));
     }
@@ -1117,6 +1192,7 @@ function renderBadgeEventGroup(group, activeType) {
           <div class="event-group-row event-detail-row event-power-row">
             <span class="event-dot neutral" aria-hidden="true">${renderBadgeEventIcon(event)}</span>
             <div class="event-group-copy"><strong>工牌关机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
+            <em>/</em>
           </div>`
       }));
     }
@@ -1130,7 +1206,7 @@ function renderBadgeEventGroup(group, activeType) {
         <div class="event-session-head">
           <div class="event-session-main">
             <span class="event-session-status${group.end ? ' is-ended' : ''}" aria-hidden="true"></span>
-            <div class="event-group-copy"><strong>工牌事件${group.number}</strong></div>
+            <div class="event-group-copy"><strong>使用记录${group.number}</strong></div>
           </div>
           <div class="event-session-duration"><span>持续时长</span><strong>${group.end ? escapeBadgeHtml(formatBadgeEventDuration(group.start.time, group.end.time)) : '进行中'}</strong></div>
         </div>
@@ -1139,22 +1215,26 @@ function renderBadgeEventGroup(group, activeType) {
   }
 
   const item = group.event;
+  const standaloneMeta = (item.type === 'power-on' || item.type === 'power-off')
+    ? '<em>/</em>'
+    : (item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : '');
   return `
     <article class="event-group-card event-standalone-card">
       <div class="event-group-row">
         <span class="event-dot ${item.color}" aria-hidden="true">${renderBadgeEventIcon(item)}</span>
         <div class="event-group-copy"><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
-        ${item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : ''}
+        ${standaloneMeta}
       </div>
     </article>`;
 }
 
 function renderBadgeEvents() {
-  const timeline = document.getElementById('badgeEventTimeline');
+  const timeline = document.getElementById('badgeEventGroups');
   const summary = document.getElementById('badgeEventResultSummary');
   if (!timeline || !summary) return;
 
   const record = getBadgeEventRecord(badgeEventFilterState.sn, badgeEventFilterState.date);
+  renderBadgeEventDurationMetrics(record);
 
   if (!record) {
     summary.textContent = '共 0 组记录';
@@ -1404,6 +1484,26 @@ const storeOverviewState = {
 };
 
 const badgeTypes = ['充电坞版本工牌', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
+
+function isBadgeWifiCapable(badgeType) {
+  return String(badgeType || '') !== '4G版本工牌';
+}
+
+const badgeDeviceStatusValues = Object.freeze(['在线', '开机', '离线', '未知']);
+const badgeDeviceStatusTone = Object.freeze({
+  在线: 'green',
+  开机: 'blue',
+  离线: 'gray',
+  未知: 'amber'
+});
+
+function getGeneratedBadgeStatus(index) {
+  const bucket = index % 10;
+  if (bucket === 0) return '未知';
+  if (bucket <= 2) return '离线';
+  if (bucket <= 4) return '开机';
+  return '在线';
+}
 // Store scope comes from the real directory; badge/advisor records remain the existing demo data.
 const badgeOrganizationRecords = (window.__DEVICE_ORGANIZATION_DEALERS || sharedOrganizationDirectory?.dealers || []).map((dealer) => {
   const brandId = `brand:${dealer.brand}`;
@@ -1435,6 +1535,7 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
   const advisorName = hasAdvisorBinding ? badge.advisorName : '';
   const store = storeOverviewRecords.find((item) => item.brand === badge.dealer.brand && item.code === badge.dealer.dealerCode);
   const organization = badgeOrganizationByStore.get(`${store.brand}|${store.code}`);
+  const badgeType = badgeTypes[index % badgeTypes.length];
   const connected = index % 31 !== 0;
   const recording = connected && index % 5 === 0;
   const battery = index === 6 ? 100 : index % 25 === 0 && index < 425 ? 7 + (index % 13) : 56 + ((index * 7) % 43);
@@ -1447,9 +1548,10 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
     advisorName,
     advisorId,
     sn: badge.sn,
-    badgeType: badgeTypes[index % badgeTypes.length],
+    badgeType,
+    badgeStatus: getGeneratedBadgeStatus(index),
     recordingStatus: recording ? '录音中' : '未录音',
-    connectionStatus: connected ? '已连接' : '未连接',
+    connectionStatus: isBadgeWifiCapable(badgeType) ? (connected ? '已连接' : '未连接') : '/',
     dockConnected,
     signal: index % 3 === 0 ? '信号良好' : index % 3 === 1 ? '一般' : '较弱',
     battery,
@@ -1493,7 +1595,9 @@ function buildGeneratedBadgeEvents(detailRecord) {
       { type: 'recording-end', label: '结束录音', time: at(5 * 60 * 60 + 28 * 60), icon: '停', color: 'red' },
       { type: 'power-off', label: '工牌关机', time: at(7 * 60 * 60 + 5 * 60), color: 'neutral' },
       { type: 'charging-start', label: '开始充电', time: at(7 * 60 * 60 + 8 * 60), icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: at(8 * 60 * 60 + 2 * 60), icon: '满', color: 'neutral' }
+      { type: 'charging-end', label: '结束充电', time: at(8 * 60 * 60 + 2 * 60), icon: '满', color: 'neutral' },
+      { type: 'power-on', label: '工牌开机', time: at(8 * 60 * 60 + 2 * 60), color: 'green' },
+      { type: 'power-off', label: '工牌关机', time: at(9 * 60 * 60), color: 'neutral' }
     );
   } else {
     events.push(
@@ -1631,7 +1735,8 @@ const badgeFieldDefinitions = Object.freeze([
   { key: 'sn', label: '工牌 SN', filterType: 'text', queryKey: 'snQuery' },
   { key: 'badgeType', label: '工牌类型', filterType: 'select' },
   { key: 'bindingStatus', label: '绑定状态', filterType: 'select' },
-  { key: 'recordingStatus', label: '工牌状态', filterType: 'select' },
+  { key: 'badgeStatus', label: '工牌状态', filterType: 'select' },
+  { key: 'recordingStatus', label: '录音状态', filterType: 'select' },
   { key: 'connectionStatus', label: 'WiFi 连接', filterType: 'select' },
   { key: 'dockConnected', label: '是否接入充电坞', filterType: 'select' },
   { key: 'signal', label: '信号', filterType: 'select' },
@@ -1645,7 +1750,12 @@ const badgeFieldDefinitionMap = Object.freeze(Object.fromEntries(badgeFieldDefin
 const badgeDefaultFieldOrder = Object.freeze(badgeFieldDefinitions.map((field) => field.key));
 const badgeAdvisorFilterDefinition = Object.freeze({ key: 'advisor', label: '顾问', filterType: 'advisor' });
 const badgeOrganizationFilterKeys = Object.freeze(['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store']);
-const badgeStatusMultiSelectKeys = Object.freeze(['bindingStatus', 'recordingStatus']);
+const badgeStatusMultiSelectKeys = Object.freeze(['bindingStatus', 'badgeStatus', 'recordingStatus']);
+const badgeFixedMultiSelectValues = Object.freeze({
+  bindingStatus: ['已绑定', '未绑定'],
+  badgeStatus: badgeDeviceStatusValues,
+  recordingStatus: ['录音中', '未录音']
+});
 const badgeFilterFieldOrder = Object.freeze([
   'advisorId',
   'advisorName',
@@ -1653,6 +1763,7 @@ const badgeFilterFieldOrder = Object.freeze([
   'governor',
   'sn',
   'bindingStatus',
+  'badgeStatus',
   'recordingStatus'
 ]);
 const badgeFieldSettingsStorageKey = 'aiqc-device-badge-field-settings-v1';
@@ -1707,6 +1818,7 @@ const badgeDefaultFilters = {
   store: [],
   advisorIds: [],
   bindingStatus: [],
+  badgeStatus: [],
   recordingStatus: [],
   connectionStatus: '全部',
   dockConnected: '全部',
@@ -2827,8 +2939,8 @@ function renderBadgeAdvisorFilter() {
 
 function getBadgeFieldSelectOptions(field) {
   if (field.key === 'dockConnected') return [{ value: '已接入', label: '已接入' }, { value: '未接入', label: '未接入' }];
-  if (field.key === 'bindingStatus' || field.key === 'recordingStatus') {
-    const values = field.key === 'bindingStatus' ? ['已绑定', '未绑定'] : ['录音中', '未录音'];
+  if (badgeFixedMultiSelectValues[field.key]) {
+    const values = badgeFixedMultiSelectValues[field.key];
     const selected = new Set(getBadgeSelectedValues(field.key));
     const pinned = badgeMenuState.openMenu === `field:${field.key}` ? badgeMenuState.pinnedSelectionIds : selected;
     return values.map((value) => ({ value, label: value })).sort((left, right) => (
@@ -2868,7 +2980,7 @@ function getBadgeFieldSelectOptions(field) {
     : badgeDetailRecords;
   const source = drilldownRecords;
   return [...new Set(source.map((item) => item[field.key]))]
-    .filter((value) => value !== undefined && value !== null && value !== '')
+    .filter((value) => value !== undefined && value !== null && value !== '' && value !== '—' && value !== '/')
     .map((value) => ({ value: String(value), label: String(value) }))
     .sort((left, right) => left.label.localeCompare(right.label, 'zh-CN'));
 }
@@ -2989,7 +3101,7 @@ function getFilteredBadgeRecords() {
     if (storeDrilldownState.active && item.storeId !== storeDrilldownState.storeId) return false;
     if (!textMatches(item, 'sn', 'snQuery')) return false;
     if (isBadgeAdvisorFilterVisible() && badgeFilterState.advisorIds.length && !badgeFilterState.advisorIds.includes(item.advisorId)) return false;
-    if (!['badgeType', 'brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store', 'bindingStatus', 'recordingStatus', 'connectionStatus', 'signal'].every((key) => selectMatches(item, key))) return false;
+    if (!['badgeType', 'brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store', 'bindingStatus', 'badgeStatus', 'recordingStatus', 'connectionStatus', 'signal'].every((key) => selectMatches(item, key))) return false;
     if (visibleKeys.has('dockConnected') && badgeFilterState.dockConnected !== '全部' && (item.dockConnected ? '已接入' : '未接入') !== badgeFilterState.dockConnected) return false;
     if (visibleKeys.has('battery') && !isBadgeNumberInRange(item.battery, badgeFilterState.batteryMin, badgeFilterState.batteryMax)) return false;
     if (visibleKeys.has('remainingMemory') && !isBadgeNumberInRange(item.remainingMemory, badgeFilterState.memoryMin, badgeFilterState.memoryMax)) return false;
@@ -3021,6 +3133,7 @@ function getBadgeExportColumnWidth(field) {
     advisorId: 22,
     advisorName: 14,
     bindingStatus: 14,
+    badgeStatus: 14,
     recordingStatus: 14,
     connectionStatus: 14,
     dockConnected: 18,
@@ -3130,11 +3243,18 @@ function renderBadgeFieldCell(item, field) {
     const status = getBadgeBindingStatus(item);
     return `<span class="status-inline ${status === '已绑定' ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${status}</span></span>`;
   }
+  if (field.key === 'badgeStatus') {
+    const status = String(item.badgeStatus || '未知');
+    return `<span class="status-inline ${badgeDeviceStatusTone[status] || 'amber'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(status)}</span></span>`;
+  }
   if (['advisorId', 'advisorName', 'patroler', 'governor'].includes(field.key)) return escapeBadgeHtml(String(item[field.key] ?? '').trim() || '—');
   if (field.key === 'recordingStatus') return item.recordingStatus === '录音中'
     ? '<span class="status-inline green"><span class="status-inline-dot"></span><span>录音中</span></span>'
     : '<span class="status-inline gray"><span class="status-inline-dot"></span><span>未录音</span></span>';
-  if (field.key === 'connectionStatus') return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
+  if (field.key === 'connectionStatus') {
+    if (!isBadgeWifiCapable(item.badgeType) || item.connectionStatus === '—' || item.connectionStatus === '/') return '/';
+    return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
+  }
   if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
   if (field.key === 'battery') return renderBatteryIndicator(item.battery);
   if (field.key === 'remainingMemory') return `<strong class="${item.remainingMemory < 20 ? 'danger-text' : ''}">${item.remainingMemory}%</strong>`;

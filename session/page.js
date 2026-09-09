@@ -1,7 +1,7 @@
 /* 录音列表 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'session';
 (function loadPageRuntime() {
-  const version = '20260909-filter-placeholder-style-v2';
+  const version = '20260909-analysis-result-label-v1';
   const scripts = [
     `../session-search-utils.js?v=${version}`,
     `../shared/issue-rule-list.js?v=${version}`,
