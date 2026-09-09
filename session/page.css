@@ -108,46 +108,16 @@
   border-bottom: 1px solid rgba(217, 226, 239, .82);
 }
 .sr-filter-dimension-main,
-.sr-filter-dimension-tabs,
 .sr-filter-dimension-path { display: flex; align-items: center; }
-.sr-filter-dimension-main { min-width: 0; gap: 12px; }
-.sr-filter-dimension-label,
-.sr-filter-dimension-path span { color: #7d899c; font-size: 13px; white-space: nowrap; }
-.sr-filter-dimension-tabs {
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid rgba(201, 210, 224, .88);
-  border-radius: 12px;
-  background: #f6f8fc;
-}
-.sr-filter-dimension-tab {
-  height: 32px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: #62728d;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color .18s ease, background .18s ease, box-shadow .18s ease;
-}
-.sr-filter-dimension-tab:hover { color: #2563eb; }
-.sr-filter-dimension-tab:focus-visible { outline: 2px solid rgba(37, 99, 235, .28); outline-offset: 2px; }
-.sr-filter-dimension-tab.active {
-  background: #fff;
-  color: #2563eb;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, .12), inset 0 0 0 1px rgba(37, 99, 235, .12);
-}
+.sr-filter-dimension-main { min-width: 0; }
+.sr-filter-dimension-path span { color: #7d899c; font-size: 14px; white-space: nowrap; }
 .sr-filter-dimension-path { min-width: 0; justify-content: flex-end; gap: 8px; }
 .sr-filter-dimension-path strong {
   min-width: 0;
   overflow: hidden;
   color: #34445f;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -165,10 +135,49 @@
 .session-real-root .badge-list-empty-state { position: relative; inset: auto; }
 .session-real-root .session-list-table-wrap.is-empty { overflow: hidden; }
 .sr-table-card { position: relative; z-index: 1; }
-.sr-real-table { min-width: 2700px; }
+.sr-real-table { min-width: 2840px; }
+.sr-intent-header-help { gap: 4px; }
+.sr-intent-header-help .session-intent-help-btn { flex: 0 0 16px; cursor: help; }
+.sr-intent-header-help .sr-intent-rule-tooltip {
+  position: fixed;
+  top: var(--sr-intent-tooltip-top, 0);
+  left: var(--sr-intent-tooltip-left, 0);
+  z-index: 180;
+  width: min(680px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  text-align: left;
+  transform: translateY(-4px);
+}
+.sr-intent-rule-tooltip .session-intent-rule-table {
+  table-layout: auto;
+  font-weight: 400;
+}
+.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table th,
+.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table td {
+  min-width: 0;
+  padding: 8px 10px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table th:first-child {
+  width: 1%;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.sr-intent-header-help:hover .sr-intent-rule-tooltip,
+.sr-intent-header-help:focus-within .sr-intent-rule-tooltip { transform: translateY(0); }
+.sr-intent-header-help .sr-intent-rule-tooltip::before {
+  left: var(--sr-intent-tooltip-arrow-left, 50%);
+}
+.sr-intent-header-help .sr-intent-rule-tooltip[data-placement="top"]::before {
+  top: auto;
+  bottom: -5px;
+  transform: rotate(225deg);
+}
 .sr-menu-group + .sr-menu-group { margin-top: 6px; border-top: 1px solid var(--line); }
 .sr-menu-group-label { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
 .sr-date-control .session-date-trigger { overflow: hidden; }
+.sr-date-control .session-date-trigger em { font-style: normal; }
 .sr-scenario-group-select {
   width: 100%;
   min-height: 42px;
@@ -177,23 +186,38 @@
   align-items: center;
   gap: 9px;
   border: 0;
-  border-radius: 10px;
-  background: #f5f8fc;
+  border-radius: 0;
+  background: transparent;
   color: var(--text);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
-.sr-scenario-group-select:hover { background: #edf3fb; }
-.sr-scenario-group-select > strong { font-size: 13px; }
+.sr-scenario-group-select:hover { background: transparent; color: var(--blue); }
+.sr-scenario-group-select > strong { font-size: 14px; }
 .sr-scenario-group-select > small { margin-left: auto; color: #8a96a8; font-size: 12px; }
 .sr-scenario-group-select.is-selected .badge-advisor-option-check { border-color: var(--blue); background: var(--blue); }
 .sr-scenario-group-select.is-partial .badge-advisor-option-check { border-color: var(--blue); background: rgba(37, 99, 235, .12); }
 .sr-scenario-group-select.is-partial .badge-advisor-option-check::before { content: ""; width: 8px; height: 2px; border-radius: 2px; background: var(--blue); }
-.sr-scenario-source-group .badge-advisor-option { padding-left: 22px; }
-.sr-date-control .session-date-trigger strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-scenario-source-group { display: flex; flex-direction: column; gap: 4px; }
+.sr-scenario-source-group + .sr-scenario-source-group {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(217, 226, 239, .82);
+}
+.sr-scenario-source-group .badge-advisor-option { padding-left: 39px; }
+.session-real-root .sr-date-control .session-date-trigger strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.session-real-root .badge-field-filter-select .session-select-trigger strong.is-placeholder {
+  color: #a0aaba;
+  font-weight: 400;
+}
 .sr-date-control .session-menu-panel-date { overflow-y: auto; }
 .sr-date-control .session-menu-panel-date { left: 0; right: auto; min-width: 0; width: min(392px, calc(100vw - 48px)); max-width: min(392px, calc(100vw - 48px)); }
+.sr-date-control .session-date-action-btn {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
 .sr-settings-panel { box-sizing: border-box; }
 .sr-settings-panel .badge-field-settings-body { min-height: 0; }
 .sr-settings-panel .is-dragging { opacity: .45; }
@@ -204,9 +228,6 @@ body.sr-settings-open { overflow: hidden; }
   #toolbarActions:has(.badge-field-settings-action) { justify-content: flex-end; }
   .session-real-root .session-filter-summary { flex-wrap: wrap; }
   .sr-filter-dimension-bar { align-items: stretch; flex-direction: column; gap: 10px; }
-  .sr-filter-dimension-main { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .sr-filter-dimension-tabs { width: 100%; }
-  .sr-filter-dimension-tab { flex: 1 1 0; padding-inline: 10px; }
   .sr-filter-dimension-path { justify-content: flex-start; }
   #sessionRealFilterControls.is-collapsed {
     display: block;

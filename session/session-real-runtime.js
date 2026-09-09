@@ -168,6 +168,7 @@
         store: text(dealer.dealerName || '—'),
         region: text(dealer.area || '—'),
         zone: text(dealer.zone || '—'),
+        patrolerCode: getPersonnelCode(dealer.patrolerId) || '-',
         patroler: text(dealer.patroler || '—'),
         governor: text(dealer.governor || '—'),
         advisorKey: dealerKeyValue + '::' + advisorId,
@@ -241,6 +242,7 @@
     { key: 'store', label: '门店', width: 20 },
     { key: 'region', label: '大区', width: 16 },
     { key: 'zone', label: '战区', width: 16 },
+    { key: 'patrolerCode', label: '巡回员code', width: 16 },
     { key: 'patroler', label: '巡回员', width: 14 },
     { key: 'governor', label: '治理员', width: 14 },
     { key: 'advisorId', label: '顾问ID', width: 20 },
@@ -268,6 +270,10 @@
       if (!parsed || !Array.isArray(parsed.order)) return fallback;
       var known = new Set(columns.map(function (column) { return column.key; }));
       var order = parsed.order.filter(function (key) { return known.has(key); });
+      if (!order.includes('patrolerCode')) {
+        var patrolerIndex = order.indexOf('patroler');
+        order.splice(patrolerIndex < 0 ? order.length : patrolerIndex, 0, 'patrolerCode');
+      }
       columns.forEach(function (column) {
         if (!order.includes(column.key)) order.push(column.key);
       });
@@ -455,7 +461,13 @@
       options = list.map(function (dealer) { return { value: dealer.zone, label: dealer.zone }; });
     } else if (key === 'patroler') {
       options = list.filter(function (dealer) { return dealer.patroler; }).map(function (dealer) {
-        return { value: dealer.patrolerId || dealer.patroler, label: dealer.patroler, meta: getPersonnelMeta(dealer, dealer.patrolerId) };
+        var code = getPersonnelCode(dealer.patrolerId);
+        return {
+          value: dealer.patrolerId || dealer.patroler,
+          label: dealer.patroler,
+          meta: text(dealer.brand) + ' · ' + (code || '-'),
+          search: dealer.brand
+        };
       });
     } else if (key === 'governor') {
       options = list.filter(function (dealer) { return dealer.governor; }).map(function (dealer) {
@@ -592,7 +604,7 @@
 
   function getSelectionText(key) {
     var values = selected(key);
-    if (!values.length) return '全部';
+    if (!values.length) return '请选择' + getFilterLabel(key);
     if (key === 'scenario') {
       var allScenarioValues = scenarioDefinitions.map(function (item) { return item.value; });
       if (allScenarioValues.every(function (value) { return values.includes(value); })) return '全部';
@@ -661,10 +673,11 @@
   function renderFilterControl(key) {
     var open = state.openMenu === key;
     var label = getFilterLabel(key);
+    var placeholder = selected(key).length === 0;
     return '<div class="badge-field-filter badge-field-filter-select session-toolbar-menu' + (open ? ' is-open' : '') + '" data-sr-control="' + escapeHtml(key) + '">' +
       '<span>' + escapeHtml(label) + '</span>' +
       '<button type="button" class="session-select-trigger' + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
-        '<strong>' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
+        '<strong class="' + (placeholder ? 'is-placeholder' : '') + '">' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
       (open ? renderOptionMenu(key) : '') + '</div>';
   }
 
@@ -769,10 +782,10 @@
       ? '品牌 → 大区 → 战区 → 门店'
       : '品牌 → 省份 → 城市 → 门店';
     return '<div class="sr-filter-dimension-bar">' +
-      '<div class="sr-filter-dimension-main"><span class="sr-filter-dimension-label">筛选维度</span>' +
-        '<div class="sr-filter-dimension-tabs" role="tablist" aria-label="录音组织筛选维度">' +
-          '<button type="button" class="sr-filter-dimension-tab' + (organizationActive ? ' active' : '') + '" data-sr-dimension="organization" role="tab" aria-selected="' + organizationActive + '">组织维度</button>' +
-          '<button type="button" class="sr-filter-dimension-tab' + (!organizationActive ? ' active' : '') + '" data-sr-dimension="geography" role="tab" aria-selected="' + !organizationActive + '">地理维度</button>' +
+      '<div class="sr-filter-dimension-main">' +
+        '<div class="sr-filter-dimension-tabs leads-view-tabs" role="tablist" aria-label="录音组织筛选维度">' +
+          '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (organizationActive ? ' active' : '') + '" data-sr-dimension="organization" role="tab" aria-selected="' + organizationActive + '">组织维度</button>' +
+          '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (!organizationActive ? ' active' : '') + '" data-sr-dimension="geography" role="tab" aria-selected="' + !organizationActive + '">地理维度</button>' +
         '</div></div>' +
       '<div class="sr-filter-dimension-path"><span>当前路径</span><strong>' + escapeHtml(pathText) + '</strong></div>' +
     '</div>';
@@ -787,7 +800,7 @@
     var primary = dimensionKeys.filter(isColumnVisible);
     var secondary = [];
     if (isColumnVisible('advisorId') || isColumnVisible('advisorName')) secondary.push('advisor');
-    if (isColumnVisible('patroler')) secondary.push('patroler');
+    if (isColumnVisible('patrolerCode') || isColumnVisible('patroler')) secondary.push('patroler');
     if (isColumnVisible('governor')) secondary.push('governor');
     if (isColumnVisible('leadId') || isColumnVisible('customerName') || isColumnVisible('customerPhone')) secondary.push('customer');
     secondary.push('scenario', 'sourceType');
@@ -838,6 +851,7 @@
       store: record.store,
       region: record.region,
       zone: record.zone,
+      patrolerCode: record.patrolerCode,
       patroler: record.patroler,
       governor: record.governor,
       advisorId: record.advisorId,
@@ -863,6 +877,44 @@
     return value === '高' ? 'red' : value === '中' ? 'amber' : value === '低' ? 'blue' : 'gray';
   }
 
+  function renderIntentLevelHeader() {
+    return '<span class="session-intent-help sr-intent-header-help">' +
+      '<span>AI意向等级</span>' +
+      '<button type="button" class="session-intent-help-btn" data-sr-intent-help aria-label="查看AI意向等级判定标准" aria-describedby="sessionRealIntentRuleTooltip">?</button>' +
+      '<span class="session-intent-rule-tooltip sr-intent-rule-tooltip" id="sessionRealIntentRuleTooltip" role="tooltip">' +
+        '<table class="session-intent-rule-table"><thead><tr><th scope="col">等级</th><th scope="col">判定标准</th></tr></thead><tbody>' +
+          '<tr><th scope="row">高</th><td>近期购买、问具体配置价格、主动约试驾、询问提车时间</td></tr>' +
+          '<tr><th scope="row">中</th><td>有需求但时间未定、对比阶段、需再考虑、已约定跟进</td></tr>' +
+          '<tr><th scope="row">低</th><td>仅初步了解、无明确计划、被推销后简单应付、ASR内容杂乱但是能判断想购车（未明确拒绝）</td></tr>' +
+          '<tr><th scope="row">无</th><td>明确拒绝、明确表达无意向、已购车</td></tr>' +
+          '<tr><th scope="row">无法判断</th><td>无法提取有效信息，AI无法判断，录音为空，客户未实际接通，内容短且无法判断为高中低意向，购车无关场景(如维修售后)</td></tr>' +
+        '</tbody></table>' +
+      '</span>' +
+    '</span>';
+  }
+
+  function positionIntentRuleTooltip(button) {
+    var tooltip = button && button.parentElement && button.parentElement.querySelector('.sr-intent-rule-tooltip');
+    if (!tooltip) return;
+    var buttonRect = button.getBoundingClientRect();
+    var tooltipWidth = tooltip.offsetWidth;
+    var tooltipHeight = tooltip.offsetHeight;
+    var edge = 16;
+    var gap = 12;
+    var left = Math.min(
+      Math.max(buttonRect.left + buttonRect.width / 2 - tooltipWidth / 2, edge),
+      Math.max(edge, global.innerWidth - tooltipWidth - edge)
+    );
+    var fitsBelow = buttonRect.bottom + gap + tooltipHeight <= global.innerHeight - edge;
+    var top = fitsBelow
+      ? buttonRect.bottom + gap
+      : Math.max(edge, buttonRect.top - gap - tooltipHeight);
+    tooltip.dataset.placement = fitsBelow ? 'bottom' : 'top';
+    tooltip.style.setProperty('--sr-intent-tooltip-left', left + 'px');
+    tooltip.style.setProperty('--sr-intent-tooltip-top', top + 'px');
+    tooltip.style.setProperty('--sr-intent-tooltip-arrow-left', Math.min(Math.max(buttonRect.left + buttonRect.width / 2 - left - 4, 12), tooltipWidth - 20) + 'px');
+  }
+
   function renderTable(recordsForView) {
     var table = document.getElementById('sessionRealTable');
     var total = document.getElementById('sessionRealCount');
@@ -875,7 +927,8 @@
     var body = table.querySelector('tbody');
     if (!head || !body) return;
     head.innerHTML = '<tr>' + visible.map(function (column) {
-      return '<th data-column-key="' + escapeHtml(column.key) + '">' + escapeHtml(column.label) + '</th>';
+      var label = column.key === 'intentLevel' ? renderIntentLevelHeader() : escapeHtml(column.label);
+      return '<th data-column-key="' + escapeHtml(column.key) + '">' + label + '</th>';
     }).join('') + '<th class="sr-operation-col">操作</th></tr>';
     total.textContent = String(recordsForView.length);
     completed.textContent = String(recordsForView.filter(function (record) { return record.status === '已完成'; }).length);
@@ -1173,7 +1226,11 @@
       showToast('至少保留一个字段');
       return;
     }
-    next.hidden.filter(function (key) { return !previousHidden.has(key); }).forEach(clearFilterForColumn);
+    next.hidden.filter(function (key) { return !previousHidden.has(key); }).forEach(function (key) {
+      if (key === 'patroler' && !next.hidden.includes('patrolerCode')) return;
+      clearFilterForColumn(key);
+    });
+    if (next.hidden.includes('patrolerCode') && next.hidden.includes('patroler')) state.selections.patroler = [];
     if (next.hidden.includes('advisorId') && next.hidden.includes('advisorName')) state.selections.advisor = [];
     if (next.hidden.includes('leadId') && next.hidden.includes('customerName') && next.hidden.includes('customerPhone')) state.selections.customer = [];
     columnSettings = next;
@@ -1252,6 +1309,10 @@
   }
 
   function bindTableEvents() {
+    document.querySelectorAll('[data-sr-intent-help]').forEach(function (node) {
+      node.addEventListener('pointerenter', function () { positionIntentRuleTooltip(node); });
+      node.addEventListener('focus', function () { positionIntentRuleTooltip(node); });
+    });
     document.querySelectorAll('[data-sr-detail]').forEach(function (node) {
       node.addEventListener('click', function () { openDetail(node.dataset.srDetail); });
     });

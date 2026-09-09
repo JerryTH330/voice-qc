@@ -1448,7 +1448,7 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
     advisorId,
     sn: badge.sn,
     badgeType: badgeTypes[index % badgeTypes.length],
-    recordingStatus: recording ? '录音中' : '—',
+    recordingStatus: recording ? '录音中' : '未录音',
     connectionStatus: connected ? '已连接' : '未连接',
     dockConnected,
     signal: index % 3 === 0 ? '信号良好' : index % 3 === 1 ? '一般' : '较弱',
@@ -1631,7 +1631,7 @@ const badgeFieldDefinitions = Object.freeze([
   { key: 'sn', label: '工牌 SN', filterType: 'text', queryKey: 'snQuery' },
   { key: 'badgeType', label: '工牌类型', filterType: 'select' },
   { key: 'bindingStatus', label: '绑定状态', filterType: 'select' },
-  { key: 'recordingStatus', label: '录音状态', filterType: 'select' },
+  { key: 'recordingStatus', label: '工牌状态', filterType: 'select' },
   { key: 'connectionStatus', label: 'WiFi 连接', filterType: 'select' },
   { key: 'dockConnected', label: '是否接入充电坞', filterType: 'select' },
   { key: 'signal', label: '信号', filterType: 'select' },
@@ -1645,6 +1645,7 @@ const badgeFieldDefinitionMap = Object.freeze(Object.fromEntries(badgeFieldDefin
 const badgeDefaultFieldOrder = Object.freeze(badgeFieldDefinitions.map((field) => field.key));
 const badgeAdvisorFilterDefinition = Object.freeze({ key: 'advisor', label: '顾问', filterType: 'advisor' });
 const badgeOrganizationFilterKeys = Object.freeze(['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store']);
+const badgeStatusMultiSelectKeys = Object.freeze(['bindingStatus', 'recordingStatus']);
 const badgeFilterFieldOrder = Object.freeze([
   'advisorId',
   'advisorName',
@@ -1705,8 +1706,8 @@ const badgeDefaultFilters = {
   governor: [],
   store: [],
   advisorIds: [],
-  bindingStatus: '全部',
-  recordingStatus: '全部',
+  bindingStatus: [],
+  recordingStatus: [],
   connectionStatus: '全部',
   dockConnected: '全部',
   signal: '全部',
@@ -2473,7 +2474,7 @@ function renderBadgeSyncDateTimeFilter(field) {
     <div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="syncDateTime">
       <span>${field.label}</span>
       <button type="button" class="session-date-trigger${open ? ' active' : ''}" data-badge-sync-date-trigger aria-label="${field.label}筛选" aria-haspopup="dialog" aria-expanded="${open ? 'true' : 'false'}">
-        ${hasRange ? `<strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong>` : '<strong>全部时间</strong>'}<span class="session-date-icon" aria-hidden="true"></span>
+        ${hasRange ? `<strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong>` : `<strong class="is-placeholder">请选择${field.label}</strong>`}<span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${menuHtml}
     </div>`;
@@ -2496,10 +2497,10 @@ function renderBadgeDimensionSwitcher() {
     ? '品牌 → 大区 → 战区 → 门店'
     : '品牌 → 省份 → 城市 → 门店';
   return `<div class="badge-filter-dimension-bar">
-    <div class="badge-filter-dimension-main"><span class="badge-filter-dimension-label">筛选维度</span>
-      <div class="badge-filter-dimension-tabs" role="tablist" aria-label="工牌组织筛选维度">
-        <button type="button" class="badge-filter-dimension-tab${organizationActive ? ' active' : ''}" data-badge-dimension="organization" role="tab" aria-selected="${organizationActive}">组织维度</button>
-        <button type="button" class="badge-filter-dimension-tab${organizationActive ? '' : ' active'}" data-badge-dimension="geography" role="tab" aria-selected="${!organizationActive}">地理维度</button>
+    <div class="badge-filter-dimension-main">
+      <div class="badge-filter-dimension-tabs leads-view-tabs" role="tablist" aria-label="工牌组织筛选维度">
+        <button type="button" class="badge-filter-dimension-tab leads-view-tab${organizationActive ? ' active' : ''}" data-badge-dimension="organization" role="tab" aria-selected="${organizationActive}">组织维度</button>
+        <button type="button" class="badge-filter-dimension-tab leads-view-tab${organizationActive ? '' : ' active'}" data-badge-dimension="geography" role="tab" aria-selected="${!organizationActive}">地理维度</button>
       </div>
     </div>
     <div class="badge-filter-dimension-path"><span>当前路径</span><strong>${pathText}</strong></div>
@@ -2605,6 +2606,10 @@ const badgeCandidateDependencies = Object.freeze({
   store: ['brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor'],
   advisor: badgeOrganizationFilterKeys
 });
+
+function isBadgeMultiSelectFilter(field) {
+  return Number.isInteger(field?.organizationLevel) || badgeStatusMultiSelectKeys.includes(field?.key);
+}
 
 function getBadgeSelectedValues(key) {
   const value = badgeFilterState[key];
@@ -2722,7 +2727,7 @@ function pruneBadgeSelections(changedKey) {
 
 function assignBadgeFilterState(nextFilters = badgeDefaultFilters) {
   Object.assign(badgeFilterState, nextFilters);
-  badgeOrganizationFilterKeys.forEach((key) => {
+  [...badgeOrganizationFilterKeys, ...badgeStatusMultiSelectKeys].forEach((key) => {
     badgeFilterState[key] = getBadgeSelectedValuesFromValue(nextFilters[key]);
   });
   badgeFilterState.advisorIds = Array.isArray(nextFilters.advisorIds) ? nextFilters.advisorIds.map(String) : [];
@@ -2786,13 +2791,14 @@ function getBadgeAdvisorName(advisorId) {
 
 function getBadgeAdvisorFilterLabel() {
   const selectedIds = Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : [];
-  if (!selectedIds.length) return '全部';
+  if (!selectedIds.length) return '请选择顾问';
   return selectedIds.map((advisorId) => getBadgeAdvisorName(advisorId)).join('、');
 }
 
 function renderBadgeAdvisorFilter() {
   const open = badgeMenuState.openMenu === 'field:advisor';
   const selectedIds = new Set(Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : []);
+  const placeholder = selectedIds.size === 0;
   const candidates = getBadgeAdvisorCandidates();
   const allSelected = candidates.length > 0 && candidates.every((item) => selectedIds.has(item.id));
   const someSelected = candidates.some((item) => selectedIds.has(item.id));
@@ -2807,7 +2813,7 @@ function renderBadgeAdvisorFilter() {
   return `<div class="badge-field-filter badge-field-filter-advisor session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="advisor">
     <span>顾问</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-advisor-trigger aria-label="顾问筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeAdvisorOptions">
-      <strong>${escapeBadgeHtml(getBadgeAdvisorFilterLabel())}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${placeholder ? 'is-placeholder' : ''}">${escapeBadgeHtml(getBadgeAdvisorFilterLabel())}</strong><i class="session-select-caret" aria-hidden="true"></i>
     </button>
     ${open ? `<div class="session-menu-panel badge-advisor-menu" role="dialog" aria-label="顾问筛选">
       <label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" value="${escapeBadgeHtml(badgeMenuState.advisorQuery)}" data-badge-advisor-search placeholder="输入顾问姓名或 ID" autocomplete="off" /></label>
@@ -2821,8 +2827,14 @@ function renderBadgeAdvisorFilter() {
 
 function getBadgeFieldSelectOptions(field) {
   if (field.key === 'dockConnected') return [{ value: '已接入', label: '已接入' }, { value: '未接入', label: '未接入' }];
-  if (field.key === 'bindingStatus') return ['已绑定', '未绑定'].map((value) => ({ value, label: value }));
-  if (field.key === 'recordingStatus') return [{ value: '录音中', label: '录音中' }];
+  if (field.key === 'bindingStatus' || field.key === 'recordingStatus') {
+    const values = field.key === 'bindingStatus' ? ['已绑定', '未绑定'] : ['录音中', '未录音'];
+    const selected = new Set(getBadgeSelectedValues(field.key));
+    const pinned = badgeMenuState.openMenu === `field:${field.key}` ? badgeMenuState.pinnedSelectionIds : selected;
+    return values.map((value) => ({ value, label: value })).sort((left, right) => (
+      Number(pinned.has(right.value)) - Number(pinned.has(left.value))
+    ));
+  }
   if (Number.isInteger(field.organizationLevel)) {
     const selected = new Set(getBadgeSelectedValues(field.key));
     const optionsById = new Map();
@@ -2875,12 +2887,12 @@ function renderBadgeRangeFilter(field) {
   const allSelected = candidates.length > 0 && candidates.every((item) => selected.has(item.value));
   const someSelected = candidates.some((item) => selected.has(item.value));
   const label = selectedValues.length === 0
-    ? '全部'
+    ? `请选择${field.label}`
     : selectedValues.map((value) => getBadgeFieldOptionLabel(field.key, value)).join('、');
   return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
     <span>${field.label}</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeRangeOptions-${field.key}">
-      <strong>${escapeBadgeHtml(label)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${selectedValues.length === 0 ? 'is-placeholder' : ''}">${escapeBadgeHtml(label)}</strong><i class="session-select-caret" aria-hidden="true"></i>
     </button>
     ${open ? `<div class="session-menu-panel badge-advisor-menu" role="dialog" aria-label="${field.label}筛选">
       <label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" value="${escapeBadgeHtml(badgeMenuState.fieldQueries[field.key] || '')}" data-badge-field-select-search="${field.key}" placeholder="${field.key === 'store' ? '输入店名或店代码' : `搜索${field.label}`}" autocomplete="off" /></label>
@@ -2901,7 +2913,7 @@ function renderBadgeRangeFilter(field) {
 
 function renderBadgeFieldFilter(field) {
   if (field.filterType === 'advisor') return renderBadgeAdvisorFilter();
-  if (Number.isInteger(field.organizationLevel)) return renderBadgeRangeFilter(field);
+  if (isBadgeMultiSelectFilter(field)) return renderBadgeRangeFilter(field);
   if (field.filterType === 'text') {
     return `<label class="badge-field-filter"><span>${field.label}</span><input type="search" value="${escapeBadgeHtml(badgeFilterState[field.queryKey])}" placeholder="请输入${field.label}" data-badge-search="${field.queryKey}" /></label>`;
   }
@@ -2911,11 +2923,14 @@ function renderBadgeFieldFilter(field) {
     const open = badgeMenuState.openMenu === menuKey;
     const allOptionLabel = '全部';
     const options = [{ value: '全部', label: allOptionLabel }, ...getBadgeFieldSelectOptions(field)];
-    const selectedLabel = options.find((option) => option.value === value)?.label || allOptionLabel;
+    const placeholder = !value || value === '全部';
+    const selectedLabel = placeholder
+      ? `请选择${field.label}`
+      : options.find((option) => option.value === value)?.label || `请选择${field.label}`;
     return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
       <span>${field.label}</span>
       <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open ? 'true' : 'false'}">
-      <strong>${escapeBadgeHtml(selectedLabel)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+      <strong class="${placeholder ? 'is-placeholder' : ''}">${escapeBadgeHtml(selectedLabel)}</strong><i class="session-select-caret" aria-hidden="true"></i>
       </button>
       ${open ? `<div class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="${field.label}筛选选项"><div class="session-menu-option-list">${options.map((option) => {
         const selected = value === option.value;
@@ -2931,7 +2946,7 @@ function renderBadgeFieldFilter(field) {
 
 function applyBadgeFieldSelectValue(key, value) {
   const field = badgeFieldDefinitionMap[key];
-  if (Number.isInteger(field?.organizationLevel)) {
+  if (isBadgeMultiSelectFilter(field)) {
     const selected = new Set(getBadgeSelectedValues(key));
     if (value === '全部') selected.clear();
     else if (selected.has(value)) selected.delete(value);
@@ -2964,7 +2979,7 @@ function getFilteredBadgeRecords() {
   const selectMatches = (item, key) => {
     if (!visibleKeys.has(key)) return true;
     const field = badgeFieldDefinitionMap[key];
-    if (Number.isInteger(field?.organizationLevel)) {
+    if (isBadgeMultiSelectFilter(field)) {
       const selected = getBadgeSelectedValues(key);
       return !selected.length || selected.includes(getBadgeRecordFieldValue(item, key));
     }
@@ -3118,7 +3133,7 @@ function renderBadgeFieldCell(item, field) {
   if (['advisorId', 'advisorName', 'patroler', 'governor'].includes(field.key)) return escapeBadgeHtml(String(item[field.key] ?? '').trim() || '—');
   if (field.key === 'recordingStatus') return item.recordingStatus === '录音中'
     ? '<span class="status-inline green"><span class="status-inline-dot"></span><span>录音中</span></span>'
-    : '<span class="status-inline gray"><span>—</span></span>';
+    : '<span class="status-inline gray"><span class="status-inline-dot"></span><span>未录音</span></span>';
   if (field.key === 'connectionStatus') return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
   if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
   if (field.key === 'battery') return renderBatteryIndicator(item.battery);
@@ -3217,7 +3232,7 @@ function clearBadgeFilterForField(field) {
   if (field.filterType === 'none') return;
   if (field.key === 'advisorId' || field.key === 'advisorName') return;
   if (field.filterType === 'text') badgeFilterState[field.queryKey] = '';
-  else if (field.filterType === 'select') badgeFilterState[field.key] = Number.isInteger(field.organizationLevel) ? [] : '全部';
+  else if (field.filterType === 'select') badgeFilterState[field.key] = isBadgeMultiSelectFilter(field) ? [] : '全部';
   else {
     badgeFilterState[field.minKey] = '';
     badgeFilterState[field.maxKey] = '';
@@ -5007,9 +5022,9 @@ document.addEventListener('click', (event) => {
     const key = badgeFieldSelectTrigger.dataset.badgeFieldSelectTrigger;
     const menuKey = `field:${key}`;
     badgeMenuState.openMenu = badgeMenuState.openMenu === menuKey ? '' : menuKey;
-    if (badgeMenuState.openMenu === menuKey && Number.isInteger(badgeFieldDefinitionMap[key]?.organizationLevel)) badgeMenuState.fieldQueries[key] = '';
+    if (badgeMenuState.openMenu === menuKey && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) badgeMenuState.fieldQueries[key] = '';
     renderBadgeFilters();
-    if (badgeMenuState.openMenu === menuKey && Number.isInteger(badgeFieldDefinitionMap[key]?.organizationLevel)) {
+    if (badgeMenuState.openMenu === menuKey && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) {
       window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-search="${key}"]`)?.focus());
     } else {
       window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-trigger="${key}"]`)?.focus());
