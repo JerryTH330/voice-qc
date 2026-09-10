@@ -133,9 +133,11 @@ const badgeEventTypeOptions = [
 ];
 const badgeEventMenuState = {
   openMenu: null,
+  closingMenu: null,
   dateViewYear: 2026,
   dateViewMonth: 8
 };
+const badgeEventMenuMotion = { lastRendered: null };
 const badgeSecondaryEventTypes = new Set(['recording-start', 'recording-end', 'low-battery']);
 const badgeEventIconAssets = {
   'power-on': 'power-on.svg',
@@ -182,12 +184,14 @@ const badgeUploadModalPaginationState = { page: 1, pageSize: 10 };
 const badgeUploadModalState = { records: [], emptyText: '当前日期没有上传完成的录音。' };
 const badgeUploadMenuState = {
   openMenu: null,
+  closingMenu: null,
   dateDraftStartDate: badgeUploadDefaultFilters.startDate,
   dateDraftEndDate: badgeUploadDefaultFilters.endDate,
   activeDateField: 'startDate',
   dateViewYear: 2026,
   dateViewMonth: 8
 };
+const badgeUploadMenuMotion = { lastRendered: null };
 let badgeUploadSelectedDate = badgeUploadDefaultFilters.endDate;
 
 const visitDefaultFilters = {
@@ -629,8 +633,9 @@ function renderBadgeEventDatePanel() {
 function renderBadgeEventFilters() {
   const container = document.getElementById('badgeEventFilters');
   if (!container) return;
-  const dateOpen = badgeEventMenuState.openMenu === 'date';
-  const typeOpen = badgeEventMenuState.openMenu === 'type';
+  if (!beginRecordDrawerMenuRender(container, badgeEventMenuState)) return;
+  const dateOpen = isRecordDrawerMenuVisible(badgeEventMenuState, 'date');
+  const typeOpen = isRecordDrawerMenuVisible(badgeEventMenuState, 'type');
   const typeLabel = badgeEventTypeOptions.find(([value]) => value === badgeEventFilterState.type)?.[1] || '全部事件';
   container.innerHTML = `
     <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-event-filter-control${dateOpen ? ' is-open' : ''}">
@@ -648,13 +653,20 @@ function renderBadgeEventFilters() {
       ${typeOpen ? `<div class="session-menu-panel" role="listbox"><div class="session-menu-option-list">${badgeEventTypeOptions.map(([value, label]) => `<button type="button" class="session-menu-option${badgeEventFilterState.type === value ? ' active' : ''}" data-badge-event-type-value="${value}" role="option" aria-selected="${badgeEventFilterState.type === value}"><span>${label}</span></button>`).join('')}</div></div>` : ''}
     </div>
     <button class="btn session-reset-btn badge-event-filter-reset" type="button" data-badge-event-reset>重置筛选</button>`;
+  playRecordDrawerMenuMotion(container, badgeEventMenuState, badgeEventMenuMotion, () => {
+    badgeEventMenuState.closingMenu = null;
+    badgeEventMenuMotion.lastRendered = null;
+    renderBadgeEventFilters();
+  });
 }
 
-function closeBadgeEventMenus() {
-  if (!badgeEventMenuState.openMenu) return false;
-  badgeEventMenuState.openMenu = null;
+function closeBadgeEventMenus(instant = false) {
+  if (!badgeEventMenuState.openMenu && !badgeEventMenuState.closingMenu) return false;
+  const wasOpen = !!badgeEventMenuState.openMenu;
+  closeRecordDrawerMenuState(badgeEventMenuState, instant);
+  if (instant) badgeEventMenuMotion.lastRendered = null;
   renderBadgeEventFilters();
-  return true;
+  return wasOpen;
 }
 
 function syncBadgeUploadDateDraft() {
@@ -692,7 +704,8 @@ function getBadgeUploadDateCells() {
 function renderBadgeUploadFilters() {
   const container = document.getElementById('badgeUploadFilters');
   if (!container) return;
-  const dateOpen = badgeUploadMenuState.openMenu === 'date';
+  if (!beginRecordDrawerMenuRender(container, badgeUploadMenuState)) return;
+  const dateOpen = isRecordDrawerMenuVisible(badgeUploadMenuState, 'date');
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
   const startDate = badgeUploadFilterState.startDate;
   const endDate = badgeUploadFilterState.endDate;
@@ -718,13 +731,20 @@ function renderBadgeUploadFilters() {
       ${datePanel}
     </div>
     <button class="btn session-reset-btn badge-event-filter-reset" type="button" data-badge-upload-filter-reset>重置筛选</button>`;
+  playRecordDrawerMenuMotion(container, badgeUploadMenuState, badgeUploadMenuMotion, () => {
+    badgeUploadMenuState.closingMenu = null;
+    badgeUploadMenuMotion.lastRendered = null;
+    renderBadgeUploadFilters();
+  });
 }
 
-function closeBadgeUploadMenus() {
-  if (!badgeUploadMenuState.openMenu) return false;
-  badgeUploadMenuState.openMenu = null;
+function closeBadgeUploadMenus(instant = false) {
+  if (!badgeUploadMenuState.openMenu && !badgeUploadMenuState.closingMenu) return false;
+  const wasOpen = !!badgeUploadMenuState.openMenu;
+  closeRecordDrawerMenuState(badgeUploadMenuState, instant);
+  if (instant) badgeUploadMenuMotion.lastRendered = null;
   renderBadgeUploadFilters();
-  return true;
+  return wasOpen;
 }
 
 function getBadgeRecordProfile() {
@@ -907,7 +927,7 @@ function renderVisitEventDetail(record) {
     <article class="${badgeSecondaryEventTypes.has(item.type) ? 'event-secondary' : 'event-primary'}${item.note ? ' event-wide' : ''}">
       <span class="event-dot ${item.color}" aria-hidden="true">${renderBadgeEventIcon(item)}</span>
       <div><strong>${escapeBadgeHtml(item.label)}</strong><p>${escapeBadgeHtml(item.time)}</p></div>
-      ${item.type === 'power-on' || item.type === 'power-off' ? '<em>/</em>' : (item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : '')}
+      ${item.type === 'power-on' || item.type === 'power-off' ? '<em>—</em>' : (item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : '')}
     </article>`).join('') : `<div class="event-empty-state">${record.detailText === '工牌未开机' ? '到访当天没有开机、关机、录音等工牌事件。' : '当前工牌在所选日期没有工牌事件。'}</div>`;
 }
 
@@ -924,10 +944,8 @@ function openVisitMatchDetail(record, detailType) {
 
 function syncBadgeRecordTabs(route) {
   const activeTab = route === 'uploads' ? 'uploads' : 'events';
-  badgeEventMenuState.openMenu = null;
-  badgeUploadMenuState.openMenu = null;
-  renderBadgeEventFilters();
-  renderBadgeUploadFilters();
+  closeBadgeEventMenus(true);
+  closeBadgeUploadMenus(true);
   document.querySelectorAll('[data-badge-record-tab]').forEach((button) => {
     const active = button.dataset.badgeRecordTab === activeTab;
     button.classList.toggle('active', active);
@@ -1153,7 +1171,7 @@ function renderBadgeEventGroup(group, activeType) {
           <div class="event-group-row event-detail-row event-power-row">
             <span class="event-dot green" aria-hidden="true">${renderBadgeEventIcon(event)}</span>
             <div class="event-group-copy"><strong>工牌开机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
-            <em>/</em>
+            <em>—</em>
           </div>`
       }));
     }
@@ -1192,7 +1210,7 @@ function renderBadgeEventGroup(group, activeType) {
           <div class="event-group-row event-detail-row event-power-row">
             <span class="event-dot neutral" aria-hidden="true">${renderBadgeEventIcon(event)}</span>
             <div class="event-group-copy"><strong>工牌关机</strong><p>${escapeBadgeHtml(event.time)}</p></div>
-            <em>/</em>
+            <em>—</em>
           </div>`
       }));
     }
@@ -1216,7 +1234,7 @@ function renderBadgeEventGroup(group, activeType) {
 
   const item = group.event;
   const standaloneMeta = (item.type === 'power-on' || item.type === 'power-off')
-    ? '<em>/</em>'
+    ? '<em>—</em>'
     : (item.note ? `<em>${escapeBadgeHtml(item.note)}</em>` : '');
   return `
     <article class="event-group-card event-standalone-card">
@@ -1551,7 +1569,7 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
     badgeType,
     badgeStatus: getGeneratedBadgeStatus(index),
     recordingStatus: recording ? '录音中' : '未录音',
-    connectionStatus: isBadgeWifiCapable(badgeType) ? (connected ? '已连接' : '未连接') : '/',
+    connectionStatus: isBadgeWifiCapable(badgeType) ? (connected ? '已连接' : '未连接') : '—',
     dockConnected,
     signal: index % 3 === 0 ? '信号良好' : index % 3 === 1 ? '一般' : '较弱',
     battery,
@@ -1840,6 +1858,7 @@ const badgeFilterState = { ...badgeDefaultFilters };
 badgeFilterState.advisorIds = [];
 const badgeMenuState = {
   openMenu: '',
+  closingMenu: null,
   selectionOrderMenu: '',
   pinnedSelectionIds: new Set(),
   advisorQuery: '',
@@ -1854,6 +1873,161 @@ const badgeMenuState = {
   dateViewYear: storeDefaultQueryDateObject.getFullYear(),
   dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
+const BADGE_MENU_MOTION_MS = 180;
+const BADGE_MENU_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+let lastRenderedBadgeOpenMenu = null;
+let badgePageSizeApplyTimer = 0;
+
+function prefersBadgeReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function getBadgeVisibleMenuKey() {
+  return badgeMenuState.openMenu || badgeMenuState.closingMenu || '';
+}
+
+function isBadgeFilterMenuVisible(key) {
+  return getBadgeVisibleMenuKey() === key;
+}
+
+function closeBadgePageSizeMenu() {
+  document.querySelectorAll('#badgeDetailPagination .page-size-options.open').forEach((node) => node.classList.remove('open'));
+  document.querySelectorAll('#badgeDetailPagination [data-badge-page-size-trigger].is-open').forEach((node) => node.classList.remove('is-open'));
+}
+
+function closeBadgeFilterMenu(instant) {
+  if (!badgeMenuState.openMenu && !badgeMenuState.closingMenu) return;
+  if (instant || prefersBadgeReducedMotion()) {
+    badgeMenuState.openMenu = '';
+    badgeMenuState.closingMenu = null;
+    return;
+  }
+  if (badgeMenuState.openMenu) badgeMenuState.closingMenu = badgeMenuState.openMenu;
+  badgeMenuState.openMenu = '';
+}
+
+function openBadgeFilterMenu(key) {
+  badgeMenuState.closingMenu = null;
+  badgeMenuState.openMenu = key;
+}
+
+function toggleBadgeFilterMenu(key) {
+  closeBadgePageSizeMenu();
+  if (badgeMenuState.openMenu === key) {
+    closeBadgeFilterMenu(false);
+    return false;
+  }
+  openBadgeFilterMenu(key);
+  return true;
+}
+
+function animateBadgeFilterMenu(panel, mode) {
+  if (!panel) return null;
+  const hiddenY = '-8px';
+  const from = mode === 'in'
+    ? { opacity: 0, transform: `translateY(${hiddenY})` }
+    : { opacity: 1, transform: 'translateY(0px)' };
+  const to = mode === 'in'
+    ? { opacity: 1, transform: 'translateY(0px)' }
+    : { opacity: 0, transform: `translateY(${hiddenY})` };
+  panel.style.pointerEvents = mode === 'out' ? 'none' : '';
+  panel.style.opacity = String(from.opacity);
+  panel.style.transform = from.transform;
+  panel.getBoundingClientRect();
+  return panel.animate([from, to], {
+    duration: BADGE_MENU_MOTION_MS,
+    easing: BADGE_MENU_MOTION_EASE,
+    fill: 'forwards'
+  });
+}
+
+function isRecordDrawerMenuVisible(state, key) {
+  return state.openMenu === key || state.closingMenu === key;
+}
+
+function beginRecordDrawerMenuRender(container, state) {
+  const closingInProgress = container._menuAnimation && state.closingMenu && !state.openMenu;
+  if (closingInProgress) return false;
+  if (container._menuAnimation) {
+    container._menuAnimation.cancel();
+    container._menuAnimation = null;
+  }
+  return true;
+}
+
+function closeRecordDrawerMenuState(state, instant) {
+  if (!state.openMenu && !state.closingMenu) return false;
+  if (instant || prefersBadgeReducedMotion()) {
+    state.openMenu = null;
+    state.closingMenu = null;
+    return true;
+  }
+  if (state.openMenu) state.closingMenu = state.openMenu;
+  state.openMenu = null;
+  return true;
+}
+
+function openRecordDrawerMenuState(state, key) {
+  state.closingMenu = null;
+  state.openMenu = key;
+}
+
+function toggleRecordDrawerMenuState(state, key) {
+  if (state.openMenu === key) {
+    closeRecordDrawerMenuState(state, false);
+    return false;
+  }
+  openRecordDrawerMenuState(state, key);
+  return true;
+}
+
+function playRecordDrawerMenuMotion(container, state, motion, onExitDone) {
+  if (!container) return;
+  const reduceMotion = prefersBadgeReducedMotion();
+  const shouldEnterMenu = !!state.openMenu && state.openMenu !== motion.lastRendered;
+  const shouldExitMenu = !!state.closingMenu && motion.lastRendered === state.closingMenu;
+  motion.lastRendered = state.openMenu;
+  const panel = container.querySelector('.session-menu-panel');
+  if (panel && shouldEnterMenu && !reduceMotion) {
+    const enterAnimation = animateBadgeFilterMenu(panel, 'in');
+    container._menuAnimation = enterAnimation;
+    if (enterAnimation) {
+      enterAnimation.onfinish = () => {
+        if (container._menuAnimation !== enterAnimation) return;
+        container._menuAnimation = null;
+        if (typeof enterAnimation.commitStyles === 'function') enterAnimation.commitStyles();
+        enterAnimation.cancel();
+        panel.style.opacity = '';
+        panel.style.transform = '';
+        panel.style.pointerEvents = '';
+      };
+      enterAnimation.oncancel = () => {
+        if (container._menuAnimation === enterAnimation) container._menuAnimation = null;
+      };
+    }
+    return;
+  }
+  if (panel && shouldExitMenu && !reduceMotion) {
+    const exitAnimation = animateBadgeFilterMenu(panel, 'out');
+    container._menuAnimation = exitAnimation;
+    if (exitAnimation) {
+      exitAnimation.onfinish = () => {
+        if (container._menuAnimation !== exitAnimation) return;
+        container._menuAnimation = null;
+        if (typeof onExitDone === 'function') onExitDone();
+      };
+      exitAnimation.oncancel = () => {
+        if (container._menuAnimation === exitAnimation) container._menuAnimation = null;
+      };
+    }
+    return;
+  }
+  if (shouldExitMenu) {
+    state.closingMenu = null;
+    motion.lastRendered = null;
+  }
+}
+
 const badgePaginationState = { page: 1, pageSize: 10 };
 const dockDefaultFilters = {
   store: '全部门店',
@@ -2546,7 +2720,7 @@ function formatBadgeSyncDateTimeLabel(value) {
 }
 
 function renderBadgeSyncDateTimeFilter(field) {
-  const open = badgeMenuState.openMenu === 'syncDateTime';
+  const open = isBadgeFilterMenuVisible('syncDateTime');
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
   const hasRange = Boolean(badgeFilterState.syncStart || badgeFilterState.syncEnd);
   const startLabel = formatBadgeSyncDateTimeLabel(badgeFilterState.syncStart);
@@ -2592,22 +2766,29 @@ function renderBadgeSyncDateTimeFilter(field) {
     </div>`;
 }
 
-function renderBadgeFilterActions() {
-  return `
-    <div class="session-filter-inline-actions session-filter-inline-actions-search">
-      <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
-      <button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}">
+function renderBadgeFilterActions(showToggle) {
+  const toggleMarkup = showToggle
+    ? `<button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}">
         <span>${badgeFilterState.collapsed ? '展开' : '收起'}</span>
         <svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-      </button>
+      </button>`
+    : '';
+  return `
+    <div class="badge-dynamic-filter-actions">
+      ${storeDrilldownState.active ? `<span class="badge-drilldown-context">当前门店：<strong>${escapeBadgeHtml(storeDrilldownState.storeName)}</strong></span>` : '<span></span>'}
+      <div>
+        <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
+        ${toggleMarkup}
+      </div>
     </div>`;
 }
 
 function renderBadgeDimensionSwitcher() {
   const organizationActive = badgeFilterState.dimensionMode === 'organization';
-  const pathText = organizationActive
-    ? '品牌 → 大区 → 战区 → 门店'
-    : '品牌 → 省份 → 城市 → 门店';
+  const pathItems = organizationActive
+    ? ['品牌', '大区', '战区', '门店']
+    : ['品牌', '省份', '城市', '门店'];
+  const pathHtml = pathItems.map((item, index) => `${index ? '<i class="session-select-caret badge-filter-dimension-path-arrow" aria-hidden="true"></i>' : ''}<span class="badge-filter-dimension-path-step">${item}</span>`).join('');
   return `<div class="badge-filter-dimension-bar">
     <div class="badge-filter-dimension-main">
       <div class="badge-filter-dimension-tabs leads-view-tabs" role="tablist" aria-label="工牌组织筛选维度">
@@ -2615,41 +2796,145 @@ function renderBadgeDimensionSwitcher() {
         <button type="button" class="badge-filter-dimension-tab leads-view-tab${organizationActive ? '' : ' active'}" data-badge-dimension="geography" role="tab" aria-selected="${!organizationActive}">地理维度</button>
       </div>
     </div>
-    <div class="badge-filter-dimension-path"><span>当前路径</span><strong>${pathText}</strong></div>
+    <div class="badge-filter-dimension-path">
+      <img src="../assets/filter-path-icon.svg" alt="" aria-hidden="true">
+      <span class="badge-filter-dimension-path-label">当前路径：</span>
+      <strong>${pathHtml}</strong>
+    </div>
   </div>`;
+}
+
+function settleBadgeFilterExtra(extraEl, collapsed) {
+  if (!extraEl) return;
+  extraEl.style.height = collapsed ? '0px' : '';
+  extraEl.style.overflow = collapsed ? 'clip' : '';
+  extraEl.style.pointerEvents = collapsed ? 'none' : '';
+  if (collapsed) extraEl.setAttribute('inert', '');
+  else extraEl.removeAttribute('inert');
+  extraEl.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
 }
 
 function renderBadgeFilters({ preserveScroll = false } = {}) {
   const container = document.getElementById('sessionFilterControls');
   if (!container) return;
+  const extraElBefore = container.querySelector('[data-badge-extra]');
+  const previousExtraHeight = extraElBefore ? extraElBefore.getBoundingClientRect().height : 0;
+  const collapseChanged = container.childElementCount > 0 &&
+    container.classList.contains('is-collapsed') !== badgeFilterState.collapsed;
+  const closingInProgress = container._menuAnimation && badgeMenuState.closingMenu && !badgeMenuState.openMenu;
+  if (closingInProgress && !collapseChanged) {
+    positionBadgeMultiSelectMenu();
+    return;
+  }
+  if (container._menuAnimation) {
+    container._menuAnimation.cancel();
+    container._menuAnimation = null;
+  }
+  if (container._collapseAnimation) {
+    container._collapseAnimation.cancel();
+    container._collapseAnimation = null;
+  }
   const previousOptions = preserveScroll ? container.querySelector('.badge-advisor-options') : null;
   const previousScroll = previousOptions ? { id: previousOptions.id, top: previousOptions.scrollTop } : null;
-  // Only refresh the pinned selection when opening another menu or reopening it.
-  if (badgeMenuState.selectionOrderMenu !== badgeMenuState.openMenu) {
-    const key = badgeMenuState.openMenu.startsWith('field:') ? badgeMenuState.openMenu.slice(6) : '';
-    badgeMenuState.selectionOrderMenu = badgeMenuState.openMenu;
+  const visibleMenu = getBadgeVisibleMenuKey();
+  if (badgeMenuState.selectionOrderMenu !== visibleMenu) {
+    const key = visibleMenu.startsWith('field:') ? visibleMenu.slice(6) : '';
+    badgeMenuState.selectionOrderMenu = visibleMenu;
     badgeMenuState.pinnedSelectionIds = new Set(key === 'advisor'
       ? badgeFilterState.advisorIds : getBadgeSelectedValues(key));
   }
-  if (badgeMenuState.openMenu !== 'field:advisor') badgeMenuState.advisorQuery = '';
+  if (!isBadgeFilterMenuVisible('field:advisor')) badgeMenuState.advisorQuery = '';
   const visibleFields = getVisibleBadgeFilterFields();
   const primaryFields = getVisibleBadgeDimensionFilterFields();
-  const renderedFields = badgeFilterState.collapsed ? primaryFields : visibleFields;
+  const extraFields = visibleFields.filter((field) => !primaryFields.some((item) => item.key === field.key));
+  const showToggle = extraFields.length > 0;
+  const extraInner = extraFields.map((field) => renderBadgeFieldFilter(field)).join('');
+  const keepExtra = !!extraInner && (!badgeFilterState.collapsed || collapseChanged);
+  const actionsHtml = renderBadgeFilterActions(showToggle);
   container.classList.toggle('is-store-drilldown', storeDrilldownState.active);
   container.classList.toggle('is-collapsed', badgeFilterState.collapsed);
   container.innerHTML = `
     ${renderBadgeDimensionSwitcher()}
-    <div class="badge-dynamic-filter-grid">
-      ${renderedFields.map((field) => renderBadgeFieldFilter(field)).join('')}
-    </div>
-    <div class="badge-dynamic-filter-actions">
-      ${storeDrilldownState.active ? `<span class="badge-drilldown-context">当前门店：<strong>${escapeBadgeHtml(storeDrilldownState.storeName)}</strong></span>` : '<span></span>'}
-      <div>
-        <button type="button" class="btn session-reset-btn" data-badge-reset>重置</button>
-        ${visibleFields.length > primaryFields.length ? `<button type="button" class="session-toggle-text-btn" data-badge-toggle aria-expanded="${badgeFilterState.collapsed ? 'false' : 'true'}"><span>${badgeFilterState.collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${badgeFilterState.collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>` : ''}
+    <div class="badge-filter-primary">
+      <div class="badge-dynamic-filter-grid">
+        ${primaryFields.map((field) => renderBadgeFieldFilter(field)).join('')}
       </div>
-    </div>`;
+      ${badgeFilterState.collapsed ? actionsHtml : ''}
+    </div>
+    ${keepExtra
+      ? `<div class="badge-filter-extra" data-badge-extra><div class="badge-filter-extra-inner"><div class="badge-dynamic-filter-grid">${extraInner}</div></div></div>`
+      : ''}
+    ${badgeFilterState.collapsed ? '' : actionsHtml}`;
+  const extraEl = container.querySelector('[data-badge-extra]');
+  const reduceMotion = prefersBadgeReducedMotion();
+  const shouldEnterMenu = !!badgeMenuState.openMenu && badgeMenuState.openMenu !== lastRenderedBadgeOpenMenu;
+  const shouldExitMenu = !!badgeMenuState.closingMenu && lastRenderedBadgeOpenMenu === badgeMenuState.closingMenu;
+  lastRenderedBadgeOpenMenu = badgeMenuState.openMenu;
+  if (extraEl && collapseChanged && !reduceMotion) {
+    const fromHeight = previousExtraHeight;
+    const toHeight = badgeFilterState.collapsed ? 0 : extraEl.getBoundingClientRect().height;
+    extraEl.style.overflow = 'clip';
+    extraEl.style.pointerEvents = 'none';
+    extraEl.style.height = `${fromHeight}px`;
+    extraEl.setAttribute('aria-hidden', badgeFilterState.collapsed ? 'true' : 'false');
+    if (badgeFilterState.collapsed) extraEl.setAttribute('inert', '');
+    else extraEl.removeAttribute('inert');
+    extraEl.getBoundingClientRect();
+    const animation = extraEl.animate([
+      { height: `${fromHeight}px` },
+      { height: `${toHeight}px` }
+    ], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+    container._collapseAnimation = animation;
+    animation.onfinish = () => {
+      if (container._collapseAnimation !== animation) return;
+      container._collapseAnimation = null;
+      if (typeof animation.commitStyles === 'function') animation.commitStyles();
+      animation.cancel();
+      settleBadgeFilterExtra(extraEl, badgeFilterState.collapsed);
+    };
+    animation.oncancel = () => {
+      if (container._collapseAnimation === animation) container._collapseAnimation = null;
+    };
+  } else {
+    settleBadgeFilterExtra(extraEl, badgeFilterState.collapsed);
+  }
   positionBadgeMultiSelectMenu();
+  const panel = container.querySelector('.session-menu-panel');
+  if (panel && shouldEnterMenu && !reduceMotion) {
+    const enterAnimation = animateBadgeFilterMenu(panel, 'in');
+    container._menuAnimation = enterAnimation;
+    if (enterAnimation) {
+      enterAnimation.onfinish = () => {
+        if (container._menuAnimation !== enterAnimation) return;
+        container._menuAnimation = null;
+        if (typeof enterAnimation.commitStyles === 'function') enterAnimation.commitStyles();
+        enterAnimation.cancel();
+        panel.style.opacity = '';
+        panel.style.transform = '';
+        panel.style.pointerEvents = '';
+      };
+      enterAnimation.oncancel = () => {
+        if (container._menuAnimation === enterAnimation) container._menuAnimation = null;
+      };
+    }
+  } else if (panel && shouldExitMenu && !reduceMotion) {
+    const exitAnimation = animateBadgeFilterMenu(panel, 'out');
+    container._menuAnimation = exitAnimation;
+    if (exitAnimation) {
+      exitAnimation.onfinish = () => {
+        if (container._menuAnimation !== exitAnimation) return;
+        container._menuAnimation = null;
+        badgeMenuState.closingMenu = null;
+        lastRenderedBadgeOpenMenu = null;
+        renderBadgeFilters();
+      };
+      exitAnimation.oncancel = () => {
+        if (container._menuAnimation === exitAnimation) container._menuAnimation = null;
+      };
+    }
+  } else if (panel && shouldExitMenu) {
+    badgeMenuState.closingMenu = null;
+  }
   const nextOptions = container.querySelector('.badge-advisor-options');
   if (previousScroll && nextOptions?.id === previousScroll.id) nextOptions.scrollTop = previousScroll.top;
 }
@@ -2851,7 +3136,7 @@ function switchBadgeDimensionMode(mode) {
   inactiveKeys.forEach((key) => { badgeFilterState[key] = []; });
   badgeFilterState.store = [];
   badgeFilterState.dimensionMode = mode;
-  badgeMenuState.openMenu = '';
+  closeBadgeFilterMenu(true);
   badgeMenuState.fieldQueries = {};
   pruneBadgeAdvisorSelections();
   badgePaginationState.page = 1;
@@ -2882,7 +3167,7 @@ function getBadgeAdvisorCandidates() {
     if (item.store) existing.stores.add(String(item.store));
     candidatesById.set(advisorId, existing);
   });
-  const selectedIds = badgeMenuState.openMenu === 'field:advisor'
+  const selectedIds = isBadgeFilterMenuVisible('field:advisor')
     ? badgeMenuState.pinnedSelectionIds : new Set(badgeFilterState.advisorIds);
   return [...candidatesById.values()]
     .map((item) => ({ ...item, stores: [...item.stores] }))
@@ -2908,7 +3193,7 @@ function getBadgeAdvisorFilterLabel() {
 }
 
 function renderBadgeAdvisorFilter() {
-  const open = badgeMenuState.openMenu === 'field:advisor';
+  const open = isBadgeFilterMenuVisible('field:advisor');
   const selectedIds = new Set(Array.isArray(badgeFilterState.advisorIds) ? badgeFilterState.advisorIds : []);
   const placeholder = selectedIds.size === 0;
   const candidates = getBadgeAdvisorCandidates();
@@ -2942,7 +3227,7 @@ function getBadgeFieldSelectOptions(field) {
   if (badgeFixedMultiSelectValues[field.key]) {
     const values = badgeFixedMultiSelectValues[field.key];
     const selected = new Set(getBadgeSelectedValues(field.key));
-    const pinned = badgeMenuState.openMenu === `field:${field.key}` ? badgeMenuState.pinnedSelectionIds : selected;
+    const pinned = isBadgeFilterMenuVisible(`field:${field.key}`) ? badgeMenuState.pinnedSelectionIds : selected;
     return values.map((value) => ({ value, label: value })).sort((left, right) => (
       Number(pinned.has(right.value)) - Number(pinned.has(left.value))
     ));
@@ -2969,7 +3254,7 @@ function getBadgeFieldSelectOptions(field) {
     selected.forEach((id) => {
       if (!optionsById.has(id)) optionsById.set(id, { value: id, label: getBadgeFieldOptionLabel(field.key, id), meta: getBadgeFieldOptionMeta(field.key, badgeOrganizationRecords.find((item) => getBadgeRecordFieldValue(item, field.key) === id)), selected: true });
     });
-    const pinned = badgeMenuState.openMenu === `field:${field.key}` ? badgeMenuState.pinnedSelectionIds : selected;
+    const pinned = isBadgeFilterMenuVisible(`field:${field.key}`) ? badgeMenuState.pinnedSelectionIds : selected;
     return [...optionsById.values()].sort((left, right) => {
       const selectedOrder = Number(pinned.has(right.value)) - Number(pinned.has(left.value));
       return selectedOrder || left.label.localeCompare(right.label, 'zh-CN') || left.value.localeCompare(right.value, 'zh-CN');
@@ -2992,7 +3277,7 @@ function getBadgeRangeSearchOptions(field) {
 }
 
 function renderBadgeRangeFilter(field) {
-  const open = badgeMenuState.openMenu === `field:${field.key}`;
+  const open = isBadgeFilterMenuVisible(`field:${field.key}`);
   const selectedValues = getBadgeSelectedValues(field.key);
   const selected = new Set(selectedValues);
   const candidates = getBadgeRangeSearchOptions(field);
@@ -3032,7 +3317,7 @@ function renderBadgeFieldFilter(field) {
   if (field.filterType === 'select') {
     const value = badgeFilterState[field.key];
     const menuKey = `field:${field.key}`;
-    const open = badgeMenuState.openMenu === menuKey;
+    const open = isBadgeFilterMenuVisible(menuKey);
     const allOptionLabel = '全部';
     const options = [{ value: '全部', label: allOptionLabel }, ...getBadgeFieldSelectOptions(field)];
     const placeholder = !value || value === '全部';
@@ -3219,7 +3504,7 @@ function renderBadgePagination(totalItems) {
       <span class="session-pagination-total">共 ${totalItems} 条</span>
       <div class="dashboard-pagination-controls">
         <div class="custom-select-container page-select page-size-select">
-          <button type="button" class="custom-select-trigger page-size-trigger" data-badge-page-size-trigger><span>${badgePaginationState.pageSize} 条/页</span></button>
+          <button type="button" class="custom-select-trigger page-size-trigger" data-badge-page-size-trigger><span>${badgePaginationState.pageSize} 条/页</span><i class="session-select-caret" aria-hidden="true"></i></button>
           <div class="custom-select-options page-size-options">${[10, 20, 50].map((size) => `<button type="button" class="custom-option page-size-option${size === badgePaginationState.pageSize ? ' active' : ''}" data-badge-page-size="${size}"><span>${size} 条/页</span></button>`).join('')}</div>
         </div>
         <div class="page-group">
@@ -3252,7 +3537,7 @@ function renderBadgeFieldCell(item, field) {
     ? '<span class="status-inline green"><span class="status-inline-dot"></span><span>录音中</span></span>'
     : '<span class="status-inline gray"><span class="status-inline-dot"></span><span>未录音</span></span>';
   if (field.key === 'connectionStatus') {
-    if (!isBadgeWifiCapable(item.badgeType) || item.connectionStatus === '—' || item.connectionStatus === '/') return '/';
+    if (!isBadgeWifiCapable(item.badgeType) || item.connectionStatus === '—' || item.connectionStatus === '/') return '—';
     return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
   }
   if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
@@ -3327,6 +3612,9 @@ function renderBadgeFieldSettings() {
 
 function openBadgeFieldSettings() {
   if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
+  closeBadgeFilterMenu(true);
+  closeBadgePageSizeMenu();
+  renderBadgeFilters();
   badgeFieldSettingsDraft = { order: [...badgeFieldSettingsState.order], visible: [...badgeFieldSettingsState.visible] };
   renderBadgeFieldSettings();
   badgeFieldSettingsBackdrop.hidden = false;
@@ -3970,7 +4258,7 @@ function applyStoreDrilldown(store, { captureReturnState = false } = {}) {
   badgeFilterState.brand = [`brand:${store.brand}`];
   badgeFilterState.store = [getBadgeStoreId(store)];
   badgeFilterState.collapsed = true;
-  badgeMenuState.openMenu = '';
+  closeBadgeFilterMenu(true);
   badgePaginationState.page = 1;
   renderBadgePage();
   return true;
@@ -3995,7 +4283,7 @@ function syncStoreDrilldownHash() {
 function restoreOrdinaryBadgeState() {
   assignBadgeFilterState(storeDrilldownState.previousBadgeFilters || badgeDefaultFilters);
   badgePaginationState.page = storeDrilldownState.previousBadgeFilters ? storeDrilldownState.previousBadgePage : 1;
-  badgeMenuState.openMenu = '';
+  closeBadgeFilterMenu(true);
   storeDrilldownState.active = false;
   storeDrilldownState.storeCode = '';
   storeDrilldownState.storeId = '';
@@ -4387,8 +4675,8 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
   if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop) return;
   window.clearTimeout(badgeRecordDrawerCloseTimer);
   const trigger = badgeRecordDrawerTrigger;
-  badgeEventMenuState.openMenu = null;
-  badgeUploadMenuState.openMenu = null;
+  closeBadgeEventMenus(true);
+  closeBadgeUploadMenus(true);
   badgeDockEventMenuState.open = false;
   badgeDockDateMenuState.open = false;
   badgeRecordDrawer.classList.remove('open');
@@ -4770,8 +5058,8 @@ document.addEventListener('click', (event) => {
   if (!event.target.closest('#badgeUploadFilters')) closeBadgeUploadMenus();
 
   if (event.target.closest('[data-badge-event-date-trigger]')) {
-    badgeEventMenuState.openMenu = badgeEventMenuState.openMenu === 'date' ? null : 'date';
-    if (badgeEventMenuState.openMenu === 'date') syncBadgeEventDateView();
+    const opening = toggleRecordDrawerMenuState(badgeEventMenuState, 'date');
+    if (opening) syncBadgeEventDateView();
     renderBadgeEventFilters();
     return;
   }
@@ -4788,14 +5076,13 @@ document.addEventListener('click', (event) => {
   const badgeEventDateValue = event.target.closest('[data-badge-event-date-value]');
   if (badgeEventDateValue) {
     badgeEventFilterState.date = badgeEventDateValue.dataset.badgeEventDateValue;
-    badgeEventMenuState.openMenu = null;
-    renderBadgeEventFilters();
+    closeBadgeEventMenus();
     renderBadgeEvents();
     return;
   }
 
   if (event.target.closest('[data-badge-event-type-trigger]')) {
-    badgeEventMenuState.openMenu = badgeEventMenuState.openMenu === 'type' ? null : 'type';
+    toggleRecordDrawerMenuState(badgeEventMenuState, 'type');
     renderBadgeEventFilters();
     return;
   }
@@ -4803,8 +5090,7 @@ document.addEventListener('click', (event) => {
   const badgeEventTypeValue = event.target.closest('[data-badge-event-type-value]');
   if (badgeEventTypeValue) {
     badgeEventFilterState.type = badgeEventTypeValue.dataset.badgeEventTypeValue;
-    badgeEventMenuState.openMenu = null;
-    renderBadgeEventFilters();
+    closeBadgeEventMenus();
     renderBadgeEvents();
     return;
   }
@@ -4815,7 +5101,7 @@ document.addEventListener('click', (event) => {
     badgeEventFilterState.date = currentRecord?.date || badgeEventDefaultFilters.date;
     badgeEventFilterState.sn = badgeRecordState.sn;
     badgeEventFilterState.type = 'all';
-    badgeEventMenuState.openMenu = null;
+    closeBadgeEventMenus(true);
     syncBadgeEventDateView();
     renderBadgeEventFilters();
     renderBadgeEvents();
@@ -4824,8 +5110,7 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-upload-date-trigger]')) {
-    const opening = badgeUploadMenuState.openMenu !== 'date';
-    badgeUploadMenuState.openMenu = opening ? 'date' : null;
+    const opening = toggleRecordDrawerMenuState(badgeUploadMenuState, 'date');
     if (opening) syncBadgeUploadDateDraft();
     renderBadgeUploadFilters();
     return;
@@ -4864,9 +5149,8 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-upload-date-cancel]')) {
-    badgeUploadMenuState.openMenu = null;
     syncBadgeUploadDateDraft();
-    renderBadgeUploadFilters();
+    closeBadgeUploadMenus();
     return;
   }
 
@@ -4876,18 +5160,17 @@ document.addEventListener('click', (event) => {
     badgeUploadSelectedDate = getLatestBadgeUploadDate(getCompletedBadgeUploadRecords(), badgeUploadFilterState.endDate);
     badgeUploadDailyPaginationState.page = 1;
     badgeUploadModalPaginationState.page = 1;
-    badgeUploadMenuState.openMenu = null;
-    renderBadgeUploadFilters();
+    closeBadgeUploadMenus();
     renderBadgeUploads();
     return;
   }
 
   if (event.target.closest('[data-badge-upload-filter-reset]')) {
     resetBadgeUploadDateRange();
-    badgeUploadMenuState.openMenu = null;
     badgeUploadMenuState.activeDateField = 'startDate';
     badgeUploadDailyPaginationState.page = 1;
     badgeUploadModalPaginationState.page = 1;
+    closeBadgeUploadMenus(true);
     syncBadgeUploadDateDraft();
     renderBadgeUploadFilters();
     if (!badgeUploadDetailModal.hidden) closeModal(badgeUploadDetailModal);
@@ -5083,7 +5366,8 @@ document.addEventListener('click', (event) => {
       badgeFilterState.brand = [`brand:${drilldownStore.brand}`];
       badgeFilterState.store = [getBadgeStoreId(drilldownStore)];
     }
-    badgeMenuState.openMenu = '';
+    closeBadgeFilterMenu(true);
+    closeBadgePageSizeMenu();
     badgePaginationState.page = 1;
     renderBadgePage();
     syncStoreDrilldownHash();
@@ -5093,15 +5377,15 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-toggle]')) {
     badgeFilterState.collapsed = !badgeFilterState.collapsed;
-    badgeMenuState.openMenu = '';
+    closeBadgeFilterMenu(true);
+    closeBadgePageSizeMenu();
     renderBadgeFilters();
     return;
   }
 
   const badgeAdvisorTrigger = event.target.closest('[data-badge-advisor-trigger]');
   if (badgeAdvisorTrigger) {
-    const opening = badgeMenuState.openMenu !== 'field:advisor';
-    badgeMenuState.openMenu = opening ? 'field:advisor' : '';
+    const opening = toggleBadgeFilterMenu('field:advisor');
     if (opening) badgeMenuState.advisorQuery = '';
     renderBadgeFilters();
     if (opening) window.requestAnimationFrame(() => document.querySelector('[data-badge-advisor-search]')?.focus());
@@ -5141,10 +5425,10 @@ document.addEventListener('click', (event) => {
   if (badgeFieldSelectTrigger) {
     const key = badgeFieldSelectTrigger.dataset.badgeFieldSelectTrigger;
     const menuKey = `field:${key}`;
-    badgeMenuState.openMenu = badgeMenuState.openMenu === menuKey ? '' : menuKey;
-    if (badgeMenuState.openMenu === menuKey && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) badgeMenuState.fieldQueries[key] = '';
+    const opening = toggleBadgeFilterMenu(menuKey);
+    if (opening && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) badgeMenuState.fieldQueries[key] = '';
     renderBadgeFilters();
-    if (badgeMenuState.openMenu === menuKey && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) {
+    if (opening && isBadgeMultiSelectFilter(badgeFieldDefinitionMap[key])) {
       window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-search="${key}"]`)?.focus());
     } else {
       window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-trigger="${key}"]`)?.focus());
@@ -5176,9 +5460,8 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-sync-date-trigger]')) {
-    const willOpen = badgeMenuState.openMenu !== 'syncDateTime';
-    if (willOpen) syncBadgeSyncDateTimeDraft();
-    badgeMenuState.openMenu = willOpen ? 'syncDateTime' : '';
+    const opening = toggleBadgeFilterMenu('syncDateTime');
+    if (opening) syncBadgeSyncDateTimeDraft();
     renderBadgeFilters();
     return;
   }
@@ -5222,7 +5505,7 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-sync-date-cancel]')) {
-    badgeMenuState.openMenu = '';
+    closeBadgeFilterMenu(false);
     renderBadgeFilters();
     return;
   }
@@ -5233,7 +5516,7 @@ document.addEventListener('click', (event) => {
     badgeFilterState.syncStart = `${badgeMenuState.dateDraftStartDate}T${startTime}`;
     badgeFilterState.syncEnd = `${badgeMenuState.dateDraftEndDate}T${endTime}`;
     if (badgeFilterState.syncStart > badgeFilterState.syncEnd) badgeFilterState.syncEnd = badgeFilterState.syncStart;
-    badgeMenuState.openMenu = '';
+    closeBadgeFilterMenu(false);
     badgePaginationState.page = 1;
     renderBadgePage();
     return;
@@ -5254,22 +5537,56 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-page-size-trigger]')) {
-    const options = event.target.closest('[data-badge-page-size-trigger]').parentElement.querySelector('.page-size-options');
-    options.classList.toggle('open');
+    const trigger = event.target.closest('[data-badge-page-size-trigger]');
+    const options = trigger.parentElement.querySelector('.page-size-options');
+    const willOpen = !options.classList.contains('open');
+    if (badgeMenuState.openMenu || badgeMenuState.closingMenu) {
+      closeBadgeFilterMenu(true);
+      renderBadgeFilters();
+      if (willOpen) {
+        const next = document.querySelector('#badgeDetailPagination [data-badge-page-size-trigger]');
+        const nextOptions = next?.parentElement.querySelector('.page-size-options');
+        if (next && nextOptions) {
+          nextOptions.getBoundingClientRect();
+          window.requestAnimationFrame(() => {
+            nextOptions.classList.add('open');
+            next.classList.add('is-open');
+          });
+        }
+      }
+      return;
+    }
+    options.classList.toggle('open', willOpen);
+    trigger.classList.toggle('is-open', willOpen);
     return;
   }
 
   const badgePageSize = event.target.closest('[data-badge-page-size]');
   if (badgePageSize) {
-    badgePaginationState.pageSize = Number(badgePageSize.dataset.badgePageSize);
-    badgePaginationState.page = 1;
-    renderBadgeDetail();
+    const select = badgePageSize.closest('.page-size-select');
+    const options = select?.querySelector('.page-size-options');
+    const trigger = select?.querySelector('[data-badge-page-size-trigger]');
+    if (options) options.classList.remove('open');
+    if (trigger) trigger.classList.remove('is-open');
+    const size = Number(badgePageSize.dataset.badgePageSize);
+    const apply = () => {
+      badgePaginationState.pageSize = size;
+      badgePaginationState.page = 1;
+      renderBadgeDetail();
+    };
+    window.clearTimeout(badgePageSizeApplyTimer);
+    if (prefersBadgeReducedMotion()) apply();
+    else badgePageSizeApplyTimer = window.setTimeout(apply, BADGE_MENU_MOTION_MS);
     return;
+  }
+
+  if (!event.target.closest('#badgeDetailPagination .page-size-select')) {
+    closeBadgePageSizeMenu();
   }
 
   if (!event.target.closest('[data-badge-menu-root]')) {
     if (badgeMenuState.openMenu) {
-      badgeMenuState.openMenu = '';
+      closeBadgeFilterMenu(false);
       renderBadgeFilters();
     }
   }
@@ -5820,8 +6137,9 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key !== 'Escape') return;
-  if (badgeMenuState.openMenu) {
-    badgeMenuState.openMenu = '';
+  if (badgeMenuState.openMenu || badgeMenuState.closingMenu) {
+    closeBadgeFilterMenu(false);
+    closeBadgePageSizeMenu();
     renderBadgeFilters();
     return;
   }

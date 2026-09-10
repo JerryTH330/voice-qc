@@ -2,7 +2,7 @@
 .badge-list-toast { position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 20px); padding: 10px 16px; color: #fff; background: rgba(21,31,49,.92); border-radius: 7px; box-shadow: 0 8px 24px rgba(13,23,43,.2); z-index: 200; opacity: 0; pointer-events: none; transition: .2s ease; font-size: 14px; }
 .badge-list-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .badge-session-filter-card, .badge-detail-table-card, .badge-field-settings-drawer, .badge-field-settings-action {
-  --text: #172033; --muted: #68758a; --line: #e7ebf2;
+  --text: #172033; --muted: #68758a; --line: #e7ebf2; --blue-dark: #1d4ed8;
   color: var(--text); font-size: 14px;
 }
 :where(.badge-session-filter-card, .badge-detail-table-card, .badge-field-settings-drawer, .badge-field-settings-action) .btn {
@@ -13,7 +13,7 @@
 }
 :where(.badge-session-filter-card, .badge-detail-table-card, .badge-field-settings-drawer, .badge-field-settings-action) .btn:hover { border-color: #aebbd0; background: #fbfcfe; }
 :where(.badge-detail-table-card, .badge-field-settings-drawer) .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 3px 8px rgba(37,99,235,.17); }
-:where(.badge-detail-table-card, .badge-field-settings-drawer) .btn.primary:hover { background: var(--blue-dark); }
+:where(.badge-detail-table-card, .badge-field-settings-drawer) .btn.primary:hover { background: var(--blue-dark, #1d4ed8); }
 :where(.badge-detail-table-card, .badge-field-settings-drawer) .btn.ghost { color: #4d5c72; }
 .badge-field-settings-head .icon-btn { width: 40px; height: 40px; flex: 0 0 40px; border: 0; background: transparent; color: #758197; border-radius: 8px; font-size: 23px; cursor: pointer; }
 .badge-field-settings-head .icon-btn:hover { background: #f1f4f8; color: var(--text); }
@@ -109,7 +109,9 @@
   mask-size: contain;
 }
 .badge-list-table-wrap { box-sizing: border-box; width: calc(100% - 40px); min-height: 280px; flex: 1 1 auto; margin-inline: 20px; position: relative; }
-.badge-list-table-wrap.is-empty { overflow: hidden; }
+.badge-detail-table-card .badge-list-table-wrap { min-height: 0; overflow: auto; }
+.badge-list-table-wrap.is-empty,
+.badge-detail-table-card .badge-list-table-wrap.is-empty { overflow: hidden; }
 .badge-list-empty-state {
   position: absolute;
   inset: 41px 0 0;
@@ -127,17 +129,24 @@
 .badge-list-empty-illustration { width: 144px; height: auto; margin-bottom: 18px; }
 .badge-list-empty-state strong { color: #8A96A8; font-size: 16px; font-weight: 600; line-height: 1.5; }
 .badge-list-empty-state p { margin: 6px 0 0; color: #435168; font-size: 14px; line-height: 1.5; }
-.badge-data-table { min-width: 2520px; border-collapse: collapse; }
-.badge-data-table thead th {
+.badge-data-table { min-width: 2520px; border-collapse: separate; border-spacing: 0; }
+.badge-data-table > thead > tr > th {
   height: auto;
   padding: 12px 18px;
   border-bottom: 0;
-  background: rgba(22, 32, 51, .04);
+  background: #fff linear-gradient(rgba(22, 32, 51, .04), rgba(22, 32, 51, .04));
   color: var(--muted);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.15;
-  position: static;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  box-shadow: inset 0 -1px 0 rgba(217, 226, 239, .56);
+}
+.badge-list-table-wrap.has-fixed-action-column > table > thead > tr > th:last-child {
+  top: 0;
+  z-index: 7;
 }
 .badge-data-table tbody td {
   min-height: 0;
@@ -653,7 +662,13 @@ body.badge-field-settings-dragging { user-select: none; cursor: grabbing; }
 .badge-field-drag-handle i { display: block; width: 12px; height: 2px; border-radius: 999px; background: #a8b3c3; }
 .badge-field-settings-footer { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); background: #fff; }
 .badge-field-settings-footer > div { display: flex; align-items: center; gap: 10px; }
-.badge-field-settings-footer .btn { min-width: 88px; height: 40px; }
+.badge-field-settings-footer .btn {
+  min-width: 88px;
+  height: 40px;
+  padding-inline: 18px;
+  border-radius: 999px;
+  font-weight: 600;
+}
 
 @media (max-width: 980px) {
   .badge-dynamic-filter-grid > .badge-field-filter-date-time:nth-child(2n) .badge-sync-date-time-panel { left: auto; right: 0; }

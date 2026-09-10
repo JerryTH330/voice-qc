@@ -213,6 +213,7 @@
     dimensionMode: 'organization',
     collapsed: true,
     openMenu: null,
+    closingMenu: null,
     menuQueries: {},
     menuOrders: {},
     activeDateField: 'startDate',
@@ -228,6 +229,62 @@
   };
   filterKeys.forEach(function (key) { state.selections[key] = []; });
   state.selections.status = ['已完成'];
+  var lastRenderedOpenMenu = null;
+  var MENU_MOTION_MS = 180;
+  var MENU_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+  function prefersReducedMotion() {
+    return global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function showFilterMenu(key) {
+    return state.openMenu === key || state.closingMenu === key;
+  }
+
+  function closePageSizeMenu() {
+    document.querySelectorAll('.session-real-root .page-size-options.open').forEach(function (node) {
+      node.classList.remove('open');
+    });
+    document.querySelectorAll('.session-real-root [data-sr-page-size-trigger].is-open').forEach(function (node) {
+      node.classList.remove('is-open');
+    });
+  }
+
+  function closeFilterMenu(instant) {
+    if (!state.openMenu && !state.closingMenu) return;
+    if (instant || prefersReducedMotion()) {
+      state.openMenu = null;
+      state.closingMenu = null;
+      return;
+    }
+    if (state.openMenu) state.closingMenu = state.openMenu;
+    state.openMenu = null;
+  }
+
+  function openFilterMenu(key) {
+    state.closingMenu = null;
+    state.openMenu = key;
+  }
+
+  function animateFilterMenu(panel, mode) {
+    if (!panel) return null;
+    var hiddenY = '-8px';
+    var from = mode === 'in'
+      ? { opacity: 0, transform: 'translateY(' + hiddenY + ')' }
+      : { opacity: 1, transform: 'translateY(0px)' };
+    var to = mode === 'in'
+      ? { opacity: 1, transform: 'translateY(0px)' }
+      : { opacity: 0, transform: 'translateY(' + hiddenY + ')' };
+    panel.style.pointerEvents = mode === 'out' ? 'none' : '';
+    panel.style.opacity = String(from.opacity);
+    panel.style.transform = from.transform;
+    panel.getBoundingClientRect();
+    return panel.animate([from, to], {
+      duration: MENU_MOTION_MS,
+      easing: MENU_MOTION_EASE,
+      fill: 'forwards'
+    });
+  }
 
   var columns = [
     { key: 'audioId', label: '录音ID', width: 22 },
@@ -678,7 +735,7 @@
       '<span>' + escapeHtml(label) + '</span>' +
       '<button type="button" class="session-select-trigger' + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
         '<strong class="' + (placeholder ? 'is-placeholder' : '') + '">' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
-      (open ? renderOptionMenu(key) : '') + '</div>';
+      (showFilterMenu(key) ? renderOptionMenu(key) : '') + '</div>';
   }
 
   function renderTextControl(key, label, placeholder) {
@@ -772,28 +829,70 @@
     return '<div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu sr-date-control' + (open ? ' is-open' : '') + '" data-sr-control="date">' +
       '<span>录音开始时间</span>' +
       '<button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-sr-trigger="date" aria-label="录音开始时间筛选" aria-haspopup="dialog" aria-expanded="' + (open ? 'true' : 'false') + '"><strong>' + escapeHtml(formatSessionDateDisplay(state.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatSessionDateDisplay(state.endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
-      (open ? renderSessionDateMenu() : '') +
+      (showFilterMenu('date') ? renderSessionDateMenu() : '') +
     '</div>';
   }
 
   function renderDimensionSwitcher() {
     var organizationActive = state.dimensionMode === 'organization';
-    var pathText = organizationActive
-      ? '品牌 → 大区 → 战区 → 门店'
-      : '品牌 → 省份 → 城市 → 门店';
+    var pathItems = organizationActive
+      ? ['品牌', '大区', '战区', '门店']
+      : ['品牌', '省份', '城市', '门店'];
+    var pathHtml = pathItems.map(function (item, index) {
+      return (index ? '<i class="session-select-caret badge-filter-dimension-path-arrow" aria-hidden="true"></i>' : '') +
+        '<span class="badge-filter-dimension-path-step">' + escapeHtml(item) + '</span>';
+    }).join('');
     return '<div class="sr-filter-dimension-bar">' +
       '<div class="sr-filter-dimension-main">' +
         '<div class="sr-filter-dimension-tabs leads-view-tabs" role="tablist" aria-label="录音组织筛选维度">' +
           '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (organizationActive ? ' active' : '') + '" data-sr-dimension="organization" role="tab" aria-selected="' + organizationActive + '">组织维度</button>' +
           '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (!organizationActive ? ' active' : '') + '" data-sr-dimension="geography" role="tab" aria-selected="' + !organizationActive + '">地理维度</button>' +
         '</div></div>' +
-      '<div class="sr-filter-dimension-path"><span>当前路径</span><strong>' + escapeHtml(pathText) + '</strong></div>' +
+      '<div class="sr-filter-dimension-path badge-filter-dimension-path">' +
+        '<img src="../assets/filter-path-icon.svg" alt="" aria-hidden="true">' +
+        '<span class="badge-filter-dimension-path-label">当前路径：</span>' +
+        '<strong>' + pathHtml + '</strong>' +
+      '</div>' +
     '</div>';
+  }
+
+  function renderFilterActions() {
+    return '<div class="badge-dynamic-filter-actions"><span></span><div>' +
+      '<button type="button" class="btn session-reset-btn" data-sr-reset>重置</button>' +
+      '<button type="button" class="session-toggle-text-btn" data-sr-collapse aria-expanded="' + !state.collapsed + '"><span>' + (state.collapsed ? '展开' : '收起') + '</span><svg class="session-toggle-text-btn-icon' + (state.collapsed ? ' is-collapsed' : '') + '" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>' +
+    '</div></div>';
+  }
+
+  function settleFilterExtra(extraEl, collapsed) {
+    if (!extraEl) return;
+    extraEl.style.height = collapsed ? '0px' : '';
+    extraEl.style.overflow = collapsed ? 'clip' : '';
+    extraEl.style.pointerEvents = collapsed ? 'none' : '';
+    if (collapsed) extraEl.setAttribute('inert', '');
+    else extraEl.removeAttribute('inert');
+    extraEl.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
   }
 
   function renderFilters() {
     var container = document.getElementById('sessionRealFilterControls');
     if (!container) return;
+    var extraEl = container.querySelector('[data-sr-extra]');
+    var previousExtraHeight = extraEl ? extraEl.getBoundingClientRect().height : 0;
+    var collapseChanged = container.childElementCount > 0 &&
+      container.classList.contains('is-collapsed') !== state.collapsed;
+    var closingInProgress = container._menuAnimation && state.closingMenu && !state.openMenu;
+    if (closingInProgress && !collapseChanged) {
+      positionFilterMenu();
+      return;
+    }
+    if (container._menuAnimation) {
+      container._menuAnimation.cancel();
+      container._menuAnimation = null;
+    }
+    if (container._collapseAnimation) {
+      container._collapseAnimation.cancel();
+      container._collapseAnimation = null;
+    }
     var dimensionKeys = state.dimensionMode === 'geography'
       ? ['brand', 'province', 'city', 'store']
       : ['brand', 'region', 'zone', 'store'];
@@ -810,19 +909,94 @@
     var textControls = [
       { key: 'audioId', label: '录音ID' }
     ].filter(function (field) { return isColumnVisible(field.key); });
+    var extraInner = secondary.map(function (key) { return renderFilterControl(key); }).join('') +
+      textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
+      (isColumnVisible('startTime') ? renderDateControl() : '');
+    var keepExtra = !!extraInner && (!state.collapsed || collapseChanged);
     container.classList.toggle('is-collapsed', state.collapsed);
     container.innerHTML =
       renderDimensionSwitcher() +
-      '<div class="badge-dynamic-filter-grid">' +
-        primary.map(function (key) { return renderFilterControl(key); }).join('') +
-        (state.collapsed ? '' : secondary.map(function (key) { return renderFilterControl(key); }).join('') +
-          textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
-          (isColumnVisible('startTime') ? renderDateControl() : '')) +
-      '</div><div class="badge-dynamic-filter-actions"><span></span><div>' +
-        '<button type="button" class="btn session-reset-btn" data-sr-reset>重置</button>' +
-        '<button type="button" class="session-toggle-text-btn" data-sr-collapse aria-expanded="' + !state.collapsed + '"><span>' + (state.collapsed ? '展开' : '收起') + '</span><svg class="session-toggle-text-btn-icon' + (state.collapsed ? ' is-collapsed' : '') + '" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>' +
-      '</div></div>';
+      '<div class="sr-filter-primary">' +
+        '<div class="badge-dynamic-filter-grid">' +
+          primary.map(function (key) { return renderFilterControl(key); }).join('') +
+        '</div>' +
+        (state.collapsed ? renderFilterActions() : '') +
+      '</div>' +
+      (keepExtra
+        ? '<div class="sr-filter-extra" data-sr-extra><div class="sr-filter-extra-inner"><div class="badge-dynamic-filter-grid">' + extraInner + '</div></div></div>'
+        : '') +
+      (state.collapsed ? '' : renderFilterActions());
+    extraEl = container.querySelector('[data-sr-extra]');
+    var reduceMotion = prefersReducedMotion();
+    var shouldEnterMenu = !!state.openMenu && state.openMenu !== lastRenderedOpenMenu;
+    var shouldExitMenu = !!state.closingMenu && lastRenderedOpenMenu === state.closingMenu;
+    lastRenderedOpenMenu = state.openMenu;
+    if (extraEl && collapseChanged && !reduceMotion) {
+      var fromHeight = previousExtraHeight;
+      var toHeight = state.collapsed ? 0 : extraEl.getBoundingClientRect().height;
+      extraEl.style.overflow = 'clip';
+      extraEl.style.pointerEvents = 'none';
+      extraEl.style.height = fromHeight + 'px';
+      extraEl.setAttribute('aria-hidden', state.collapsed ? 'true' : 'false');
+      if (state.collapsed) extraEl.setAttribute('inert', '');
+      else extraEl.removeAttribute('inert');
+      extraEl.getBoundingClientRect();
+      var animation = extraEl.animate([
+        { height: fromHeight + 'px' },
+        { height: toHeight + 'px' }
+      ], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+      container._collapseAnimation = animation;
+      animation.onfinish = function () {
+        if (container._collapseAnimation !== animation) return;
+        container._collapseAnimation = null;
+        if (typeof animation.commitStyles === 'function') animation.commitStyles();
+        animation.cancel();
+        settleFilterExtra(extraEl, state.collapsed);
+      };
+      animation.oncancel = function () {
+        if (container._collapseAnimation === animation) container._collapseAnimation = null;
+      };
+    } else {
+      settleFilterExtra(extraEl, state.collapsed);
+    }
     positionFilterMenu();
+    var panel = container.querySelector('[data-sr-menu], [data-sr-date-panel]');
+    if (panel && shouldEnterMenu && !reduceMotion) {
+      var enterAnimation = animateFilterMenu(panel, 'in');
+      container._menuAnimation = enterAnimation;
+      if (enterAnimation) {
+        enterAnimation.onfinish = function () {
+          if (container._menuAnimation !== enterAnimation) return;
+          container._menuAnimation = null;
+          if (typeof enterAnimation.commitStyles === 'function') enterAnimation.commitStyles();
+          enterAnimation.cancel();
+          panel.style.opacity = '';
+          panel.style.transform = '';
+          panel.style.pointerEvents = '';
+        };
+        enterAnimation.oncancel = function () {
+          if (container._menuAnimation === enterAnimation) container._menuAnimation = null;
+        };
+      }
+    } else if (panel && shouldExitMenu && !reduceMotion) {
+      var exitAnimation = animateFilterMenu(panel, 'out');
+      container._menuAnimation = exitAnimation;
+      if (exitAnimation) {
+        exitAnimation.onfinish = function () {
+          if (container._menuAnimation !== exitAnimation) return;
+          container._menuAnimation = null;
+          state.closingMenu = null;
+          lastRenderedOpenMenu = null;
+          renderFilters();
+          bindEvents();
+        };
+        exitAnimation.oncancel = function () {
+          if (container._menuAnimation === exitAnimation) container._menuAnimation = null;
+        };
+      }
+    } else if (panel && shouldExitMenu) {
+      state.closingMenu = null;
+    }
   }
 
   function positionFilterMenu() {
@@ -984,7 +1158,7 @@
     container.innerHTML = '<div class="dashboard-pagination sr-pagination">' +
       '<span class="session-pagination-total">共 ' + totalItems + ' 条</span>' +
       '<div class="dashboard-pagination-controls">' +
-        '<div class="custom-select-container page-select page-size-select"><button type="button" class="custom-select-trigger page-size-trigger" data-sr-page-size-trigger><span>' + pageSize + ' 条/页</span></button><div class="custom-select-options page-size-options">' +
+        '<div class="custom-select-container page-select page-size-select"><button type="button" class="custom-select-trigger page-size-trigger" data-sr-page-size-trigger><span>' + pageSize + ' 条/页</span><i class="session-select-caret" aria-hidden="true"></i></button><div class="custom-select-options page-size-options">' +
           [10, 20, 50].map(function (size) { return '<button type="button" class="custom-option page-size-option' + (size === pageSize ? ' active' : '') + '" data-sr-page-size="' + size + '">' + size + ' 条/页</button>'; }).join('') +
         '</div></div>' +
         '<div class="page-group"><button type="button" class="page-arrow" data-sr-page-arrow="-1" ' + (current <= 1 ? 'disabled' : '') + '>‹</button>' +
@@ -1035,7 +1209,7 @@
           '<div class="table-headbar session-list-table-headbar sr-table-headbar">' +
             '<div class="panel-title"><h3>录音总览</h3></div>' +
             '<div class="badge-detail-table-head-tools"><div class="session-filter-summary"><span>当前匹配 <strong id="sessionRealCount">0</strong> 条录音</span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-completed" aria-hidden="true"></span><span>已完成 <strong id="sessionRealCompleted">0</strong> 条</span></span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-failed" aria-hidden="true"></span><span>失败 <strong id="sessionRealFailed">0</strong> 条</span></span></div>' +
-            '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-sr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action" data-sr-export aria-describedby="sessionRealExportTooltip" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="sessionRealExportTooltip" role="tooltip">导出 Excel</span></div></div></div>' +
+            '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-sr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-sr-export aria-describedby="sessionRealExportTooltip" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="sessionRealExportTooltip" role="tooltip">导出 Excel</span></div></div></div>' +
           '</div>' +
           '<div class="table-wrap session-list-table-wrap"><table class="data-table session-data-table badge-data-table sr-real-table" id="sessionRealTable"><thead></thead><tbody></tbody></table><div class="badge-list-empty-state" id="sessionRealEmptyState" role="status" hidden><svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true"> <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" /> <path d="M53 27c0-5.5 4.5-10 10-10h54l18 18v61c0 5.5-4.5 10-10 10H63c-5.5 0-10-4.5-10-10V27Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" /> <path d="M117 17v18h18" fill="#E8F0FC" stroke="#CAD7EA" stroke-width="3" stroke-linejoin="round" /> <path d="M70 48h47M70 62h31M70 76h24" stroke="#B7C6DB" stroke-width="5" stroke-linecap="round" /> <circle cx="117" cy="83" r="21" fill="#EEF5FF" stroke="#5B8DEF" stroke-width="4" /> <path d="m132 98 15 15" stroke="#5B8DEF" stroke-width="6" stroke-linecap="round" /> <path d="M108 83h18" stroke="#8EAFE9" stroke-width="4" stroke-linecap="round" /> </svg><strong>暂无符合条件的录音</strong><p>请调整筛选条件后重试</p></div></div>' +
           '<div class="session-pagination" id="sessionRealPagination"></div>' +
@@ -1135,7 +1309,7 @@
     inactiveKeys.forEach(function (key) { state.selections[key] = []; });
     state.selections.store = [];
     state.dimensionMode = mode;
-    state.openMenu = null;
+    closeFilterMenu(true);
     state.menuQueries = {};
     state.page = 1;
   }
@@ -1237,7 +1411,7 @@
     persistColumnSettings();
     columnSettingsDraft = null;
     state.settingsOpen = false;
-    state.openMenu = null;
+    closeFilterMenu(true);
     state.page = 1;
     rerender();
     showToast('字段设置已保存');
@@ -1310,35 +1484,76 @@
 
   function bindTableEvents() {
     document.querySelectorAll('[data-sr-intent-help]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('pointerenter', function () { positionIntentRuleTooltip(node); });
       node.addEventListener('focus', function () { positionIntentRuleTooltip(node); });
     });
     document.querySelectorAll('[data-sr-detail]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('click', function () { openDetail(node.dataset.srDetail); });
     });
     document.querySelectorAll('[data-sr-page]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('click', function () { state.page = Number(node.dataset.srPage); rerender(); });
     });
     document.querySelectorAll('[data-sr-page-arrow]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('click', function () { state.page = Math.max(1, (state.page || 1) + Number(node.dataset.srPageArrow)); rerender(); });
     });
     document.querySelectorAll('[data-sr-page-size-trigger]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
+        var willOpen = !node.classList.contains('is-open');
+        if (state.openMenu || state.closingMenu) {
+          closeFilterMenu(true);
+          rerender();
+          if (willOpen) {
+            var next = document.querySelector('[data-sr-page-size-trigger]');
+            var nextOptions = next && next.parentElement.querySelector('.page-size-options');
+            if (next && nextOptions) {
+              nextOptions.getBoundingClientRect();
+              global.requestAnimationFrame(function () {
+                nextOptions.classList.add('open');
+                next.classList.add('is-open');
+              });
+            }
+          }
+          return;
+        }
         var options = node.parentElement.querySelector('.page-size-options');
-        options.classList.toggle('open');
-        node.classList.toggle('is-open');
+        if (options) options.classList.toggle('open', willOpen);
+        node.classList.toggle('is-open', willOpen);
       });
     });
     document.querySelectorAll('[data-sr-page-size]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
-        state.pageSize = Number(node.dataset.srPageSize);
-        state.page = 1;
-        rerender();
+        var size = Number(node.dataset.srPageSize);
+        var select = node.closest('.page-size-select');
+        var options = select && select.querySelector('.page-size-options');
+        var trigger = select && select.querySelector('[data-sr-page-size-trigger]');
+        if (options) options.classList.remove('open');
+        if (trigger) trigger.classList.remove('is-open');
+        var apply = function () {
+          state.pageSize = size;
+          state.page = 1;
+          rerender();
+        };
+        if (prefersReducedMotion()) apply();
+        else global.setTimeout(apply, MENU_MOTION_MS);
       });
     });
     document.querySelectorAll('[data-sr-page-jump]').forEach(function (node) {
+      if (node.dataset.srBound === 'true') return;
+      node.dataset.srBound = 'true';
       node.addEventListener('change', function () {
         var totalPages = Math.max(1, Math.ceil(getFilteredRecords().length / Number(state.pageSize || 10)));
         state.page = Math.min(totalPages, Math.max(1, Number(node.value || 1)));
@@ -1364,12 +1579,13 @@
       node.addEventListener('click', function (event) {
         event.stopPropagation();
         var key = node.dataset.srTrigger;
+        closePageSizeMenu();
         if (state.openMenu === key) {
-          state.openMenu = null;
+          closeFilterMenu(false);
           rerender();
           return;
         }
-        state.openMenu = key;
+        openFilterMenu(key);
         if (key === 'date') {
           state.activeDateField = 'startDate';
           state.dateDraftStartDate = state.startDate;
@@ -1539,7 +1755,7 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
-        state.openMenu = null;
+        closeFilterMenu(false);
         rerender();
       });
     });
@@ -1551,7 +1767,7 @@
         state.startDate = state.dateDraftStartDate;
         state.endDate = state.dateDraftEndDate;
         state.page = 1;
-        state.openMenu = null;
+        closeFilterMenu(false);
         rerender();
       });
     });
@@ -1570,7 +1786,7 @@
         syncSessionDateView(defaultStartDate);
         state.page = 1;
         state.collapsed = true;
-        state.openMenu = null;
+        closeFilterMenu(true);
         state.menuQueries = {};
         rerender();
       });
@@ -1580,7 +1796,7 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function () {
         state.collapsed = !state.collapsed;
-        state.openMenu = null;
+        closeFilterMenu(true);
         rerender();
       });
     });
@@ -1604,7 +1820,7 @@
       node.addEventListener('click', function (event) {
         event.stopPropagation();
         state.settingsOpen = !state.settingsOpen;
-        state.openMenu = null;
+        closeFilterMenu(true);
         columnSettingsDraft = state.settingsOpen ? cloneColumnSettings(columnSettings) : null;
         rerender();
         syncSettingsButton();
@@ -1665,18 +1881,21 @@
       documentEventsBound = true;
       global.addEventListener('resize', positionFilterMenu);
       document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && (state.settingsOpen || state.openMenu)) {
+        if (event.key === 'Escape' && (state.settingsOpen || state.openMenu || state.closingMenu)) {
           var settingsWasOpen = state.settingsOpen;
           state.settingsOpen = false;
           columnSettingsDraft = null;
-          state.openMenu = null;
+          closeFilterMenu(!!settingsWasOpen);
+          closePageSizeMenu();
           rerender();
           if (settingsWasOpen) document.querySelector('[data-sr-settings]')?.focus();
+        } else if (event.key === 'Escape') {
+          closePageSizeMenu();
         }
       });
       document.addEventListener('click', function (event) {
         if (state.openMenu && !event.target.closest('[data-sr-control]')) {
-          state.openMenu = null;
+          closeFilterMenu(false);
           rerender();
         }
         if (state.settingsOpen && !event.target.closest('.sr-settings-panel') && !event.target.closest('[data-sr-settings]')) {
@@ -1686,8 +1905,15 @@
           syncSettingsButton();
         }
         document.querySelectorAll('.page-size-options.open').forEach(function (node) {
-          if (!event.target.closest('.page-size-select')) node.classList.remove('open');
+          if (!event.target.closest('.page-size-select')) {
+            node.classList.remove('open');
+          }
         });
+        if (!event.target.closest('.page-size-select')) {
+          document.querySelectorAll('[data-sr-page-size-trigger].is-open').forEach(function (node) {
+            node.classList.remove('is-open');
+          });
+        }
       });
     }
   }
