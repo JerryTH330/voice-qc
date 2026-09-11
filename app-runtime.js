@@ -7912,7 +7912,71 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         province: buildLeadOrganizationTree(leadOrganizationDealers, 'province')
       }
       const leadRecordTemplates = buildLeadRecords()
-      const leadRecords = buildLeadOrganizationDemoRecords(leadRecordTemplates, leadOrganizationDealers)
+
+      function getStableLeadHash(value) {
+        let hash = 2166136261
+        String(value || '').split('').forEach((character) => {
+          hash ^= character.charCodeAt(0)
+          hash = Math.imul(hash, 16777619)
+        })
+        return hash >>> 0
+      }
+
+      function buildRealLeadRecords() {
+        const source = Array.isArray(window.__LEADS_REAL_DATA) ? window.__LEADS_REAL_DATA : []
+        if (!source.length) return []
+        const directory = Array.isArray(window.__DEVICE_ORGANIZATION_DEALERS)
+          ? window.__DEVICE_ORGANIZATION_DEALERS
+          : []
+        const directoryByDealer = new Map(directory.map((dealer) => [
+          `${dealer.brand}::${dealer.dealerCode}`,
+          dealer
+        ]))
+
+        return source.map((record) => {
+          const hash = getStableLeadHash(record.id)
+          const dealer = directoryByDealer.get(`${record.brand}::${record.dealerCode}`) || {}
+          const minuteOfDay = (9 * 60) + (hash % (11 * 60))
+          const lastContact = `${record.leadDate} ${padNumber(Math.floor(minuteOfDay / 60))}:${padNumber(minuteOfDay % 60)}`
+          const regionOrganizationPath = `${record.brand} > ${record.region} > ${record.zone} > ${record.store}`
+          const provinceOrganizationPath = `${record.brand} > ${record.province} > ${record.city} > ${record.store}`
+          const recordingCount = Math.max(0, Number(record.recordingCount) || 0)
+
+          return normalizeLeadRecord({
+            ...record,
+            advisorId: `${record.brand}::${record.dealerCode}::${record.advisorName}`,
+            owner: record.advisorName,
+            patroler: dealer.patroler || '',
+            patrolerId: dealer.patrolerId || '',
+            governor: dealer.governor || '',
+            governorId: dealer.governorId || '',
+            organizationPath: regionOrganizationPath,
+            regionOrganizationPath,
+            provinceOrganizationPath,
+            recordStartTime: `${record.leadDate} 00:00`,
+            leadIssuedAt: `${record.leadDate} 00:00`,
+            lastContact,
+            updatedAt: lastContact,
+            customer: record.customerName,
+            model: record.carSeries,
+            stage: record.leadStatus,
+            source: record.leadSource,
+            aiLeadValidity: recordingCount === 0 ? '暂未分析' : (hash % 2 ? '有效' : '无效'),
+            isMultiNodeJourneyDemo: false,
+            isMultiNodeCustomerDemo: false,
+            isMultiStoreCustomerDemo: false
+          }, hash)
+        }).sort((left, right) => {
+          return String(right.leadDate || '').localeCompare(String(left.leadDate || ''))
+            || String(right.id).localeCompare(String(left.id))
+        })
+      }
+
+      const realLeadRecords = buildRealLeadRecords()
+      const leadRecords = realLeadRecords.length
+        ? realLeadRecords
+        : buildLeadOrganizationDemoRecords(leadRecordTemplates, leadOrganizationDealers)
+      window.__LEADS_APP_RECORDS = leadRecords
 
       function getLeadRecordOrganizationFilterPath(record, dimension = leadsFilterState.organizationDimension) {
         const dealerPath = dimension === 'province'
@@ -8984,6 +9048,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function maskDisplayName(value) {
         const chars = Array.from(String(value))
+        if (chars.includes('*')) {
+          return String(value)
+        }
         if (chars.length <= 1) {
           return value
         }
@@ -14204,6 +14271,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerDetailSelection = { ...selection }
       }
 
+      window.__openLeadCustomerDetail = (selection = {}) => {
+        setCustomerDetailSelection(selection)
+        renderPage('customer-detail')
+      }
+
       function getCustomerDetailAggregateRecord(selection = customerDetailSelection) {
         const safeSelection = {
           ...customerDetailDefaultSelection,
@@ -16188,6 +16260,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function maskLeadDetailCustomerName(value) {
         const text = String(value || '').trim()
+        if (text.includes('*')) {
+          return text
+        }
         if (text.length <= 1) {
           return text || '王*生'
         }
@@ -21625,6 +21700,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function attachRouteLinks() {
         pageHost.querySelectorAll('[data-route]').forEach((node) => {
           node.addEventListener('click', () => {
+            if (
+              node.dataset.route === 'leads' &&
+              window.__LEADS_MODERN_RUNTIME_INSTALLED__ &&
+              !document.getElementById('leadsFilterControls')
+            ) {
+              const returnUrl = new URL(window.location.href)
+              const returnView = node.dataset.leadsViewTarget === 'customers' ? 'customers' : 'leads'
+              returnUrl.searchParams.set('route', 'leads')
+              returnUrl.searchParams.set('leadsView', returnView)
+              ;['leadId', 'leadSource', 'leadReturnView'].forEach((key) => returnUrl.searchParams.delete(key))
+              returnUrl.hash = 'leads'
+              window.location.href = returnUrl.toString()
+              return
+            }
             if (node.dataset.route === 'leads' && (node.dataset.leadsViewTarget === 'leads' || node.dataset.leadsViewTarget === 'customers')) {
               leadsViewState.mode = node.dataset.leadsViewTarget
             }

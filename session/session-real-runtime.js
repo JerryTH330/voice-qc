@@ -232,6 +232,8 @@
   var lastRenderedOpenMenu = null;
   var MENU_MOTION_MS = 180;
   var MENU_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  var intentTooltipHideTimer = 0;
+  var intentTooltipAnchor = null;
 
   function prefersReducedMotion() {
     return global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -342,6 +344,15 @@
 
   var columnSettings = readColumnSettings();
   var columnSettingsDraft = null;
+  var fieldSettingsCloseTimer = 0;
+  var fieldSettingsDragController = global.__fieldSettingsInteractions.createController({
+    listSelector: '#sessionRealFieldSettings .badge-field-settings-list',
+    itemSelector: '[data-sr-column-item]',
+    scrollerSelector: '#sessionRealFieldSettings .badge-field-settings-body',
+    enabled: function () { return Boolean(state.settingsOpen && columnSettingsDraft); },
+    getKey: function (item) { return item.dataset.srColumnItem; },
+    onOrderChange: function (order) { if (columnSettingsDraft) columnSettingsDraft.order = order; }
+  });
 
   function cloneColumnSettings(settings) {
     return { order: settings.order.slice(), hidden: settings.hidden.slice() };
@@ -1067,9 +1078,35 @@
     '</span>';
   }
 
-  function positionIntentRuleTooltip(button) {
-    var tooltip = button && button.parentElement && button.parentElement.querySelector('.sr-intent-rule-tooltip');
-    if (!tooltip) return;
+  function intentTooltipEl() {
+    return document.getElementById('sessionRealIntentRuleTooltip');
+  }
+
+  function restoreIntentRuleTooltip() {
+    var tooltip = intentTooltipEl();
+    var host = document.querySelector('.sr-intent-header-help');
+    if (!tooltip) {
+      intentTooltipAnchor = null;
+      return;
+    }
+    tooltip.classList.remove('is-open');
+    if (host && tooltip.parentElement !== host) host.appendChild(tooltip);
+    else if (!host && tooltip.parentElement === document.body) tooltip.remove();
+    intentTooltipAnchor = null;
+    var button = document.querySelector('[data-sr-intent-help]');
+    if (button && (button.matches(':hover') || button.matches(':focus-visible'))) {
+      showIntentRuleTooltip(button);
+    }
+  }
+
+  function hideIntentRuleTooltip() {
+    global.clearTimeout(intentTooltipHideTimer);
+    intentTooltipHideTimer = global.setTimeout(restoreIntentRuleTooltip, 160);
+  }
+
+  function positionIntentRuleTooltip(button, tooltip) {
+    tooltip = tooltip || intentTooltipEl();
+    if (!button || !tooltip) return;
     var buttonRect = button.getBoundingClientRect();
     var tooltipWidth = tooltip.offsetWidth;
     var tooltipHeight = tooltip.offsetHeight;
@@ -1089,6 +1126,44 @@
     tooltip.style.setProperty('--sr-intent-tooltip-arrow-left', Math.min(Math.max(buttonRect.left + buttonRect.width / 2 - left - 4, 12), tooltipWidth - 20) + 'px');
   }
 
+  function showIntentRuleTooltip(button) {
+    var tooltip = intentTooltipEl();
+    if (!button || !tooltip) return;
+    global.clearTimeout(intentTooltipHideTimer);
+    intentTooltipAnchor = button;
+    if (tooltip.parentElement !== document.body) document.body.appendChild(tooltip);
+    positionIntentRuleTooltip(button, tooltip);
+    tooltip.classList.add('is-open');
+    positionIntentRuleTooltip(button, tooltip);
+  }
+
+  function bindIntentRuleHelp() {
+    var button = document.querySelector('[data-sr-intent-help]');
+    var tooltip = intentTooltipEl();
+    var wrap = document.querySelector('.session-real-root .session-list-table-wrap');
+    if (!button) return;
+    if (button.dataset.srBound !== 'true') {
+      button.dataset.srBound = 'true';
+      button.addEventListener('pointerenter', function () { showIntentRuleTooltip(button); });
+      button.addEventListener('mouseenter', function () { showIntentRuleTooltip(button); });
+      button.addEventListener('pointerleave', hideIntentRuleTooltip);
+      button.addEventListener('focus', function () { showIntentRuleTooltip(button); });
+      button.addEventListener('blur', hideIntentRuleTooltip);
+    }
+    if (tooltip && tooltip.dataset.srBound !== 'true') {
+      tooltip.dataset.srBound = 'true';
+      tooltip.addEventListener('pointerenter', function () { global.clearTimeout(intentTooltipHideTimer); });
+      tooltip.addEventListener('pointerleave', hideIntentRuleTooltip);
+    }
+    if (wrap && wrap.dataset.srIntentScrollBound !== 'true') {
+      wrap.dataset.srIntentScrollBound = 'true';
+      wrap.addEventListener('scroll', function () {
+        if (!intentTooltipAnchor) return;
+        positionIntentRuleTooltip(intentTooltipAnchor);
+      }, { passive: true });
+    }
+  }
+
   function renderTable(recordsForView) {
     var table = document.getElementById('sessionRealTable');
     var total = document.getElementById('sessionRealCount');
@@ -1100,6 +1175,7 @@
     var head = table.querySelector('thead');
     var body = table.querySelector('tbody');
     if (!head || !body) return;
+    restoreIntentRuleTooltip();
     head.innerHTML = '<tr>' + visible.map(function (column) {
       var label = column.key === 'intentLevel' ? renderIntentLevelHeader() : escapeHtml(column.label);
       return '<th data-column-key="' + escapeHtml(column.key) + '">' + label + '</th>';
@@ -1168,7 +1244,7 @@
       '</div></div>';
   }
 
-  function renderFieldSettings() {
+  function renderFieldSettings(options) {
     var host = document.getElementById('sessionRealFieldSettings');
     if (!host) {
       host = document.createElement('div');
@@ -1177,26 +1253,62 @@
     }
     document.body.classList.toggle('sr-settings-open', state.settingsOpen);
     if (!state.settingsOpen) {
+      if (host.dataset.srSettingsClosing === 'true') return;
       host.innerHTML = '';
       return;
     }
+    global.clearTimeout(fieldSettingsCloseTimer);
+    delete host.dataset.srSettingsClosing;
+    var animateOpen = Boolean(options && options.animateOpen && !host.querySelector('.badge-field-settings-drawer.open'));
     var scrollTop = host.querySelector('.badge-field-settings-body')?.scrollTop || 0;
     var working = getWorkingColumnSettings();
     var ordered = working.order.map(function (key) { return getColumn(key); }).filter(Boolean);
     var visibleCount = ordered.filter(function (column) { return !working.hidden.includes(column.key); }).length;
     host.innerHTML = '<div class="drawer-backdrop badge-field-settings-backdrop" data-sr-settings-close></div>' +
-      '<aside class="drawer detail-drawer badge-field-settings-drawer open sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置">' +
+      '<aside class="drawer detail-drawer badge-field-settings-drawer' + (animateOpen ? '' : ' open') + ' sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置" aria-hidden="false">' +
         '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="icon-btn" data-sr-settings-close aria-label="关闭字段设置">×</button></div>' +
         '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>全选</button></div>' +
         '<div class="badge-field-settings-list" aria-label="可配置字段列表">' + ordered.map(function (column) {
           var visible = !working.hidden.includes(column.key);
-          return '<div class="badge-field-settings-item' + (visible ? ' is-visible' : '') + '" draggable="true" data-sr-column-item="' + escapeHtml(column.key) + '">' +
+          return '<div class="badge-field-settings-item' + (visible ? ' is-visible' : '') + '" draggable="false" data-sr-column-item="' + escapeHtml(column.key) + '">' +
             '<span class="badge-field-drag-handle" aria-hidden="true"><i></i><i></i><i></i></span>' +
             '<label><input type="checkbox" data-sr-column-visible="' + escapeHtml(column.key) + '" ' + (visible ? 'checked' : '') + '><span>' + escapeHtml(column.label) + '</span></label>' +
             '<small>' + (visible ? '已显示' : '已隐藏') + '</small></div>';
         }).join('') + '</div></div>' +
         '<div class="badge-field-settings-footer"><button type="button" class="btn ghost" data-sr-settings-restore>恢复默认</button><div><button type="button" class="btn ghost" data-sr-settings-close>取消</button><button type="button" class="btn primary" data-sr-settings-save>保存设置</button></div></div></aside>';
     host.querySelector('.badge-field-settings-body').scrollTop = scrollTop;
+    if (animateOpen) global.requestAnimationFrame(function () {
+      var drawer = host.querySelector('.sr-settings-panel');
+      if (!drawer || !state.settingsOpen) return;
+      drawer.classList.add('open');
+      var closeButton = drawer.querySelector('[data-sr-settings-close]');
+      if (closeButton) closeButton.focus();
+    });
+  }
+
+  function closeFieldSettings() {
+    var host = document.getElementById('sessionRealFieldSettings');
+    var drawer = host && host.querySelector('.sr-settings-panel');
+    if (fieldSettingsDragController) fieldSettingsDragController.cancel();
+    state.settingsOpen = false;
+    columnSettingsDraft = null;
+    document.body.classList.remove('sr-settings-open');
+    syncSettingsButton();
+    if (!host || !drawer) {
+      if (host) host.innerHTML = '';
+      return;
+    }
+    host.dataset.srSettingsClosing = 'true';
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    global.clearTimeout(fieldSettingsCloseTimer);
+    var finish = function () {
+      if (state.settingsOpen) return;
+      delete host.dataset.srSettingsClosing;
+      host.innerHTML = '';
+    };
+    if (prefersReducedMotion()) finish();
+    else fieldSettingsCloseTimer = global.setTimeout(finish, 230);
   }
 
   function renderShell() {
@@ -1265,7 +1377,7 @@
     }
     renderFilters();
     renderTable(getFilteredRecords());
-    renderFieldSettings();
+    renderFieldSettings(options && options.animateSettingsOpen ? { animateOpen: true } : null);
     bindEvents();
     syncRefreshButton();
     syncSettingsButton();
@@ -1409,10 +1521,9 @@
     if (next.hidden.includes('leadId') && next.hidden.includes('customerName') && next.hidden.includes('customerPhone')) state.selections.customer = [];
     columnSettings = next;
     persistColumnSettings();
-    columnSettingsDraft = null;
-    state.settingsOpen = false;
     closeFilterMenu(true);
     state.page = 1;
+    closeFieldSettings();
     rerender();
     showToast('字段设置已保存');
   }
@@ -1483,12 +1594,7 @@
   }
 
   function bindTableEvents() {
-    document.querySelectorAll('[data-sr-intent-help]').forEach(function (node) {
-      if (node.dataset.srBound === 'true') return;
-      node.dataset.srBound = 'true';
-      node.addEventListener('pointerenter', function () { positionIntentRuleTooltip(node); });
-      node.addEventListener('focus', function () { positionIntentRuleTooltip(node); });
-    });
+    bindIntentRuleHelp();
     document.querySelectorAll('[data-sr-detail]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
@@ -1819,22 +1925,22 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
-        state.settingsOpen = !state.settingsOpen;
+        if (state.settingsOpen) {
+          closeFieldSettings();
+          return;
+        }
+        state.settingsOpen = true;
         closeFilterMenu(true);
-        columnSettingsDraft = state.settingsOpen ? cloneColumnSettings(columnSettings) : null;
-        rerender();
+        columnSettingsDraft = cloneColumnSettings(columnSettings);
+        rerender({ animateSettingsOpen: true });
         syncSettingsButton();
-        if (state.settingsOpen) document.querySelector('.sr-settings-panel [data-sr-settings-close]')?.focus();
       });
     });
     document.querySelectorAll('[data-sr-settings-close]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
       node.addEventListener('click', function () {
-        state.settingsOpen = false;
-        columnSettingsDraft = null;
-        rerender();
-        syncSettingsButton();
+        closeFieldSettings();
       });
     });
     document.querySelectorAll('[data-sr-column-visible]').forEach(function (node) {
@@ -1879,12 +1985,15 @@
 
     if (!documentEventsBound) {
       documentEventsBound = true;
-      global.addEventListener('resize', positionFilterMenu);
+      global.addEventListener('resize', function () {
+        positionFilterMenu();
+        if (intentTooltipAnchor) positionIntentRuleTooltip(intentTooltipAnchor);
+      });
       document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') restoreIntentRuleTooltip();
         if (event.key === 'Escape' && (state.settingsOpen || state.openMenu || state.closingMenu)) {
           var settingsWasOpen = state.settingsOpen;
-          state.settingsOpen = false;
-          columnSettingsDraft = null;
+          if (settingsWasOpen) closeFieldSettings();
           closeFilterMenu(!!settingsWasOpen);
           closePageSizeMenu();
           rerender();
@@ -1899,10 +2008,7 @@
           rerender();
         }
         if (state.settingsOpen && !event.target.closest('.sr-settings-panel') && !event.target.closest('[data-sr-settings]')) {
-          state.settingsOpen = false;
-          columnSettingsDraft = null;
-          rerender();
-          syncSettingsButton();
+          closeFieldSettings();
         }
         document.querySelectorAll('.page-size-options.open').forEach(function (node) {
           if (!event.target.closest('.page-size-select')) {

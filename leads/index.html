@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./page.css?v=20260902-global-brand-v1" />
+    <link rel="stylesheet" href="./page.css?v=20260911-filter-actions-gap-v1" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20260910-settings-footer-pill-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
 <title>线索列表 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
@@ -49,14 +50,14 @@
       </main>
     </div>
     <template id="tpl-leads-list">
-          <div class="page-stack">
-            <section class="card session-filter-card">
-              <div class="leads-view-tabs-row">
-                <div class="leads-view-tabs" id="leadsViewTabs">
-                  <button type="button" class="leads-view-tab active" data-leads-view="leads">线索视图</button>
-                  <button type="button" class="leads-view-tab" data-leads-view="customers">客户聚合视图</button>
-                </div>
+          <div class="page-stack leads-modern-root">
+            <div class="leads-view-tabs-row">
+              <div class="leads-view-tabs" id="leadsViewTabs" role="tablist" aria-label="线索数据视图">
+                <button type="button" class="leads-view-tab active" data-leads-view="leads" role="tab" aria-selected="true">线索视图</button>
+                <button type="button" class="leads-view-tab" data-leads-view="customers" role="tab" aria-selected="false">客户聚合视图</button>
               </div>
+            </div>
+            <section class="card session-filter-card">
               <div class="session-filter-toolbar" id="leadsFilterControls"></div>
             </section>
 
@@ -928,7 +929,7 @@
 
     <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260902-customer-detail-title-v1"></script>
+    <script src="./page.js?v=20260911-field-settings-motion-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

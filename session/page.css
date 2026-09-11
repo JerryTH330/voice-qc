@@ -264,38 +264,55 @@ body:has(.session-real-root) #pageHost {
 .sr-real-table { min-width: 2840px; }
 .sr-intent-header-help { gap: 4px; }
 .sr-intent-header-help .session-intent-help-btn { flex: 0 0 16px; cursor: help; }
-.sr-intent-header-help .sr-intent-rule-tooltip {
+.sr-intent-header-help .sr-intent-rule-tooltip,
+body > .sr-intent-rule-tooltip {
   position: fixed;
   top: var(--sr-intent-tooltip-top, 0);
   left: var(--sr-intent-tooltip-left, 0);
-  z-index: 180;
+  z-index: 400;
   width: min(680px, calc(100vw - 32px));
   max-width: calc(100vw - 32px);
+  overflow: visible;
   text-align: left;
   transform: translateY(-4px);
 }
+.session-intent-help.sr-intent-header-help:hover .sr-intent-rule-tooltip,
+.session-intent-help.sr-intent-header-help:focus-within .sr-intent-rule-tooltip,
+.sr-intent-header-help .sr-intent-rule-tooltip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+body > .sr-intent-rule-tooltip.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
 .sr-intent-rule-tooltip .session-intent-rule-table {
   table-layout: auto;
+  font-size: 14px;
   font-weight: 400;
 }
-.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table th,
-.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table td {
+.sr-intent-rule-tooltip .session-intent-rule-table th,
+.sr-intent-rule-tooltip .session-intent-rule-table td {
   min-width: 0;
   padding: 8px 10px;
+  font-size: 14px;
   white-space: normal;
   overflow-wrap: anywhere;
 }
-.session-real-root .sr-intent-rule-tooltip .session-intent-rule-table th:first-child {
+.sr-intent-rule-tooltip .session-intent-rule-table th:first-child {
   width: 1%;
   white-space: nowrap;
   overflow-wrap: normal;
 }
-.sr-intent-header-help:hover .sr-intent-rule-tooltip,
-.sr-intent-header-help:focus-within .sr-intent-rule-tooltip { transform: translateY(0); }
-.sr-intent-header-help .sr-intent-rule-tooltip::before {
+.sr-intent-header-help .sr-intent-rule-tooltip::before,
+body > .sr-intent-rule-tooltip::before {
   left: var(--sr-intent-tooltip-arrow-left, 50%);
 }
-.sr-intent-header-help .sr-intent-rule-tooltip[data-placement="top"]::before {
+.sr-intent-header-help .sr-intent-rule-tooltip[data-placement="top"]::before,
+body > .sr-intent-rule-tooltip[data-placement="top"]::before {
   top: auto;
   bottom: -5px;
   transform: rotate(225deg);
@@ -346,7 +363,6 @@ body:has(.session-real-root) #pageHost {
 }
 .sr-settings-panel { box-sizing: border-box; }
 .sr-settings-panel .badge-field-settings-body { min-height: 0; }
-.sr-settings-panel .is-dragging { opacity: .45; }
 body.sr-settings-open { overflow: hidden; }
 @media (max-width: 980px) {
   .session-real-root #sessionRealFilterControls.is-collapsed .sr-filter-primary { display: block; }
