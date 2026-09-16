@@ -33,6 +33,15 @@
     return String(value == null ? '' : value);
   }
 
+  function decodeSeriesLabel(value) {
+    return text(value)
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&#160;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function escapeHtml(value) {
     return text(value)
       .replace(/&/g, '&amp;')
@@ -141,16 +150,30 @@
       var dealer = getDealer(dealerKey && dealerKey[0] + '::' + dealerKey[1]);
       var advisorTuple = Array.isArray(data.advisors) ? data.advisors[row[6]] || [] : [];
       var customerTuple = Array.isArray(data.customers) ? data.customers[row[7]] || [] : [];
-      var series = Array.isArray(data.series) ? (data.series[row[13]] || '未知') : '未知';
+      var leadSeries = Array.isArray(data.series) ? decodeSeriesLabel(data.series[row[13]] || '未知') : '未知';
+      var aiSeries = Array.isArray(data.series) && row[17] != null ? decodeSeriesLabel(data.series[row[17]] || '') : '';
       var scenario = Array.isArray(data.scenarios) ? (data.scenarios[row[14]] || '') : '';
       var source = Array.isArray(data.sources) ? (data.sources[row[15]] || '未知') : '未知';
+      var clueSources = Array.isArray(data.clueSources) ? data.clueSources : [];
+      function clueSourceAt(index) {
+        var sourceIndex = row[index];
+        return sourceIndex == null ? '' : (clueSources[sourceIndex] || '');
+      }
+      var leadSource = clueSourceAt(18);
+      var secondSource = clueSourceAt(19);
+      var thirdSource = clueSourceAt(20);
+      var fourthSource = clueSourceAt(21);
+      var leadBrand = Array.isArray(data.leadBrands) && row[22] != null ? (data.leadBrands[row[22]] || '') : '';
       var advisorId = text(advisorTuple[3]);
       var advisorName = text(advisorTuple[2]);
       var advisorPhone = maskPhone(advisorTuple[4]);
       var customerKey = text(customerTuple[0]);
       var customerName = text(customerTuple[1]);
       var status = Number(row[3]) === 1 ? '已完成' : '失败';
-      if (status === '失败') series = '—';
+      if (status === '失败') {
+        leadSeries = '—';
+        aiSeries = '—';
+      }
       var dealerKeyValue = dealerKey ? dealerKey[0] + '::' + dealerKey[1] : '';
       return {
         audioId: text(row[0]),
@@ -176,15 +199,20 @@
         advisorName: advisorName || '—',
         advisorPhone: advisorPhone,
         leadId: text(row[8]) || '—',
+        leadBrand: leadBrand || '—',
         customerName: customerName || '—',
         customerNameMasked: maskName(customerName),
         customerPhone: text(customerTuple[2]) || customerPhone(customerKey),
         qualifiedRate: status === '失败' ? '—' : (text(row[11]) || '—'),
         intentLevel: status === '失败' ? '—' : (text(row[12]) || '无法判断'),
-        carSeries: series || '未知',
-        leadCarSeries: series || '未知',
+        carSeries: aiSeries || '—',
+        leadCarSeries: leadSeries || '未知',
         scenario: scenario,
         source: source,
+        leadSource: leadSource || '—',
+        secondSource: secondSource || '—',
+        thirdSource: thirdSource || '—',
+        fourthSource: fourthSource || '—',
         sourceType: inferSourceType(row[0], source),
         endTime: text(row[16])
       };
@@ -205,6 +233,7 @@
       audioId: '',
       leadId: '',
       advisorPhone: '',
+      customerKeyword: '',
       customerName: '',
       customerPhone: ''
     },
@@ -288,37 +317,45 @@
     });
   }
 
+  var COLUMN_SETTINGS_VERSION = 5;
   var columns = [
     { key: 'audioId', label: '录音ID', width: 22 },
     { key: 'brand', label: '品牌', width: 10 },
-    { key: 'startTime', label: '录音开始时间', width: 20 },
-    { key: 'uploadTime', label: '录音上传时间', width: 20 },
-    { key: 'status', label: '分析结果', width: 12 },
-    { key: 'duration', label: '录音时长', width: 12 },
+    { key: 'region', label: '大区', width: 16 },
+    { key: 'zone', label: '战区', width: 16 },
     { key: 'province', label: '省份', width: 12 },
     { key: 'city', label: '城市', width: 12 },
     { key: 'dealerCode', label: '店代码', width: 14 },
     { key: 'store', label: '门店', width: 20 },
-    { key: 'region', label: '大区', width: 16 },
-    { key: 'zone', label: '战区', width: 16 },
-    { key: 'patrolerCode', label: '巡回员code', width: 16 },
-    { key: 'patroler', label: '巡回员', width: 14 },
-    { key: 'governor', label: '治理员', width: 14 },
     { key: 'advisorId', label: '顾问ID', width: 20 },
     { key: 'advisorName', label: '顾问姓名', width: 14 },
     { key: 'advisorPhone', label: '顾问号码', width: 16 },
-    { key: 'leadId', label: '线索ID', width: 22 },
-    { key: 'customerName', label: '客户姓名', width: 14 },
+    { key: 'patrolerCode', label: '巡回员code', width: 16 },
+    { key: 'patroler', label: '巡回员', width: 14 },
+    { key: 'governor', label: '治理员', width: 14 },
+    { key: 'customerName', label: '客户名称', width: 14 },
     { key: 'customerPhone', label: '客户号码', width: 16 },
     { key: 'qualifiedRate', label: '话术命中率', width: 14 },
     { key: 'intentLevel', label: 'AI意向等级', width: 14 },
-    { key: 'carSeries', label: '意向车系', width: 20 },
+    { key: 'carSeries', label: 'AI意向车系', width: 20 },
     { key: 'scenario', label: '质检场景', width: 16 },
-    { key: 'source', label: '数据来源', width: 14 }
+    { key: 'source', label: '数据来源', width: 14 },
+    { key: 'sourceType', label: '录音来源类型', width: 16 },
+    { key: 'leadId', label: '线索ID', width: 22 },
+    { key: 'leadBrand', label: '线索品牌', width: 10 },
+    { key: 'leadCarSeries', label: '意向车系', width: 20 },
+    { key: 'leadSource', label: '线索来源', width: 15 },
+    { key: 'secondSource', label: '二级来源', width: 18 },
+    { key: 'thirdSource', label: '三级来源', width: 22 },
+    { key: 'fourthSource', label: '四级来源', width: 24 },
+    { key: 'startTime', label: '录音开始时间', width: 20 },
+    { key: 'uploadTime', label: '录音上传时间', width: 20 },
+    { key: 'duration', label: '录音时长', width: 12 },
+    { key: 'status', label: '分析结果', width: 12 }
   ];
 
   function createDefaultColumnSettings() {
-    return { order: columns.map(function (column) { return column.key; }), hidden: [] };
+    return { version: COLUMN_SETTINGS_VERSION, order: columns.map(function (column) { return column.key; }), hidden: [] };
   }
 
   function readColumnSettings() {
@@ -333,10 +370,39 @@
         var patrolerIndex = order.indexOf('patroler');
         order.splice(patrolerIndex < 0 ? order.length : patrolerIndex, 0, 'patrolerCode');
       }
+      if (!order.includes('leadCarSeries')) {
+        var carSeriesIndex = order.indexOf('carSeries');
+        order.splice(carSeriesIndex < 0 ? order.length : carSeriesIndex, 0, 'leadCarSeries');
+      }
+      var sourceExtras = ['leadSource', 'secondSource', 'thirdSource', 'fourthSource'];
+      if (!sourceExtras.every(function (key) { return order.includes(key); })) {
+        var sourceIndex = order.indexOf('source');
+        var insertAt = sourceIndex < 0 ? order.length : sourceIndex + 1;
+        sourceExtras.forEach(function (key) {
+          if (!order.includes(key)) {
+            order.splice(insertAt, 0, key);
+            insertAt += 1;
+          }
+        });
+      }
       columns.forEach(function (column) {
         if (!order.includes(column.key)) order.push(column.key);
       });
-      return { order: order, hidden: Array.isArray(parsed.hidden) ? parsed.hidden.filter(function (key) { return known.has(key); }) : [] };
+      if (Number(parsed.version || 0) < COLUMN_SETTINGS_VERSION) {
+        if (Number(parsed.version || 0) < 2) {
+          var organizationKeys = ['region', 'zone', 'store'];
+          order = order.filter(function (key) { return !organizationKeys.includes(key); });
+          var brandIndex = order.indexOf('brand');
+          order.splice.apply(order, [brandIndex < 0 ? 0 : brandIndex + 1, 0].concat(organizationKeys));
+        }
+        order = order.filter(function (key) { return key !== 'sourceType'; });
+        var fourthSourceIndex = order.indexOf('fourthSource');
+        order.splice(fourthSourceIndex < 0 ? order.length : fourthSourceIndex + 1, 0, 'sourceType');
+        if (Number(parsed.version || 0) < 5) {
+          order = columns.map(function (column) { return column.key; });
+        }
+      }
+      return { version: COLUMN_SETTINGS_VERSION, order: order, hidden: Array.isArray(parsed.hidden) ? parsed.hidden.filter(function (key) { return known.has(key); }) : [] };
     } catch (error) {
       return fallback;
     }
@@ -355,7 +421,7 @@
   });
 
   function cloneColumnSettings(settings) {
-    return { order: settings.order.slice(), hidden: settings.hidden.slice() };
+    return { version: COLUMN_SETTINGS_VERSION, order: settings.order.slice(), hidden: settings.hidden.slice() };
   }
 
   function getWorkingColumnSettings() {
@@ -476,11 +542,18 @@
       var audioIdQuery = normalize(state.queries.audioId);
       var leadQuery = normalize(state.queries.leadId);
       var advisorPhoneQuery = normalizeDigits(state.queries.advisorPhone);
+      var customerKeywordQuery = normalize(state.queries.customerKeyword);
+      var customerKeywordDigits = normalizeDigits(state.queries.customerKeyword);
       var customerNameQuery = normalize(state.queries.customerName);
       var customerPhoneQuery = normalizeDigits(state.queries.customerPhone);
       if (audioIdQuery && !normalize(record.audioId).includes(audioIdQuery)) return false;
       if (leadQuery && !normalize(record.leadId).includes(leadQuery)) return false;
       if (advisorPhoneQuery && !normalizeDigits(record.advisorPhone).includes(advisorPhoneQuery)) return false;
+      if (customerKeywordQuery) {
+        var customerNameMatched = normalize(record.customerName).includes(customerKeywordQuery) || normalize(record.customerNameMasked).includes(customerKeywordQuery);
+        var customerPhoneMatched = customerKeywordDigits && normalizeDigits(record.customerPhone).includes(customerKeywordDigits);
+        if (!customerNameMatched && !customerPhoneMatched) return false;
+      }
       if (customerNameQuery && !normalize(record.customerName).includes(customerNameQuery) && !normalize(record.customerNameMasked).includes(customerNameQuery)) return false;
       if (customerPhoneQuery && !normalizeDigits(record.customerPhone).includes(customerPhoneQuery)) return false;
     }
@@ -568,8 +641,7 @@
       return {
         value: option.value,
         label: option.label,
-        meta: stores.length ? stores.join('、') : '—',
-        submeta: option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
+        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
         search: option.label + ' ' + option.value + ' ' + phones.join(' '),
         searchDigits: phones.map(normalizeDigits).join(' ')
       };
@@ -652,10 +724,10 @@
       brand: '品牌',
       scenario: '质检场景',
       source: '数据来源',
-      sourceType: '数据来源类型',
+      sourceType: '录音来源类型',
       intentLevel: 'AI意向等级',
       carSeries: 'AI意向车系',
-      leadCarSeries: '线索车系',
+      leadCarSeries: '意向车系',
       province: '省份',
       city: '城市',
       store: '门店',
@@ -731,7 +803,7 @@
           var group = options.filter(function (option) { return option.meta === brand; });
           return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
         }).join('') : options.map(renderOption).join('')) : '<div class="badge-advisor-empty">未找到匹配' + escapeHtml(getFilterLabel(key)) + '</div>';
-    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名、ID或手机号' : key === 'customer' ? '输入客户姓名、线索ID或手机号' : '搜索' + getFilterLabel(key);
+    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名、ID或手机号' : key === 'customer' ? '输入客户名称、线索ID或手机号' : '搜索' + getFilterLabel(key);
     return '<div class="session-menu-panel badge-advisor-menu" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
       '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
       '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + allActive + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
@@ -751,7 +823,8 @@
 
   function renderTextControl(key, label, placeholder) {
     return '<label class="badge-field-filter"><span>' + escapeHtml(label) + '</span>' +
-      '<input type="search" data-sr-query="' + escapeHtml(key) + '" value="' + escapeHtml(state.queries[key] || '') + '" placeholder="' + escapeHtml(placeholder || ('请输入' + label)) + '" autocomplete="off"></label>';
+      '<input type="search" data-sr-query="' + escapeHtml(key) + '" value="' + escapeHtml(state.queries[key] || '') + '" placeholder="' + escapeHtml(placeholder || ('请输入' + label)) + '" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search">' +
+      '<svg class="sr-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>';
   }
 
   function formatSessionDateDisplay(value) {
@@ -831,7 +904,7 @@
         return '<button type="button" class="session-date-day' + (inRange ? ' in-range' : '') + (value === startDate ? ' is-start' : '') + (value === endDate ? ' is-end' : '') + (value === todayValue ? ' is-today' : '') + '" data-sr-date-value="' + value + '">' + date.getDate() + '</button>';
       }).join('') + '</div>' +
       '<div class="session-date-shortcuts"><button type="button" class="session-date-shortcut" data-sr-date-shortcut="today">今天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last3">近3天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last7">近7天</button></div>' +
-      '<div class="session-cascader-footer session-date-footer"><span>' + escapeHtml('已选择 ' + getSessionDateRangeText(startDate, endDate)) + '</span><div class="session-date-actions"><button type="button" class="btn session-date-action-btn" data-sr-date-cancel>取消</button><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sr-date-apply>应用日期</button></div></div>' +
+      '<div class="session-cascader-footer session-date-footer"><span>' + escapeHtml('已选择 ' + getSessionDateRangeText(startDate, endDate)) + '</span><div class="session-date-actions"><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sr-date-apply>应用日期</button></div></div>' +
     '</div>';
   }
 
@@ -914,13 +987,17 @@
     if (isColumnVisible('governor')) secondary.push('governor');
     if (isColumnVisible('leadId') || isColumnVisible('customerName') || isColumnVisible('customerPhone')) secondary.push('customer');
     secondary.push('scenario', 'sourceType');
-    secondary = secondary.concat(['intentLevel', 'carSeries'].filter(isColumnVisible));
+    secondary = secondary.concat(['intentLevel', 'leadCarSeries', 'carSeries'].filter(isColumnVisible));
     if (isColumnVisible('status')) secondary.push('status');
-    secondary.push('leadCarSeries');
     var textControls = [
+      { key: 'leadId', label: '线索ID' },
       { key: 'audioId', label: '录音ID' }
     ].filter(function (field) { return isColumnVisible(field.key); });
-    var extraInner = secondary.map(function (key) { return renderFilterControl(key); }).join('') +
+    var extraInner = secondary.map(function (key) {
+      return key === 'customer'
+        ? renderTextControl('customerKeyword', '客户', '输入客户名称或客户号码')
+        : renderFilterControl(key);
+    }).join('') +
       textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
       (isColumnVisible('startTime') ? renderDateControl() : '');
     var keepExtra = !!extraInner && (!state.collapsed || collapseChanged);
@@ -1043,13 +1120,20 @@
       advisorName: record.advisorName,
       advisorPhone: record.advisorPhone,
       leadId: record.leadId,
+      leadBrand: record.leadBrand,
       customerName: record.customerNameMasked,
       customerPhone: record.customerPhone,
       qualifiedRate: record.qualifiedRate,
       intentLevel: record.intentLevel,
+      leadCarSeries: record.leadCarSeries,
       carSeries: record.carSeries,
       scenario: record.scenario,
-      source: record.source
+      source: record.source,
+      leadSource: record.leadSource,
+      secondSource: record.secondSource,
+      thirdSource: record.thirdSource,
+      fourthSource: record.fourthSource,
+      sourceType: record.sourceType
     };
     return values[key] == null || values[key] === '' ? '—' : values[key];
   }
@@ -1173,7 +1257,7 @@
     if (!table || !total || !completed || !failed) return;
     var visible = visibleColumns();
     var head = table.querySelector('thead');
-    var body = table.querySelector('tbody');
+    var body = table.tBodies[0];
     if (!head || !body) return;
     restoreIntentRuleTooltip();
     head.innerHTML = '<tr>' + visible.map(function (column) {
@@ -1267,7 +1351,7 @@
     host.innerHTML = '<div class="drawer-backdrop badge-field-settings-backdrop" data-sr-settings-close></div>' +
       '<aside class="drawer detail-drawer badge-field-settings-drawer' + (animateOpen ? '' : ' open') + ' sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置" aria-hidden="false">' +
         '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="icon-btn" data-sr-settings-close aria-label="关闭字段设置">×</button></div>' +
-        '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>全选</button></div>' +
+        '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>' + (visibleCount === ordered.length ? '取消全选' : '全选') + '</button></div>' +
         '<div class="badge-field-settings-list" aria-label="可配置字段列表">' + ordered.map(function (column) {
           var visible = !working.hidden.includes(column.key);
           return '<div class="badge-field-settings-item' + (visible ? ' is-visible' : '') + '" draggable="false" data-sr-column-item="' + escapeHtml(column.key) + '">' +
@@ -1518,7 +1602,10 @@
     });
     if (next.hidden.includes('patrolerCode') && next.hidden.includes('patroler')) state.selections.patroler = [];
     if (next.hidden.includes('advisorId') && next.hidden.includes('advisorName')) state.selections.advisor = [];
-    if (next.hidden.includes('leadId') && next.hidden.includes('customerName') && next.hidden.includes('customerPhone')) state.selections.customer = [];
+    if (next.hidden.includes('leadId') && next.hidden.includes('customerName') && next.hidden.includes('customerPhone')) {
+      state.selections.customer = [];
+      state.queries.customerKeyword = '';
+    }
     columnSettings = next;
     persistColumnSettings();
     closeFilterMenu(true);
@@ -1536,7 +1623,8 @@
 
   function selectAllColumnSettingsDraft() {
     if (!columnSettingsDraft) return;
-    columnSettingsDraft.hidden = [];
+    var allVisible = columnSettingsDraft.order.every(function (key) { return !columnSettingsDraft.hidden.includes(key); });
+    columnSettingsDraft.hidden = allVisible ? columnSettingsDraft.order.slice() : [];
     renderFieldSettings();
     bindEvents();
   }
@@ -1668,6 +1756,23 @@
     });
   }
 
+  function applyTextQuery(node) {
+    var key = node.dataset.srQuery;
+    var value = node.value;
+    var cursor = node.selectionStart;
+    state.queries[key] = value;
+    state.page = 1;
+    rerender();
+    global.requestAnimationFrame(function () {
+      var input = document.querySelector('[data-sr-query="' + key + '"]');
+      if (!input) return;
+      input.focus();
+      if (typeof cursor === 'number') {
+        try { input.setSelectionRange(cursor, cursor); } catch (error) {}
+      }
+    });
+  }
+
   var documentEventsBound = false;
 
   function bindEvents() {
@@ -1788,20 +1893,16 @@
     document.querySelectorAll('[data-sr-query]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
-      node.addEventListener('input', function () {
-        var key = node.dataset.srQuery;
-        var value = node.value;
-        var cursor = node.selectionStart;
-        state.queries[key] = value;
-        state.page = 1;
-        rerender();
-        global.requestAnimationFrame(function () {
-          var input = document.querySelector('[data-sr-query="' + key + '"]');
-          if (input) {
-            input.focus();
-            input.setSelectionRange(cursor, cursor);
-          }
-        });
+      node.addEventListener('compositionstart', function () {
+        node.dataset.srComposing = 'true';
+      });
+      node.addEventListener('compositionend', function () {
+        delete node.dataset.srComposing;
+        applyTextQuery(node);
+      });
+      node.addEventListener('input', function (event) {
+        if (event.isComposing || node.dataset.srComposing === 'true') return;
+        applyTextQuery(node);
       });
     });
     document.querySelectorAll('[data-sr-date-field]').forEach(function (node) {
@@ -1853,15 +1954,6 @@
         state.dateDraftEndDate = endValue;
         state.activeDateField = 'endDate';
         syncSessionDateView(endValue);
-        rerender();
-      });
-    });
-    document.querySelectorAll('[data-sr-date-cancel]').forEach(function (node) {
-      if (node.dataset.srBound === 'true') return;
-      node.dataset.srBound = 'true';
-      node.addEventListener('click', function (event) {
-        event.stopPropagation();
-        closeFilterMenu(false);
         rerender();
       });
     });

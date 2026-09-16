@@ -720,7 +720,8 @@ function renderBadgeUploadFilters() {
     cells: getBadgeUploadDateCells(),
     summaryText: `已选择 ${draftRangeText}`,
     panelClassName: 'session-menu-panel session-menu-panel-date badge-upload-date-panel',
-    title: '上传完成日期范围'
+    title: '上传完成日期范围',
+    showCancel: false
   }) : '';
   container.innerHTML = `
     <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-event-filter-control${dateOpen ? ' is-open' : ''}">
@@ -1819,8 +1820,16 @@ function loadBadgeFieldSettings() {
 
 let badgeFieldSettingsState = loadBadgeFieldSettings();
 let badgeFieldSettingsDraft = null;
-let badgeFieldPointerDrag = null;
-let badgeFieldDragAutoScrollFrame = 0;
+const badgeFieldSettingsDragController = window.__fieldSettingsInteractions.createController({
+  listSelector: '#badgeFieldSettingsList',
+  itemSelector: '[data-badge-field-settings-item]',
+  scrollerSelector: '#badgeFieldSettingsDrawer .badge-field-settings-body',
+  enabled: () => Boolean(badgeFieldSettingsDraft),
+  getKey: (item) => item.dataset.badgeFieldSettingsItem,
+  onOrderChange: (order) => {
+    if (badgeFieldSettingsDraft) badgeFieldSettingsDraft.order = order;
+  }
+});
 
 const badgeDefaultFilters = {
   snQuery: '',
@@ -3599,6 +3608,8 @@ function renderBadgeFieldSettings() {
   const visibleSet = new Set(badgeFieldSettingsDraft.visible);
   badgeFieldSettingsSelectedCount.textContent = visibleSet.size;
   document.getElementById('badgeFieldSettingsTotalCount').textContent = badgeFieldDefinitions.length;
+  const selectAllButton = badgeFieldSettingsDrawer?.querySelector('[data-badge-field-settings-select-all]');
+  if (selectAllButton) selectAllButton.textContent = visibleSet.size === badgeFieldDefinitions.length ? '取消全选' : '全选';
   badgeFieldSettingsList.innerHTML = badgeFieldSettingsDraft.order.map((key) => {
     const field = badgeFieldDefinitionMap[key];
     const checked = visibleSet.has(key);
@@ -3628,7 +3639,7 @@ function openBadgeFieldSettings() {
 
 function closeBadgeFieldSettings() {
   if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
-  cancelBadgeFieldPointerDrag();
+  badgeFieldSettingsDragController.cancel();
   badgeFieldSettingsDrawer.classList.remove('open');
   badgeFieldSettingsDrawer.setAttribute('aria-hidden', 'true');
   window.setTimeout(() => { badgeFieldSettingsBackdrop.hidden = true; }, 220);
@@ -3666,159 +3677,6 @@ function saveBadgeFieldSettings() {
   closeBadgeFieldSettings();
   renderBadgePage();
   showToast('字段设置已保存');
-}
-
-function getBadgeFieldSettingsDomOrder() {
-  return [...badgeFieldSettingsList?.querySelectorAll('[data-badge-field-settings-item]') || []]
-    .map((item) => item.dataset.badgeFieldSettingsItem);
-}
-
-function animateBadgeFieldSettingsReflow(mutate) {
-  const items = [...badgeFieldSettingsList.querySelectorAll('[data-badge-field-settings-item]')];
-  const firstTops = new Map(items.map((item) => [item, item.getBoundingClientRect().top]));
-  mutate();
-  items.forEach((item) => {
-    const deltaY = firstTops.get(item) - item.getBoundingClientRect().top;
-    if (Math.abs(deltaY) < 1) return;
-    item.style.transform = `translateY(${deltaY}px)`;
-    window.requestAnimationFrame(() => {
-      if (item.isConnected) item.style.transform = '';
-    });
-  });
-}
-
-function updateBadgeFieldDragGhostPosition(drag, clientX, clientY) {
-  if (!drag?.ghost) return;
-  const maxLeft = Math.max(8, window.innerWidth - drag.rect.width - 8);
-  const maxTop = Math.max(8, window.innerHeight - drag.rect.height - 8);
-  const left = Math.min(maxLeft, Math.max(8, clientX - drag.grabOffsetX));
-  const top = Math.min(maxTop, Math.max(8, clientY - drag.grabOffsetY));
-  drag.ghost.style.left = `${left}px`;
-  drag.ghost.style.top = `${top}px`;
-}
-
-function updateBadgeFieldDragTarget(drag, clientX, clientY) {
-  if (!drag?.active || !drag.placeholder) return;
-  const target = document.elementFromPoint(clientX, clientY)?.closest('[data-badge-field-settings-item]');
-  if (!target || !badgeFieldSettingsList.contains(target)) return;
-  const targetRect = target.getBoundingClientRect();
-  const insertBefore = clientY < targetRect.top + (targetRect.height / 2);
-  const placeholderBeforeTarget = drag.placeholder.previousElementSibling === target;
-  const placeholderAfterTarget = drag.placeholder.nextElementSibling === target;
-  if ((insertBefore && placeholderBeforeTarget) || (!insertBefore && placeholderAfterTarget)) return;
-  animateBadgeFieldSettingsReflow(() => {
-    if (insertBefore) target.before(drag.placeholder);
-    else target.after(drag.placeholder);
-  });
-}
-
-function stopBadgeFieldDragAutoScroll() {
-  if (!badgeFieldDragAutoScrollFrame) return;
-  window.cancelAnimationFrame(badgeFieldDragAutoScrollFrame);
-  badgeFieldDragAutoScrollFrame = 0;
-}
-
-function runBadgeFieldDragAutoScroll() {
-  const drag = badgeFieldPointerDrag;
-  if (!drag?.active) {
-    badgeFieldDragAutoScrollFrame = 0;
-    return;
-  }
-  const scroller = badgeFieldSettingsDrawer?.querySelector('.badge-field-settings-body');
-  const scrollerRect = scroller?.getBoundingClientRect();
-  if (scroller && scrollerRect && scroller.scrollHeight > scroller.clientHeight) {
-    const edge = 64;
-    const topDistance = scrollerRect.top + edge - drag.lastClientY;
-    const bottomDistance = drag.lastClientY - (scrollerRect.bottom - edge);
-    let delta = 0;
-    if (topDistance > 0) delta = -Math.ceil(Math.min(1, topDistance / edge) ** 2 * 14);
-    else if (bottomDistance > 0) delta = Math.ceil(Math.min(1, bottomDistance / edge) ** 2 * 14);
-    if (delta) {
-      scroller.scrollTop += delta;
-      updateBadgeFieldDragGhostPosition(drag, drag.lastClientX, drag.lastClientY);
-      updateBadgeFieldDragTarget(drag, drag.lastClientX, drag.lastClientY);
-    }
-  }
-  badgeFieldDragAutoScrollFrame = window.requestAnimationFrame(runBadgeFieldDragAutoScroll);
-}
-
-function startBadgeFieldPointerDrag(event) {
-  const drag = badgeFieldPointerDrag;
-  if (!drag || drag.active || !badgeFieldSettingsDraft) return;
-  drag.active = true;
-  drag.rect = drag.item.getBoundingClientRect();
-  drag.grabOffsetX = event.clientX - drag.rect.left;
-  drag.grabOffsetY = event.clientY - drag.rect.top;
-  drag.placeholder = document.createElement('div');
-  drag.placeholder.className = 'badge-field-settings-placeholder';
-  drag.placeholder.setAttribute('aria-hidden', 'true');
-  drag.placeholder.style.height = `${drag.rect.height}px`;
-  drag.placeholder.style.width = `${drag.rect.width}px`;
-  drag.item.parentElement.insertBefore(drag.placeholder, drag.item);
-  drag.item.classList.add('is-drag-source');
-  drag.item.remove();
-  drag.ghost = drag.item.cloneNode(true);
-  drag.ghost.classList.add('badge-field-settings-drag-ghost');
-  drag.ghost.classList.remove('is-drag-source', 'is-drop-hidden');
-  drag.ghost.style.width = `${drag.rect.width}px`;
-  drag.ghost.style.height = `${drag.rect.height}px`;
-  drag.ghost.setAttribute('aria-hidden', 'true');
-  drag.ghost.removeAttribute('draggable');
-  document.body.appendChild(drag.ghost);
-  badgeFieldSettingsList.classList.add('is-dragging');
-  document.body.classList.add('badge-field-settings-dragging');
-  updateBadgeFieldDragGhostPosition(drag, event.clientX, event.clientY);
-  badgeFieldDragAutoScrollFrame = window.requestAnimationFrame(runBadgeFieldDragAutoScroll);
-}
-
-function finishBadgeFieldPointerDrag() {
-  const drag = badgeFieldPointerDrag;
-  if (!drag) return;
-  stopBadgeFieldDragAutoScroll();
-  if (!drag.active) {
-    badgeFieldPointerDrag = null;
-    return;
-  }
-  const item = drag.item;
-  const placeholder = drag.placeholder;
-  if (placeholder?.isConnected) placeholder.replaceWith(item);
-  else if (!item.isConnected) badgeFieldSettingsList.appendChild(item);
-  item.classList.remove('is-drag-source');
-  item.classList.add('is-drop-hidden');
-  badgeFieldSettingsDraft.order = getBadgeFieldSettingsDomOrder();
-  const targetRect = item.getBoundingClientRect();
-  badgeFieldSettingsList.classList.remove('is-dragging');
-  document.body.classList.remove('badge-field-settings-dragging');
-  if (drag.ghost) {
-    drag.ghost.classList.add('is-dropping');
-    drag.ghost.style.left = `${targetRect.left}px`;
-    drag.ghost.style.top = `${targetRect.top}px`;
-    window.setTimeout(() => {
-      drag.ghost?.remove();
-      item.classList.remove('is-drop-hidden');
-    }, 180);
-  } else {
-    item.classList.remove('is-drop-hidden');
-  }
-  badgeFieldPointerDrag = null;
-}
-
-function cancelBadgeFieldPointerDrag() {
-  const drag = badgeFieldPointerDrag;
-  if (!drag) return;
-  stopBadgeFieldDragAutoScroll();
-  if (drag.placeholder?.isConnected) drag.placeholder.replaceWith(drag.item);
-  else if (!drag.item.isConnected) badgeFieldSettingsList.appendChild(drag.item);
-  const itemsByKey = new Map([...badgeFieldSettingsList.querySelectorAll('[data-badge-field-settings-item]')].map((item) => [item.dataset.badgeFieldSettingsItem, item]));
-  drag.originalOrder.forEach((key) => {
-    const item = itemsByKey.get(key);
-    if (item) badgeFieldSettingsList.appendChild(item);
-  });
-  drag.item.classList.remove('is-drag-source', 'is-drop-hidden');
-  drag.ghost?.remove();
-  badgeFieldSettingsList.classList.remove('is-dragging');
-  document.body.classList.remove('badge-field-settings-dragging');
-  badgeFieldPointerDrag = null;
 }
 
 function formatStoreDateDisplay(value) {
@@ -4841,7 +4699,8 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-field-settings-select-all]')) {
     if (!badgeFieldSettingsDraft) return;
-    badgeFieldSettingsDraft.visible = [...badgeFieldSettingsDraft.order];
+    const allVisible = badgeFieldSettingsDraft.order.every((key) => badgeFieldSettingsDraft.visible.includes(key));
+    badgeFieldSettingsDraft.visible = allVisible ? [] : [...badgeFieldSettingsDraft.order];
     renderBadgeFieldSettings();
     return;
   }
@@ -6026,53 +5885,6 @@ document.addEventListener('input', (event) => {
   renderBadgeDetail();
 });
 
-document.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0) return;
-  const handle = event.target.closest('.badge-field-drag-handle');
-  const item = handle?.closest('[data-badge-field-settings-item]');
-  if (!item || !badgeFieldSettingsDraft) return;
-  event.preventDefault();
-  badgeFieldPointerDrag = {
-    key: item.dataset.badgeFieldSettingsItem,
-    item,
-    pointerId: event.pointerId,
-    startX: event.clientX,
-    startY: event.clientY,
-    lastClientX: event.clientX,
-    lastClientY: event.clientY,
-    originalOrder: getBadgeFieldSettingsDomOrder(),
-    active: false
-  };
-  handle.setPointerCapture?.(event.pointerId);
-});
-
-document.addEventListener('pointermove', (event) => {
-  if (!badgeFieldPointerDrag || event.pointerId !== badgeFieldPointerDrag.pointerId || !badgeFieldSettingsDraft) return;
-  event.preventDefault();
-  const drag = badgeFieldPointerDrag;
-  drag.lastClientX = event.clientX;
-  drag.lastClientY = event.clientY;
-  if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 4) return;
-  if (!drag.active) startBadgeFieldPointerDrag(event);
-  updateBadgeFieldDragGhostPosition(drag, event.clientX, event.clientY);
-  updateBadgeFieldDragTarget(drag, event.clientX, event.clientY);
-});
-
-document.addEventListener('pointerup', (event) => {
-  if (!badgeFieldPointerDrag || event.pointerId !== badgeFieldPointerDrag.pointerId) return;
-  finishBadgeFieldPointerDrag();
-});
-
-document.addEventListener('pointercancel', () => {
-  cancelBadgeFieldPointerDrag();
-});
-
-document.addEventListener('pointerleave', () => {
-  if (badgeFieldPointerDrag?.active) cancelBadgeFieldPointerDrag();
-});
-
-window.addEventListener('blur', () => cancelBadgeFieldPointerDrag());
-
 document.addEventListener('focusin', (event) => {
   if (!event.target.matches('[data-dock-store-search]') || dockMenuState.openMenu === 'store') return;
   dockMenuState.openMenu = 'store';
@@ -6100,10 +5912,6 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && badgeManagementState.openMenuSn) {
     badgeManagementState.openMenuSn = '';
     renderBadgeManagementPage();
-    return;
-  }
-  if (event.key === 'Escape' && badgeFieldPointerDrag) {
-    cancelBadgeFieldPointerDrag();
     return;
   }
   if (event.key === 'Tab' && isBadgeRecordDrawerOpen()) {

@@ -242,7 +242,7 @@
 }
 
 .leads-data-table:not(.customer-aggregate-table) {
-  min-width: 2180px;
+  min-width: 3840px;
 }
 
 .ai-lead-validity-heading {
@@ -2605,8 +2605,8 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 }
 
 #leadsDataTable.customer-aggregate-table {
-  min-width: 2512px !important;
-  width: 2512px !important;
+  min-width: 3140px !important;
+  width: 3140px !important;
   table-layout: fixed !important;
   border-collapse: collapse !important;
 }
@@ -2631,6 +2631,46 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   height: 57px !important;
   padding-top: 15px !important;
   padding-bottom: 15px !important;
+}
+
+#leadsDataTable.customer-aggregate-table th[data-column-key="associationSummary"],
+#leadsDataTable.customer-aggregate-table td[data-column-key="associationSummary"] {
+  width: 380px !important;
+  min-width: 380px !important;
+  max-width: 380px !important;
+  white-space: nowrap !important;
+}
+
+#leadsDataTable.customer-aggregate-table th:is(
+  [data-column-key="recordCoverage"],
+  [data-column-key="storeRecordCoverage"],
+  [data-column-key="leadStatus"],
+  [data-column-key="firstRecordingAt"],
+  [data-column-key="latestRecordingAt"]
+),
+#leadsDataTable.customer-aggregate-table td:is(
+  [data-column-key="recordCoverage"],
+  [data-column-key="storeRecordCoverage"],
+  [data-column-key="leadStatus"],
+  [data-column-key="firstRecordingAt"],
+  [data-column-key="latestRecordingAt"]
+) {
+  width: 138px !important;
+  min-width: 138px !important;
+  max-width: 138px !important;
+}
+
+#leadsDataTable.customer-aggregate-table th:is(
+  [data-column-key="firstLeadIssuedAt"],
+  [data-column-key="latestLeadIssuedAt"]
+),
+#leadsDataTable.customer-aggregate-table td:is(
+  [data-column-key="firstLeadIssuedAt"],
+  [data-column-key="latestLeadIssuedAt"]
+) {
+  width: 166px !important;
+  min-width: 166px !important;
+  max-width: 166px !important;
 }
 
 #leadsDataTable.customer-aggregate-table .ai-lead-validity-heading {
@@ -2798,11 +2838,10 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   color: #94a3b8;
 }
 
-/* 关联概况列 — 允许换行，宽度略宽 */
+/* 关联概况列 — 保持单行，完整展示汇总信息 */
 .cv-association-summary-cell {
-  min-width: 180px;
-  max-width: 280px;
-  white-space: normal;
+  min-width: 380px;
+  white-space: nowrap;
   line-height: 1.5;
   color: #475569;
   font-size: 13px;
@@ -3858,6 +3897,34 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   font-weight: 400;
 }
 
+.leads-modern-filters .lr-filter-search-control input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.leads-modern-filters .lr-filter-search-control input::placeholder {
+  color: #a0aaba;
+  opacity: 1;
+}
+
+.leads-modern-filters .lr-filter-search-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: #7d899c;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
 .leads-modern-filters .lr-filter-menu,
 .leads-modern-filters .lr-date-panel {
   left: 0;
@@ -3938,9 +4005,27 @@ body:has(.leads-modern-root) #pageHost {
 }
 
 .leads-modern-root .leads-list-table-wrap {
+  position: relative;
   min-height: 0;
   flex: 1 1 auto;
   overflow: auto;
+}
+
+.leads-modern-root .leads-list-table-wrap.is-empty {
+  overflow: hidden;
+}
+
+.leads-modern-root #leadsEmptyState {
+  inset: 41px 0 0;
+  min-height: 0;
+}
+
+.leads-modern-root #leadsEmptyState strong {
+  font-weight: 500;
+}
+
+.leads-modern-root #leadsEmptyState p {
+  color: #a0aaba;
 }
 
 .lr-table-card {
@@ -3993,6 +4078,12 @@ body:has(.leads-modern-root) #pageHost {
 .lr-data-table > tbody > tr > td.fixed-action-column {
   z-index: 3;
   background: #fff;
+}
+
+#leadsDataTable:not(.customer-aggregate-table) th[data-column-key="lastContact"],
+#leadsDataTable:not(.customer-aggregate-table) td[data-column-key="lastContact"] {
+  width: 180px !important;
+  min-width: 180px !important;
 }
 
 .lr-validity-header-help {

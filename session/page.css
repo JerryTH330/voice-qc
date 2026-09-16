@@ -108,10 +108,11 @@ body:has(.session-real-root) #pageHost {
 .session-real-root .sr-filter-card { flex: 0 0 auto; }
 .session-real-root .sr-table-card { min-height: 360px; flex: 1 1 auto; }
 .session-real-root .sr-table-card .table-shell { height: 100%; }
-.session-real-root .session-list-table-wrap { min-height: 0; overflow: auto; }
+.session-real-root .session-list-table-wrap { position: relative; min-height: 0; flex: 1 1 auto; overflow: auto; }
 
 /* 上滑时整行表头吸顶；操作列同时保持右侧固定。 */
 .session-real-root .sr-real-table {
+  min-width: 3700px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -258,10 +259,11 @@ body:has(.session-real-root) #pageHost {
 #mainTopbar:has(.badge-field-settings-action) { align-items: center; }
 #toolbarActions .badge-field-settings-trigger { height: 40px; padding-inline: 16px; }
 #mainTopbar:has(.badge-field-settings-action) .toolbar-row:empty { display: none; }
-.session-real-root .badge-list-empty-state { position: relative; inset: auto; }
+.session-real-root #sessionRealEmptyState { position: absolute; inset: 41px 0 0; min-height: 0; }
+.session-real-root #sessionRealEmptyState strong { font-weight: 500; }
+.session-real-root #sessionRealEmptyState p { color: #a0aaba; }
 .session-real-root .session-list-table-wrap.is-empty { overflow: hidden; }
 .sr-table-card { position: relative; z-index: 1; }
-.sr-real-table { min-width: 2840px; }
 .sr-intent-header-help { gap: 4px; }
 .sr-intent-header-help .session-intent-help-btn { flex: 0 0 16px; cursor: help; }
 .sr-intent-header-help .sr-intent-rule-tooltip,
@@ -353,6 +355,18 @@ body > .sr-intent-rule-tooltip[data-placement="top"]::before {
 .session-real-root .badge-field-filter-select .session-select-trigger strong.is-placeholder {
   color: #a0aaba;
   font-weight: 400;
+}
+.session-real-root .sr-filter-search-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: #7d899c;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 .sr-date-control .session-menu-panel-date { overflow-y: auto; }
 .sr-date-control .session-menu-panel-date { left: 0; right: auto; min-width: 0; width: min(392px, calc(100vw - 48px)); max-width: min(392px, calc(100vw - 48px)); }

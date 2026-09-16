@@ -9,10 +9,10 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "../shared/organization-directory.js?v=20260828-shared-org-v2",
     "../date-filter-component-utils.js?v=20260906-date-filter-v1",
     "../device-management/xlsx-export-utils.js?v=20260902-badge-list-actions-v1",
-    "../shared/field-settings-interactions.js?v=20260911-field-settings-motion-v1",
+    "../shared/field-settings-interactions.js?v=20260911-field-settings-select-all-v1",
     "./real-lead-data.js?v=20260910-real-leads-v1",
     "../app-runtime.js?v=20260910-real-leads-v3",
-    "./leads-modern-runtime.js?v=20260911-field-settings-motion-v1"
+    "./leads-modern-runtime.js?v=20260915-lead-overview-order-v1"
   ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

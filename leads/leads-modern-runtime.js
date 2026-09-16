@@ -12,6 +12,8 @@
   var FILTER_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
   var VIEW_CONTENT_MOTION_MS = 160;
   var DEFAULT_DATE = '2026-09-10';
+  var LEAD_COLUMN_SCHEMA_VERSION = '20260915-lead-overview-order-v1';
+  var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析'];
   var ORGANIZATION_KEYS = ['brand', 'region', 'zone', 'province', 'city', 'patroler', 'governor', 'store', 'advisor'];
   var FILTER_LABELS = {
     brand: '品牌',
@@ -28,6 +30,8 @@
     customerPhone: '客户手机',
     intentGrade: '意向级别',
     leadStatus: '线索状态',
+    aiLeadValidity: 'AI线索有效性',
+    validRecording: '录音状态',
     customerCrossStore: '是否跨门店',
     customerStoreCountRange: '关联门店数',
     customerMultiLead: '是否多线索',
@@ -53,29 +57,35 @@
   var LEAD_COLUMNS = [
     column('id', '线索ID', 24),
     column('brand', '品牌', 12),
+    column('region', '大区', 16),
+    column('zone', '战区', 16),
     column('province', '省份', 14),
     column('city', '城市', 14),
     column('dealerCode', '店代码', 16),
     column('store', '门店', 22),
-    column('region', '大区', 16),
-    column('zone', '战区', 16),
+    column('advisorCode', '顾问ID', 20),
+    column('advisorName', '顾问姓名', 14),
+    column('advisorPhone', '顾问号码', 17),
+    column('patrolerCode', '巡回员code', 16),
     column('patroler', '巡回员', 14),
     column('governor', '治理员', 14),
-    column('advisorName', '顾问', 14),
     column('customerName', '客户名称', 14),
-    column('customerPhone', '客户手机', 17),
+    column('customerPhone', '客户号码', 17),
+    column('carSeries', '意向车型', 18),
     column('intentGrade', '意向级别', 12),
-    column('carSeries', '意向车系', 18),
     column('leadStatus', '线索状态', 14),
-    column('leadDate', '线索日期', 15),
-    column('leadSource', '一级来源', 15),
+    column('aiLeadValidity', 'AI线索有效性', 17),
+    column('validRecording', '录音状态', 14),
+    column('recordingCount', '录音数', 12),
+    column('lastContact', '最近联系', 20),
+    column('leadSource', '线索来源', 15),
     column('secondSource', '二级来源', 18),
     column('thirdSource', '三级来源', 22),
     column('fourthSource', '四级来源', 24),
-    column('recordingCount', '录音数量', 12),
-    column('validRecording', '是否有录音', 14),
-    column('aiLeadValidity', 'AI线索有效性', 17),
-    column('lastContact', '最近一次联系时间', 20)
+    column('leadIssuedAt', '线索下发时间', 20),
+    column('arrivalTime', '到店时间', 20),
+    column('testDriveTime', '试驾时间', 20),
+    column('leadDate', '统计日期', 15)
   ];
 
   var CUSTOMER_COLUMNS = [
@@ -151,6 +161,22 @@
     return value || (record[key] ? record.brand + '::' + key + '::' + record[key] : '');
   }
 
+  function patrolerCode(value) {
+    var match = text(value).match(/(?:^|\|)patroler:code:([^|]+)/);
+    return match ? text(match[1]) : '';
+  }
+
+  function dateTimeFromOffset(dateValue, minuteOffset) {
+    var parts = text(dateValue).split('-').map(Number);
+    if (parts.length !== 3 || parts.some(function (part) { return !Number.isFinite(part); })) return '';
+    var value = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 0, minuteOffset));
+    return value.getUTCFullYear() + '-' +
+      String(value.getUTCMonth() + 1).padStart(2, '0') + '-' +
+      String(value.getUTCDate()).padStart(2, '0') + ' ' +
+      String(value.getUTCHours()).padStart(2, '0') + ':' +
+      String(value.getUTCMinutes()).padStart(2, '0');
+  }
+
   var directoryByDealer = new Map(sourceDirectory.map(function (dealer) {
     return [dealerKey(dealer.brand, dealer.dealerCode), dealer];
   }));
@@ -164,20 +190,28 @@
     var directory = directoryByDealer.get(dealerKey(row.brand, row.dealerCode)) || {};
     var hash = stableHash(row.id);
     var minuteOfDay = (9 * 60) + (hash % (11 * 60));
-    var hours = String(Math.floor(minuteOfDay / 60)).padStart(2, '0');
-    var minutes = String(minuteOfDay % 60).padStart(2, '0');
+    var issuedOffset = (8 * 60) + (hash % (9 * 60));
+    var arrivalOffset = issuedOffset + ((1 + ((hash >>> 5) % 3)) * 24 * 60) + 60 + ((hash >>> 9) % 240);
+    var testDriveOffset = arrivalOffset + 30 + ((hash >>> 13) % 150);
     var recordingCount = Math.max(0, Number(row.recordingCount) || 0);
     return Object.assign({}, row, {
       id: text(row.id),
       patroler: text(directory.patroler),
       patrolerId: text(directory.patrolerId),
+      patrolerCode: patrolerCode(directory.patrolerId),
       governor: text(directory.governor),
       governorId: text(directory.governorId),
       advisorId: advisorValue(row),
-      recordStartTime: row.leadDate + ' 00:00',
-      leadIssuedAt: row.leadDate + ' 00:00',
-      lastContact: row.leadDate + ' ' + hours + ':' + minutes,
-      aiLeadValidity: recordingCount === 0 ? '暂未分析' : (hash % 2 ? '有效' : '无效')
+      advisorCode: '',
+      advisorPhone: '',
+      recordStartTime: dateTimeFromOffset(row.leadDate, issuedOffset),
+      leadIssuedAt: dateTimeFromOffset(row.leadDate, issuedOffset),
+      arrivalTime: dateTimeFromOffset(row.leadDate, arrivalOffset),
+      testDriveTime: dateTimeFromOffset(row.leadDate, testDriveOffset),
+      lastContact: dateTimeFromOffset(row.leadDate, minuteOfDay),
+      aiLeadValidity: recordingCount === 0
+        ? (hash % 2 ? '分析中' : '未分析')
+        : AI_LEAD_VALIDITY_OPTIONS[hash % 4]
     });
   }).sort(function (left, right) {
     return right.leadDate.localeCompare(left.leadDate) || right.id.localeCompare(left.id);
@@ -205,6 +239,8 @@
       dimensionMode: 'organization',
       collapsed: true,
       selections: {},
+      leadIdQuery: '',
+      recordingCountQuery: '',
       startDate: DEFAULT_DATE,
       endDate: DEFAULT_DATE,
       dateDraftStart: DEFAULT_DATE,
@@ -255,6 +291,10 @@
     return 'aiqc-leads-modern-columns-' + view;
   }
 
+  function storageVersionKey(view) {
+    return storageKey(view) + '-schema-version';
+  }
+
   function defaultColumnSettings(columns) {
     return { order: columns.map(function (item) { return item.key; }), hidden: [] };
   }
@@ -265,6 +305,12 @@
       var saved = JSON.parse(global.localStorage.getItem(storageKey(view)) || 'null');
       if (!saved || !Array.isArray(saved.order) || !Array.isArray(saved.hidden)) return fallback;
       var validKeys = columns.map(function (item) { return item.key; });
+      if (view === 'leads' && global.localStorage.getItem(storageVersionKey(view)) !== LEAD_COLUMN_SCHEMA_VERSION) {
+        var migrated = { order: fallback.order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
+        global.localStorage.setItem(storageKey(view), JSON.stringify(migrated));
+        global.localStorage.setItem(storageVersionKey(view), LEAD_COLUMN_SCHEMA_VERSION);
+        return migrated;
+      }
       var order = saved.order.filter(function (key) { return validKeys.includes(key); });
       validKeys.forEach(function (key) { if (!order.includes(key)) order.push(key); });
       return { order: order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
@@ -275,6 +321,7 @@
 
   function saveColumnSettings(view) {
     global.localStorage.setItem(storageKey(view), JSON.stringify(columnSettings[view]));
+    if (view === 'leads') global.localStorage.setItem(storageVersionKey(view), LEAD_COLUMN_SCHEMA_VERSION);
   }
 
   function state() {
@@ -423,6 +470,8 @@
     if (key === 'customerStoreCountRange') return ['1家', '2家', '3家', '4家及以上'].map(function (value) { return option(value); });
     if (key === 'customerLeadCountRange' || key === 'customerAudioCountRange') return ['1条', '2条', '3条', '4条及以上'].map(function (value) { return option(value); });
     if (key === 'customerRecordCoverage' || key === 'customerStoreRecordCoverage') return ['全部有录音', '部分有录音', '全部无录音'].map(function (value) { return option(value); });
+    if (key === 'aiLeadValidity') return AI_LEAD_VALIDITY_OPTIONS.map(function (value) { return option(value); });
+    if (key === 'validRecording') return ['是', '否'].map(function (value) { return option(value, value === '是' ? '有录音' : '无录音'); });
     var source = targetState.view === 'customers' ? customerRecords : records.filter(function (record) {
       return recordMatchesOrganization(record, targetState);
     });
@@ -494,11 +543,15 @@
 
   function filteredLeadRecords(targetState) {
     return records.filter(function (record) {
+      var leadIdQuery = normalizedQuery(targetState.leadIdQuery);
+      var recordingCountQuery = text(targetState.recordingCountQuery);
       return recordMatchesOrganization(record, targetState)
         && matchesValues(record.leadStatus, selected('leadStatus', targetState))
         && matchesValues(record.intentGrade, selected('intentGrade', targetState))
-        && matchesValues(record.customerName, selected('customerName', targetState))
-        && matchesValues(record.customerPhone, selected('customerPhone', targetState))
+        && matchesValues(record.aiLeadValidity, selected('aiLeadValidity', targetState))
+        && matchesValues(record.validRecording, selected('validRecording', targetState))
+        && (!leadIdQuery || normalizedQuery(record.id).includes(leadIdQuery))
+        && (!recordingCountQuery || String(record.recordingCount) === recordingCountQuery)
         && (!targetState.startDate || record.leadDate >= targetState.startDate)
         && (!targetState.endDate || record.leadDate <= targetState.endDate);
     });
@@ -599,6 +652,12 @@
       (menuVisible(key) ? renderOptionMenu(key) : '') + '</div>';
   }
 
+  function renderTextSearchControl(key, label, placeholder, inputMode) {
+    return '<label class="badge-field-filter lr-filter-search-control"><span>' + escapeHtml(label) + '</span>' +
+      '<input type="search" data-lr-query="' + escapeHtml(key) + '" value="' + escapeHtml(state()[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="' + escapeHtml(inputMode || 'search') + '">' +
+      '<svg class="lr-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>';
+  }
+
   function formatDateDisplay(value) {
     return value ? value.replace(/-/g, '/') : '不限';
   }
@@ -643,19 +702,20 @@
       cells: dateCells(),
       summaryText: '已选择 ' + formatDateDisplay(viewState.dateDraftStart) + ' 至 ' + formatDateDisplay(viewState.dateDraftEnd),
       panelClassName: 'session-menu-panel session-menu-panel-date lr-date-panel',
-      title: '线索日期范围',
+      title: currentView === 'leads' ? '统计日期范围' : '线索日期范围',
       shortcuts: [
         { key: 'today', label: '今天' },
         { key: 'last3', label: '近3天' },
         { key: 'last7', label: '近7天' }
-      ]
+      ],
+      showCancel: false
     });
   }
 
   function renderDateControl() {
     var open = state().openMenu === 'date';
     return '<div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu session-toolbar-control-date' + (open ? ' is-open' : '') + '">' +
-      '<span>线索日期</span><button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-lr-date-trigger aria-expanded="' + open + '"><strong>' + escapeHtml(formatDateDisplay(state().startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatDateDisplay(state().endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
+      '<span>' + (currentView === 'leads' ? '统计日期' : '线索日期') + '</span><button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-lr-date-trigger aria-expanded="' + open + '"><strong>' + escapeHtml(formatDateDisplay(state().startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatDateDisplay(state().endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
       (menuVisible('date') ? renderDatePanel() : '') + '</div>';
   }
 
@@ -690,7 +750,7 @@
     var common = ['patroler', 'governor', 'advisor'];
     return currentView === 'customers'
       ? common.concat(['customerCrossStore', 'customerStoreCountRange', 'customerMultiLead', 'customerLeadCountRange', 'customerAudioCountRange', 'customerRecordCoverage', 'customerStoreRecordCoverage', 'customerStatus'])
-      : common.concat(['leadStatus', 'intentGrade', 'customerName', 'customerPhone']);
+      : common.concat(['leadStatus', 'intentGrade', 'aiLeadValidity', 'date', 'leadIdQuery', 'validRecording', 'recordingCountQuery']);
   }
 
   function renderFilterActions() {
@@ -735,8 +795,18 @@
       host._lrCollapseAnimation = null;
     }
     var primary = dimensionKeys().filter(function (key) { return filterVisible(key); });
-    var secondary = secondaryKeys().filter(function (key) { return filterVisible(key); });
-    var extraInner = secondary.map(renderFilterControl).join('') + (filterVisible('date') ? renderDateControl() : '');
+    var secondary = secondaryKeys().filter(function (key) {
+      if (key === 'date') return filterVisible('date');
+      if (key === 'leadIdQuery') return filterVisible('id');
+      if (key === 'recordingCountQuery') return filterVisible('recordingCount');
+      return filterVisible(key);
+    });
+    var extraInner = secondary.map(function (key) {
+      if (key === 'date') return renderDateControl();
+      if (key === 'leadIdQuery') return renderTextSearchControl(key, '线索ID', '请输入线索ID');
+      if (key === 'recordingCountQuery') return renderTextSearchControl(key, '录音数', '请输入录音数', 'numeric');
+      return renderFilterControl(key);
+    }).join('') + (currentView === 'customers' && filterVisible('date') ? renderDateControl() : '');
     var keepExtra = extraInner && (!state().collapsed || collapseChanged);
     host.className = 'session-filter-toolbar leads-modern-filters' + (state().collapsed ? ' is-collapsed' : '');
     host.setAttribute('data-lr-installed', 'true');
@@ -844,15 +914,37 @@
     }
     if (key === 'crossStore') return item.crossStore ? '是' : '否';
     if (key === 'multiLead') return item.multiLead ? '是' : '否';
+    if (key === 'validRecording') return text(item.validRecording) === '是' ? '有录音' : '无录音';
     if (key === 'recordingCount' || key === 'aggregateAudioCount') return String(Number(item[key]) || 0);
     return text(item[key]) || '—';
   }
 
+  function leadStatusTone(value) {
+    if (value === '已下定' || value === '有效') return 'green';
+    if (value === '跟进中') return 'amber';
+    if (value === '战败' || value === '无效') return 'red';
+    if (value === '未跟进') return 'gray';
+    if (value === '异地') return 'blue';
+    return 'gray';
+  }
+
+  function aiLeadValidityTone(value) {
+    if (value === '有效') return 'green';
+    if (value === '无效') return 'red';
+    if (value === '无法判断') return 'amber';
+    if (value === '分析中') return 'blue';
+    return 'gray';
+  }
+
+  function renderStatusInline(value, tone) {
+    return '<span class="status-inline ' + tone + '"><span class="status-inline-dot" aria-hidden="true"></span><span>' + escapeHtml(value) + '</span></span>';
+  }
+
   function renderCell(item, key) {
     var value = displayValue(item, key, false);
-    if (key === 'leadStatus') return '<span class="status-inline"><span class="status-inline-dot" aria-hidden="true"></span><span>' + escapeHtml(value) + '</span></span>';
+    if (key === 'leadStatus' && value && value !== '—') return renderStatusInline(value, leadStatusTone(value));
     if (key === 'intentGrade') return '<span class="pill-inline intent-grade-pill">' + escapeHtml(value) + '</span>';
-    if (key === 'aiLeadValidity') return '<span class="ai-lead-validity-pill">' + escapeHtml(value) + '</span>';
+    if (key === 'aiLeadValidity' && value && value !== '—') return renderStatusInline(value, aiLeadValidityTone(value));
     if (currentView === 'customers' && item.aggregateValues && item.aggregateValues[key] && item.aggregateValues[key].length > 1) {
       return '<span class="lr-multi-value" title="' + escapeHtml(item.aggregateValues[key].join('、')) + '">' + escapeHtml(value) + '</span>';
     }
@@ -977,6 +1069,8 @@
     var table = document.getElementById('leadsDataTable');
     var header = document.getElementById('leadsTableHeader');
     var body = document.getElementById('leadsTableBody');
+    var emptyState = document.getElementById('leadsEmptyState');
+    var tableWrap = table && table.closest('.leads-list-table-wrap');
     if (!table || !header || !body) return;
     restoreValidityTooltip();
     var items = filteredRecords();
@@ -991,6 +1085,12 @@
       return '<th data-column-key="' + escapeHtml(item.key) + '">' + label + '</th>';
     }).join('') + '<th class="fixed-action-column">操作</th></tr>';
     bindAiLeadValidityHelp(header);
+    if (emptyState) {
+      emptyState.hidden = items.length > 0;
+      var emptyTitle = document.getElementById('leadsEmptyStateTitle');
+      if (emptyTitle) emptyTitle.textContent = currentView === 'customers' ? '暂无符合条件的客户' : '暂无符合条件的线索';
+    }
+    if (tableWrap) tableWrap.classList.toggle('is-empty', !items.length);
     body.innerHTML = pageItems.length ? pageItems.map(function (item) {
       var detail = currentView === 'customers'
         ? Number(item.aggregateAudioCount) <= 0
@@ -999,8 +1099,11 @@
             ? '<button class="table-link" data-lr-customer-detail-id="' + escapeHtml(item.id) + '">查看详情</button>'
             : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="customers">查看详情</button>'
         : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="leads">线索详情</button>';
-      return '<tr>' + columns.map(function (column) { return '<td>' + renderCell(item, column.key) + '</td>'; }).join('') + '<td class="fixed-action-column">' + detail + '</td></tr>';
-    }).join('') : '<tr><td colspan="' + (columns.length + 1) + '"><div class="badge-list-empty-state is-inline"><strong>暂无符合条件的数据</strong><p>请调整筛选条件后重试</p></div></td></tr>';
+      return '<tr>' + columns.map(function (column) {
+        var cellClass = column.key === 'associationSummary' ? ' class="cv-association-summary-cell"' : '';
+        return '<td data-column-key="' + escapeHtml(column.key) + '"' + cellClass + '>' + renderCell(item, column.key) + '</td>';
+      }).join('') + '<td class="fixed-action-column">' + detail + '</td></tr>';
+    }).join('') : '';
     table.classList.add('badge-data-table', 'lr-data-table');
     var title = document.getElementById('leadsTableHeadTitle');
     if (title) title.textContent = currentView === 'customers' ? '客户聚合总览' : '线索总览';
@@ -1114,7 +1217,7 @@
     var visibleCount = ordered.filter(function (item) { return !working.hidden.includes(item.key); }).length;
     host.innerHTML = '<div class="drawer-backdrop badge-field-settings-backdrop" data-lr-settings-close></div><aside class="drawer detail-drawer badge-field-settings-drawer' + (animateOpen ? '' : ' open') + '" role="dialog" aria-modal="true" aria-label="字段设置" aria-hidden="false">' +
       '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>当前为' + (currentView === 'customers' ? '客户聚合视图' : '线索视图') + '，字段和筛选项独立保存</p></div><button type="button" class="icon-btn" data-lr-settings-close>×</button></div>' +
-      '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-lr-settings-select-all>全选</button></div><div class="badge-field-settings-list">' +
+      '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-lr-settings-select-all>' + (visibleCount === ordered.length ? '取消全选' : '全选') + '</button></div><div class="badge-field-settings-list">' +
         ordered.map(function (item) {
           var visible = !working.hidden.includes(item.key);
           return '<div class="badge-field-settings-item' + (visible ? ' is-visible' : '') + '" draggable="false" data-lr-column-item="' + escapeHtml(item.key) + '"><span class="badge-field-drag-handle"><i></i><i></i><i></i></span><label><input type="checkbox" data-lr-column-visible="' + escapeHtml(item.key) + '" ' + (visible ? 'checked' : '') + '><span>' + escapeHtml(item.label) + '</span></label><small>' + (visible ? '已显示' : '已隐藏') + '</small></div>';
@@ -1210,6 +1313,10 @@
 
   function applyColumnSettings() {
     var working = workingSettings();
+    if (!working.order.some(function (key) { return !working.hidden.includes(key); })) {
+      showToast('至少保留一个字段');
+      return;
+    }
     columnSettings[currentView] = JSON.parse(JSON.stringify(working));
     saveColumnSettings(currentView);
     var filterHost = document.getElementById('leadsFilterControls');
@@ -1227,6 +1334,8 @@
       state().startDate = '';
       state().endDate = '';
     }
+    if (!filterVisible('id')) state().leadIdQuery = '';
+    if (!filterVisible('recordingCount')) state().recordingCountQuery = '';
     state().page = 1;
     closeFieldSettings();
     renderAll();
@@ -1368,10 +1477,6 @@
       renderFilters();
       return;
     }
-    if (target.closest('[data-lr-date-cancel]')) {
-      closeMenu(false);
-      return;
-    }
     if (target.closest('[data-lr-date-apply]')) {
       state().startDate = state().dateDraftStart;
       state().endDate = state().dateDraftEnd;
@@ -1428,7 +1533,9 @@
       return;
     }
     if (target.closest('[data-lr-settings-select-all]')) {
-      workingSettings().hidden = [];
+      var working = workingSettings();
+      var allVisible = working.order.every(function (key) { return !working.hidden.includes(key); });
+      working.hidden = allVisible ? working.order.slice() : [];
       renderFieldSettings();
       return;
     }
@@ -1456,6 +1563,13 @@
   }
 
   function handleInput(event) {
+    var directSearch = event.target.closest('[data-lr-query]');
+    if (directSearch) {
+      state()[directSearch.dataset.lrQuery] = directSearch.value;
+      state().page = 1;
+      renderTable();
+      return;
+    }
     var search = event.target.closest('[data-lr-menu-search]');
     if (search) {
       var key = search.dataset.lrMenuSearch;
