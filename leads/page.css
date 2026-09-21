@@ -3788,7 +3788,7 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   font-size: 14px;
   font-weight: 500;
   line-height: 1;
-  letter-spacing: -.01em;
+  letter-spacing: normal;
   transition: border-color .18s ease, box-shadow .18s ease, color .18s ease, background .18s ease;
 }
 
@@ -4039,7 +4039,7 @@ body:has(.leads-modern-root) #pageHost {
 }
 
 .leads-table-headbar {
-  gap: 16px;
+  gap: 14px;
 }
 
 .leads-table-headbar .session-filter-summary {

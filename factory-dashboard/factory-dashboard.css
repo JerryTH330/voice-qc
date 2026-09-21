@@ -5810,7 +5810,7 @@
   font-weight: 500;
 }
 
-.factory-dashboard-page .store-date-root .session-menu-panel-date {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-menu-panel-date {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
@@ -5823,27 +5823,27 @@
   pointer-events: auto;
 }
 
-.factory-dashboard-page .store-date-root .session-menu-panel-date,
-.factory-dashboard-page .store-date-root .session-menu-panel-date * {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-menu-panel-date,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-menu-panel-date * {
   box-sizing: border-box;
   font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
 }
 
-.factory-dashboard-page .store-date-root .session-date-panel-head {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-panel-copy span {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-panel-copy span {
   display: block;
   color: var(--soft);
   font-size: 11px;
   line-height: 1.4;
 }
 
-.factory-dashboard-page .store-date-root .session-date-panel-copy strong {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-panel-copy strong {
   display: block;
   margin-top: 4px;
   font-size: 14px;
@@ -5852,7 +5852,7 @@
   color: var(--text);
 }
 
-.factory-dashboard-page .store-date-root .session-date-nav {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-nav {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -5861,7 +5861,7 @@
   background: rgba(243, 247, 253, 0.96);
 }
 
-.factory-dashboard-page .store-date-root .session-date-nav strong {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-nav strong {
   min-width: 88px;
   text-align: center;
   font-size: 13px;
@@ -5869,7 +5869,7 @@
   font-weight: 600;
 }
 
-.factory-dashboard-page .store-date-root .session-date-nav-btn {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-nav-btn {
   width: 28px;
   height: 28px;
   border: 0;
@@ -5881,14 +5881,14 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
-.factory-dashboard-page .store-date-root .session-date-tabs {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-tab {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-tab {
   padding: 10px 12px;
   border: 1px solid rgba(217, 226, 239, 0.92);
   border-radius: 14px;
@@ -5897,14 +5897,14 @@
   cursor: pointer;
 }
 
-.factory-dashboard-page .store-date-root .session-date-tab span {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-tab span {
   display: block;
   color: var(--soft);
   font-size: 11px;
   line-height: 1.4;
 }
 
-.factory-dashboard-page .store-date-root .session-date-tab strong {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-tab strong {
   display: block;
   margin-top: 6px;
   font-size: 13px;
@@ -5913,44 +5913,44 @@
   color: var(--text);
 }
 
-.factory-dashboard-page .store-date-root .session-date-tab.active {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-tab.active {
   border-color: rgba(37, 99, 235, 0.28);
   background: rgba(37, 99, 235, 0.06);
 }
 
-.factory-dashboard-page .store-date-root .session-date-weekdays,
-.factory-dashboard-page .store-date-root .session-date-grid {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-weekdays,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-weekdays {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-weekdays {
   margin-top: 16px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-weekdays span {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-weekdays span {
   text-align: center;
   color: var(--soft);
   font-size: 11px;
   line-height: 1.4;
 }
 
-.factory-dashboard-page .store-date-root .session-date-grid {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-grid {
   margin-top: 8px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-empty,
-.factory-dashboard-page .store-date-root .session-date-day {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-empty,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day {
   aspect-ratio: 1 / 1;
   border-radius: 12px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-empty {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-empty {
   display: block;
 }
 
-.factory-dashboard-page .store-date-root .session-date-day {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day {
   border: 0;
   background: transparent;
   display: grid;
@@ -5963,37 +5963,37 @@
   cursor: pointer;
 }
 
-.factory-dashboard-page .store-date-root .session-date-day:disabled,
-.factory-dashboard-page .store-date-root .session-date-day.is-disabled {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day:disabled,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.is-disabled {
   color: rgba(148, 163, 184, 0.78);
   cursor: default;
 }
 
-.factory-dashboard-page .store-date-root .session-date-day:hover {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day:hover {
   background: rgba(37, 99, 235, 0.08);
 }
 
-.factory-dashboard-page .store-date-root .session-date-day:disabled:hover,
-.factory-dashboard-page .store-date-root .session-date-day.is-disabled:hover {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day:disabled:hover,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.is-disabled:hover {
   background: transparent;
 }
 
-.factory-dashboard-page .store-date-root .session-date-day.in-range {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.in-range {
   background: rgba(37, 99, 235, 0.08);
   color: var(--blue);
 }
 
-.factory-dashboard-page .store-date-root .session-date-day.is-start,
-.factory-dashboard-page .store-date-root .session-date-day.is-end {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.is-start,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.is-end {
   background: linear-gradient(135deg, var(--blue), var(--blue-2));
   color: #fff;
 }
 
-.factory-dashboard-page .store-date-root .session-date-day.is-today {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-day.is-today {
   box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.26);
 }
 
-.factory-dashboard-page .store-date-root .session-date-shortcuts {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-shortcuts {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6001,7 +6001,7 @@
   margin-top: 14px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-shortcut {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-shortcut {
   min-height: 30px;
   padding: 0 12px;
   border: 1px solid rgba(217, 226, 239, 0.9);
@@ -6015,8 +6015,8 @@
   cursor: pointer;
 }
 
-.factory-dashboard-page .store-date-root .session-cascader-footer,
-.factory-dashboard-page .store-date-root .session-date-footer {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-cascader-footer,
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-footer {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(217, 226, 239, 0.72);
@@ -6026,13 +6026,13 @@
   gap: 16px;
 }
 
-.factory-dashboard-page .store-date-root .session-date-footer > span {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-footer > span {
   font-size: 12px;
   line-height: 1.5;
   color: var(--muted);
 }
 
-.factory-dashboard-page .store-date-root .session-date-actions {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -6040,7 +6040,7 @@
   justify-content: flex-end;
 }
 
-.factory-dashboard-page .store-date-root .session-date-action-btn {
+.factory-dashboard-page :is(.store-date-root, .fo-date-root) .session-date-action-btn {
   min-width: 94px;
   white-space: nowrap;
   flex: 0 0 auto;

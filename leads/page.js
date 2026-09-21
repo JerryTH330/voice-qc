@@ -12,7 +12,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "../shared/field-settings-interactions.js?v=20260911-field-settings-select-all-v1",
     "./real-lead-data.js?v=20260910-real-leads-v1",
     "../app-runtime.js?v=20260910-real-leads-v3",
-    "./leads-modern-runtime.js?v=20260915-lead-overview-order-v1"
+    "./leads-modern-runtime.js?v=20260921-summary-divider-v1"
   ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

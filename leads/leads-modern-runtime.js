@@ -13,6 +13,7 @@
   var VIEW_CONTENT_MOTION_MS = 160;
   var DEFAULT_DATE = '2026-09-10';
   var LEAD_COLUMN_SCHEMA_VERSION = '20260915-lead-overview-order-v1';
+  var CUSTOMER_COLUMN_SCHEMA_VERSION = '20260921-customer-overview-order-v1';
   var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析'];
   var ORGANIZATION_KEYS = ['brand', 'region', 'zone', 'province', 'city', 'patroler', 'governor', 'store', 'advisor'];
   var FILTER_LABELS = {
@@ -90,17 +91,17 @@
 
   var CUSTOMER_COLUMNS = [
     column('brand', '品牌', 12),
+    column('region', '大区', 16),
+    column('zone', '战区', 16),
     column('province', '省份', 14),
     column('city', '城市', 14),
     column('dealerCode', '店代码', 16),
     column('store', '门店', 22),
-    column('region', '大区', 16),
-    column('zone', '战区', 16),
+    column('advisorName', '顾问姓名', 14),
     column('patroler', '巡回员', 14),
     column('governor', '治理员', 14),
-    column('advisorName', '顾问', 14),
-    column('customerName', '客户姓名', 14),
-    column('customerPhone', '客户手机号', 17),
+    column('customerName', '客户名称', 14),
+    column('customerPhone', '客户手机', 17),
     column('crossStore', '是否跨门店', 14),
     column('aggregateStoreCount', '关联门店数', 14),
     column('multiLead', '是否多线索', 14),
@@ -305,10 +306,11 @@
       var saved = JSON.parse(global.localStorage.getItem(storageKey(view)) || 'null');
       if (!saved || !Array.isArray(saved.order) || !Array.isArray(saved.hidden)) return fallback;
       var validKeys = columns.map(function (item) { return item.key; });
-      if (view === 'leads' && global.localStorage.getItem(storageVersionKey(view)) !== LEAD_COLUMN_SCHEMA_VERSION) {
+      var schemaVersion = view === 'customers' ? CUSTOMER_COLUMN_SCHEMA_VERSION : LEAD_COLUMN_SCHEMA_VERSION;
+      if (global.localStorage.getItem(storageVersionKey(view)) !== schemaVersion) {
         var migrated = { order: fallback.order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
         global.localStorage.setItem(storageKey(view), JSON.stringify(migrated));
-        global.localStorage.setItem(storageVersionKey(view), LEAD_COLUMN_SCHEMA_VERSION);
+        global.localStorage.setItem(storageVersionKey(view), schemaVersion);
         return migrated;
       }
       var order = saved.order.filter(function (key) { return validKeys.includes(key); });
@@ -321,7 +323,7 @@
 
   function saveColumnSettings(view) {
     global.localStorage.setItem(storageKey(view), JSON.stringify(columnSettings[view]));
-    if (view === 'leads') global.localStorage.setItem(storageVersionKey(view), LEAD_COLUMN_SCHEMA_VERSION);
+    global.localStorage.setItem(storageVersionKey(view), view === 'customers' ? CUSTOMER_COLUMN_SCHEMA_VERSION : LEAD_COLUMN_SCHEMA_VERSION);
   }
 
   function state() {
@@ -1062,7 +1064,7 @@
       headbar.appendChild(tools);
     }
     var canExport = total > 0 && visibleColumns(currentView).length > 0;
-    tools.innerHTML = '<div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-lr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-lr-export ' + (canExport ? '' : 'disabled') + '><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>';
+    tools.innerHTML = '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-lr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-lr-export ' + (canExport ? '' : 'disabled') + '><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>';
   }
 
   function renderTable() {

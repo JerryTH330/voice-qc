@@ -96,47 +96,7 @@
   const FACTORY_DASHBOARD_HTML = `<section class="factory-filter-panel factory-filter-sticky-body global-filter-bar session-filter-card" aria-label="全局筛选">
     <div class="store-filter-shell session-filter-toolbar">
       <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-primary">
-        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-brand">
-          <span class="gf-label">品牌</span>
-          <div class="gf-tabs todo-filter-tabs" id="gf-brand" role="group" aria-label="品牌">
-            <button class="gf-tab todo-filter-tab active" data-brand="all" aria-pressed="true">全部</button>
-            <button class="gf-tab todo-filter-tab" data-brand="传祺" aria-pressed="false">传祺</button>
-            <button class="gf-tab todo-filter-tab" data-brand="埃安" aria-pressed="false">埃安</button>
-          </div>
-        </div>
         <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
-      </div>
-      <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-secondary">
-        <div id="factorySceneFilterSlot"></div>
-        <div class="gf-group gf-time-group store-filter-box session-toolbar-control session-toolbar-segment-control store-toolbar-control-time">
-          <span class="gf-label">时间</span>
-          <div class="gf-tabs todo-filter-tabs" id="gf-time" role="group" aria-label="时间">
-            <button class="gf-tab todo-filter-tab active" data-time="1" aria-pressed="true">昨日</button>
-            <button class="gf-tab todo-filter-tab" data-time="7" aria-pressed="false">近7天</button>
-            <button class="gf-tab todo-filter-tab" data-time="15" aria-pressed="false">近半月</button>
-            <button class="gf-tab todo-filter-tab" data-time="30" aria-pressed="false">近1月</button>
-            <button class="gf-tab gf-tab-custom todo-filter-tab" data-time="custom" id="gf-custom-btn" aria-pressed="false">自定义</button>
-          </div>
-        </div>
-        <div class="store-date-popover-anchor" id="store-date-control"></div>
-      </div>
-      <div class="session-filter-row session-filter-row-main factory-filter-row-main">
-        <div class="gf-group store-filter-box session-toolbar-control session-toolbar-menu session-toolbar-control-car store-model-dropdown factory-model-dropdown" id="factory-model-dropdown">
-          <span class="gf-label">车系</span>
-          <button type="button" class="store-model-trigger session-select-trigger" id="factory-model-trigger" aria-haspopup="listbox" aria-expanded="false">
-            <strong id="factory-model-display">全部车系</strong>
-            <span class="store-model-caret session-select-caret"></span>
-          </button>
-          <div class="store-model-panel session-menu-panel" id="factory-model-panel">
-            <div class="session-menu-option-list">
-              <button type="button" class="store-model-option session-menu-option active" data-model="all"><span>全部车系</span></button>
-              <button type="button" class="store-model-option session-menu-option" data-model="M8"><span>传祺M8</span></button>
-              <button type="button" class="store-model-option session-menu-option" data-model="S7"><span>传祺S7</span></button>
-              <button type="button" class="store-model-option session-menu-option" data-model="GS8"><span>传祺GS8</span></button>
-              <button type="button" class="store-model-option session-menu-option" data-model="E8"><span>传祺E8</span></button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -340,50 +300,6 @@
     mount.innerHTML = FACTORY_DASHBOARD_HTML;
 
 
-  // ══════════════════════════════════════════════════
-  // 1. 组织架构数据（大区 → 战区 → 门店，三级级联）
-  // ══════════════════════════════════════════════════
-  const ORG_TREE = {
-    '华南大区': {
-      '广州战区': ['广州白云店', '广州天河店', '广州番禺店', '广州增城店'],
-      '深圳战区': ['深圳南山店', '深圳龙华店', '深圳宝安店'],
-      '佛山战区': ['佛山禅城店', '佛山南海店'],
-      '东莞战区': ['东莞莞城店', '东莞虎门店', '东莞长安店']
-    },
-    '华东大区': {
-      '上海战区': ['上海浦东店', '上海闵行店', '上海嘉定店', '上海松江店'],
-      '杭州战区': ['杭州西湖店', '杭州余杭店', '杭州萧山店'],
-      '南京战区': ['南京江宁店', '南京建邺店'],
-      '苏州战区': ['苏州工业园店', '苏州吴中店', '苏州昆山店']
-    },
-    '华北大区': {
-      '北京战区': ['北京朝阳店', '北京海淀店', '北京丰台店', '北京通州店'],
-      '天津战区': ['天津滨海店', '天津南开店'],
-      '石家庄战区': ['石家庄裕华店', '石家庄长安店'],
-      '郑州战区': ['郑州金水店', '郑州中原店', '郑州二七店']
-    },
-    '华中大区': {
-      '武汉战区': ['武汉武昌店', '武汉洪山店', '武汉汉口店'],
-      '长沙战区': ['长沙岳麓店', '长沙雨花店', '长沙开福店'],
-      '南昌战区': ['南昌红谷店', '南昌青山湖店']
-    },
-    '西南大区': {
-      '成都战区': ['成都武侯店', '成都锦江店', '成都高新店', '成都龙泉驿店'],
-      '重庆战区': ['重庆渝北店', '重庆九龙坡店', '重庆南岸店'],
-      '昆明战区': ['昆明官渡店', '昆明盘龙店']
-    },
-    '西北大区': {
-      '西安战区': ['西安雁塔店', '西安未央店', '西安长安店'],
-      '兰州战区': ['兰州城关店', '兰州安宁店'],
-      '乌鲁木齐战区': ['乌鲁木齐天山店']
-    },
-    '东北大区': {
-      '沈阳战区': ['沈阳铁西店', '沈阳皇姑店', '沈阳浑南店'],
-      '哈尔滨战区': ['哈尔滨南岗店', '哈尔滨道里店'],
-      '长春战区': ['长春朝阳店', '长春南关店']
-    }
-  };
-
   const FACTORY_ALL_ORG_VALUE = '全部组织';
 
   const escapeHtml = (value) => String(value ?? '')
@@ -443,42 +359,8 @@
 
   const getFactoryDateRangeText = (startDate, endDate) => `${formatFactoryDateDisplay(startDate)} 至 ${formatFactoryDateDisplay(endDate)}`;
 
-  const buildFactoryOrganizationTree = () => {
-    return Object.entries(ORG_TREE).map(([region, zones]) => ({
-      label: region,
-      path: region,
-      children: Object.entries(zones).map(([zone, stores]) => ({
-        label: zone,
-        path: `${region} > ${zone}`,
-        children: stores.map((store) => ({
-          label: store,
-          path: `${region} > ${zone} > ${store}`,
-          children: []
-        }))
-      }))
-    }));
-  };
-
   const sharedOrganizationDirectory = window.AIQCOrganization;
-  const getFactoryOrganizationTree = () => sharedOrganizationDirectory
-    ? sharedOrganizationDirectory.getRootNodes(factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand)
-    : buildFactoryOrganizationTree();
 
-  const flattenFactoryOrganizationNodes = (nodes, collection = []) => {
-    nodes.forEach((node) => {
-      collection.push(node);
-      if (node.children && node.children.length) {
-        flattenFactoryOrganizationNodes(node.children, collection);
-      }
-    });
-    return collection;
-  };
-
-  const getFlatFactoryOrganizationNodes = () => flattenFactoryOrganizationNodes(getFactoryOrganizationTree(), []);
-
-  // ══════════════════════════════════════════════════
-  // 2. KPI 数据（全国汇总级 — 复用门店看板模式）
-  // ══════════════════════════════════════════════════
   const ALL_KPI_DATA = {
     invitation:    { label: "邀约录音数", num: "6",    unit: "条",  trend: "↑1",    trendDir: "up" },
     reception:     { label: "接待录音数", num: "18",   unit: "条",  trend: "↑3",    trendDir: "up" },
@@ -585,25 +467,17 @@
   let currentSource = SOURCE_KEYS.all;
   let currentScenes = [SCENE_KEYS.all];
   let currentBrand  = 'all';
-  let factoryOrgDimension = 'region';
   let factorySelectedOrgPath = FACTORY_ALL_ORG_VALUE;
-  let currentAdvisor = 'all';
   let currentTime   = '1';     // 时间: 1=昨日, 7=近7天, 15=近半月, 30=近1月, custom
   let factoryTimeStartDate = '';
   let factoryTimeEndDate = '';
-  let currentModel  = 'all';   // 车型
-  const factoryOrgMenuState = {
-    open: false,
-    dimensionOpen: false,
-    draftPath: FACTORY_ALL_ORG_VALUE,
-    searchQuery: '',
-    searchActive: false
-  };
+  let currentModel  = 'all';   // 车系显示范围
+  let currentModels = [];
   const factoryDateShortcutOptions = [
-    { key: '1', label: '近1天' },
+    { key: '1', label: '昨日' },
     { key: '7', label: '近7天' },
-    { key: '15', label: '近15天' },
-    { key: '30', label: '近30天' }
+    { key: '15', label: '近半月' },
+    { key: '30', label: '近1月' }
   ];
   const factoryDateState = {
     open: false,
@@ -745,7 +619,7 @@
     } else if (currentRegion !== 'all') {
       el.textContent = currentRegion;
     } else {
-      el.textContent = '全国';
+      el.textContent = factorySelectedOrgPath === FACTORY_ALL_ORG_VALUE ? '全国' : factorySelectedOrgPath;
     }
   };
 
@@ -806,372 +680,6 @@
     }
     return sharedOrganizationDirectory?.formatPath(value, currentBrand === 'all' ? '全部' : currentBrand)
       || value.replaceAll(' > ', ' / ');
-  };
-
-  const normalizeFactoryOrganizationSearchText = (value) => {
-    return String(value || '')
-      .toLowerCase()
-      .replaceAll(' > ', '')
-      .replaceAll('/', '')
-      .replaceAll('／', '')
-      .replace(/\s+/g, '');
-  };
-
-  const getFactoryOrganizationColumns = (draftPath) => {
-    if (sharedOrganizationDirectory) {
-      return sharedOrganizationDirectory.getColumns(draftPath, factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand);
-    }
-    const columns = [];
-    let currentNodes = getFactoryOrganizationTree();
-
-    while (currentNodes && currentNodes.length) {
-      columns.push(currentNodes);
-      const activeNode = currentNodes.find((node) => draftPath === node.path || draftPath.startsWith(`${node.path} > `));
-      if (!activeNode || !activeNode.children || !activeNode.children.length) {
-        break;
-      }
-      currentNodes = activeNode.children;
-    }
-
-    return columns;
-  };
-
-  const getFactoryOrganizationSearchResults = (keyword) => {
-    if (sharedOrganizationDirectory) {
-      return sharedOrganizationDirectory.search(keyword, factoryOrgDimension, currentBrand === 'all' ? '全部' : currentBrand);
-    }
-    const normalizedKeyword = normalizeFactoryOrganizationSearchText(keyword);
-    if (!normalizedKeyword) {
-      return [];
-    }
-
-    return getFlatFactoryOrganizationNodes().filter((node) => {
-      const normalizedLabel = normalizeFactoryOrganizationSearchText(node.label);
-      const normalizedPath = normalizeFactoryOrganizationSearchText(node.path);
-      return normalizedLabel.includes(normalizedKeyword) || normalizedPath.includes(normalizedKeyword);
-    });
-  };
-
-  const getFactoryOrganizationNodeByPath = (path) => {
-    if (!path || path === FACTORY_ALL_ORG_VALUE) {
-      return null;
-    }
-    return sharedOrganizationDirectory?.findNode(path, factoryOrgDimension)
-      || getFlatFactoryOrganizationNodes().find((node) => node.path === path)
-      || null;
-  };
-
-  const applyFactoryOrgPath = (path) => {
-    factorySelectedOrgPath = path || FACTORY_ALL_ORG_VALUE;
-    currentAdvisor = 'all';
-    if (!path || path === FACTORY_ALL_ORG_VALUE) {
-      currentRegion = 'all';
-      currentZone = 'all';
-      currentStore = 'all';
-      return;
-    }
-
-    if (sharedOrganizationDirectory) {
-      const node = sharedOrganizationDirectory.findNode(path, factoryOrgDimension);
-      if (node?.type === 'advisor') currentAdvisor = node.advisorId;
-      const dealerCode = node?.dealerCode;
-      const dealer = sharedOrganizationDirectory.dealers.find((item) => item.dealerCode === dealerCode);
-      currentRegion = dealer?.area || 'all';
-      currentZone = dealer?.zone || 'all';
-      currentStore = dealer?.dealerName || 'all';
-      return;
-    }
-
-    const [region, zone, store] = path.split(' > ');
-    currentRegion = region || 'all';
-    currentZone = zone || 'all';
-    currentStore = store || 'all';
-  };
-
-  const renderFactoryOrganizationMenu = () => {
-    const draftPath = factoryOrgMenuState.draftPath || getCurrentFactoryOrgPath();
-    const searchQuery = factoryOrgMenuState.searchQuery || '';
-    const isSearching = Boolean(searchQuery.trim());
-    const searchResults = isSearching ? getFactoryOrganizationSearchResults(searchQuery) : [];
-    const columns = getFactoryOrganizationColumns(draftPath);
-
-    return `
-      <div class="factory-org-panel" data-factory-org-menu-panel="true">
-        <div class="factory-org-panel-top">
-          <button
-            type="button"
-            class="factory-org-clear${draftPath === FACTORY_ALL_ORG_VALUE ? ' active' : ''}"
-            data-factory-org-clear="true"
-          >
-            <span>${FACTORY_ALL_ORG_VALUE}</span>
-          </button>
-          <div class="factory-org-current">
-            <span>${factoryOrgDimension === 'province' ? '省份维度' : '大区维度'}·当前层级</span>
-            <strong>${escapeHtml(formatFactoryOrganizationDisplay(draftPath))}</strong>
-          </div>
-        </div>
-        ${
-          isSearching
-            ? `
-              <div class="factory-org-search-panel">
-                ${
-                  searchResults.length
-                    ? `
-                      <div class="factory-org-search-results">
-                        ${searchResults.map((node) => {
-                          const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : '';
-                          return `
-                            <button
-                              type="button"
-                              class="factory-org-search-option${active}"
-                              data-factory-org-path="${escapeHtml(node.path)}"
-                              data-factory-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"
-                              data-factory-org-from-search="true"
-                            >
-                              <span class="factory-org-search-main">
-                                <span class="factory-org-search-label">${escapeHtml(node.label)}</span>
-                                <span class="factory-org-search-copy">${escapeHtml(formatFactoryOrganizationDisplay(node.path))}</span>
-                              </span>
-                              ${node.children && node.children.length ? '<i class="factory-org-arrow" aria-hidden="true"></i>' : ''}
-                            </button>
-                          `;
-                        }).join('')}
-                      </div>
-                    `
-                    : '<div class="factory-org-empty">未找到匹配的组织</div>'
-                }
-              </div>
-            `
-            : `
-              <div class="factory-org-columns">
-                ${columns.map((nodes) => `
-                  <div class="factory-org-column">
-                    ${nodes.map((node) => {
-                      const active = draftPath === node.path || draftPath.startsWith(`${node.path} > `) ? ' active' : '';
-                      return `<button type="button" class="factory-org-option${active}" data-factory-org-path="${escapeHtml(node.path)}" data-factory-org-has-children="${node.children && node.children.length ? 'true' : 'false'}"><span>${escapeHtml(node.label)}</span>${node.children && node.children.length ? '<i class="factory-org-arrow" aria-hidden="true"></i>' : ''}</button>`;
-                    }).join('')}
-                  </div>`).join('')}
-              </div>
-            `
-        }
-        <div class="factory-org-footer">
-          <span>筛选将覆盖当前层级及其下属门店与顾问</span>
-          <button type="button" class="btn-primary" data-factory-org-apply="${escapeHtml(draftPath)}">应用组织</button>
-        </div>
-      </div>
-    `;
-  };
-
-  const renderFactoryOrganizationControl = () => {
-    const slot = document.getElementById('factoryOrgControlSlot');
-    if (!slot) return;
-
-    const open = factoryOrgMenuState.open;
-    const searchQuery = factoryOrgMenuState.searchQuery || '';
-    const hasSearchQuery = Boolean(searchQuery.trim());
-    const isSearchActive = factoryOrgMenuState.searchActive || hasSearchQuery;
-    const displayValue = open
-      ? factoryOrgMenuState.draftPath || getCurrentFactoryOrgPath()
-      : getCurrentFactoryOrgPath();
-
-    slot.innerHTML = `
-      <div class="store-filter-box session-toolbar-control session-toolbar-menu${open || factoryOrgMenuState.dimensionOpen ? ' is-open' : ''} session-toolbar-control-org factory-organization-combined-control" data-factory-org-root="true">
-        <div class="factory-organization-combined-main">
-          <button type="button" class="session-select-trigger factory-organization-dimension-trigger${factoryOrgMenuState.dimensionOpen ? ' active' : ''}" data-factory-org-dimension-toggle="true" aria-expanded="${factoryOrgMenuState.dimensionOpen ? 'true' : 'false'}">
-            <strong>${factoryOrgDimension === 'province' ? '省份维度' : '大区维度'}</strong><span class="session-select-caret" aria-hidden="true"></span>
-          </button>
-          <div class="session-select-trigger session-select-trigger-search factory-organization-path-trigger${open ? ' active' : ''}">
-          <div class="session-select-trigger-search-main">
-            <input
-              type="text"
-              class="session-select-trigger-search-input${isSearchActive ? '' : ' is-display-mode'}"
-              data-factory-org-trigger-input="true"
-              value="${escapeHtml(searchQuery)}"
-              placeholder="${escapeHtml(isSearchActive ? '搜索组织/门店/顾问' : formatFactoryOrganizationDisplay(displayValue))}"
-              aria-label="搜索组织"
-            />
-          </div>
-          <button
-            type="button"
-            class="session-select-trigger-search-toggle"
-            data-factory-org-trigger-toggle="true"
-            aria-label="展开组织筛选"
-            aria-haspopup="listbox"
-            aria-expanded="${open ? 'true' : 'false'}"
-          >
-            <span class="session-select-caret" aria-hidden="true"></span>
-          </button>
-          </div>
-        </div>
-        ${factoryOrgMenuState.dimensionOpen ? `<div class="session-menu-panel factory-org-dimension-menu"><button type="button" class="session-menu-option${factoryOrgDimension === 'region' ? ' active' : ''}" data-factory-org-dimension="region"><span>大区维度</span></button><button type="button" class="session-menu-option${factoryOrgDimension === 'province' ? ' active' : ''}" data-factory-org-dimension="province"><span>省份维度</span></button></div>` : ''}
-        ${open ? renderFactoryOrganizationMenu() : ''}
-      </div>
-    `;
-  };
-
-  const rerenderFactoryOrganizationControl = (keepFocus = false) => {
-    renderFactoryOrganizationControl();
-    bindFactoryOrganizationControlEvents();
-    syncFactoryOrganizationMenuLayout();
-
-    if (!keepFocus) {
-      return;
-    }
-
-    window.requestAnimationFrame(() => {
-      const input = document.querySelector('[data-factory-org-trigger-input="true"]');
-      if (!input) {
-        return;
-      }
-      input.focus();
-      const position = input.value.length;
-      input.setSelectionRange(position, position);
-    });
-  };
-
-  const syncFactoryOrganizationMenuLayout = () => {
-    window.requestAnimationFrame(() => {
-      const panel = document.querySelector('[data-factory-org-menu-panel="true"]');
-      if (!panel) return;
-      panel.style.setProperty('--factory-org-shift-x', '0px');
-      const rect = panel.getBoundingClientRect();
-      const safeInset = 16;
-      let shiftX = 0;
-      if (rect.right > window.innerWidth - safeInset) shiftX -= rect.right - (window.innerWidth - safeInset);
-      if (rect.left + shiftX < safeInset) shiftX += safeInset - (rect.left + shiftX);
-      panel.style.setProperty('--factory-org-shift-x', `${Math.round(shiftX)}px`);
-      const columns = panel.querySelector('.factory-org-columns');
-      columns?.scrollTo({ left: columns.scrollWidth, behavior: 'smooth' });
-    });
-  };
-
-  const commitFactoryOrganizationFilter = (path) => {
-    applyFactoryOrgPath(path);
-    issueRuleAnalysisState.path = [];
-    sopAnalysisState.path = [];
-    factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
-    factoryOrgMenuState.searchQuery = '';
-    factoryOrgMenuState.searchActive = false;
-    factoryOrgMenuState.open = false;
-    updateOrgLabel();
-    rerenderFactoryOrganizationControl();
-    applyGlobalFilter();
-  };
-
-  const bindFactoryOrganizationControlEvents = () => {
-    const root = document.querySelector('[data-factory-org-root="true"]');
-    if (!root) return;
-
-    const toggle = root.querySelector('[data-factory-org-trigger-toggle="true"]');
-    const dimensionToggle = root.querySelector('[data-factory-org-dimension-toggle="true"]');
-    const input = root.querySelector('[data-factory-org-trigger-input="true"]');
-
-    dimensionToggle?.addEventListener('click', (event) => {
-      event.stopPropagation();
-      factoryOrgMenuState.dimensionOpen = !factoryOrgMenuState.dimensionOpen;
-      factoryOrgMenuState.open = false;
-      factoryOrgMenuState.searchQuery = '';
-      factoryOrgMenuState.searchActive = false;
-      rerenderFactoryOrganizationControl();
-    });
-
-    root.querySelectorAll('[data-factory-org-dimension]').forEach((node) => {
-      node.addEventListener('click', () => {
-        const nextDimension = node.dataset.factoryOrgDimension || 'region';
-        if (factoryOrgDimension !== nextDimension) {
-          factoryOrgDimension = nextDimension;
-          applyFactoryOrgPath(FACTORY_ALL_ORG_VALUE);
-        }
-        factoryOrgMenuState.dimensionOpen = false;
-        factoryOrgMenuState.draftPath = FACTORY_ALL_ORG_VALUE;
-        rerenderFactoryOrganizationControl();
-        applyGlobalFilter();
-      });
-    });
-
-    if (toggle) {
-      toggle.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const willOpen = !factoryOrgMenuState.open;
-        factoryOrgMenuState.open = willOpen;
-        factoryOrgMenuState.dimensionOpen = false;
-        if (willOpen) {
-          factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
-        } else {
-          factoryOrgMenuState.searchQuery = '';
-          factoryOrgMenuState.searchActive = false;
-        }
-        rerenderFactoryOrganizationControl(willOpen && factoryOrgMenuState.searchActive);
-      });
-    }
-
-    if (input) {
-      input.addEventListener('click', (event) => {
-        event.stopPropagation();
-      });
-
-      input.addEventListener('focus', () => {
-        const shouldActivateSearch = !factoryOrgMenuState.searchActive;
-        const shouldOpen = !factoryOrgMenuState.open;
-
-        if (shouldActivateSearch) {
-          factoryOrgMenuState.searchActive = true;
-          factoryOrgMenuState.searchQuery = '';
-        }
-        if (shouldOpen) {
-          factoryOrgMenuState.open = true;
-          factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
-        }
-
-        if (shouldActivateSearch || shouldOpen) {
-          rerenderFactoryOrganizationControl(true);
-        }
-      });
-
-      input.addEventListener('input', (event) => {
-        if (event.isComposing) return;
-        factoryOrgMenuState.searchQuery = input.value || '';
-        factoryOrgMenuState.searchActive = true;
-        if (!factoryOrgMenuState.open) {
-          factoryOrgMenuState.open = true;
-          factoryOrgMenuState.draftPath = getCurrentFactoryOrgPath();
-        }
-        rerenderFactoryOrganizationControl(true);
-      });
-    }
-
-    root.querySelectorAll('[data-factory-org-path]').forEach((node) => {
-      node.addEventListener('click', () => {
-        const nextPath = node.dataset.factoryOrgPath || FACTORY_ALL_ORG_VALUE;
-        const hasChildren = node.dataset.factoryOrgHasChildren === 'true';
-        const fromSearch = node.dataset.factoryOrgFromSearch === 'true';
-        factoryOrgMenuState.draftPath = nextPath;
-
-        if (hasChildren) {
-          if (fromSearch) {
-            factoryOrgMenuState.searchQuery = '';
-            factoryOrgMenuState.searchActive = false;
-          }
-          rerenderFactoryOrganizationControl();
-          return;
-        }
-
-        commitFactoryOrganizationFilter(nextPath);
-      });
-    });
-
-    root.querySelectorAll('[data-factory-org-clear]').forEach((node) => {
-      node.addEventListener('click', () => {
-        commitFactoryOrganizationFilter(FACTORY_ALL_ORG_VALUE);
-      });
-    });
-
-    root.querySelectorAll('[data-factory-org-apply]').forEach((node) => {
-      node.addEventListener('click', () => {
-        const nextPath = node.dataset.factoryOrgApply || factoryOrgMenuState.draftPath || FACTORY_ALL_ORG_VALUE;
-        commitFactoryOrganizationFilter(nextPath);
-      });
-    });
   };
 
   // ══════════════════════════════════════════════════
@@ -1258,28 +766,49 @@
   // 7. 全局筛选栏事件绑定
   // ══════════════════════════════════════════════════
 
-  // ── 7a. 组织级联选择 ────────────────────────────
-  renderFactoryOrganizationControl();
-  bindFactoryOrganizationControlEvents();
+  let factoryDateReady = false;
+  const organizationFilter = window.FactoryOrganizationFilter.mount({
+    root: document.getElementById('factoryOrgControlSlot'),
+    records: sharedOrganizationDirectory?.recordings || [],
+    fields: [
+      { key: 'scene', label: '业务场景', options: FACTORY_SCENE_FILTER_OPTIONS.filter(item => item.value !== SCENE_KEYS.all) },
+      { key: 'model', label: '车系', groupByBrand: true, options: selections => window.FactoryOrganizationFilter.leadSeriesOptions(window.__SESSION_REAL_RECORDING_DATA, selections.brand) }
+    ],
+    renderTrailing: () => '<div id="store-date-control" class="fo-control fo-date-control"></div>',
+    onRender() {
+      if (!factoryDateReady) return;
+      factoryDateState.open = false;
+      renderFactoryDateControl();
+    },
+    onChange({ reset } = {}) {
+      if (reset) {
+        currentTime = '1';
+        syncFactoryTimeRangeFromQuickFilter('1');
+        renderFactoryDateControl();
+      }
+      currentScenes = organizationFilter.selections.scene.length ? [...organizationFilter.selections.scene] : [SCENE_KEYS.all];
+      const selectedSeries = organizationFilter.options('model').filter(item => organizationFilter.selections.model.includes(item.value));
+      const demoSeriesKeys = { 'M8系列': 'M8', '向往S7': 'S7', 'GS8系列': 'GS8', 'E8': 'E8' };
+      currentModels = selectedSeries.map(item => item.meta === '传祺' ? (demoSeriesKeys[item.label] || item.label) : item.value);
+      currentModel = selectedSeries.length ? selectedSeries.map(item => item.label).join('、') : 'all';
+      currentBrand = organizationFilter.single('brand');
+      const scoped = sharedOrganizationDirectory.recordings.filter(organizationFilter.matches);
+      const uniqueValue = key => {
+        const values = [...new Set(scoped.map(record => record.dealer[key]))];
+        return values.length === 1 ? values[0] : 'all';
+      };
+      currentRegion = uniqueValue('area');
+      currentZone = uniqueValue('zone');
+      currentStore = uniqueValue('dealerName');
+      factorySelectedOrgPath = ['brand', 'region', 'zone', 'province', 'city', 'store', 'patroler', 'governor', 'advisor'].some(key => organizationFilter.selections[key].length)
+        ? organizationFilter.summary() : FACTORY_ALL_ORG_VALUE;
+      issueRuleAnalysisState.path = [];
+      sopAnalysisState.path = [];
+      updateOrgLabel();
+      applyGlobalFilter();
+    }
+  });
   updateOrgLabel();
-
-  if (window.__factoryDashboardOrgOutsideHandler) {
-    document.removeEventListener('click', window.__factoryDashboardOrgOutsideHandler, true);
-  }
-
-  window.__factoryDashboardOrgOutsideHandler = (event) => {
-    if (!factoryOrgMenuState.open) {
-      return;
-    }
-    const root = document.querySelector('[data-factory-org-root="true"]');
-    if (root && !root.contains(event.target)) {
-      factoryOrgMenuState.open = false;
-      factoryOrgMenuState.searchQuery = '';
-      factoryOrgMenuState.searchActive = false;
-      rerenderFactoryOrganizationControl();
-    }
-  };
-  document.addEventListener('click', window.__factoryDashboardOrgOutsideHandler, true);
 
   // ── 7b. 通用 Tab 筛选绑定器 ─────────────────────
   const bindGlobalFilter = (containerId, dataAttr, stateUpdater) => {
@@ -1302,62 +831,10 @@
   };
 
   const syncFactorySceneTabs = () => {
-    const sourceTabs = document.querySelectorAll('#gf-source .gf-tab');
-    const selection = getFactorySceneSelection();
-    const allowed = new Set(getAllowedScenes(currentSource));
-    const sceneSlot = document.getElementById('factorySceneFilterSlot');
-
-    sourceTabs.forEach((tab) => {
-      const isActive = tab.dataset.source === currentSource;
-      tab.classList.toggle('active', isActive);
-      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-
-    if (!sceneSlot) {
-      return;
-    }
-
-    const optionsMarkup = renderCheckboxFilterOptionsMarkup({
-      options: FACTORY_SCENE_FILTER_OPTIONS,
-      buttonClassName: 'factory-scene-filter-option factory-multi-select-option',
-      checkClassName: 'factory-multi-select-check',
-      textClassName: 'factory-multi-select-text',
-      getOptionMeta(option) {
-        const scene = option.value;
-        const isAll = scene === SCENE_KEYS.all;
-        const isAllowed = isAll || allowed.has(scene);
-        const isActive = isAll
-          ? selection.isAllSelected
-          : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
-        const isIndeterminate = isAll && !selection.isAllSelected && !selection.isNoneSelected;
-        const isHidden = isAll || !isAllowed;
-
-        return {
-          className: [
-            isActive ? 'active' : '',
-            isIndeterminate ? 'is-indeterminate' : '',
-            isHidden ? 'is-hidden' : '',
-            !isAllowed ? 'disabled' : ''
-          ].filter(Boolean).join(' '),
-          attrs: {
-            'data-scene': scene,
-            'aria-pressed': isActive ? 'true' : 'false',
-            'aria-checked': isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'),
-            'aria-hidden': isHidden ? 'true' : 'false',
-            tabindex: isHidden ? -1 : (isAllowed ? 0 : -1)
-          }
-        };
-      }
-    });
-
-    sceneSlot.innerHTML = renderInlineCheckboxFilterGroupMarkup({
-      rootClassName: 'gf-group store-filter-box session-toolbar-control session-toolbar-segment-control factory-toolbar-control-scene',
-      label: '业务场景',
-      labelClassName: 'gf-label',
-      tabsId: 'gf-scene',
-      tabsClassName: 'gf-tabs todo-filter-tabs factory-multi-select-tabs',
-      tabsAriaLabel: '业务场景',
-      optionsMarkup
+    document.querySelectorAll('#gf-source [data-source]').forEach(tab => {
+      const active = tab.dataset.source === currentSource;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-pressed', String(active));
     });
   };
 
@@ -1376,29 +853,6 @@
     currentScenes = setSourceSelection(currentSource);
     syncFactorySceneTabs();
     applyGlobalFilter();
-  });
-
-  document.getElementById('factorySceneFilterSlot')?.addEventListener('click', (event) => {
-    const tab = event.target.closest('[data-scene]');
-    if (!tab || tab.classList.contains('disabled') || tab.classList.contains('is-hidden')) return;
-    const nextScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
-    if (Array.isArray(nextScenes) && nextScenes.length === 0) return;
-    currentScenes = nextScenes;
-    syncFactorySceneTabs();
-    applyGlobalFilter();
-  });
-
-  bindGlobalFilter("gf-brand", "brand", val => {
-    const changed = currentBrand !== val;
-    currentBrand = val;
-    if (changed) {
-      applyFactoryOrgPath(FACTORY_ALL_ORG_VALUE);
-      factoryOrgMenuState.draftPath = FACTORY_ALL_ORG_VALUE;
-      factoryOrgMenuState.open = false;
-      factoryOrgMenuState.dimensionOpen = false;
-      factoryOrgMenuState.searchQuery = '';
-      rerenderFactoryOrganizationControl();
-    }
   });
 
   const shiftFactoryReferenceDate = (date, offsetDays) => {
@@ -1554,7 +1008,9 @@
       endLabel: formatFactoryDateDisplay(endDate),
       disablePrevMonth,
       disableNextMonth,
-      panelStyle: 'left: 0; right: auto;',
+      panelClassName: 'session-menu-panel session-menu-panel-date fo-date-panel',
+      title: '统计日期范围',
+      showCancel: false,
       cells: cells.map((date) => {
         if (!date) {
           return null;
@@ -1582,9 +1038,7 @@
       return;
     }
 
-    host.addEventListener('click', (event) => {
-      event.stopPropagation();
-    });
+    host.onclick = event => event.stopPropagation();
 
     host.querySelectorAll('[data-factory-date-trigger]').forEach((node) => {
       node.addEventListener('click', (event) => {
@@ -1655,25 +1109,26 @@
       return;
     }
 
-    if (currentTime !== 'custom') {
-      host.innerHTML = '';
-      return;
-    }
-
-    host.innerHTML = renderSharedDateRangeControlMarkup({
-      currentValue: currentTime,
+    host.classList.toggle('is-open', factoryDateState.open);
+    host.innerHTML = '<span>统计日期</span>' + renderSharedDateRangeControlMarkup({
+      currentValue: 'custom',
       customValue: 'custom',
       isOpen: factoryDateState.open,
       startLabel: formatFactoryDateDisplay(factoryTimeStartDate),
       endLabel: formatFactoryDateDisplay(factoryTimeEndDate),
       dataNamespace: 'factory-date',
-      rootClassName: 'store-date-root',
-      triggerClassName: 'session-date-trigger store-date-trigger',
+      rootClassName: 'fo-date-root',
+      triggerClassName: 'session-date-trigger',
       triggerLabel: '日期范围筛选',
       menuHtml: factoryDateState.open ? renderFactoryDateMenu() : ''
     });
 
     bindFactoryDateEvents();
+    const panel = host.querySelector('.fo-date-panel');
+    if (panel) {
+      const rect = panel.getBoundingClientRect();
+      panel.style.marginLeft = Math.min(0, window.innerWidth - 16 - rect.right) + 'px';
+    }
   }
 
   function closeFactoryDatePicker(shouldRender = true) {
@@ -1688,6 +1143,7 @@
   }
 
   function openFactoryDatePicker() {
+    organizationFilter.closeMenu();
     if (!factoryTimeStartDate || !factoryTimeEndDate) {
       syncFactoryTimeRangeFromQuickFilter('7');
     }
@@ -1716,84 +1172,15 @@
 
   syncFactoryTimeRangeFromQuickFilter(currentTime);
 
-  // 绑定时间筛选
-  bindGlobalFilter("gf-time", "time", val => {
-    currentTime = val;
-    if (val === 'custom') {
-      openFactoryDatePicker();
-    } else {
-      syncFactoryTimeRangeFromQuickFilter(val);
-      closeFactoryDatePicker(false);
-      renderFactoryDateControl();
-    }
-  });
-
-  const initFactoryModelDropdown = () => {
-    const trigger = document.getElementById('factory-model-trigger');
-    const panel = document.getElementById('factory-model-panel');
-    const display = document.getElementById('factory-model-display');
-    if (!trigger || !panel || !display) return;
-
-    const modelLabels = { all: '全部车系', M8: '传祺M8', S7: '传祺S7', GS8: '传祺GS8', E8: '传祺E8' };
-
-    const openDropdown = () => {
-      panel.classList.add('show');
-      trigger.classList.add('active');
-      trigger.setAttribute('aria-expanded', 'true');
-    };
-
-    const closeDropdown = () => {
-      panel.classList.remove('show');
-      trigger.classList.remove('active');
-      trigger.setAttribute('aria-expanded', 'false');
-    };
-
-    const selectModel = (model) => {
-      panel.querySelectorAll('.store-model-option').forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.model === model);
-      });
-      currentModel = model;
-      display.textContent = modelLabels[model] || model;
-      closeDropdown();
-      applyGlobalFilter();
-    };
-
-    trigger.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (panel.classList.contains('show')) {
-        closeDropdown();
-      } else {
-        openDropdown();
-      }
-    });
-
-    panel.addEventListener('click', (event) => {
-      const option = event.target.closest('.store-model-option');
-      if (option && option.dataset.model) {
-        selectModel(option.dataset.model);
-      }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!trigger.contains(event.target) && !panel.contains(event.target)) {
-        closeDropdown();
-      }
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeDropdown();
-    });
-  };
-  initFactoryModelDropdown();
+  factoryDateReady = true;
+  renderFactoryDateControl();
 
   document.addEventListener('click', (event) => {
     const root = document.querySelector('[data-factory-date-root="true"]');
-    const timeTabs = document.getElementById('gf-time');
     if (
       factoryDateState.open
       && root
       && !root.contains(event.target)
-      && !timeTabs?.contains(event.target)
     ) {
       closeFactoryDatePicker();
     }
@@ -3560,11 +2947,30 @@
       </div>
     </div>`;
 
+  const getSelectedModelTags = () => {
+    const datasets = currentModels.map(model => MODEL_TAG_DATA[model]).filter(Boolean);
+    if (!datasets.length) return null;
+    if (datasets.length === 1) return datasets[0];
+    const result = {};
+    ['positive', 'negative', 'neutral'].forEach(polarity => {
+      const tags = new Map();
+      datasets.forEach(dataset => (dataset[polarity] || []).forEach(tag => {
+        const previous = tags.get(tag.name);
+        tags.set(tag.name, previous ? {
+          ...previous, count: previous.count + tag.count,
+          recordings: [...(previous.recordings || []), ...(tag.recordings || [])]
+        } : { ...tag });
+      }));
+      result[polarity] = [...tags.values()].sort((a, b) => b.count - a.count);
+    });
+    return result;
+  };
+
   const renderProductInsightOverview = () => {
     const el = document.getElementById('product-insight-overview');
     if (!el) return;
 
-    const tags = MODEL_TAG_DATA[currentModel];
+    const tags = getSelectedModelTags();
     const focusItems = currentModel === 'all'
       ? [...PRODUCT_FOCUS_CLOUD]
       : [...(tags?.positive || PRODUCT_FOCUS_CLOUD)];
@@ -3617,7 +3023,7 @@
     const subEl = document.getElementById('product-cloud-sub');
     const primaryTitle = document.getElementById('product-primary-cloud-title');
     const secondaryTitle = document.getElementById('product-secondary-cloud-title');
-    const modelTags = MODEL_TAG_DATA[currentModel];
+    const modelTags = getSelectedModelTags();
 
     if (currentModel === 'all') {
       if (subEl) subEl.textContent = '本品关注车型词云 · 本品关注点词云 · 本品关注 TOP10';
@@ -3651,7 +3057,7 @@
     } else {
       if (titleEl) titleEl.textContent = `客户标签分布 · ${currentModel}`;
       if (subEl) subEl.textContent = '按正向、负向、中性标签查看客户关注内容';
-      const tags = MODEL_TAG_DATA[currentModel];
+      const tags = getSelectedModelTags();
       if (!tags) { body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--color-text-muted);font-size:var(--text-body)">暂无该车系标签数据</div>'; return; }
       const allTags = [...(tags.positive||[]), ...(tags.negative||[]), ...(tags.neutral||[])];
       const maxCount = Math.max(...allTags.map(t => t.count));
@@ -3947,7 +3353,7 @@
 
   const getCompeteRowsForCurrentModel = () => {
     if (currentModel === 'all') return [...COMPETE_TOP5].sort((a, b) => a.rank - b.rank);
-    const priority = MODEL_COMPETE_PRIORITY[currentModel] || [];
+    const priority = [...new Set(currentModels.flatMap(model => MODEL_COMPETE_PRIORITY[model] || []))];
     const priorityIndex = name => {
       const idx = priority.findIndex(p => p === name);
       return idx === -1 ? 999 : idx;
@@ -4814,7 +4220,7 @@
     rules.forEach(rule => {
       rows.push([
         organization,
-        currentBrand || '全部品牌',
+        organizationFilter.selections.brand.length ? organizationFilter.display('brand') : '全部品牌',
         currentModel === 'all' ? '全部车系' : currentModel,
         getIssueExportTimeLabel(),
         selectedScenes || '未选择',
@@ -5973,12 +5379,7 @@
   // ══════════════════════════════════════════════════
   const getFactoryScopedRecordings = () => {
     if (!sharedOrganizationDirectory?.recordings) return [];
-    return sharedOrganizationDirectory.recordings.filter((recording) => {
-      const brandMatch = currentBrand === 'all' || recording.dealer.brand === currentBrand;
-      const recordPath = sharedOrganizationDirectory.getRecordPath(recording, factoryOrgDimension, true);
-      const organizationMatch = factorySelectedOrgPath === FACTORY_ALL_ORG_VALUE || recordPath.startsWith(factorySelectedOrgPath);
-      return brandMatch && organizationMatch;
-    });
+    return sharedOrganizationDirectory.recordings.filter(organizationFilter.matches);
   };
 
   const syncFactorySharedKpiCounts = () => {
