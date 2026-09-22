@@ -1291,26 +1291,33 @@
     showToast.timer = global.setTimeout(function () { toast.classList.remove('is-visible'); }, 2200);
   }
 
-  function exportCurrent() {
-    var exporter = global.__xlsxExportUtils && global.__xlsxExportUtils.downloadXlsx;
+  async function exportCurrent() {
     var items = filteredRecords();
     var columns = visibleColumns(currentView);
-    if (!columns.length) {
-      showToast('请先在字段设置中至少显示一个字段');
-      return;
-    }
-    if (!exporter || !items.length) return;
+    var button = document.querySelector('[data-lr-export]');
+    if (!columns.length || !items.length || (button && button.disabled)) return;
+    var filters = Object.keys(state().selections).filter(function (key) { return selected(key).length; }).map(function (key) {
+      var options = currentOptions(key);
+      return { label: FILTER_LABELS[key] || key, value: selected(key).map(function (value) {
+        var item = options.find(function (option) { return option.value === value; });
+        return item ? item.label : value;
+      }).join('、') };
+    });
+    filters.push({ label: currentView === 'customers' ? '线索日期' : '统计日期', value: state().startDate + ' 至 ' + state().endDate });
+    if (state().leadIdQuery) filters.push({ label: '线索ID', value: state().leadIdQuery });
+    if (state().recordingCountQuery) filters.push({ label: '录音数', value: state().recordingCountQuery });
     var now = new Date();
     var stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0');
-    exporter({
-      filename: (currentView === 'customers' ? '客户聚合列表_' : '线索列表_') + stamp + '.xlsx',
-      sheetName: currentView === 'customers' ? '客户聚合列表' : '线索列表',
+    var name = currentView === 'customers' ? '客户聚合列表' : '线索列表';
+    var request = {
+      source: currentView, filename: name + '_' + stamp + '.xlsx', sheetName: name, filters: filters,
       columns: columns.map(function (item) { return { label: item.label, width: item.width }; }),
-      rows: items.map(function (item) {
-        return columns.map(function (column) { return displayValue(item, column.key, true); });
-      })
-    });
-    showToast('已导出 ' + items.length + ' 条数据');
+      rows: items.map(function (item) { return columns.map(function (column) { return displayValue(item, column.key, true); }); })
+    };
+    if (button) button.disabled = true;
+    try { await global.__exportReady; await global.ExportTaskUI.submit(request); }
+    catch (error) { showToast(error.message || '导出任务创建失败，请重试'); }
+    finally { if (button) button.disabled = !filteredRecords().length; }
   }
 
   function applyColumnSettings() {

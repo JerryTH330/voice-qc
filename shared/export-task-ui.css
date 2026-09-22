@@ -1,0 +1,5 @@
+.export-task-toast { position: fixed; z-index: 16000; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; max-width: min(720px, calc(100vw - 32px)); padding: 14px 18px; border: 1px solid #d9e2ef; border-radius: 12px; background: #fff; color: #162033; box-shadow: 0 8px 30px #16203324; font: 14px/1.5 Inter, 'PingFang SC', sans-serif; }
+.export-task-toast[hidden] { display: none; }
+.export-task-toast > span { overflow-wrap: anywhere; }
+.export-task-toast a { color: #2563eb; white-space: nowrap; font-weight: 600; }
+.export-task-toast button { border: 0; background: none; padding: 6px; cursor: pointer; font-size: 22px; color: #5c6e89; }

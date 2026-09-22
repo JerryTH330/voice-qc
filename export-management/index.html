@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>导出管理 · AI质检平台</title>
+  <link rel="icon" href="../assets/ds-logo.png">
+  <link rel="stylesheet" href="../voice-qc-admin.css?v=20260902-global-brand-v1">
+  <link rel="stylesheet" href="../shared/badge-list-components.css?v=20260910-settings-footer-pill-v1">
+  <link rel="stylesheet" href="./page.css?v=20260922-v1">
+</head>
+<body>
+  <div class="page-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../assets/ds-logo.png" alt="DS logo"></div><div class="brand-copy"><strong>AI质检与客户洞察</strong></div></div>
+      <div class="nav-scroll" data-unified-navigation aria-label="主导航"></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><h1 class="page-title">导出管理</h1><p class="page-desc">查看我的导出任务，文件自生成成功起保留 7 天</p></div></header>
+      <section class="card export-filters" aria-label="任务筛选">
+        <label>文件名称<input id="exportSearch" type="search" placeholder="搜索文件名称" autocomplete="off"></label>
+        <label>来源<select id="exportSource"><option value="">全部来源</option><option value="session">录音列表</option><option value="leads">线索列表</option><option value="customers">客户聚合列表</option><option value="badges">工牌明细</option></select></label>
+        <label>状态<select id="exportStatus"><option value="">全部状态</option><option value="queued">排队中</option><option value="running">导出中</option><option value="completed">已完成</option><option value="failed">失败</option><option value="expired">已过期</option></select></label>
+        <fieldset><legend>提交日期</legend><div class="export-dates"><input id="exportStart" type="date" aria-label="提交开始日期"><span>至</span><input id="exportEnd" type="date" aria-label="提交结束日期"></div></fieldset>
+        <button class="btn ghost" type="button" id="exportReset">重置</button>
+      </section>
+      <section class="card export-table-card">
+        <div class="table-headbar"><h2>导出任务</h2><div class="badge-detail-table-head-tools"><span class="session-filter-summary" id="exportCount">正在加载…</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action" type="button" id="exportRefresh"><span class="badge-detail-refresh-icon" aria-hidden="true"></span>刷新</button></div></div>
+        <p id="exportError" role="alert" hidden></p>
+        <div class="export-table-wrap"><table class="data-table"><thead><tr><th>文件名称</th><th>来源</th><th>状态</th><th>记录数</th><th>提交时间</th><th>完成时间</th><th>失效时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table></div>
+        <div class="export-empty" id="exportEmpty" hidden><span class="export-empty-icon" aria-hidden="true">↓</span><h3>暂无导出任务</h3><p>在录音列表、线索列表或工牌明细中点击导出，即可创建任务</p></div>
+        <footer class="export-pagination"><span id="exportTotal"></span><div><label>每页 <select id="exportPageSize"><option>10</option><option>20</option><option>50</option></select> 条</label><button class="btn ghost" id="exportPrevious" type="button" aria-label="上一页">‹</button><span id="exportPage"></span><button class="btn ghost" id="exportNext" type="button" aria-label="下一页">›</button></div></footer>
+      </section>
+    </main>
+  </div>
+  <dialog id="exportDetail" aria-labelledby="exportDetailTitle"><header><h2 id="exportDetailTitle">任务详情</h2><button type="button" class="export-close" data-close="exportDetail" aria-label="关闭任务详情">×</button></header><div id="exportDetailBody"></div><footer><button class="btn ghost" type="button" data-close="exportDetail">关闭</button></footer></dialog>
+  <dialog id="exportDelete" aria-labelledby="exportDeleteTitle"><header><h2 id="exportDeleteTitle">删除导出任务</h2><button type="button" class="export-close" data-close="exportDelete" aria-label="关闭删除确认">×</button></header><p id="exportDeleteName"></p><p class="export-muted">删除后，任务记录及关联文件将一并移除，无法恢复。</p><footer><button class="btn ghost" type="button" data-close="exportDelete">取消</button><button class="btn export-danger" type="button" id="exportConfirmDelete">删除</button></footer></dialog>
+  <script src="../unified-navigation-shell.js?v=20260922-export-v1"></script>
+  <script src="./page.js?v=20260922-v1"></script>
+</body>
+</html>

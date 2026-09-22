@@ -1,6 +1,16 @@
 (function initUnifiedNavigationShell() {
   const scriptUrl = new URL(document.currentScript?.src || './unified-navigation-shell.js', window.location.href);
   const appRootUrl = new URL('./', scriptUrl);
+  const exportStyle = document.createElement('link');
+  exportStyle.rel = 'stylesheet'; exportStyle.href = new URL('shared/export-task-ui.css?v=20260922-v1', appRootUrl).href;
+  document.head.appendChild(exportStyle);
+  window.__exportReady = ['device-management/xlsx-export-utils.js', 'shared/export-tasks.js', 'shared/export-task-browser.js'].reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = new URL(path + '?v=20260922-v1', appRootUrl).href;
+    script.onload = resolve; script.onerror = () => reject(new Error('导出功能加载失败，请刷新重试'));
+    document.body.appendChild(script);
+  })), Promise.resolve());
+  window.__exportReady.catch(error => console.error(error));
   const desktopShell = window.matchMedia('(min-width: 1101px)');
   const pageShell = document.querySelector('.page-shell');
   const navigationRoot = document.querySelector('[data-unified-navigation], .nav-scroll');
@@ -44,6 +54,7 @@
       { page: 'device-visits', route: 'visits', label: '到访明细', path: 'device-management/index.html#visits', icon: '<span class="nav-icon nav-device-symbol" aria-hidden="true">◫</span>' }
     ] },
     { label: '管理', items: [
+      { page: 'export-management', label: '导出管理', path: 'export-management/index.html', icon: icons.badgeOverview },
       { page: 'config', label: '质检配置', path: 'config/index.html', icon: icons.config },
       { page: 'system', label: '系统管理', path: 'system/index.html', icon: icons.system }
     ] }
@@ -80,6 +91,7 @@
     if (pathname.includes('/script-library/')) return 'script-library';
     if (pathname.includes('/session/')) return 'session';
     if (pathname.includes('/leads/')) return 'leads';
+    if (pathname.includes('/export-management/')) return 'export-management';
     if (pathname.includes('/config/')) return 'config';
     if (pathname.includes('/system/')) return 'system';
     return '';
@@ -168,6 +180,9 @@
     const button = event.target.closest('.nav-button');
     if (!button || !button.dataset.href) return;
 
+    if (button.dataset.page === 'export-management' || getCurrentNavigationPage() === 'export-management') {
+      event.preventDefault(); event.stopImmediatePropagation(); window.location.href = button.dataset.href; return;
+    }
     const isDevicePage = getCurrentNavigationPage().startsWith('device-');
     if (button.dataset.page?.startsWith('device-')) {
       if (isDevicePage) return;

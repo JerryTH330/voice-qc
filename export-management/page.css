@@ -1,0 +1,52 @@
+.main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.topbar { margin-bottom: 8px; }
+.export-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; padding: 20px; }
+.export-filters label, .export-filters fieldset { display: flex; flex-direction: column; gap: 8px; min-width: 140px; margin: 0; padding: 0; border: 0; color: #5c6e89; font-size: 13px; }
+.export-filters label:first-child { flex: 1; min-width: 190px; }
+.export-filters legend { margin-bottom: 8px; padding: 0; }
+.export-filters input, .export-filters select, .export-pagination select { height: 42px; border: 1px solid #d1dced; border-radius: 12px; padding: 0 12px; background: #fff; color: #162033; font: inherit; min-width: 0; }
+.export-filters input:focus-visible, .export-filters select:focus-visible, .export-pagination select:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.export-dates { display: flex; gap: 8px; align-items: center; }
+.export-filters .btn { min-height: 42px; }
+.export-table-card { padding: 0; overflow: hidden; flex: 1; min-height: 350px; display: flex; flex-direction: column; }
+.export-table-card .table-headbar { padding: 20px; display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+.export-table-card h2 { margin: 0; font-size: 18px; }
+.export-table-wrap { overflow: auto; flex: 1; }
+.export-table-wrap table { min-width: 1340px; width: 100%; border-collapse: collapse; }
+.export-table-wrap th, .export-table-wrap td { padding: 16px; white-space: nowrap; text-align: left; border-bottom: 1px solid #e5ecf5; font-size: 14px; }
+.export-table-wrap th { background: #f5f7fa; color: #5c6e89; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+.export-table-wrap th:last-child, .export-table-wrap td:last-child { position: sticky; right: 0; background: #fff; box-shadow: -8px 0 14px #16203305; min-width: 120px; }
+.export-table-wrap th:last-child { background: #edf3fb; z-index: 2; }
+.export-link { border: 0; padding: 4px 0; background: transparent; color: #2563eb; cursor: pointer; font: inherit; text-align: left; }
+.export-link:hover { text-decoration: underline; }
+.export-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; border-radius: 3px; }
+.export-name { max-width: 310px; display: block; overflow: hidden; text-overflow: ellipsis; }
+.export-actions { display: flex; gap: 18px; }
+.export-status { display: inline-flex; gap: 7px; align-items: center; font-size: 13px; }
+.export-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.export-status.queued { color: #937025; }.export-status.running { color: #2563eb; }.export-status.completed { color: #16835d; }.export-status.failed { color: #d14343; }.export-status.expired { color: #8490a3; }
+.export-muted { color: #6c7b91; }.export-link.danger { color: #cf3e3e; }
+.export-empty { text-align: center; padding: 64px 20px; color: #6c7b91; }
+.export-empty[hidden] { display: none; }
+.export-empty h3 { margin: 16px 0 8px; font-size: 16px; color: #334155; }
+.export-empty p { font-size: 14px; }
+.export-empty-icon { display: inline-grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: #eef4fc; font-size: 28px; color: #7397c9; }
+.export-pagination { padding: 16px 20px; border-top: 1px solid #e5ecf5; display: flex; justify-content: space-between; align-items: center; color: #5c6e89; font-size: 14px; }
+.export-pagination > div { display: flex; gap: 12px; align-items: center; }
+.export-pagination select { height: 36px; }
+.export-pagination .btn { min-width: 36px; padding: 6px 12px; }
+#exportError { color: #be3636; padding: 0 20px; }
+dialog { border: 1px solid #d9e2ef; border-radius: 20px; padding: 24px; color: #162033; width: min(640px, calc(100vw - 32px)); max-height: 85vh; box-shadow: 0 24px 80px #16203330; }
+dialog::backdrop { background: #16203350; }
+dialog header, dialog footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+dialog h2 { margin: 0; font-size: 20px; } dialog h3 { font-size: 15px; margin-top: 24px; }
+dialog footer { justify-content: flex-end; margin-top: 24px; }
+.export-close { border: 0; background: transparent; font: 28px/1 sans-serif; padding: 8px; cursor: pointer; color: #65758e; }
+#exportDelete { width: min(460px, calc(100vw - 32px)); }
+#exportDeleteName { overflow-wrap: anywhere; line-height: 1.6; }
+#exportDetailBody dl { display: grid; grid-template-columns: 100px minmax(0,1fr); gap: 12px; margin: 20px 0; font-size: 14px; line-height: 1.6; }
+#exportDetailBody dt { color: #6c7b91; } #exportDetailBody dd { margin: 0; overflow-wrap: anywhere; }
+.export-field-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style-position: inside; font-size: 13px; }
+.export-field-list li { background: #f2f6fb; border-radius: 6px; padding: 5px 9px; }
+.export-danger { background: #ce3e3e; color: #fff; border-color: #ce3e3e; }
+@media (max-width: 700px) { .export-filters { gap: 12px; } .export-filters label { flex: 1; } .export-filters input, .export-filters select { font-size: 16px; } .export-dates input { width: 135px; } .export-pagination { flex-wrap: wrap; gap: 12px; } }

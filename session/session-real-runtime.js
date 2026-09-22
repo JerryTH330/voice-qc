@@ -1629,31 +1629,33 @@
     bindEvents();
   }
 
-  function exportRecords() {
-    var exportRecordsList = getFilteredRecords();
-    var exportButton = document.querySelector('[data-sr-export]');
-    if (!exportRecordsList.length || (exportButton && exportButton.disabled)) return;
-    var exporter = global.__xlsxExportUtils;
-    if (!exporter || typeof exporter.downloadXlsx !== 'function') {
-      showToast('Excel 导出功能加载失败，请刷新页面后重试');
-      return;
-    }
-    var visible = visibleColumns();
+  async function exportRecords() {
+    var items = getFilteredRecords();
+    var button = document.querySelector('[data-sr-export]');
+    var columns = visibleColumns();
+    if (!items.length || !columns.length || (button && button.disabled)) return;
+    var filters = Object.keys(state.selections).filter(function (key) { return selected(key).length; }).map(function (key) {
+      var options = currentValueOptions(key);
+      return { label: getFilterLabel(key), value: selected(key).map(function (value) {
+        var item = options.find(function (option) { return option.value === value; });
+        return item ? item.label : value;
+      }).join('、') };
+    });
+    var queryLabels = { audioId: '录音ID', leadId: '线索ID', advisorPhone: '顾问号码', customerKeyword: '客户关键词', customerName: '客户名称', customerPhone: '客户号码' };
+    Object.keys(state.queries).forEach(function (key) { if (state.queries[key]) filters.push({ label: queryLabels[key], value: state.queries[key] }); });
+    filters.push({ label: '录音日期', value: state.startDate + ' 至 ' + state.endDate });
     var now = new Date();
     var pad = function (value) { return String(value).padStart(2, '0'); };
-    var filename = '录音列表_' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '_' + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + '.xlsx';
-    try {
-      exporter.downloadXlsx({
-        filename: filename,
-        sheetName: '录音列表',
-        columns: visible.map(function (column) { return { label: column.label, width: column.width }; }),
-        rows: exportRecordsList.map(function (record) { return visible.map(function (column) { return cellValue(record, column.key); }); })
-      });
-      showToast('已导出 ' + exportRecordsList.length + ' 条录音');
-    } catch (error) {
-      console.error('Session export failed', error);
-      showToast('导出失败，请稍后重试');
-    }
+    var request = {
+      source: 'session', filename: '录音列表_' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '_' + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + '.xlsx',
+      sheetName: '录音列表', filters: filters,
+      columns: columns.map(function (column) { return { label: column.label, width: column.width }; }),
+      rows: items.map(function (record) { return columns.map(function (column) { return cellValue(record, column.key); }); })
+    };
+    if (button) button.disabled = true;
+    try { await global.__exportReady; await global.ExportTaskUI.submit(request); }
+    catch (error) { showToast(error.message || '导出任务创建失败，请重试'); }
+    finally { if (button) button.disabled = !getFilteredRecords().length; }
   }
 
   function refreshRecords() {

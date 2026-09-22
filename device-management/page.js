@@ -3453,27 +3453,33 @@ function getBadgeExportTimestamp(date = new Date()) {
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 }
 
-function exportBadgeDetailExcel() {
+async function exportBadgeDetailExcel() {
   const records = getFilteredBadgeRecords();
-  if (!records.length || badgeDetailExportButton?.disabled) return;
-  const visibleFields = getVisibleBadgeFields();
-  const exporter = globalThis.__xlsxExportUtils;
-  if (!exporter?.downloadXlsx) {
-    showToast('Excel 导出功能加载失败，请刷新页面后重试');
-    return;
-  }
-  try {
-    exporter.downloadXlsx({
-      filename: `工牌明细_${getBadgeExportTimestamp()}.xlsx`,
-      sheetName: '工牌明细',
-      columns: visibleFields.map((field) => ({ label: field.label, width: getBadgeExportColumnWidth(field) })),
-      rows: records.map((item) => visibleFields.map((field) => getBadgeExportCellValue(item, field)))
-    });
-    showToast(`已导出 ${records.length.toLocaleString('zh-CN')} 条工牌明细`);
-  } catch (error) {
-    console.error('Excel export failed', error);
-    showToast('导出失败，请稍后重试');
-  }
+  const fields = getVisibleBadgeFields();
+  if (!records.length || !fields.length || badgeDetailExportButton?.disabled) return;
+  const filters = [];
+  getVisibleBadgeFilterFields().forEach(field => {
+    let value = '';
+    if (field.filterType === 'text') value = badgeFilterState[field.queryKey] || '';
+    else if (field.minKey) {
+      const min = badgeFilterState[field.minKey], max = badgeFilterState[field.maxKey];
+      if (min || max) value = `${min || '不限'} 至 ${max || '不限'}${field.unit || ''}`;
+    } else {
+      value = getBadgeSelectedValuesFromValue(badgeFilterState[field.key]).map(item => getBadgeFieldOptionLabel(field.key, item)).join('、');
+    }
+    if (value) filters.push({ label: field.label, value });
+  });
+  if (badgeFilterState.advisorIds.length) filters.push({ label: '顾问', value: badgeFilterState.advisorIds.map(id => badgeDetailRecords.find(item => String(item.advisorId) === String(id))?.advisorName || id).join('、') });
+  if (storeDrilldownState.active) filters.push({ label: '当前门店', value: storeDrilldownState.storeName });
+  const request = {
+    source: 'badges', filename: `工牌明细_${getBadgeExportTimestamp()}.xlsx`, sheetName: '工牌明细', filters,
+    columns: fields.map(field => ({ label: field.label, width: getBadgeExportColumnWidth(field) })),
+    rows: records.map(item => fields.map(field => getBadgeExportCellValue(item, field)))
+  };
+  if (badgeDetailExportButton) badgeDetailExportButton.disabled = true;
+  try { await window.__exportReady; await window.ExportTaskUI.submit(request); }
+  catch (error) { showToast(error.message || '导出任务创建失败，请重试'); }
+  finally { if (badgeDetailExportButton) badgeDetailExportButton.disabled = !getFilteredBadgeRecords().length; }
 }
 
 function refreshBadgeDetailData() {

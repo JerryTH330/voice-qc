@@ -1,0 +1,37 @@
+<!DOCTYPE html><html lang="zh-CN"><meta charset="utf-8"><title>导出任务验收数据</title>
+<h1>导出任务验收数据</h1><p>仅用于本地验收。创建带“验收示例”前缀的成功、失败、过期和他人任务，不修改已有任务。</p>
+<button id="create">创建验收示例</button><button id="cleanup">清理验收示例</button><a href="../export-management/index.html">打开导出管理</a><pre id="result" role="status"></pre>
+<script src="../device-management/xlsx-export-utils.js"></script><script src="../shared/export-tasks.js"></script>
+<script>
+const output = document.getElementById('result');
+async function database() {
+  return new Promise((resolve, reject) => { const request = indexedDB.open('aiqc-export-tasks-v1', 1); request.onupgradeneeded = () => request.result.createObjectStore('tasks', { keyPath: 'id' }); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+}
+async function write(tasks, cleanup = false) {
+  const db = await database();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('tasks', 'readwrite'), table = tx.objectStore('tasks');
+    if (cleanup) { const request = table.getAll(); request.onsuccess = () => request.result.filter(task => task.filename.startsWith('验收示例_')).forEach(task => table.delete(task.id)); }
+    else tasks.forEach(task => table.put(task));
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  }); db.close();
+}
+document.getElementById('create').onclick = async () => {
+  try {
+    const tasks = []; let time = Date.now() - 8 * 86400000;
+    const store = { update: async action => action(tasks) };
+    const service = ExportTasks.createService({ store, userId: 'prototype-current-user', now: () => time, buildFile: window.__xlsxExportUtils.createXlsxBytes });
+    const input = name => ({ source: 'leads', filename: `验收示例_${name}.xlsx`, sheetName: '线索列表', columns: [{ label: '客户名称' }, { label: '品牌' }], rows: [['验收客户', '埃安']], filters: [{ label: '品牌', value: '埃安' }] });
+    await service.submit(input('已过期')); time += 1000; await service.advance(); time += 4000; await service.advance();
+    time = Date.now();
+    const failure = ExportTasks.createService({ store, userId: 'prototype-current-user', now: () => time, buildFile: () => { throw new Error('验收示例：文件生成失败'); } });
+    await failure.submit(input('失败')); time += 1000; await failure.advance(); time += 4000; await failure.advance();
+    await service.submit(input('已完成')); time += 1000; await service.advance(); time += 4000; await service.advance();
+    const other = ExportTasks.createService({ store, userId: 'prototype-other-user', now: () => time, buildFile: window.__xlsxExportUtils.createXlsxBytes });
+    await other.submit(input('其他用户不可见'));
+    tasks.forEach(task => { task.notified = true; });
+    await write(tasks); output.textContent = `已创建 ${tasks.length} 个示例；管理页应仅显示本人的 3 个。`;
+  } catch (error) { output.textContent = error.message; }
+};
+document.getElementById('cleanup').onclick = async () => { try { await write([], true); output.textContent = '验收示例已清理'; } catch (error) { output.textContent = error.message; } };
+</script></html>
