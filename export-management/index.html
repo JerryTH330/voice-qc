@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>导出管理 · AI质检平台</title>
   <link rel="icon" href="../assets/ds-logo.png">
-  <link rel="stylesheet" href="../voice-qc-admin.css?v=20260902-global-brand-v1">
-  <link rel="stylesheet" href="../shared/badge-list-components.css?v=20260910-settings-footer-pill-v1">
-  <link rel="stylesheet" href="./page.css?v=20260922-v1">
+  <link rel="stylesheet" href="../voice-qc-admin.css?v=20260923-close-icon-v1">
+  <link rel="stylesheet" href="../shared/badge-list-components.css?v=20260922-empty-typography-v2">
+  <link rel="stylesheet" href="./page.css?v=20260924-footer-weight-v1">
+  <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1">
 </head>
 <body>
   <div class="page-shell">
@@ -17,25 +18,37 @@
     </aside>
     <main class="main">
       <header class="topbar"><div><h1 class="page-title">导出管理</h1><p class="page-desc">查看我的导出任务，文件自生成成功起保留 7 天</p></div></header>
-      <section class="card export-filters" aria-label="任务筛选">
-        <label>文件名称<input id="exportSearch" type="search" placeholder="搜索文件名称" autocomplete="off"></label>
-        <label>来源<select id="exportSource"><option value="">全部来源</option><option value="session">录音列表</option><option value="leads">线索列表</option><option value="customers">客户聚合列表</option><option value="badges">工牌明细</option></select></label>
-        <label>状态<select id="exportStatus"><option value="">全部状态</option><option value="queued">排队中</option><option value="running">导出中</option><option value="completed">已完成</option><option value="failed">失败</option><option value="expired">已过期</option></select></label>
-        <fieldset><legend>提交日期</legend><div class="export-dates"><input id="exportStart" type="date" aria-label="提交开始日期"><span>至</span><input id="exportEnd" type="date" aria-label="提交结束日期"></div></fieldset>
-        <button class="btn ghost" type="button" id="exportReset">重置</button>
+      <section class="card badge-session-filter-card export-filters" aria-label="任务筛选">
+        <label class="badge-field-filter"><span>文件名称</span><input id="exportSearch" type="search" placeholder="搜索文件名称" autocomplete="off"></label>
+        <div class="badge-field-filter badge-field-filter-select export-select" data-select="exportSource"><span>来源</span><input id="exportSource" type="hidden" value=""><button type="button" class="session-select-trigger" aria-label="来源筛选" aria-haspopup="listbox" aria-expanded="false" aria-controls="exportSourceMenu"><strong>全部来源</strong><span class="session-select-caret" aria-hidden="true"></span></button><div id="exportSourceMenu" class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="来源" hidden></div></div>
+        <div class="badge-field-filter badge-field-filter-select export-select" data-select="exportStatus"><span>状态</span><input id="exportStatus" type="hidden" value=""><button type="button" class="session-select-trigger" aria-label="状态筛选" aria-haspopup="listbox" aria-expanded="false" aria-controls="exportStatusMenu"><strong>全部状态</strong><span class="session-select-caret" aria-hidden="true"></span></button><div id="exportStatusMenu" class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="状态" hidden></div></div>
+        <div class="badge-field-filter badge-field-filter-date-time export-date-control"><span>提交日期</span><input id="exportStart" type="hidden"><input id="exportEnd" type="hidden"><button id="exportDateTrigger" type="button" class="session-date-trigger" aria-label="提交日期筛选" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportDateMenu"><strong>不限日期</strong><span class="session-date-icon" aria-hidden="true"></span></button><div id="exportDateMenu" class="session-menu-panel session-menu-panel-date" role="dialog" aria-label="提交日期范围" hidden></div></div>
+        <button class="btn ghost session-reset-btn" type="button" id="exportReset">重置</button>
       </section>
-      <section class="card export-table-card">
-        <div class="table-headbar"><h2>导出任务</h2><div class="badge-detail-table-head-tools"><span class="session-filter-summary" id="exportCount">正在加载…</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action" type="button" id="exportRefresh"><span class="badge-detail-refresh-icon" aria-hidden="true"></span>刷新</button></div></div>
+      <section class="card badge-detail-table-card export-table-card">
+        <div class="table-headbar session-list-table-headbar"><h2>导出任务</h2><div class="badge-detail-table-head-tools"><span class="session-filter-summary" id="exportCount">正在加载…</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" id="exportRefresh" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button></div></div>
         <p id="exportError" role="alert" hidden></p>
-        <div class="export-table-wrap"><table class="data-table"><thead><tr><th>文件名称</th><th>来源</th><th>状态</th><th>记录数</th><th>提交时间</th><th>完成时间</th><th>失效时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table></div>
-        <div class="export-empty" id="exportEmpty" hidden><span class="export-empty-icon" aria-hidden="true">↓</span><h3>暂无导出任务</h3><p>在录音列表、线索列表或工牌明细中点击导出，即可创建任务</p></div>
-        <footer class="export-pagination"><span id="exportTotal"></span><div><label>每页 <select id="exportPageSize"><option>10</option><option>20</option><option>50</option></select> 条</label><button class="btn ghost" id="exportPrevious" type="button" aria-label="上一页">‹</button><span id="exportPage"></span><button class="btn ghost" id="exportNext" type="button" aria-label="下一页">›</button></div></footer>
+        <div class="badge-list-table-wrap export-table-wrap"><table class="data-table badge-data-table"><thead><tr><th>文件名称</th><th>来源</th><th>状态</th><th>记录数</th><th>提交时间</th><th>完成时间</th><th>失效时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table>
+        <div class="export-empty" id="exportEmpty" hidden><svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true">
+          <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" />
+          <path d="M56 23a10 10 0 0 1 10-10h44l17 17v63a10 10 0 0 1-10 10H66a10 10 0 0 1-10-10V23Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" />
+          <path d="M110 13v17h17" fill="#E8F0FC" stroke="#CAD7EA" stroke-width="3" stroke-linejoin="round" />
+          <path d="M72 44h37M72 57h25" stroke="#B7C6DB" stroke-width="5" stroke-linecap="round" />
+          <path d="M46 88v16a9 9 0 0 0 9 9h70a9 9 0 0 0 9-9V88" fill="#EEF5FF" stroke="#8EAFE9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M90 71v28m-11-11 11 11 11-11" stroke="#5B8DEF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg><h3 class="badge-list-empty-title">暂无导出任务</h3><p class="badge-list-empty-description">在录音列表、线索列表或工牌明细中点击导出，即可创建任务</p></div></div>
+        <footer class="session-pagination"><div class="dashboard-pagination"><span class="session-pagination-total" id="exportTotal"></span><div class="dashboard-pagination-controls">
+          <div class="page-select page-size-select export-select" data-select="exportPageSize"><input id="exportPageSize" type="hidden" value="10"><button type="button" class="page-size-trigger" aria-label="每页条数" aria-haspopup="listbox" aria-expanded="false" aria-controls="exportPageSizeMenu"><span>10 条/页</span></button><div id="exportPageSizeMenu" class="custom-select-options page-size-options" role="listbox" aria-label="每页条数" hidden></div></div>
+          <div class="page-group"><button class="page-arrow" id="exportPrevious" type="button" aria-label="上一页">‹</button><span class="page-group" id="exportPage"></span><button class="page-arrow" id="exportNext" type="button" aria-label="下一页">›</button></div>
+          <div class="page-group page-jump-group"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input id="exportJump" type="number" min="1" value="1" aria-label="跳转页码"></label><span class="session-page-jump-suffix">页</span></div>
+        </div></div></footer>
       </section>
     </main>
   </div>
-  <dialog id="exportDetail" aria-labelledby="exportDetailTitle"><header><h2 id="exportDetailTitle">任务详情</h2><button type="button" class="export-close" data-close="exportDetail" aria-label="关闭任务详情">×</button></header><div id="exportDetailBody"></div><footer><button class="btn ghost" type="button" data-close="exportDetail">关闭</button></footer></dialog>
-  <dialog id="exportDelete" aria-labelledby="exportDeleteTitle"><header><h2 id="exportDeleteTitle">删除导出任务</h2><button type="button" class="export-close" data-close="exportDelete" aria-label="关闭删除确认">×</button></header><p id="exportDeleteName"></p><p class="export-muted">删除后，任务记录及关联文件将一并移除，无法恢复。</p><footer><button class="btn ghost" type="button" data-close="exportDelete">取消</button><button class="btn export-danger" type="button" id="exportConfirmDelete">删除</button></footer></dialog>
-  <script src="../unified-navigation-shell.js?v=20260922-export-v1"></script>
-  <script src="./page.js?v=20260922-v1"></script>
+  <dialog id="exportDetail" class="export-detail-drawer" aria-labelledby="exportDetailTitle" aria-describedby="exportDetailSubtitle"><header><div><h2 id="exportDetailTitle">文件摘要</h2><p id="exportDetailSubtitle">查看导出任务状态、提交条件和导出字段</p></div><button type="button" class="export-close platform-close-icon" data-close="exportDetail" aria-label="关闭任务详情抽屉"></button></header><div id="exportDetailBody"></div><footer class="export-detail-footer"><p><svg class="export-detail-icon export-detail-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg><span id="exportDetailNote"></span></p><button id="exportDetailDownload" class="btn btn-primary" type="button" aria-busy="false" disabled><svg class="export-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 11l5 5 5 -5M12 4v12"/></svg><span>下载文件</span></button></footer></dialog>
+  <dialog id="exportDelete" aria-labelledby="exportDeleteTitle"><header><h2 id="exportDeleteTitle">删除导出任务</h2><button type="button" class="export-close platform-close-icon" data-close="exportDelete" aria-label="关闭删除确认"></button></header><div class="export-dialog-body"><p id="exportDeleteName"></p><p class="export-muted">删除后，任务记录及关联文件将一并移除，无法恢复。</p></div><footer><button class="btn ghost" type="button" data-close="exportDelete">取消</button><button class="btn export-danger" type="button" id="exportConfirmDelete">删除</button></footer></dialog>
+  <script src="../unified-navigation-shell.js?v=20260923-platform-toast-v4"></script>
+  <script src="./page.js?v=20260924-completed-footer-v1"></script>
+  <script src="../fixed-action-column.js?v=20260923-export-wrap-v2"></script>
 </body>
 </html>

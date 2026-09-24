@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var WRAPPER_SELECTOR = '.table-wrap, .table-scroll, .hot-distribution-table-wrap';
+  var WRAPPER_SELECTOR = '.table-wrap, .table-scroll, .hot-distribution-table-wrap, .export-table-wrap';
   var SCROLL_CLASS = 'action-column-scroll';
   var FIXED_CLASS = 'has-fixed-action-column';
   var SHADOW_CLASS = 'has-action-column-shadow';

@@ -127,8 +127,10 @@
 }
 .badge-list-empty-state[hidden] { display: none; }
 .badge-list-empty-illustration { width: 144px; height: auto; margin-bottom: 18px; }
-.badge-list-empty-state strong { color: #8A96A8; font-size: 16px; font-weight: 600; line-height: 1.5; }
-.badge-list-empty-state p { margin: 6px 0 0; color: #435168; font-size: 14px; line-height: 1.5; }
+.badge-list-empty-state strong,
+.badge-list-empty-title { margin: 0; color: #8A96A8; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.badge-list-empty-state p,
+.badge-list-empty-description { margin: 6px 0 0; color: #435168; font-size: 14px; line-height: 1.5; }
 .badge-data-table { min-width: 2520px; border-collapse: separate; border-spacing: 0; }
 .badge-data-table > thead > tr > th {
   height: auto;

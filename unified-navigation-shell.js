@@ -1,12 +1,67 @@
 (function initUnifiedNavigationShell() {
   const scriptUrl = new URL(document.currentScript?.src || './unified-navigation-shell.js', window.location.href);
   const appRootUrl = new URL('./', scriptUrl);
-  const exportStyle = document.createElement('link');
-  exportStyle.rel = 'stylesheet'; exportStyle.href = new URL('shared/export-task-ui.css?v=20260922-v1', appRootUrl).href;
-  document.head.appendChild(exportStyle);
-  window.__exportReady = ['device-management/xlsx-export-utils.js', 'shared/export-tasks.js', 'shared/export-task-browser.js'].reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {
+  const toastStyle = document.createElement('link');
+  toastStyle.rel = 'stylesheet'; toastStyle.href = new URL('shared/platform-toast.css?v=20260923-shadow-gutter-v4', appRootUrl).href;
+  document.head.appendChild(toastStyle);
+  const toastIcons = {
+    success: '<circle cx="10" cy="10" r="7.5"/><path d="m6.5 10 2.3 2.3 4.7-4.7"/>',
+    error: '<circle cx="10" cy="10" r="7.5"/><path d="M10 6v4.5"/><circle cx="10" cy="13.5" r=".75" fill="currentColor" stroke="none"/>',
+    info: '<circle cx="10" cy="10" r="7.5"/><path d="M10 9v4"/><circle cx="10" cy="6.5" r=".75" fill="currentColor" stroke="none"/>'
+  };
+  function getToastStack() {
+    let stack = document.querySelector('.platform-toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'platform-toast-stack';
+      document.body.appendChild(stack);
+    }
+    return stack;
+  }
+  window.PlatformToast = {
+    show(message, { kind = 'info', duration = 2200, action, dismissible = false } = {}) {
+      const toast = document.createElement('div');
+      const type = Object.hasOwn(toastIcons, kind) ? kind : 'info';
+      toast.className = 'platform-toast';
+      toast.dataset.kind = type;
+      toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+      const icon = document.createElement('span');
+      icon.className = 'platform-toast-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${toastIcons[type]}</svg>`;
+      const copy = document.createElement('span');
+      copy.className = 'platform-toast-message';
+      copy.textContent = message;
+      toast.append(icon, copy);
+      if (action) {
+        const link = document.createElement('a');
+        link.className = 'platform-toast-action';
+        link.textContent = action.label;
+        link.href = action.href;
+        toast.appendChild(link);
+      }
+      if (dismissible) {
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'platform-toast-close';
+        close.setAttribute('aria-label', '关闭提示');
+        close.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg>';
+        close.addEventListener('click', () => toast.remove());
+        toast.appendChild(close);
+      }
+      getToastStack().appendChild(toast);
+      if (duration > 0) window.setTimeout(() => toast.remove(), duration);
+      return toast;
+    }
+  };
+  const exportScriptVersions = {
+    'device-management/xlsx-export-utils.js': '20260922-v1',
+    'shared/export-tasks.js': '20260923-demo-seed-v3',
+    'shared/export-task-browser.js': '20260923-platform-toast-v1'
+  };
+  window.__exportReady = Object.keys(exportScriptVersions).reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = new URL(path + '?v=20260922-v1', appRootUrl).href;
+    script.src = new URL(`${path}?v=${exportScriptVersions[path]}`, appRootUrl).href;
     script.onload = resolve; script.onerror = () => reject(new Error('导出功能加载失败，请刷新重试'));
     document.body.appendChild(script);
   })), Promise.resolve());

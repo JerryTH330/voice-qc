@@ -37,22 +37,14 @@
     }
   };
   const service = ExportTasks.createService({ store, userId: 'prototype-current-user', buildFile: window.__xlsxExportUtils.createXlsxBytes });
-  let toast, closeTimer, busy = false, lastError = '';
-  function notify(message, id) {
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'export-task-toast'; toast.setAttribute('role', 'status');
-      document.body.appendChild(toast);
-    }
-    toast.replaceChildren();
-    const text = document.createElement('span'); text.textContent = message; toast.appendChild(text);
-    if (id) {
-      const link = document.createElement('a'); link.textContent = '查看任务';
-      link.href = managerUrl.href + '?task=' + encodeURIComponent(id); toast.appendChild(link);
-    }
-    const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', '关闭提示');
-    close.onclick = () => { toast.hidden = true; }; toast.appendChild(close);
-    toast.hidden = false; clearTimeout(closeTimer); closeTimer = setTimeout(() => { toast.hidden = true; }, 10000);
+  let busy = false, lastError = '';
+  function notify(message, id, kind = 'info') {
+    window.PlatformToast.show(message, {
+      kind,
+      duration: 10000,
+      action: id ? { label: '查看任务', href: managerUrl.href + '?task=' + encodeURIComponent(id) } : undefined,
+      dismissible: true
+    });
   }
   async function tick() {
     if (busy || document.hidden) return;
@@ -62,19 +54,19 @@
       const notices = await service.takeNotices();
       if (notices.length) {
         const item = notices[0];
-        notify(notices.length > 1 ? `${notices.length} 个导出任务已处理，请查看结果` : `${item.filename}：${ExportTasks.statuses[item.status]}`, item.id);
+        notify(notices.length > 1 ? `${notices.length} 个导出任务已处理，请查看结果` : `${item.filename}：${ExportTasks.statuses[item.status]}`, item.id, notices.length > 1 ? 'info' : item.status === 'completed' ? 'success' : 'error');
       }
       window.dispatchEvent(new Event('export-tasks-changed'));
       lastError = '';
     } catch (error) {
-      if (lastError !== error.message) { notify(error.message); lastError = error.message; }
+      if (lastError !== error.message) { notify(error.message, null, 'error'); lastError = error.message; }
     } finally { busy = false; }
   }
   window.ExportTaskUI = {
     service, notify,
     async submit(request) {
       const task = await service.submit(request);
-      notify('导出任务已创建', task.id);
+      notify('导出任务已创建', task.id, 'success');
       window.dispatchEvent(new Event('export-tasks-changed'));
       return task;
     },
