@@ -65,14 +65,29 @@
     return '';
   }
 
-  function createModel(dealers, records) {
+  function createModel(dealers, records, { mode = 'visits', getAdvisorRecords = () => records } = {}) {
     const directory = dealers.map(organizationRecord);
     const draft = defaults();
     const applied = defaults();
-    const sourceFor = (key) => key === 'advisor' ? records : directory;
-    const labelFor = (key, id) => sourceFor(key).find((item) => valueOf(item, key) === id)?.[fields[key].nameKey] || '—';
+    const storeLinkedPersonnel = mode === 'matching';
+    const sourceFor = (key) => key === 'advisor' ? getAdvisorRecords() : directory;
+    const labelFor = (key, id) => (key === 'advisor' ? records : directory).find((item) => valueOf(item, key) === id)?.[fields[key].nameKey] || '—';
+    const dependenciesFor = (key) => {
+      if (!storeLinkedPersonnel) return dependencies[key];
+      if (key === 'province') return [];
+      if (key === 'city') return ['province'];
+      if (['patroler', 'governor', 'advisor'].includes(key)) return ['store'];
+      if (key === 'store') return [...dimensionKeys(draft.dimensionMode).filter((item) => item !== 'store'), 'patroler', 'governor'];
+      return dependencies[key];
+    };
     const matchesFields = (record, keys, state) => keys.every((key) => !state[key].length || state[key].includes(valueOf(record, key)));
-    const candidateRecords = (key, keys = dependencies[key]) => sourceFor(key).filter((record) => matchesFields(record, keys, draft));
+    const candidateRecords = (key, keys = dependenciesFor(key)) => {
+      const advisorStores = storeLinkedPersonnel && key === 'store' && draft.advisor.length
+        ? new Set(getAdvisorRecords().filter((record) => draft.advisor.includes(valueOf(record, 'advisor'))).map((record) => valueOf(record, 'store')))
+        : null;
+      return sourceFor(key).filter((record) => matchesFields(record, keys, draft)
+        && (!advisorStores || advisorStores.has(valueOf(record, 'store'))));
+    };
 
     function options(key, { query = '', pinnedIds = draft[key] } = {}) {
       const candidates = new Map();
@@ -95,7 +110,7 @@
           || left.label.localeCompare(right.label, 'zh-CN') || left.value.localeCompare(right.value, 'zh-CN'));
     }
 
-    function prune(key, keys = dependencies[key]) {
+    function prune(key, keys = dependenciesFor(key)) {
       const validIds = new Set(candidateRecords(key, keys).map((record) => valueOf(record, key)));
       const removed = draft[key].filter((id) => !validIds.has(id));
       draft[key] = draft[key].filter((id) => validIds.has(id));
@@ -106,9 +121,15 @@
       const available = new Set(candidateRecords(key).map((record) => valueOf(record, key)).filter(Boolean));
       draft[key] = [...new Set(values.map(String))].filter((id) => available.has(id));
       const removed = [];
-      chains.filter((chain) => chain.includes(key)).forEach((chain) => {
+      const activeChains = storeLinkedPersonnel ? [['brand', 'region', 'zone'], ['province', 'city']] : chains;
+      activeChains.filter((chain) => chain.includes(key)).forEach((chain) => {
         chain.slice(chain.indexOf(key) + 1).forEach((child) => removed.push(...prune(child, chain.slice(0, chain.indexOf(child)))));
       });
+      if (storeLinkedPersonnel) {
+        if (dependenciesFor('store').includes(key) || key === 'advisor') removed.push(...prune('store'));
+        if (key === 'store') ['patroler', 'governor', 'advisor'].forEach((child) => removed.push(...prune(child)));
+        return removed;
+      }
       if (key === 'brand') ['patroler', 'governor'].forEach((child) => removed.push(...prune(child)));
       if (dependencies.store.includes(key)) removed.push(...prune('store'));
       if (key === 'store' || dependencies.advisor.includes(key)) removed.push(...prune('advisor'));
@@ -120,7 +141,7 @@
       (mode === 'geography' ? ['region', 'zone'] : ['province', 'city']).forEach((key) => { draft[key] = []; });
       draft.store = [];
       draft.dimensionMode = mode;
-      prune('advisor');
+      if (!storeLinkedPersonnel) prune('advisor');
     }
 
     return {

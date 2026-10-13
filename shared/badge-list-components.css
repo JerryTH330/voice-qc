@@ -1,6 +1,4 @@
 /* 工牌明细与录音列表共用的列表组件；尺寸、颜色和交互状态以工牌明细为准。 */
-.badge-list-toast { position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 20px); padding: 10px 16px; color: #fff; background: rgba(21,31,49,.92); border-radius: 7px; box-shadow: 0 8px 24px rgba(13,23,43,.2); z-index: 200; opacity: 0; pointer-events: none; transition: .2s ease; font-size: 14px; }
-.badge-list-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .badge-session-filter-card, .badge-detail-table-card, .badge-field-settings-drawer, .badge-field-settings-action {
   --text: #172033; --muted: #68758a; --line: #e7ebf2; --blue-dark: #1d4ed8;
   color: var(--text); font-size: 14px;
@@ -678,7 +676,7 @@ body.badge-field-settings-dragging { user-select: none; cursor: grabbing; }
   .badge-session-filter-card :is(#sessionFilterControls, #sessionRealFilterControls).is-collapsed { display: block; }
   .badge-session-filter-card :is(#sessionFilterControls, #sessionRealFilterControls).is-collapsed .badge-dynamic-filter-actions { margin-top: 14px; }
   .badge-dynamic-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .badge-detail-table-card .session-list-table-headbar { align-items: flex-start; flex-wrap: wrap; }
+  .badge-detail-table-card .session-list-table-headbar { align-items: center; flex-wrap: wrap; }
   .badge-detail-table-head-tools { width: 100%; margin-left: 0; justify-content: space-between; }
 }
 @media (max-width: 620px) {

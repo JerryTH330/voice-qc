@@ -56,7 +56,7 @@
   };
   const exportScriptVersions = {
     'device-management/xlsx-export-utils.js': '20260922-v1',
-    'shared/export-tasks.js': '20260923-demo-seed-v3',
+    'shared/export-tasks.js': '20261010-matching-export-v1',
     'shared/export-task-browser.js': '20260923-platform-toast-v1'
   };
   window.__exportReady = Object.keys(exportScriptVersions).reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {
@@ -137,6 +137,7 @@
     const pathname = decodeURIComponent(window.location.pathname);
     if (pathname.includes('/device-management/')) {
       const route = window.location.hash.slice(1).split('?')[0];
+      if (route === 'store-visits') return 'device-dashboard';
       return `device-${['stores', 'badges', 'management', 'docks', 'dashboard', 'visits'].includes(route) ? route : 'stores'}`;
     }
     if (pathname.includes('/客户洞察/v2/')) return 'customer-insight';

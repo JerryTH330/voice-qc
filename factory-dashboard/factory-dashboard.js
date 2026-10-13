@@ -741,7 +741,7 @@
             <div class="rec-modal-eyebrow">录音信息及试听</div>
             <div class="rec-modal-title">${displayId}</div>
           </div>
-          <button class="rec-modal-close" onclick="closeRecordingPlayer()" aria-label="关闭">×</button>
+          <button class="rec-modal-close platform-close-icon" onclick="closeRecordingPlayer()" aria-label="关闭"></button>
         </div>
         <div class="rec-player-line">
           <span>00:00</span>
@@ -4015,6 +4015,7 @@
     query: '',
     sort: 'rate-desc',
     page: 1,
+    pageSize: 10,
     selectedRuleId: null,
     path: []
   };
@@ -4024,11 +4025,12 @@
     query: '',
     sort: 'rate-desc',
     page: 1,
+    pageSize: 10,
     selectedRuleId: null,
     path: []
   };
 
-  const ISSUE_RULE_PAGE_SIZE = 10;
+  const ISSUE_RULE_PAGE_SIZE_OPTIONS = [10, 20, 50];
   const ISSUE_RULE_SORT_OPTIONS = [
     { value: 'rate-desc', label: '命中率从高到低' },
     { value: 'rate-asc', label: '命中率从低到高' },
@@ -4250,14 +4252,19 @@
     return new Set([startPage, startPage + 1, startPage + 2]);
   };
 
-  const renderIssueRulePagination = (totalItems, currentPage, pageCount) => {
+  const renderIssueRulePagination = (totalItems, currentPage, pageCount, pageSize) => {
     const compactPages = getCompactIssueRulePaginationPages(pageCount, currentPage);
     return `
-    <div class="issue-rule-footer issue-rule-pagination session-pagination">
+    <div class="issue-rule-footer issue-rule-pagination session-pagination dashboard-badge-pagination">
       <div class="dashboard-pagination">
         <span class="session-pagination-total">共 ${totalItems} 条</span>
         <div class="dashboard-pagination-controls">
-          <span class="issue-pagination-page-size">${ISSUE_RULE_PAGE_SIZE} 条/页</span>
+          <div class="custom-select-container page-select page-size-select dashboard-page-size-select">
+            <button type="button" class="custom-select-trigger page-size-trigger" data-issue-page-size-trigger aria-label="每页 ${pageSize} 条，选择每页条数" aria-haspopup="listbox" aria-expanded="false"><span>${pageSize} 条/页</span><i class="session-select-caret" aria-hidden="true"></i></button>
+            <div class="custom-select-options page-size-options" role="listbox" aria-label="每页条数">
+              ${ISSUE_RULE_PAGE_SIZE_OPTIONS.map(size => `<button type="button" class="custom-option page-size-option${size === pageSize ? ' active' : ''}" data-issue-page-size="${size}" role="option" aria-selected="${size === pageSize}"><span>${size} 条/页</span></button>`).join('')}
+            </div>
+          </div>
           <div class="page-group" aria-label="规则分页">
             <button type="button" class="issue-rule-page-btn page-arrow" data-page-action="prev" aria-label="上一页" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
             ${Array.from({ length: pageCount }, (_, index) => index + 1).map(page => `
@@ -4307,10 +4314,11 @@
 
   const renderRuleListView = (config, rules, state = issueRuleAnalysisState) => {
     const canExport = state.activeTab === 'sop';
-    const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+    const pageSize = state.pageSize;
+    const pageCount = Math.max(1, Math.ceil(rules.length / pageSize));
     const currentPage = Math.min(state.page, pageCount);
-    const start = (currentPage - 1) * ISSUE_RULE_PAGE_SIZE;
-    const visibleRules = rules.slice(start, start + ISSUE_RULE_PAGE_SIZE);
+    const start = (currentPage - 1) * pageSize;
+    const visibleRules = rules.slice(start, start + pageSize);
     const rows = visibleRules.map(rule => {
       const tagLabels = (rule.applicableScenes || []).map(getSceneLabel);
 
@@ -4346,7 +4354,7 @@
           </button>
         </div>
       ` : ''}
-      <div class="issue-rule-list-shell">
+      <div class="issue-rule-list-shell${pageSize > 10 ? ' is-page-size-expanded' : ''}">
         <div class="issue-rule-list-head">
           <span class="issue-rule-name-head">规则名称</span>
           <span>${config.metricLabel}</span>
@@ -4357,7 +4365,7 @@
           ${rows || `<div class="issue-rule-empty">${config.emptyText}</div>`}
         </div>
       </div>
-      ${renderIssueRulePagination(rules.length, currentPage, pageCount)}
+      ${renderIssueRulePagination(rules.length, currentPage, pageCount, pageSize)}
     `;
   };
 
@@ -4540,11 +4548,57 @@
       render();
     });
 
+    const pageSizeControl = root.querySelector('.dashboard-page-size-select');
+    const pageSizeTrigger = pageSizeControl?.querySelector('[data-issue-page-size-trigger]');
+    const pageSizeOptions = pageSizeControl?.querySelector('.page-size-options');
+    if (pageSizeTrigger && pageSizeOptions) {
+      const closePageSizeOptions = () => {
+        pageSizeOptions.classList.remove('open');
+        pageSizeTrigger.classList.remove('is-open');
+        pageSizeTrigger.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('pointerdown', onOutsidePointerDown, true);
+        document.removeEventListener('keydown', onPageSizeKeydown);
+      };
+      const onOutsidePointerDown = (event) => {
+        if (!pageSizeControl.contains(event.target)) closePageSizeOptions();
+      };
+      const onPageSizeKeydown = (event) => {
+        if (event.key !== 'Escape' && event.key !== 'Tab') return;
+        closePageSizeOptions();
+        if (event.key === 'Escape') pageSizeTrigger.focus();
+      };
+      pageSizeTrigger.addEventListener('click', () => {
+        const willOpen = !pageSizeOptions.classList.contains('open');
+        if (!willOpen) {
+          closePageSizeOptions();
+          return;
+        }
+        pageSizeOptions.classList.add('open');
+        pageSizeTrigger.classList.add('is-open');
+        pageSizeTrigger.setAttribute('aria-expanded', 'true');
+        document.addEventListener('pointerdown', onOutsidePointerDown, true);
+        document.addEventListener('keydown', onPageSizeKeydown);
+      });
+      pageSizeOptions.addEventListener('click', (event) => {
+        const option = event.target.closest('[data-issue-page-size]');
+        if (!option) return;
+        closePageSizeOptions();
+        if (option.classList.contains('active')) {
+          pageSizeTrigger.focus();
+          return;
+        }
+        state.pageSize = Number(option.dataset.issuePageSize);
+        state.page = 1;
+        const render = rootId === 'issue-sop-analysis-root' ? renderSOPAnalysis : renderIssueRuleAnalysis;
+        render();
+      });
+    }
+
     root.querySelectorAll('.issue-rule-page-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
         const rules = getVisibleIssueRules(state);
-        const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+        const pageCount = Math.max(1, Math.ceil(rules.length / state.pageSize));
         const delta = btn.dataset.pageAction === 'next' ? 1 : -1;
         state.page = Math.max(1, Math.min(pageCount, state.page + delta));
         const render = rootId === 'issue-sop-analysis-root' ? renderSOPAnalysis : renderIssueRuleAnalysis;
@@ -4566,7 +4620,7 @@
     const applyPageJump = () => {
       if (!pageJumpInput) return;
       const rules = getVisibleIssueRules(state);
-      const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+      const pageCount = Math.max(1, Math.ceil(rules.length / state.pageSize));
       const requestedPage = Number(pageJumpInput.value);
       const targetPage = Math.max(1, Math.min(pageCount, Number.isFinite(requestedPage) ? Math.round(requestedPage) : state.page));
       if (targetPage === state.page) {
@@ -4585,7 +4639,7 @@
     });
 
     const rules = getVisibleIssueRules(state);
-    const pageCount = Math.max(1, Math.ceil(rules.length / ISSUE_RULE_PAGE_SIZE));
+    const pageCount = Math.max(1, Math.ceil(rules.length / state.pageSize));
     if (state.page > pageCount) {
       state.page = pageCount;
       const render = rootId === 'issue-sop-analysis-root' ? renderSOPAnalysis : renderIssueRuleAnalysis;
@@ -4888,7 +4942,7 @@
             <h2 id="issue-recording-library-title">${issue.title}</h2>
             <p>${type === 'risk' ? '按风险命中样本查看原声证据' : '按未命中样本查看原声证据'}，支持搜索顾问、门店、录音编号。</p>
           </div>
-          <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeFactoryIssueRecordingLibrary()">×</button>
+          <button type="button" class="recording-library-close platform-close-icon" aria-label="关闭录音列表" onclick="closeFactoryIssueRecordingLibrary()"></button>
         </div>
         <div class="recording-library-summary">
           <div><strong>${records.length}</strong><span>全部录音</span></div>

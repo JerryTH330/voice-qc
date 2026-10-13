@@ -44,7 +44,7 @@
       records.forEach(record => {
         const id = value(record, key);
         if (!id || found.has(id) || !matchesKeys(record, dependencies[key])) return;
-        const meta = key === 'store' ? record.dealer.dealerCode : key === 'advisor' ? record.dealer.dealerName : '';
+        const meta = key === 'store' ? record.dealer.dealerCode : key === 'advisor' ? `${record.dealer.dealerName || '—'} · ${record.advisorId || '—'}` : '';
         found.set(id, { value: id, label: label(record, key), meta });
       });
       const items = [...found.values()].sort((a, b) => a.label.localeCompare(b.label, 'zh-CN', { numeric: true }));
@@ -123,10 +123,14 @@
       root.classList.toggle('is-collapsed', collapsed);
       const extraInner = ['patroler', 'governor', 'advisor', ...fields.map(field => field.key)].map(control).join('') + renderTrailing();
       const keepExtra = extraInner && (!collapsed || collapseChanged);
-      root.innerHTML = `<div class="fo-heading"><div class="fo-tabs" role="tablist" aria-label="组织筛选维度">${[['organization', '组织维度'], ['geography', '地理维度']].map(([key, name]) => `<button type="button" role="tab" aria-selected="${model.dimension === key}" data-fo-dimension="${key}">${name}</button>`).join('')}</div><div class="fo-path"><img src="../assets/filter-path-icon.svg" alt="">当前路径：<strong title="${escape(model.summary())}">${model.primary().map((key, index) => `${index ? '<i class="session-select-caret fo-path-arrow" aria-hidden="true"></i>' : ''}<span>${escape(model.selections[key].length ? model.display(key) : '全部' + labels[key])}</span>`).join('')}</strong></div></div>` +
-        `<div class="fo-primary"><div class="fo-grid">${model.primary().map(control).join('')}</div>${collapsed ? renderActions() : ''}</div>` +
+      root.innerHTML = global.DimensionSwitcher.render({
+        namespace: 'fo', mode: model.dimension, label: '厂端组织筛选维度', panelId: 'factoryDimensionFilters',
+        path: model.primary().map(key => model.selections[key].length ? model.display(key) : '全部' + labels[key])
+      }) +
+        `<div class="fo-primary"><div class="fo-grid" id="factoryDimensionFilters">${model.primary().map(control).join('')}</div>${collapsed ? renderActions() : ''}</div>` +
         (keepExtra ? `<div class="fo-extra" data-fo-extra><div class="fo-extra-inner"><div class="fo-grid fo-secondary">${extraInner}</div></div></div>` : '') +
         (collapsed ? '' : renderActions());
+      global.DimensionSwitcher.sync(root);
       onRender();
       const extra = root.querySelector('[data-fo-extra]');
       if (extra && collapseChanged && !global.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -156,8 +160,16 @@
       const button = event.target.closest('button');
       if (!button) return;
       let changed = false;
+      let dimensionChange = null;
       if (button.hasAttribute('data-fo-trigger')) { open = open === button.dataset.foTrigger ? '' : button.dataset.foTrigger; query = ''; }
-      else if (button.hasAttribute('data-fo-dimension')) { model.setDimension(button.dataset.foDimension); open = ''; query = ''; changed = true; }
+      else if (button.hasAttribute('data-fo-dimension')) {
+        const from = model.dimension, mode = button.dataset.foDimension;
+        if (from === mode) return;
+        const before = model.primary().filter(key => key !== 'brand').map(key => [key, [...model.selections[key]]]);
+        model.setDimension(mode); open = ''; query = ''; changed = true;
+        dimensionChange = { from, mode, event,
+          cleared: before.some(([key, values]) => values.some(value => !model.selections[key].includes(value))) };
+      }
       else if (button.hasAttribute('data-fo-option')) {
         const id = button.dataset.foOption, values = model.selections[open];
         model.set(open, values.includes(id) ? values.filter(value => value !== id) : [...values, id]); changed = true;
@@ -176,6 +188,11 @@
       if (focusValue) [...root.querySelectorAll('[data-fo-option]')].find(node => node.dataset.foOption === focusValue)?.focus({ preventScroll: true });
       if (root.querySelector('.fo-options')) root.querySelector('.fo-options').scrollTop = scroll;
       if (changed) onChange({ reset: button.hasAttribute('data-fo-reset') });
+      if (dimensionChange) global.DimensionSwitcher.change(root, {
+        ...dimensionChange,
+        fields: (model.dimension === 'geography' ? ['province', 'city'] : ['region', 'zone'])
+          .map(key => root.querySelector(`[data-fo-control="${key}"]`))
+      });
     });
     root.addEventListener('input', event => {
       if (!event.target.matches('[data-fo-search]')) return;

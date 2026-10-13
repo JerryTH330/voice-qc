@@ -1287,6 +1287,11 @@
   gap: 12px;
   min-height: 0;
 }
+
+.factory-dashboard-page .issue-rule-list-shell.is-page-size-expanded .issue-rule-list {
+  max-height: 508px;
+  overflow-y: auto;
+}
 .factory-dashboard-page .issue-rule-row {
   position: relative;
   min-height: 40px;
@@ -1539,35 +1544,6 @@
   flex-wrap: nowrap;
 }
 
-.factory-dashboard-page .issue-pagination-page-size {
-  position: relative;
-  display: inline-flex;
-  min-width: 116px;
-  min-height: 38px;
-  align-items: center;
-  padding: 0 37px 0 15px;
-  border: 1px solid rgba(207, 217, 232, 0.96);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
-  color: #617088;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.factory-dashboard-page .issue-pagination-page-size::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 15px;
-  width: 7px;
-  height: 7px;
-  border-right: 1.5px solid #94a3b8;
-  border-bottom: 1.5px solid #94a3b8;
-  transform: translateY(-70%) rotate(45deg);
-}
-
 .factory-dashboard-page .issue-rule-pagination .page-group,
 .factory-dashboard-page .issue-rule-pagination .page-jump-group {
   display: inline-flex;
@@ -1645,6 +1621,10 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.factory-dashboard-page .dashboard-badge-pagination .page-jump-select {
+  color: #68758a;
 }
 
 .factory-dashboard-page .issue-rule-pagination .page-jump-select input {

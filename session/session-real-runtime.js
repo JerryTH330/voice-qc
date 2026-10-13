@@ -1,4 +1,4 @@
-/* 真实录音列表：在不改动详情主体假数据的前提下，替换录音列表的演示数据与筛选交互。 */
+/* 录音列表：导入主体数据与共享关联演示数据，沿用现有筛选和字段设置。 */
 (function initSessionRealRuntime(global) {
   'use strict';
 
@@ -22,7 +22,7 @@
   ];
   var intentOptions = ['高', '中', '低', '无', '无法判断'];
   var brandOptions = ['传祺', '埃安'];
-  var statusOptions = ['已完成', '失败'];
+  var statusOptions = ['已完成', '失败', '录音上传中', '录音转写中', '模型分析中'];
   var sourceTypeOptions = ['实体卡', '虚拟号', '工作号'];
   var sourceOptions = Array.isArray(data.sources) && data.sources.length
     ? data.sources.filter(function (value) { return value && value !== '未知'; })
@@ -217,7 +217,7 @@
         endTime: text(row[16])
       };
     });
-    return result.sort(function (left, right) {
+    return result.concat(global.AIQCLinkedDemo?.recordings || []).sort(function (left, right) {
       var uploadDiff = parseDate(right.uploadTime) - parseDate(left.uploadTime);
       return uploadDiff || compareAudioId(left.audioId, right.audioId);
     });
@@ -258,6 +258,14 @@
   };
   filterKeys.forEach(function (key) { state.selections[key] = []; });
   state.selections.status = ['已完成'];
+  var linkedRecording = global.AIQCLinkedDemo?.getRecording(new URLSearchParams(global.location.search).get('focusRecordingId'));
+  if (linkedRecording) {
+    state.queries.audioId = linkedRecording.audioId;
+    state.startDate = state.endDate = linkedRecording.startTime.slice(0, 10);
+    state.dateDraftStartDate = state.dateDraftEndDate = state.startDate;
+    state.dateViewYear = Number(state.startDate.slice(0, 4)); state.dateViewMonth = Number(state.startDate.slice(5, 7));
+    state.selections.status = [linkedRecording.status];
+  }
   var lastRenderedOpenMenu = null;
   var MENU_MOTION_MS = 180;
   var MENU_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -540,6 +548,8 @@
     }
     if (!options || !options.ignoreQueries) {
       var audioIdQuery = normalize(state.queries.audioId);
+      var linkedTarget = global.AIQCLinkedDemo?.getRecording(state.queries.audioId);
+      if (linkedTarget && record.audioId !== linkedTarget.audioId) return false;
       var leadQuery = normalize(state.queries.leadId);
       var advisorPhoneQuery = normalizeDigits(state.queries.advisorPhone);
       var customerKeywordQuery = normalize(state.queries.customerKeyword);
@@ -641,7 +651,7 @@
       return {
         value: option.value,
         label: option.label,
-        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.value + ' · ' + (phones.length ? phones.join('、') : '—'),
+        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.value,
         search: option.label + ' ' + option.value + ' ' + phones.join(' '),
         searchDigits: phones.map(normalizeDigits).join(' ')
       };
@@ -918,26 +928,10 @@
   }
 
   function renderDimensionSwitcher() {
-    var organizationActive = state.dimensionMode === 'organization';
-    var pathItems = organizationActive
-      ? ['品牌', '大区', '战区', '门店']
-      : ['品牌', '省份', '城市', '门店'];
-    var pathHtml = pathItems.map(function (item, index) {
-      return (index ? '<i class="session-select-caret badge-filter-dimension-path-arrow" aria-hidden="true"></i>' : '') +
-        '<span class="badge-filter-dimension-path-step">' + escapeHtml(item) + '</span>';
-    }).join('');
-    return '<div class="sr-filter-dimension-bar">' +
-      '<div class="sr-filter-dimension-main">' +
-        '<div class="sr-filter-dimension-tabs leads-view-tabs" role="tablist" aria-label="录音组织筛选维度">' +
-          '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (organizationActive ? ' active' : '') + '" data-sr-dimension="organization" role="tab" aria-selected="' + organizationActive + '">组织维度</button>' +
-          '<button type="button" class="sr-filter-dimension-tab leads-view-tab' + (!organizationActive ? ' active' : '') + '" data-sr-dimension="geography" role="tab" aria-selected="' + !organizationActive + '">地理维度</button>' +
-        '</div></div>' +
-      '<div class="sr-filter-dimension-path badge-filter-dimension-path">' +
-        '<img src="../assets/filter-path-icon.svg" alt="" aria-hidden="true">' +
-        '<span class="badge-filter-dimension-path-label">当前路径：</span>' +
-        '<strong>' + pathHtml + '</strong>' +
-      '</div>' +
-    '</div>';
+    return global.DimensionSwitcher.render({
+      namespace: 'sr', mode: state.dimensionMode,
+      label: '录音组织筛选维度', panelId: 'sessionDimensionFilters'
+    });
   }
 
   function renderFilterActions() {
@@ -1005,7 +999,7 @@
     container.innerHTML =
       renderDimensionSwitcher() +
       '<div class="sr-filter-primary">' +
-        '<div class="badge-dynamic-filter-grid">' +
+        '<div class="badge-dynamic-filter-grid" id="sessionDimensionFilters">' +
           primary.map(function (key) { return renderFilterControl(key); }).join('') +
         '</div>' +
         (state.collapsed ? renderFilterActions() : '') +
@@ -1014,6 +1008,7 @@
         ? '<div class="sr-filter-extra" data-sr-extra><div class="sr-filter-extra-inner"><div class="badge-dynamic-filter-grid">' + extraInner + '</div></div></div>'
         : '') +
       (state.collapsed ? '' : renderFilterActions());
+    global.DimensionSwitcher.sync(container);
     extraEl = container.querySelector('[data-sr-extra]');
     var reduceMotion = prefersReducedMotion();
     var shouldEnterMenu = !!state.openMenu && state.openMenu !== lastRenderedOpenMenu;
@@ -1290,6 +1285,7 @@
         if (column.key === 'intentLevel') {
           return '<td><span class="pill-inline ai-intent-pill ' + intentClass(value) + '">' + escapeHtml(value) + '</span></td>';
         }
+        if (record.linkedDemo && column.key === 'leadId') return '<td><a class="table-link" href="' + escapeHtml(global.AIQCLinkedDemo.listUrl('lead', record.leadId)) + '">' + escapeHtml(value) + '</a></td>';
         if (column.key === 'audioId' || column.key === 'leadId') {
           return '<td><span class="cell-main">' + escapeHtml(value) + '</span></td>';
         }
@@ -1350,7 +1346,7 @@
     var visibleCount = ordered.filter(function (column) { return !working.hidden.includes(column.key); }).length;
     host.innerHTML = '<div class="drawer-backdrop badge-field-settings-backdrop" data-sr-settings-close></div>' +
       '<aside class="drawer detail-drawer badge-field-settings-drawer' + (animateOpen ? '' : ' open') + ' sr-settings-panel" role="dialog" aria-modal="true" aria-label="字段设置" aria-hidden="false">' +
-        '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="icon-btn" data-sr-settings-close aria-label="关闭字段设置">×</button></div>' +
+        '<div class="drawer-head badge-field-settings-head"><div><h2>字段设置</h2><p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p></div><button type="button" class="icon-btn platform-close-icon" data-sr-settings-close aria-label="关闭字段设置"></button></div>' +
         '<div class="drawer-body badge-field-settings-body"><div class="badge-field-settings-summary"><span>已选 <strong>' + visibleCount + '</strong> / ' + ordered.length + ' 个字段</span><button type="button" data-sr-settings-select-all>' + (visibleCount === ordered.length ? '取消全选' : '全选') + '</button></div>' +
         '<div class="badge-field-settings-list" aria-label="可配置字段列表">' + ordered.map(function (column) {
           var visible = !working.hidden.includes(column.key);
@@ -1422,20 +1418,8 @@
     bindEvents();
   }
 
-  function showToast(message) {
-    var toast = document.getElementById('sessionRealToast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'sessionRealToast';
-      toast.className = 'badge-list-toast';
-      toast.setAttribute('role', 'status');
-      toast.setAttribute('aria-live', 'polite');
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    toast.classList.add('is-visible');
-    global.clearTimeout(showToast.timer);
-    showToast.timer = global.setTimeout(function () { toast.classList.remove('is-visible'); }, 2200);
+  function showToast(message, kind = 'info') {
+    global.PlatformToast.show(message, { kind, duration: 2200 });
   }
 
   function syncRefreshButton() {
@@ -1593,7 +1577,7 @@
     var previousHidden = new Set(columnSettings.hidden);
     var next = cloneColumnSettings(columnSettingsDraft);
     if (!next.order.some(function (key) { return !next.hidden.includes(key); })) {
-      showToast('至少保留一个字段');
+      showToast('至少保留一个字段', 'error');
       return;
     }
     next.hidden.filter(function (key) { return !previousHidden.has(key); }).forEach(function (key) {
@@ -1612,7 +1596,7 @@
     state.page = 1;
     closeFieldSettings();
     rerender();
-    showToast('字段设置已保存');
+    showToast('字段设置已保存', 'success');
   }
 
   function restoreColumnSettingsDraft() {
@@ -1654,7 +1638,7 @@
     };
     if (button) button.disabled = true;
     try { await global.__exportReady; await global.ExportTaskUI.submit(request); }
-    catch (error) { showToast(error.message || '导出任务创建失败，请重试'); }
+    catch (error) { showToast(error.message || '导出任务创建失败，请重试', 'error'); }
     finally { if (button) button.disabled = !getFilteredRecords().length; }
   }
 
@@ -1665,8 +1649,8 @@
     global.setTimeout(function () {
       state.refreshBusy = false;
       rerender();
-      showToast('录音列表已刷新');
-    }, 280);
+      showToast('录音列表已刷新', 'success');
+    }, 700);
   }
 
   function openDetail(audioId) {
@@ -1781,9 +1765,23 @@
     document.querySelectorAll('[data-sr-dimension]').forEach(function (node) {
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
-      node.addEventListener('click', function () {
-        switchDimensionMode(node.dataset.srDimension);
+      node.addEventListener('click', function (event) {
+        var previousMode = state.dimensionMode;
+        var nextMode = node.dataset.srDimension;
+        if (nextMode === previousMode) return;
+        var before = ['region', 'zone', 'province', 'city', 'store'].map(function (key) {
+          return { key: key, values: selected(key).slice() };
+        });
+        switchDimensionMode(nextMode);
         rerender();
+        var controls = document.getElementById('sessionRealFilterControls');
+        global.DimensionSwitcher.change(controls, {
+          from: previousMode, mode: nextMode, event: event,
+          cleared: before.some(function (item) { return item.values.some(function (value) { return !selected(item.key).includes(value); }); }),
+          fields: (nextMode === 'geography' ? ['province', 'city'] : ['region', 'zone']).map(function (key) {
+            return controls.querySelector('[data-sr-control="' + key + '"]');
+          })
+        });
       });
     });
     document.querySelectorAll('[data-sr-trigger]').forEach(function (node) {
@@ -1989,6 +1987,7 @@
         closeFilterMenu(true);
         state.menuQueries = {};
         rerender();
+        showToast('筛选条件已重置');
       });
     });
     document.querySelectorAll('[data-sr-collapse]').forEach(function (node) {

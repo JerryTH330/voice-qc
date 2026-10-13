@@ -9,6 +9,37 @@ function fixture(initialTasks = []) {
   return { make, advance: ms => { time += ms; } };
 }
 const request = () => ({ source: 'leads', filename: '线索列表.xlsx', sheetName: '线索列表', filters: [{ label: '品牌', value: '埃安' }], columns: [{ label: '客户名称' }], rows: [['张*'], ['李*']] });
+test('visit exports keep their source, field order, filters and row values through completion', async () => {
+  const f = fixture(), service = f.make();
+  const input = {
+    source: 'visits', filename: '到访明细.xlsx', sheetName: '到访明细',
+    filters: [{ label: '匹配状态', value: '无录音、匹配失败' }],
+    columns: [{ label: '顾问 ID' }, { label: '业务 ID' }, { label: '匹配详情' }],
+    rows: [['AION-SHA0120-02', 'BIZ-20260812-0183', '工牌未开机'], ['AION-JSE0600-01', '—', '客户明确不同意录音，本次未采集']]
+  };
+  const expected = structuredClone(input);
+  const task = await service.submit(input);
+  input.rows[0][0] = 'changed'; input.columns.reverse(); input.filters[0].value = 'changed';
+  const saved = await f.make().get(task.id);
+  assert.equal(saved.source, 'visits');
+  assert.equal(saved.status, 'queued');
+  assert.equal(saved.recordCount, 2);
+  assert.deepEqual(saved.columns, expected.columns);
+  assert.deepEqual(saved.filters, expected.filters);
+  assert.equal((await f.make().list())[0].id, task.id);
+  f.advance(2000); await service.advance();
+  assert.equal((await service.get(task.id)).status, 'running');
+  f.advance(10000); await f.make().advance();
+  const result = await service.download(task.id);
+  assert.equal(result.filename, expected.filename);
+  assert.equal(result.bytes[0], 80); assert.equal(result.bytes[1], 75);
+  const xml = new TextDecoder().decode(result.bytes);
+  assert.ok(xml.includes('sheet name="到访明细"'));
+  const cells = [...xml.matchAll(/<t[^>]*>(.*?)<\/t>/g)].map((match) => match[1]);
+  assert.deepEqual(cells, [...expected.columns.map((column) => column.label), ...expected.rows.flat()]);
+  assert.ok(!xml.includes('changed'));
+  assert.equal((await service.get(task.id)).status, 'completed');
+});
 test('submitted content is fixed and task survives service recreation', async () => {
   const f = fixture(), service = f.make(), input = request();
   const task = await service.submit(input);

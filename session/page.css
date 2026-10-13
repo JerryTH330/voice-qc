@@ -1,5 +1,5 @@
 /* 录音列表 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260902-global-brand-v1");
+@import url("../voice-qc-admin.css?v=20261010-table-headbar-align-v1");
 @import url("../app-inline.css?v=20260812-date-picker-fix-v2");
 
 .session-list-table-wrap {
@@ -12,8 +12,8 @@
   min-width: 2480px;
 }
 
-.session-data-table thead th:last-child,
-.session-data-table tbody td:last-child {
+.session-real-root .session-data-table thead th:last-child,
+.session-real-root .session-data-table tbody td:last-child {
   width: 92px;
   min-width: 92px;
   max-width: 92px;
@@ -178,60 +178,6 @@ body:has(.session-real-root) #pageHost {
   white-space: nowrap;
 }
 .session-real-root :is(.session-select-trigger, .session-date-trigger, .session-filter-summary, .session-date-panel-copy span, .session-date-nav strong, .session-date-tab span, .session-date-tab strong, .session-date-weekdays span, .session-date-day, .session-date-shortcut, .session-date-footer span, .session-pagination button, .session-pagination input, .session-pagination span) { font-size: 14px; }
-.sr-filter-dimension-bar {
-  box-sizing: border-box;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-bottom: 1px solid rgba(217, 226, 239, .82);
-}
-.sr-filter-dimension-main,
-.sr-filter-dimension-path { display: flex; align-items: center; }
-.sr-filter-dimension-main { min-width: 0; }
-.session-real-root .badge-filter-dimension-path {
-  box-sizing: border-box;
-  min-width: 0;
-  min-height: 30px;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 17px;
-  border: 1px solid rgba(37, 99, 235, .18);
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(248, 251, 255, .98) 0%, rgba(241, 246, 255, .92) 100%);
-}
-.session-real-root .badge-filter-dimension-path img {
-  display: block;
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-}
-.session-real-root .badge-filter-dimension-path-label,
-.session-real-root .badge-filter-dimension-path-step {
-  min-width: 0;
-  overflow: hidden;
-  color: #334155;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.session-real-root .badge-filter-dimension-path strong {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  column-gap: 2px;
-  overflow: hidden;
-  color: inherit;
-  font: inherit;
-}
-.session-real-root .badge-filter-dimension-path-arrow {
-  color: #64748b;
-  transform: rotate(-90deg);
-}
 .session-real-root .badge-session-filter-card #sessionRealFilterControls.is-collapsed {
   display: block;
   grid-template-columns: none;
@@ -387,8 +333,6 @@ body.sr-settings-open { overflow: hidden; }
   #mainTopbar:has(.badge-field-settings-action) .toolbar { align-items: flex-end; }
   #toolbarActions:has(.badge-field-settings-action) { justify-content: flex-end; }
   .session-real-root .session-filter-summary { flex-wrap: wrap; }
-  .sr-filter-dimension-bar { align-items: stretch; flex-direction: column; gap: 10px; }
-  .session-real-root .badge-filter-dimension-path { justify-content: flex-start; }
   .session-real-root #sessionRealFilterControls.is-collapsed .sr-filter-primary { display: block; }
   .session-real-root #sessionRealFilterControls.is-collapsed .sr-filter-primary .badge-dynamic-filter-actions { margin-top: 14px; }
 }

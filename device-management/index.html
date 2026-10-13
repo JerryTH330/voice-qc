@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20261008-visits-customer-filter-v1" />
-    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20260910-settings-footer-pill-v1" />
+    <link rel="stylesheet" href="./page.css?v=20261012-shared-dimension-v1" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
+    <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -29,7 +30,6 @@
       <main class="main">
         <header class="topbar">
           <div class="topbar-copy">
-            <button class="visit-origin-back" type="button" data-visits-back-matching hidden><span aria-hidden="true">‹</span> 返回录音排查</button>
             <h1 id="pageTitle">到访明细</h1>
             <p id="pageDescription">查看销售助手到访数据与工牌录音的完整处理状态</p>
           </div>
@@ -65,7 +65,7 @@
                   <input type="search" data-store-name-search placeholder="输入门店名称" aria-label="输入门店名称快捷筛选" />
                 </label>
                 <div class="store-date-filter-host" id="storeDateFilterControl"></div>
-                <button class="btn session-reset-btn store-filter-reset" type="button" data-store-filter-reset>重置筛选</button>
+                <button class="btn session-reset-btn store-filter-reset device-reset-btn" type="button" data-store-filter-reset>重置</button>
               </div>
             </div>
             <div class="summary-row store-overview-metrics">
@@ -253,6 +253,9 @@
           </section>
 
           <section class="page-panel active" data-page="visits">
+            <div class="store-drilldown-actions" data-visit-store-drilldown-actions hidden>
+              <button class="store-drilldown-back" type="button" data-visits-back-matching>返回录音排查</button>
+            </div>
             <div class="filter-card badge-session-filter-card visits-filter-grid" data-visit-filter-card>
               <div id="visitFilterControls" class="is-collapsed">
                 <div id="visitDimensionSwitcher"></div>
@@ -269,26 +272,22 @@
                     </div>
                   </div>
                 </div>
-                <div class="badge-filter-extra" id="visitAdvancedFilters" data-visit-advanced-search aria-label="到访明细更多筛选" hidden>
+                <div class="badge-filter-extra" id="visitAdvancedFilters" data-visit-advanced-search aria-label="到访明细更多筛选" aria-hidden="true" inert hidden>
                   <div class="badge-filter-extra-inner">
                     <div class="badge-dynamic-filter-grid">
                       <div class="visit-personnel-filter-grid" id="visitPersonnelFilters"></div>
-                      <label class="badge-field-filter visit-select-control"><span>到访来源</span><select data-visit-filter="source"><option>全部来源</option><option>销售助手</option><option>模板导入</option></select><i class="session-select-caret" aria-hidden="true"></i></label>
-                      <label class="badge-field-filter visit-select-control"><span>匹配状态</span><select data-visit-filter="status"><option>全部状态</option><option>全部未匹配</option><option value="异常需处理">无录音、匹配失败</option><option>已匹配</option><option>匹配失败</option><option>无录音</option><option>录音上传中</option><option>待匹配</option><option>录音转写中</option><option>模型分析中</option></select><i class="session-select-caret" aria-hidden="true"></i></label>
-                      <div class="badge-field-filter badge-field-filter-date-time visit-time-field" data-visit-menu-root="time">
+                      <div class="visit-personnel-filter-grid" id="visitEnumFilters"></div>
+                      <div class="badge-field-filter badge-field-filter-date-time visit-time-field" data-visit-menu-root="time" data-visit-filter-key="time">
                         <span>时间范围</span>
                         <button class="session-date-trigger" type="button" data-visit-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="visitTimePanel">
-                          <strong data-visit-time-summary>08-11 00:00:00 至 08-12 23:59:59</strong><span class="session-date-icon" aria-hidden="true"></span>
+                          <strong data-visit-time-start>2026/08/11</strong><em>至</em><strong data-visit-time-end>2026/08/12</strong><span class="session-date-icon" aria-hidden="true"></span>
                         </button>
-                        <div class="session-menu-panel visit-multiselect-menu visit-time-panel" id="visitTimePanel" role="dialog" aria-label="到访时间范围" hidden>
-                          <label><span>开始时间</span><input type="datetime-local" step="1" value="2026-08-11T00:00:00" data-visit-filter="startDateTime" aria-label="到访开始时间" /></label>
-                          <label><span>结束时间</span><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-visit-filter="endDateTime" aria-label="到访结束时间" /></label>
-                        </div>
+                        <div id="visitTimePanel" role="dialog" aria-label="到访日期范围" hidden></div>
                       </div>
-                      <label class="visit-search-control"><span>业务 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入业务 ID" autocomplete="off" data-visit-filter="businessId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
-                      <label class="visit-search-control"><span>录音 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入录音 ID" autocomplete="off" data-visit-filter="recordingId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
-                      <label class="badge-field-filter"><span>线索ID</span><input type="search" placeholder="请输入线索ID" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="leadId" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
-                      <label class="badge-field-filter"><span>客户</span><input type="search" placeholder="输入客户名称或客户号码" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="customerKeyword" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
+                      <label class="visit-search-control" data-visit-filter-key="businessId"><span>业务 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入业务 ID" autocomplete="off" data-visit-filter="businessId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                      <label class="visit-search-control" data-visit-filter-key="recordingId"><span>录音 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入录音 ID" autocomplete="off" data-visit-filter="recordingId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
+                      <label class="badge-field-filter" data-visit-filter-key="leadId"><span>线索ID</span><input type="search" placeholder="请输入线索ID" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="leadId" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
+                      <label class="badge-field-filter" data-visit-filter-key="customerKeyword"><span>客户</span><input type="search" placeholder="输入客户名称或客户号码" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="customerKeyword" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
                     </div>
                   </div>
                 </div>
@@ -301,10 +300,10 @@
                   <div class="badge-detail-table-head-tools">
                     <div class="session-filter-summary visit-filter-summary" id="visitResultSummary"><span>共 <strong>1,286</strong> 条</span><span>已匹配 <strong>1,142</strong> 条</span><span>处理中 <strong>112</strong> 条</span><span>异常需处理 <strong>32</strong> 条</span></div>
                     <i class="badge-detail-table-divider" aria-hidden="true"></i>
-                    <button class="btn primary badge-detail-table-action" type="button" data-action="export"><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
+                    <button class="btn primary badge-detail-table-action" type="button" id="visitExportButton" data-visit-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
                   </div>
                 </div>
-              <div class="table-scroll badge-list-table-wrap visits-table-scroll"><table class="data-table visits-table"><thead><tr><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>客户名称</th><th>客户号码</th><th>顾问姓名</th><th>所属门店</th><th>业务场景</th><th>意向车系</th><th>匹配完成时间</th><th>到访来源</th><th>数据更新时间</th><th>线索ID</th><th>门店编码</th><th>业务 ID</th></tr></thead><tbody id="visitTableBody"></tbody></table>
+              <div class="table-scroll badge-list-table-wrap visits-table-scroll"><table class="data-table visits-table"><thead><tr id="visitTableHeadRow"><th>业务 ID</th><th>线索ID</th><th>品牌</th><th>大区</th><th>战区</th><th>省份</th><th>城市</th><th>店代码</th><th>所属门店</th><th>顾问 ID</th><th>顾问姓名</th><th>巡回员</th><th>治理员</th><th>客户名称</th><th>客户号码</th><th>业务场景</th><th>意向车系</th><th>到访来源</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>录音 ID</th><th>匹配完成时间</th><th>数据更新时间</th><th class="visit-actions-column">操作</th></tr></thead><tbody id="visitTableBody"></tbody></table>
                 <div class="badge-list-empty-state" id="visitEmptyState" role="status" hidden>
                   <svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true">
                     <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" />
@@ -324,25 +323,57 @@
           </section>
 
           <section class="page-panel" data-page="dashboard">
-            <div class="filter-card filter-grid dashboard-filter-grid" data-matching-filter-card>
-              <label class="field"><span>品牌</span><select data-matching-filter="brand"><option>全部品牌</option></select></label>
-              <label class="field"><span>大区</span><select data-matching-filter="region"><option>全部大区</option></select></label>
-              <label class="field"><span>战区</span><select data-matching-filter="zone"><option>全部战区</option></select></label>
-              <label class="field"><span>门店</span><select data-matching-filter="store"><option>全部门店</option></select></label>
-              <label class="field span-2"><span>时间范围</span><span class="range-field"><input type="datetime-local" step="1" value="2026-08-11T00:00:00" data-matching-filter="startDateTime" /><b>至</b><input type="datetime-local" step="1" value="2026-08-12T23:59:59" data-matching-filter="endDateTime" /></span></label>
-              <div class="filter-actions"><button class="btn ghost" type="button" data-matching-filter-reset>重置</button><button class="btn primary" type="button" data-matching-filter-apply>查询</button></div>
+            <div class="filter-card badge-session-filter-card matching-filter-card" data-matching-filter-card>
+              <div id="matchingFilterControls" class="is-collapsed">
+                <div id="matchingDimensionSwitcher"></div>
+                <div class="badge-filter-primary">
+                  <div class="badge-dynamic-filter-grid" id="matchingDimensionFilters" role="tabpanel"></div>
+                  <div class="badge-dynamic-filter-actions matching-filter-actions">
+                    <span></span>
+                    <div>
+                      <button class="btn session-reset-btn" type="button" data-matching-filter-reset>重置</button>
+                      <button class="session-toggle-text-btn" type="button" data-matching-advanced-toggle aria-expanded="false" aria-controls="matchingAdvancedFilters">
+                        <span>展开</span>
+                        <svg class="session-toggle-text-btn-icon is-collapsed" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="badge-filter-extra" id="matchingAdvancedFilters" data-matching-advanced-search aria-label="录音排查更多筛选" aria-hidden="true" inert hidden>
+                  <div class="badge-filter-extra-inner">
+                    <div class="badge-dynamic-filter-grid">
+                      <div class="matching-personnel-filter-grid" id="matchingPersonnelFilters"></div>
+                      <div class="badge-field-filter badge-field-filter-date-time matching-time-field" data-matching-menu-root="time">
+                        <span>时间范围</span>
+                        <button class="session-date-trigger" type="button" data-matching-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="matchingTimePanel">
+                          <strong data-matching-time-start>2026/08/11</strong><em>至</em><strong data-matching-time-end>2026/08/12</strong><span class="session-date-icon" aria-hidden="true"></span>
+                        </button>
+                        <div id="matchingTimePanel" role="dialog" aria-label="录音排查日期范围" hidden></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="metric-grid five-metrics">
-              <article class="metric-card"><div class="metric-top"><span>到访数</span><i class="metric-icon blue">访</i></div><strong id="matchingMetricVisits">1,286</strong><p>按业务 ID 去重</p></article>
-              <article class="metric-card"><div class="metric-top"><span>已匹配到访</span><i class="metric-icon green">✓</i></div><strong id="matchingMetricMatched">1,142</strong><p>已完成录音关联的到访</p></article>
-              <article class="metric-card featured"><div class="metric-top"><span>录音匹配率 <button class="help" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数">?</button></span><i class="metric-icon violet">%</i></div><strong id="matchingMetricRate">88.8%</strong><p id="matchingMetricRateNote">1,142 ÷ 1,286</p></article>
-              <article class="metric-card"><div class="metric-top"><span>处理中</span><i class="metric-icon amber">…</i></div><strong id="matchingMetricProcessing">112</strong><p>待匹配、上传、转写、分析</p></article>
-              <article class="metric-card"><div class="metric-top"><span>异常需处理</span><i class="metric-icon red">!</i></div><strong id="matchingMetricProblems">32</strong><p>无录音、匹配失败</p></article>
-            </div>
-            <section class="card table-card dashboard-table-card">
-              <div class="card-head matching-workbench-head"><div><h2 id="matchingTableTitle">门店汇总</h2><p id="matchingTableDescription">按“异常需处理数从高到低、匹配率从低到高”排序</p></div></div>
-              <div class="table-scroll"><table class="data-table matching-table"><thead id="matchingTableHead"><tr><th>门店</th><th>到访数</th><th>已匹配到访</th><th>处理中</th><th>异常需处理</th><th>录音匹配率</th><th>操作</th></tr></thead><tbody id="matchingTableBody"></tbody></table></div>
-              <div class="pagination"><span id="matchingPaginationTotal">共 3 家门店</span><button disabled>‹</button><button class="active">1</button><button disabled>›</button></div>
+            <section class="card table-card badge-detail-table-card matching-table-card">
+              <div class="table-shell">
+                <div class="table-headbar session-list-table-headbar matching-workbench-head">
+                  <div class="panel-title"><h3 id="matchingTableTitle">门店汇总</h3></div>
+                  <div class="badge-detail-table-head-tools">
+                    <div class="session-filter-summary matching-filter-summary">
+                      <span class="matching-summary-item" title="按业务 ID 去重" aria-describedby="matchingMetricVisitsNote">到访数 <strong id="matchingMetricVisits">1,286</strong><span class="matching-metric-note" id="matchingMetricVisitsNote">按业务 ID 去重</span></span>
+                      <span class="matching-summary-item" title="已完成录音关联的到访" aria-describedby="matchingMetricMatchedNote">已匹配到访 <strong id="matchingMetricMatched">1,142</strong><span class="matching-metric-note" id="matchingMetricMatchedNote">已完成录音关联的到访</span></span>
+                      <span class="matching-summary-item" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数" aria-describedby="matchingMetricRateDescription matchingMetricRateNote">录音匹配率 <strong id="matchingMetricRate">88.8%</strong><span class="matching-metric-note" id="matchingMetricRateDescription">当前状态为已匹配的去重到访数 ÷ 全部去重到访数</span><span class="matching-metric-note" id="matchingMetricRateNote">1,142 ÷ 1,286</span></span>
+                      <span class="matching-summary-item" title="待匹配、上传、转写、分析" aria-describedby="matchingMetricProcessingNote">处理中 <strong id="matchingMetricProcessing">112</strong><span class="matching-metric-note" id="matchingMetricProcessingNote">待匹配、上传、转写、分析</span></span>
+                      <span class="matching-summary-item" title="无录音、匹配失败" aria-describedby="matchingMetricProblemsNote">异常需处理 <strong id="matchingMetricProblems">32</strong><span class="matching-metric-note" id="matchingMetricProblemsNote">无录音、匹配失败</span></span>
+                    </div>
+                    <i class="badge-detail-table-divider" aria-hidden="true"></i>
+                    <button class="btn primary badge-detail-table-action" type="button" id="matchingExportButton" data-matching-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
+                  </div>
+                </div>
+                <div class="table-scroll badge-list-table-wrap matching-table-scroll"><table class="data-table matching-table"><thead id="matchingTableHead"><tr><th scope="col">品牌</th><th scope="col">大区</th><th scope="col">战区</th><th scope="col">省份</th><th scope="col">城市</th><th scope="col">店代码</th><th scope="col">门店</th><th scope="col">巡回员</th><th scope="col">治理员</th><th scope="col">到访数</th><th scope="col">已匹配到访</th><th scope="col">处理中</th><th scope="col">异常需处理</th><th scope="col">录音匹配率</th><th scope="col" class="matching-actions-column">操作</th></tr></thead><tbody id="matchingTableBody"></tbody></table></div>
+                <div class="session-pagination matching-pagination"><div class="dashboard-pagination"><span class="session-pagination-total" id="matchingPaginationTotal">共 3 家门店</span><div class="dashboard-pagination-controls" id="matchingPaginationControls"></div></div></div>
+              </div>
             </section>
           </section>
         </div>
@@ -351,21 +382,24 @@
 
     <div class="modal-backdrop" id="importModal" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
-        <div class="modal-head"><div><h2 id="importTitle">导入到访明细</h2><p>仅用于销售顾问手动补传到访数据。</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="modal-head"><div><h2 id="importTitle">导入到访明细</h2><p>仅用于销售顾问手动补传到访数据。</p></div><button class="icon-btn close-modal platform-close-icon" aria-label="关闭"></button></div>
         <div class="visit-import-body">
-        <div class="upload-zone" id="visitImportDropzone">
-          <input id="visitImportFileInput" type="file" accept=".xlsx,.xls" hidden />
-          <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 15v5h14v-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-          <strong id="visitImportFileName">点击或拖拽 Excel 文件到这里</strong>
-          <p id="visitImportFileHint">支持 .xlsx、.xls，单个文件不超过 10 MB</p>
-          <button class="btn ghost" type="button" data-visit-import-select>选择文件</button>
-        </div>
-        <section class="visit-import-template-card">
-        <div class="template-row"><span><strong>请使用固定模板</strong><small>10 个字段均为必填，列名和顺序请勿修改。</small></span><button class="text-btn" type="button" data-visit-template-download>下载模板</button></div>
-        <div class="visit-template-fields" aria-label="上传模板必填字段">
-          <span>客户名称</span><span>客户号码</span><span>到访日期</span><span>开始时间</span><span>结束时间</span><span>顾问姓名</span><span>所属门店</span><span>门店编码</span><span>业务场景</span><span>意向车系</span>
-        </div>
-        </section>
+          <section class="visit-import-template-card" aria-labelledby="visitImportTemplateTitle">
+            <div class="visit-import-template-head"><h3 id="visitImportTemplateTitle">模板要求</h3><p>模板共 26 个字段，以下 10 项必填。</p></div>
+            <ol class="visit-template-fields" aria-label="上传模板必填字段" role="list">
+              <li>门店编码</li><li>所属门店</li><li>顾问姓名</li><li>客户名称</li><li>客户号码</li><li>业务场景</li><li>意向车系</li><li>到访日期</li><li>开始时间</li><li>结束时间</li>
+            </ol>
+            <button class="btn ghost visit-template-download visit-import-outline" type="button" data-visit-template-download><svg class="visit-template-download-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>下载模板</button>
+          </section>
+          <div class="visit-import-upload-panel">
+            <div class="upload-zone" id="visitImportDropzone">
+              <input id="visitImportFileInput" type="file" accept=".xlsx,.xls" hidden />
+              <img class="visit-import-illustration" src="../assets/device-import/visit-upload-illustration-v1.png" width="1465" height="1073" alt="" aria-hidden="true" draggable="false" />
+              <strong id="visitImportFileName">点击或拖拽 Excel 文件到这里</strong>
+              <p id="visitImportFileHint">支持 .xlsx、.xls，单个文件不超过 10 MB</p>
+              <button class="btn ghost visit-import-outline" type="button" data-visit-import-select>选择文件</button>
+            </div>
+          </div>
         </div>
         <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary" type="button" data-visit-import-submit disabled>开始上传</button></div>
       </section>
@@ -373,9 +407,29 @@
 
     <div class="modal-backdrop badge-record-detail-modal-backdrop" id="badgeUploadDetailModal" hidden>
       <section class="modal badge-upload-modal" role="dialog" aria-modal="true" aria-labelledby="badgeUploadDetailTitle">
-        <div class="modal-head"><div><h2 id="badgeUploadDetailTitle">录音上传明细</h2><p id="badgeUploadDetailDescription">仅展示当前顾问、当前工牌在所选日期上传完成的录音</p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="modal-head"><div><h2 id="badgeUploadDetailTitle">录音上传明细</h2><p id="badgeUploadDetailDescription">仅展示当前顾问、当前工牌在所选日期上传完成的录音</p></div><button class="icon-btn close-modal platform-close-icon" aria-label="关闭"></button></div>
         <div class="badge-upload-modal-content">
-        <div class="badge-upload-modal-body"><div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>顾问姓名</th><th>工牌 SN</th><th>录音片段</th><th>文件大小</th><th>音频开始时间</th><th>音频时长</th><th>录音上传时间</th><th>匹配时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div></div>
+          <section class="card badge-record-profile-card visit-upload-profile-card" aria-label="到访匹配信息">
+            <div class="badge-record-profile-name">
+              <img src="../assets/device-record-profile/advisor-avatar.png" alt="" aria-hidden="true" />
+              <strong id="visitUploadAdvisorName">—</strong>
+            </div>
+            <div class="badge-record-profile-meta">
+              <span class="status-inline" id="visitUploadStatus"><span class="status-inline-dot" aria-hidden="true"></span><span id="visitUploadStatusLabel">—</span></span>
+              <span class="badge-record-profile-chip">
+                <img src="../assets/device-record-profile/badge-sn.svg" alt="" aria-hidden="true" />
+                <span>工牌 SN：<strong id="visitUploadSn">—</strong></span>
+              </span>
+              <span class="badge-record-profile-chip">
+                <img src="../assets/device-record-profile/visit-date.svg" alt="" aria-hidden="true" />
+                <span>到访日期：<strong id="visitUploadDate">—</strong></span>
+              </span>
+            </div>
+          </section>
+          <div class="badge-upload-modal-body">
+            <div class="card-head visit-upload-list-head"><div><h2 id="visitUploadListTitle">录音上传明细</h2><p id="visitUploadListDescription" hidden></p></div></div>
+            <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>顾问姓名</th><th>工牌 SN</th><th>录音片段</th><th>文件大小</th><th>音频开始时间</th><th>音频时长</th><th>录音上传时间</th><th>匹配时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
+          </div>
         <div class="session-pagination badge-record-pagination badge-upload-modal-pagination" id="badgeUploadPagination"></div>
         </div>
       </section>
@@ -383,18 +437,26 @@
 
     <div class="modal-backdrop badge-record-detail-modal-backdrop" id="visitEventDetailModal" hidden>
       <section class="modal badge-upload-modal visit-event-modal" role="dialog" aria-modal="true" aria-labelledby="visitEventDetailTitle">
-        <div class="modal-head"><div><h2 id="visitEventDetailTitle">工牌事件明细</h2><p id="visitEventDetailDescription"></p></div><button class="icon-btn close-modal" aria-label="关闭">×</button></div>
+        <div class="modal-head"><div><h2 id="visitEventDetailTitle">工牌事件明细</h2><p id="visitEventDetailDescription"></p></div><button class="icon-btn close-modal platform-close-icon" aria-label="关闭"></button></div>
         <div class="visit-event-modal-body">
-          <div class="visit-event-context">
-            <span><small>顾问姓名</small><strong id="visitEventAdvisorName">—</strong></span>
-            <span><small>所属门店</small><strong id="visitEventStoreName">—</strong></span>
-            <span><small>工牌 SN</small><strong id="visitEventSn">—</strong></span>
-          </div>
-          <div class="visit-event-filter-preview">
-            <label class="field inline-field"><span>查询日期（单日）</span><input id="visitEventDate" type="date" readonly /></label>
-            <label class="field inline-field"><span>事件类型</span><select disabled><option>全部事件</option></select></label>
-          </div>
-          <section class="visit-event-card">
+          <section class="card badge-record-profile-card visit-event-context" aria-label="到访顾问工牌信息">
+            <div class="badge-record-profile-name">
+              <img src="../assets/device-record-profile/advisor-avatar.png" alt="" aria-hidden="true" />
+              <strong id="visitEventAdvisorName">—</strong>
+            </div>
+            <div class="badge-record-profile-meta">
+              <span class="badge-record-profile-chip">
+                <img src="../assets/device-record-profile/store.svg" alt="" aria-hidden="true" />
+                <span>所属门店：<strong id="visitEventStoreName">—</strong></span>
+              </span>
+              <span class="badge-record-profile-chip">
+                <img src="../assets/device-record-profile/badge-sn.svg" alt="" aria-hidden="true" />
+                <span>工牌 SN：<strong id="visitEventSn">—</strong></span>
+              </span>
+            </div>
+          </section>
+          <div class="badge-record-drawer-controls visit-event-filter-preview" id="visitEventFilters"></div>
+          <section class="card table-card badge-event-record-card visit-event-card">
             <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="visitEventResultSummary">共 0 条</span></div>
             <div class="event-timeline" id="visitEventDetailTimeline"></div>
           </section>
@@ -404,7 +466,7 @@
 
     <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementMemberModal" hidden>
       <section class="modal badge-management-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementMemberTitle">
-        <div class="modal-head"><div><h2 id="badgeManagementMemberTitle">换绑成员</h2><p>仅可选择当前门店内未绑定工牌的员工</p></div><button class="icon-btn badge-management-modal-close" type="button" aria-label="关闭">×</button></div>
+        <div class="modal-head"><div><h2 id="badgeManagementMemberTitle">换绑成员</h2><p>仅可选择当前门店内未绑定工牌的员工</p></div><button class="icon-btn badge-management-modal-close platform-close-icon" type="button" aria-label="关闭"></button></div>
         <div class="badge-management-modal-body">
           <label class="badge-management-form-row"><span><b>*</b> 工牌</span><input id="badgeManagementMemberSn" type="text" readonly /></label>
           <div class="badge-management-form-row badge-management-member-row">
@@ -425,7 +487,7 @@
 
     <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementAddModal" hidden>
       <section class="modal badge-management-modal badge-management-add-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementAddTitle">
-        <div class="modal-head"><div><h2 id="badgeManagementAddTitle">添加人员</h2><p>从当前门店员工目录搜索并导入，不支持手工新建</p></div><button class="icon-btn badge-management-add-close" type="button" aria-label="关闭">×</button></div>
+        <div class="modal-head"><div><h2 id="badgeManagementAddTitle">添加人员</h2><p>从当前门店员工目录搜索并导入，不支持手工新建</p></div><button class="icon-btn badge-management-add-close platform-close-icon" type="button" aria-label="关闭"></button></div>
         <div class="badge-management-add-body">
           <label class="badge-management-picker-search badge-management-directory-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="支持搜索员工姓名和工号" data-badge-management-directory-search /></label>
           <div class="badge-management-select-all-row"><label><input type="checkbox" data-badge-management-select-all /><span>全选当前结果</span></label><small id="badgeManagementSelectedCount">已选择 0 人</small></div>
@@ -447,7 +509,7 @@
 
     <div class="drawer-backdrop" id="visitDrawer" hidden></div>
     <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true">
-      <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer" aria-label="关闭">×</button></div>
+      <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer platform-close-icon" aria-label="关闭"></button></div>
       <div class="drawer-body" id="drawerBody"></div>
     </aside>
 
@@ -459,7 +521,7 @@
             <h2 id="badgeRecordDrawerTitle">工牌记录</h2>
             <p id="badgeRecordDrawerSubtitle">查看当前顾问工牌的设备事件和录音上传记录</p>
           </div>
-          <button class="icon-btn badge-record-drawer-close" type="button" data-badge-record-drawer-close aria-label="关闭详情抽屉">×</button>
+          <button class="icon-btn badge-record-drawer-close platform-close-icon" type="button" data-badge-record-drawer-close aria-label="关闭详情抽屉"></button>
         </div>
       </div>
       <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody">
@@ -527,7 +589,7 @@
           <h2 id="badgeFieldSettingsTitle">字段设置</h2>
           <p>勾选字段并拖动调整列表顺序，指定筛选字段会同步控制筛选项</p>
         </div>
-        <button class="icon-btn" type="button" data-badge-field-settings-close aria-label="关闭字段设置">×</button>
+        <button class="icon-btn platform-close-icon" type="button" data-badge-field-settings-close aria-label="关闭字段设置"></button>
       </div>
       <div class="drawer-body badge-field-settings-body">
         <div class="badge-field-settings-summary">
@@ -545,16 +607,57 @@
       </div>
     </aside>
 
-    <div class="toast" id="toast" role="status">操作已完成</div>
-    <script src="../unified-navigation-shell.js?v=20260922-export-v1"></script>
+    <div class="drawer-backdrop badge-field-settings-backdrop" id="visitFieldSettingsBackdrop" hidden></div>
+    <aside class="drawer detail-drawer badge-field-settings-drawer" id="visitFieldSettingsDrawer" role="dialog" aria-modal="true" aria-labelledby="visitFieldSettingsTitle" aria-hidden="true" inert>
+      <div class="drawer-head badge-field-settings-head">
+        <div><h2 id="visitFieldSettingsTitle">字段设置</h2><p>勾选字段并拖动调整列表顺序，对应筛选项同步显示或隐藏</p></div>
+        <button class="icon-btn platform-close-icon" type="button" data-visit-field-settings-close aria-label="关闭字段设置"></button>
+      </div>
+      <div class="drawer-body badge-field-settings-body">
+        <div class="badge-field-settings-summary">
+          <span>已选 <strong id="visitFieldSettingsSelectedCount">26</strong> / <span id="visitFieldSettingsTotalCount">26</span> 个字段</span>
+          <button type="button" data-visit-field-settings-select-all>取消全选</button>
+        </div>
+        <div class="badge-field-settings-list" id="visitFieldSettingsList" aria-label="到访可配置字段列表"></div>
+      </div>
+      <div class="badge-field-settings-footer">
+        <button class="btn ghost" type="button" data-visit-field-settings-restore>恢复默认</button>
+        <div><button class="btn ghost" type="button" data-visit-field-settings-close>取消</button><button class="btn primary" type="button" data-visit-field-settings-save>保存设置</button></div>
+      </div>
+    </aside>
+
+    <div class="drawer-backdrop badge-field-settings-backdrop" id="matchingFieldSettingsBackdrop" hidden></div>
+    <aside class="drawer detail-drawer badge-field-settings-drawer" id="matchingFieldSettingsDrawer" role="dialog" aria-modal="true" aria-labelledby="matchingFieldSettingsTitle" aria-hidden="true" inert>
+      <div class="drawer-head badge-field-settings-head">
+        <div><h2 id="matchingFieldSettingsTitle">字段设置</h2><p>勾选字段并拖动调整列表顺序，对应筛选项同步显示或隐藏</p></div>
+        <button class="icon-btn platform-close-icon" type="button" data-matching-field-settings-close aria-label="关闭字段设置"></button>
+      </div>
+      <div class="drawer-body badge-field-settings-body">
+        <div class="badge-field-settings-summary">
+          <span>已选 <strong id="matchingFieldSettingsSelectedCount">14</strong> / <span id="matchingFieldSettingsTotalCount">14</span> 个字段</span>
+          <button type="button" data-matching-field-settings-select-all>取消全选</button>
+        </div>
+        <div class="badge-field-settings-list" id="matchingFieldSettingsList" aria-label="门店汇总可配置字段列表"></div>
+      </div>
+      <div class="badge-field-settings-footer">
+        <button class="btn ghost" type="button" data-matching-field-settings-restore>恢复默认</button>
+        <div><button class="btn ghost" type="button" data-matching-field-settings-close>取消</button><button class="btn primary" type="button" data-matching-field-settings-save>保存设置</button></div>
+      </div>
+    </aside>
+
+    <script src="../unified-navigation-shell.js?v=20261010-store-visits-v1"></script>
     <script src="../date-filter-component-utils.js?v=20260901-optional-cancel-v1"></script>
     <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
     <script src="./organization-data.js?v=20260903-real-stores-v1"></script>
-    <script src="./visit-organization-filter.js?v=20261008-visits-organization-v1"></script>
+    <script src="../shared/linked-demo-data.js?v=20261010-linked-demo-v1"></script>
+    <script src="./visit-organization-filter.js?v=20261010-matching-org-v1"></script>
+    <script src="./visit-field-settings.js?v=20261009-visits-advisor-id-v1"></script>
+    <script src="./matching-field-settings.js?v=20261010-matching-fields-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
     <script src="../shared/field-settings-interactions.js?v=20260914-shared-field-settings-drag-v1"></script>
-    <script src="./page.js?v=20261008-visits-customer-filter-v1"></script>
+    <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
+    <script src="./page.js?v=20261012-shared-dimension-v1"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

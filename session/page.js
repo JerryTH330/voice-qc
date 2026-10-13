@@ -1,7 +1,7 @@
 /* 录音列表 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'session';
 (function loadPageRuntime() {
-  const version = '20260922-export-v1';
+  const version = '20261010-linked-demo-v1';
   const scripts = [
     `../session-search-utils.js?v=${version}`,
     `../shared/issue-rule-list.js?v=${version}`,
@@ -11,8 +11,9 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     `../device-management/xlsx-export-utils.js?v=${version}`,
     `../shared/field-settings-interactions.js?v=${version}`,
     `./real-recording-data.js?v=${version}`,
+    `../shared/linked-demo-data.js?v=${version}`,
     `../app-runtime.js?v=${version}`,
-    `./session-real-runtime.js?v=${version}`
+    `./session-real-runtime.js?v=20261012-shared-dimension-v1`
   ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

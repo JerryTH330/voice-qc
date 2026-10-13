@@ -7923,7 +7923,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildRealLeadRecords() {
-        const source = Array.isArray(window.__LEADS_REAL_DATA) ? window.__LEADS_REAL_DATA : []
+        const source = (Array.isArray(window.__LEADS_REAL_DATA) ? window.__LEADS_REAL_DATA : []).concat(window.AIQCLinkedDemo?.leads || [])
         if (!source.length) return []
         const directory = Array.isArray(window.__DEVICE_ORGANIZATION_DEALERS)
           ? window.__DEVICE_ORGANIZATION_DEALERS
@@ -7934,6 +7934,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         ]))
 
         return source.map((record) => {
+          if (record.linkedDemo) return record
           const hash = getStableLeadHash(record.id)
           const dealer = directoryByDealer.get(`${record.brand}::${record.dealerCode}`) || {}
           const minuteOfDay = (9 * 60) + (hash % (11 * 60))
@@ -15745,6 +15746,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildLeadDetailPayload(lead, role) {
+        if (lead.linkedDemo) return window.AIQCLinkedDemo.buildLeadPayload(lead)
         const roleMeta = getLeadDetailRoleMeta(role)
         const phone = getLeadDetailPhone(lead.id, role)
         const tags = getLeadDetailUniqueTags(lead)
@@ -15980,6 +15982,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderLeadDetailJourneyEntries(payload) {
+        if (payload?.linkedDemo) { window.AIQCLinkedDemo.renderLeadJourney(payload, pageHost); return }
         if (!payload?.isMultiNodeJourneyDemo) return
 
         const timeline = pageHost.querySelector('.lead-journey-scroll')
@@ -19502,6 +19505,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function applySessionDetailRouteContext() {
         const context = getSessionDetailRouteContext()
+        const linkedRecording = window.AIQCLinkedDemo?.getRecording(context.sessionId)
+        if (linkedRecording) { window.AIQCLinkedDemo.applyRecordingDetail(linkedRecording, pageHost, sessionDetailState); return }
         const recordIdNode = document.getElementById('sessionDetailRecordId')
         const storeNode = document.getElementById('sessionDetailStore')
         const dateNode = document.getElementById('sessionDetailDate')

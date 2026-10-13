@@ -6060,7 +6060,7 @@ body::before {
 .table-headbar {
   padding: 20px 20px 12px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -9291,6 +9291,87 @@ body::before {
   border-radius: 999px;
   background: var(--blue);
 }
+
+.session-pagination .dashboard-page-size-select .page-size-trigger {
+  gap: 8px;
+  padding-right: 14px;
+  color: #68758a;
+  font-size: 14px;
+}
+
+.session-pagination .dashboard-page-size-select .page-size-trigger::after {
+  display: none;
+}
+
+.session-pagination .dashboard-page-size-select .session-select-caret {
+  margin-left: auto;
+}
+
+.session-pagination .dashboard-page-size-select .page-size-trigger.is-open .session-select-caret {
+  color: var(--blue);
+  transform: rotate(180deg);
+}
+
+.session-pagination .dashboard-page-size-select .page-size-options {
+  display: flex;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  width: max-content;
+  min-width: 100%;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 180ms;
+}
+
+.session-pagination .dashboard-page-size-select .page-size-options.open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+
+.session-pagination .dashboard-page-size-select .page-size-option {
+  width: auto;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination) :is(.session-pagination-total, .session-page-jump-label, .session-page-jump-suffix) {
+  color: #68758a;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination) :is(.page-arrow, .page-num) {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination) :is(.page-arrow, .page-num:not(.active)) {
+  color: #68758a;
+}
+
+body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination) .page-arrow:disabled {
+  background: rgba(248, 250, 253, 0.88);
+}
+
+body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination) .page-jump-select {
+  width: 54px;
+  min-width: 54px;
+  color: #68758a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-pagination .dashboard-page-size-select .session-select-caret,
+  .session-pagination .dashboard-page-size-select .page-size-options {
+    transition: none;
+  }
+}
+
 
 .session-pagination .session-page-jump-label,
 .session-pagination .session-page-jump-suffix {
