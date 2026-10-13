@@ -2043,6 +2043,27 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 #importModal .visit-import-illustration { display: block; width: 144px; max-width: 100%; height: auto; flex: 0 0 auto; margin-bottom: 16px; object-fit: contain; pointer-events: none; user-select: none; }
 #importModal .upload-zone strong { max-width: 100%; overflow-wrap: anywhere; font-size: 16px; font-weight: 600; line-height: 24px; }
 #importModal .upload-zone p { max-width: 100%; margin: 8px 0 16px; color: #7b8799; font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }
+#importModal .visit-import-progress { width: 100%; margin-top: 16px; }
+#importModal .visit-import-progress[hidden], #importModal .visit-import-errors[hidden] { display: none; }
+#importModal .visit-import-progress-meta { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--blue); font-size: 14px; line-height: 20px; font-variant-numeric: tabular-nums; }
+#importModal .visit-import-progress-track { height: 8px; overflow: hidden; border-radius: 999px; background: #e4ecfa; }
+#importModal .visit-import-progress-track > span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--blue); transform: scaleX(0); transform-origin: left center; transition: transform 160ms linear; }
+#importModal .visit-import-progress[data-phase="failed"] .visit-import-progress-meta { color: var(--red); }
+#importModal .visit-import-progress[data-phase="failed"] .visit-import-progress-track { background: #fde9ec; }
+#importModal .visit-import-progress[data-phase="failed"] .visit-import-progress-track > span { background: var(--red); }
+#importModal[aria-busy="true"] .upload-zone { cursor: default; }
+#importModal .btn:disabled, #importModal .close-modal:disabled { cursor: not-allowed; opacity: .65; }
+#importModal .visit-import-errors { min-width: 0; grid-column: 1 / -1; padding: 16px; border: 1px solid #f2c8ce; border-radius: 14px; background: #fff; }
+#importModal .visit-import-errors-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+#importModal .visit-import-errors h3 { margin: 0; color: var(--red); font-size: 16px; line-height: 24px; }
+#importModal .visit-import-errors p { margin: 6px 0 0; color: var(--text); font-size: 14px; line-height: 20px; }
+#importModal .visit-import-errors-scroll { max-height: 190px; overflow: auto; }
+#importModal .visit-import-errors table { width: 100%; min-width: 560px; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
+#importModal .visit-import-errors th, #importModal .visit-import-errors td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+#importModal .visit-import-errors th { color: #7b8799; background: #f7f9fc; font-weight: 600; }
+#importModal .visit-import-errors th:first-child { width: 100px; }
+#importModal .visit-import-errors th:nth-child(2) { width: 170px; }
+#importModal .visit-import-errors th:nth-child(3) { width: 100px; }
 #importModal .modal-foot { flex: 0 0 auto; padding: 16px 24px; gap: 16px; background: #fff; }
 #importModal .btn { min-width: 88px; height: 40px; padding-inline: 18px; border-radius: 999px; font-size: 14px; font-weight: 600; transition: border-color .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease; }
 #importModal .btn.visit-import-outline { color: var(--blue); border-color: var(--blue); background: #fff; box-shadow: none; }
@@ -2052,7 +2073,8 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 @media (prefers-reduced-motion: reduce) {
   #importModal .modal { animation: none; }
   #importModal .upload-zone,
-  #importModal .btn { transition: none; }
+  #importModal .btn,
+  #importModal .visit-import-progress-track > span { transition: none; }
 }
 
 @keyframes visit-detail-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -2088,6 +2110,7 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
   #importModal .visit-import-body { padding: 20px; grid-template-columns: minmax(0, 1fr); }
   #importModal .visit-import-template-card { padding: 16px; }
   #importModal .upload-zone { min-height: 220px; padding: 20px; }
+  #importModal .visit-import-errors-head { flex-wrap: wrap; }
   #importModal .modal-foot { padding-inline: 20px; }
 }
 @media (max-width: 620px) {

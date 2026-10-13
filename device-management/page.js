@@ -3072,6 +3072,16 @@ const visitImportFileInput = document.getElementById('visitImportFileInput');
 const visitImportFileName = document.getElementById('visitImportFileName');
 const visitImportFileHint = document.getElementById('visitImportFileHint');
 const visitImportSubmitButton = document.querySelector('[data-visit-import-submit]');
+const visitImportSelectButton = document.querySelector('[data-visit-import-select]');
+const visitImportProgress = document.getElementById('visitImportProgress');
+const visitImportProgressStage = document.getElementById('visitImportProgressStage');
+const visitImportProgressPercent = document.getElementById('visitImportProgressPercent');
+const visitImportProgressTrack = document.getElementById('visitImportProgressTrack');
+const visitImportProgressFill = document.getElementById('visitImportProgressFill');
+const visitImportErrors = document.getElementById('visitImportErrors');
+const visitImportErrorsSummary = document.getElementById('visitImportErrorsSummary');
+const visitImportErrorsBody = document.getElementById('visitImportErrorsBody');
+const visitImportErrorsDownload = document.querySelector('[data-visit-import-errors-download]');
 const badgeUploadDetailModal = document.getElementById('badgeUploadDetailModal');
 const badgeUploadDetailTitle = document.getElementById('badgeUploadDetailTitle');
 const badgeUploadDetailDescription = document.getElementById('badgeUploadDetailDescription');
@@ -3114,6 +3124,7 @@ let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
 let badgeDetailRefreshTimer = 0;
 let visitImportFile = null;
+const visitImportState = { phase: 'idle', progress: 0, result: null, timer: 0 };
 
 const sharedOrganizationDirectory = window.AIQCLinkedDemo?.buildOrganizationView(window.AIQCOrganization) || window.AIQCOrganization;
 const storeOverviewRecords = (sharedOrganizationDirectory?.dealers || []).map((dealer, index) => ({
@@ -5949,16 +5960,61 @@ function showToast(message, kind = 'info') {
 }
 
 function resetVisitImport() {
+  if (isVisitImportBusy()) return;
+  window.clearTimeout(visitImportState.timer);
+  Object.assign(visitImportState, { phase: 'idle', progress: 0, result: null, timer: 0 });
   visitImportFile = null;
   if (visitImportFileInput) visitImportFileInput.value = '';
   if (visitImportFileName) visitImportFileName.textContent = '点击或拖拽 Excel 文件到这里';
   if (visitImportFileHint) visitImportFileHint.textContent = '支持 .xlsx、.xls，单个文件不超过 10 MB';
   if (visitImportSubmitButton) visitImportSubmitButton.disabled = true;
   visitImportDropzone?.classList.remove('has-file', 'is-dragover');
+  renderVisitImportState();
+}
+
+function isVisitImportBusy() {
+  return visitImportState.phase === 'uploading' || visitImportState.phase === 'validating';
+}
+
+function renderVisitImportState() {
+  const busy = isVisitImportBusy();
+  const stage = visitImportState.phase === 'uploading' ? '上传中'
+    : visitImportState.phase === 'failed' ? '校验失败' : '校验中';
+  importModal.setAttribute('aria-busy', String(busy));
+  importModal.querySelectorAll('.close-modal').forEach(button => { button.disabled = busy; });
+  visitImportSelectButton.disabled = busy;
+  visitImportSelectButton.textContent = visitImportFile ? '重新选择' : '选择文件';
+  visitImportFileInput.disabled = busy;
+  visitImportSubmitButton.disabled = busy || !visitImportFile;
+  visitImportSubmitButton.textContent = busy ? stage : '开始上传';
+  visitImportProgress.hidden = visitImportState.phase === 'idle' || visitImportState.phase === 'ready';
+  visitImportProgress.setAttribute('data-phase', visitImportState.phase);
+  visitImportProgressStage.textContent = stage;
+  visitImportProgressPercent.textContent = `${visitImportState.progress}%`;
+  visitImportProgressTrack.setAttribute('aria-valuenow', String(visitImportState.progress));
+  visitImportProgressTrack.setAttribute('aria-valuetext', `${stage} ${visitImportState.progress}%`);
+  visitImportProgressFill.style.transform = `scaleX(${visitImportState.progress / 100})`;
+  if (busy) visitImportFileHint.textContent = visitImportState.phase === 'uploading' ? '正在上传，请稍候' : '上传完成，正在校验到访数据';
+  visitImportErrors.hidden = visitImportState.phase !== 'failed';
+  if (visitImportState.phase === 'failed') {
+    const { total, failures } = visitImportState.result;
+    visitImportFileHint.textContent = '校验未通过，请修正文件后重新选择';
+    visitImportErrorsSummary.textContent = `本次 ${total} 条数据均未导入，请修正以下 ${failures.length} 条错误。`;
+    visitImportErrorsBody.innerHTML = failures.map(failure => `<tr><td>${failure.rowNumber}</td><td>${escapeBadgeHtml(failure.record.store || '—')}</td><td>${escapeBadgeHtml(failure.record.advisor || '—')}</td><td>${escapeBadgeHtml(failure.reasons.join('；'))}</td></tr>`).join('');
+  } else {
+    visitImportErrorsSummary.textContent = '';
+    visitImportErrorsBody.innerHTML = '';
+  }
+}
+
+function requestVisitImportFile() {
+  if (isVisitImportBusy()) return;
+  visitImportFileInput.value = '';
+  visitImportFileInput.click();
 }
 
 function selectVisitImportFile(file) {
-  if (!file) return;
+  if (!file || isVisitImportBusy()) return;
   const isExcel = /\.(xlsx|xls)$/i.test(file.name);
   if (!isExcel) {
     resetVisitImport();
@@ -5971,15 +6027,53 @@ function selectVisitImportFile(file) {
     return;
   }
   visitImportFile = file;
+  Object.assign(visitImportState, { phase: 'ready', progress: 0, result: null });
   if (visitImportFileName) visitImportFileName.textContent = file.name;
   if (visitImportFileHint) visitImportFileHint.textContent = `${(file.size / 1024).toFixed(1)} KB · 文件已选择，可开始上传`;
   if (visitImportSubmitButton) visitImportSubmitButton.disabled = false;
   visitImportDropzone?.classList.add('has-file');
+  renderVisitImportState();
+}
+
+function startVisitImport() {
+  if (!visitImportFile || isVisitImportBusy()) return;
+  const result = window.VisitImportDemo.createResult(visitImportFile.name, visitRecords, visitDirectoryDealers);
+  Object.assign(visitImportState, { phase: 'uploading', progress: 0, result: null });
+  renderVisitImportState();
+  const advance = () => {
+    visitImportState.progress = Math.min(100, visitImportState.progress + 14);
+    if (visitImportState.progress >= 70) visitImportState.phase = 'validating';
+    renderVisitImportState();
+    if (visitImportState.progress < 100) visitImportState.timer = window.setTimeout(advance, 240);
+    else visitImportState.timer = window.setTimeout(() => finishVisitImport(result), 180);
+  };
+  visitImportState.timer = window.setTimeout(advance, 240);
+}
+
+function finishVisitImport(result) {
+  visitImportState.timer = 0;
+  visitImportState.result = result;
+  if (result.failures.length) {
+    visitImportState.phase = 'failed';
+    renderVisitImportState();
+    showToast('导入失败，本次未导入', 'error');
+    visitImportErrors.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+  } else {
+    visitImportState.phase = 'complete';
+    closeModal(importModal);
+    showToast(`导入成功，共 ${result.imported} 条`, 'success');
+  }
+}
+
+function downloadVisitImportFailures() {
+  if (isVisitImportBusy() || !visitImportState.result?.failures.length) return;
+  const filename = `${visitImportFile.name.replace(/\.(xlsx|xls)$/i, '')}_失败明细.xlsx`;
+  window.__xlsxExportUtils.downloadXlsx({ filename, ...window.VisitImportDemo.failureWorkbook(visitImportState.result, visitFieldSettingsModel.fields) });
 }
 
 function downloadVisitTemplate() {
   const link = document.createElement('a');
-  link.href = './templates/到访明细上传模板.xlsx';
+  link.href = './templates/到访明细上传模板.xlsx?v=20261013-ten-required-fields-v2';
   link.download = '到访明细上传模板.xlsx';
   document.body.appendChild(link);
   link.click();
@@ -6286,6 +6380,7 @@ function openModal(modal) {
 }
 
 function closeModal(modal) {
+  if (modal === importModal && isVisitImportBusy()) return;
   const wasVisitDetail = modal.classList.contains('is-visit-detail');
   if (modal === visitEventDetailModal) closeVisitEventMenus(true);
   modal.hidden = true;
@@ -6298,21 +6393,18 @@ function closeModal(modal) {
   }
 }
 
-document.querySelector('[data-visit-import-select]')?.addEventListener('click', () => visitImportFileInput?.click());
+visitImportSelectButton?.addEventListener('click', requestVisitImportFile);
+visitImportErrorsDownload?.addEventListener('click', downloadVisitImportFailures);
 document.querySelector('[data-visit-template-download]')?.addEventListener('click', downloadVisitTemplate);
 visitImportFileInput?.addEventListener('change', () => selectVisitImportFile(visitImportFileInput.files?.[0]));
-visitImportSubmitButton?.addEventListener('click', () => {
-  if (!visitImportFile) return;
-  const fileName = visitImportFile.name;
-  closeModal(importModal);
-  showToast(`${fileName} 已上传并进入校验`, 'success');
-});
+visitImportSubmitButton?.addEventListener('click', startVisitImport);
 visitImportDropzone?.addEventListener('click', (event) => {
-  if (!event.target.closest('button')) visitImportFileInput?.click();
+  if (!event.target.closest('button')) requestVisitImportFile();
 });
 ['dragenter', 'dragover'].forEach((eventName) => {
   visitImportDropzone?.addEventListener(eventName, (event) => {
     event.preventDefault();
+    if (isVisitImportBusy()) return;
     visitImportDropzone.classList.add('is-dragover');
   });
 });

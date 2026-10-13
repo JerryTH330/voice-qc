@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20261012-shared-dimension-v1" />
+    <link rel="stylesheet" href="./page.css?v=20261013-visit-import-failure-red-v5" />
     <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2" />
@@ -385,7 +385,7 @@
         <div class="modal-head"><div><h2 id="importTitle">导入到访明细</h2><p>仅用于销售顾问手动补传到访数据。</p></div><button class="icon-btn close-modal platform-close-icon" aria-label="关闭"></button></div>
         <div class="visit-import-body">
           <section class="visit-import-template-card" aria-labelledby="visitImportTemplateTitle">
-            <div class="visit-import-template-head"><h3 id="visitImportTemplateTitle">模板要求</h3><p>模板共 26 个字段，以下 10 项必填。</p></div>
+            <div class="visit-import-template-head"><h3 id="visitImportTemplateTitle">模板要求</h3><p>模板仅需填写以下 10 项，均为必填。</p></div>
             <ol class="visit-template-fields" aria-label="上传模板必填字段" role="list">
               <li>门店编码</li><li>所属门店</li><li>顾问姓名</li><li>客户名称</li><li>客户号码</li><li>业务场景</li><li>意向车系</li><li>到访日期</li><li>开始时间</li><li>结束时间</li>
             </ol>
@@ -396,10 +396,18 @@
               <input id="visitImportFileInput" type="file" accept=".xlsx,.xls" hidden />
               <img class="visit-import-illustration" src="../assets/device-import/visit-upload-illustration-v1.png" width="1465" height="1073" alt="" aria-hidden="true" draggable="false" />
               <strong id="visitImportFileName">点击或拖拽 Excel 文件到这里</strong>
+              <div class="visit-import-progress" id="visitImportProgress" hidden>
+                <div class="visit-import-progress-meta"><span id="visitImportProgressStage">上传中</span><span id="visitImportProgressPercent">0%</span></div>
+                <div class="visit-import-progress-track" id="visitImportProgressTrack" role="progressbar" aria-label="到访导入进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="visitImportProgressFill"></span></div>
+              </div>
               <p id="visitImportFileHint">支持 .xlsx、.xls，单个文件不超过 10 MB</p>
               <button class="btn ghost visit-import-outline" type="button" data-visit-import-select>选择文件</button>
             </div>
           </div>
+          <section class="visit-import-errors" id="visitImportErrors" aria-labelledby="visitImportErrorsTitle" hidden>
+            <div class="visit-import-errors-head"><div role="alert"><h3 id="visitImportErrorsTitle">导入失败</h3><p id="visitImportErrorsSummary"></p></div><button class="btn ghost visit-import-outline" type="button" data-visit-import-errors-download>下载失败明细</button></div>
+            <div class="visit-import-errors-scroll"><table><thead><tr><th>Excel 行号</th><th>所属门店</th><th>顾问姓名</th><th>失败原因</th></tr></thead><tbody id="visitImportErrorsBody"></tbody></table></div>
+          </section>
         </div>
         <div class="modal-foot"><button class="btn ghost close-modal">取消</button><button class="btn primary" type="button" data-visit-import-submit disabled>开始上传</button></div>
       </section>
@@ -653,11 +661,12 @@
     <script src="../shared/linked-demo-data.js?v=20261013-linked-demo-recent-seven-days-v2"></script>
     <script src="./visit-organization-filter.js?v=20261010-matching-org-v1"></script>
     <script src="./visit-field-settings.js?v=20261009-visits-advisor-id-v1"></script>
+    <script src="./visit-import-demo.js?v=20261013-import-ten-fields-v6"></script>
     <script src="./matching-field-settings.js?v=20261010-matching-fields-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
     <script src="../shared/field-settings-interactions.js?v=20260914-shared-field-settings-drag-v1"></script>
     <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
-    <script src="./page.js?v=20261013-visits-demo-recent-seven-days-v2"></script>
+    <script src="./page.js?v=20261013-import-ten-fields-v6"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>
