@@ -217,8 +217,6 @@ const badgeUploadMenuMotion = { lastRendered: null };
 let badgeUploadSelectedDate = badgeUploadDefaultFilters.endDate;
 
 const visitDefaultFilters = {
-  startDate: '2026-08-11',
-  endDate: '2026-08-12',
   source: [],
   status: [],
   businessId: '',
@@ -227,7 +225,11 @@ const visitDefaultFilters = {
   customerKeyword: ''
 };
 function getVisitDefaultFilters() {
-  return { ...visitDefaultFilters, source: [...visitDefaultFilters.source], status: [...visitDefaultFilters.status] };
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - 6);
+  return { ...visitDefaultFilters, startDate: formatStoreDateValue(start), endDate: formatStoreDateValue(today),
+    source: [...visitDefaultFilters.source], status: [...visitDefaultFilters.status] };
 }
 const visitFilterState = getVisitDefaultFilters();
 const visitEnumFields = Object.freeze({
@@ -329,11 +331,11 @@ const visitOrganizationModel = window.VisitOrganizationFilter.createModel(visitD
 const visitMenuState = { openMenu: '', closingMenu: null, query: '', pinnedIds: new Set() };
 const visitMenuMotion = { lastRendered: null };
 const visitDateMenuState = {
-  draftStartDate: visitDefaultFilters.startDate,
-  draftEndDate: visitDefaultFilters.endDate,
+  draftStartDate: visitFilterState.startDate,
+  draftEndDate: visitFilterState.endDate,
   activeField: 'startDate',
-  viewYear: Number(visitDefaultFilters.startDate.slice(0, 4)),
-  viewMonth: Number(visitDefaultFilters.startDate.slice(5, 7))
+  viewYear: Number(visitFilterState.startDate.slice(0, 4)),
+  viewMonth: Number(visitFilterState.startDate.slice(5, 7))
 };
 const visitMatchingFilterKeys = new Set();
 const visitStoreDrilldownState = {
@@ -393,8 +395,9 @@ function clearHiddenVisitFilters() {
   const hidden = visitFieldSettingsModel.getHiddenFilterKeys(visitFieldSettingsState).filter((key) => !visitMatchingFilterKeys.has(key));
   hidden.forEach((key) => {
     if (key === 'time') {
-      visitFilterState.startDate = visitDefaultFilters.startDate;
-      visitFilterState.endDate = visitDefaultFilters.endDate;
+      const defaults = getVisitDefaultFilters();
+      visitFilterState.startDate = defaults.startDate;
+      visitFilterState.endDate = defaults.endDate;
       syncVisitDateDraft();
     } else if (window.VisitOrganizationFilter.fields[key]) visitOrganizationModel.set(key, []);
     else visitFilterState[key] = visitEnumFields[key] ? [] : '';
@@ -966,7 +969,7 @@ let visitDetailTrigger = null;
 
 const matchingPaginationState = { page: 1, pageSize: 20 };
 
-const matchingDefaultFilters = { startDate: '2026-08-11', endDate: '2026-08-12' };
+const matchingDefaultFilters = { ...(window.AIQCLinkedDemo?.dateRange || { startDate: '2026-08-11', endDate: '2026-08-12' }) };
 const matchingFilterState = { ...matchingDefaultFilters };
 const matchingExportButton = document.getElementById('matchingExportButton');
 let matchingExportBusy = false;
@@ -1614,7 +1617,7 @@ function getFilteredVisitRecords() {
     });
     const customerMatch = matchesVisitCustomerKeyword(item, visitFilterState.customerKeyword);
     return dateMatch && organizationMatch && sourceMatch && statusMatch && queryMatch && customerMatch;
-  });
+  }).sort((left, right) => right.date.localeCompare(left.date) || right.startTime.localeCompare(left.startTime));
 }
 
 function formatDeviceCount(value) {
@@ -3139,7 +3142,7 @@ const storeOverviewRecords = (sharedOrganizationDirectory?.dealers || []).map((d
     storeOverviewRecords.push({ brand: dealer.brand, organization: dealer.area, zone: dealer.zone,
       province: dealer.province, city: dealer.city, code: dealer.dealerCode, name: dealer.dealerName,
       dealer: { ...dealer, advisors: linkedBadges.map(badge => ({ advisorId: badge.advisorId, advisorName: badge.advisorName })) }, employees: linkedBadges.length, badges: linkedBadges.length, boundEmployees: linkedBadges.length,
-      bindings: linkedBadges.length, syncedAt: '2026-08-12 23:59:59' });
+      bindings: linkedBadges.length, syncedAt: `${window.AIQCLinkedDemo.dateRange.endDate} 23:59:59` });
   }
 });
 

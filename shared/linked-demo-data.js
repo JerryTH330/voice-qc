@@ -48,6 +48,13 @@
       governor: dealer.governor || '', governorId: dealer.governorId || '' };
   }
   const pad = n => String(n).padStart(2, '0');
+  const today = new Date();
+  const recentDates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() - index);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  });
+  const dateRange = { startDate: recentDates[6], endDate: recentDates[0] };
   const clock = seconds => `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor(seconds / 60) % 60)}:${pad(seconds % 60)}`;
   const seconds = time => time.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
   const names = ['陈知夏', '刘嘉怡', '赵思远', '徐安然', '杨晨曦', '何书瑶', '周沐阳', '张明轩'];
@@ -59,10 +66,10 @@
     return { ...organization(dealer), dealer, advisorId, advisorName,
       advisorPhone: `138****${String(storeIndex * 3 + advisorIndex + 1).padStart(4, '0')}`,
       sn: `MN-LINK-${String(storeIndex * 3 + advisorIndex + 1).padStart(6, '0')}`,
-      linkedDemo: true, queryDate: '2026-08-12', badgeType: '明略Wi-Fi工牌', badgeStatus: '在线',
+      linkedDemo: true, queryDate: dateRange.endDate, badgeType: '明略Wi-Fi工牌', badgeStatus: '在线',
       recordingStatus: '未录音', connectionStatus: '已连接', dockConnected: true, signal: '信号良好',
       battery: 61 + (storeIndex * 7 + advisorIndex) % 39, remainingMemory: 45 + (storeIndex * 11) % 50,
-      uptime: '10:00:00', pendingUploads: 0, syncedAt: '2026-08-12 23:59:59' };
+      uptime: '10:00:00', pendingUploads: 0, syncedAt: `${dateRange.endDate} 23:59:59` };
   }));
   function linkVisit(record, storeIndex, advisorIndex) {
     const dealer = stores[storeIndex];
@@ -114,6 +121,7 @@
       visits.push(linkVisit(record, storeIndex, index % 3));
     }
   }
+  visits.forEach((visit, index) => { visit.date = recentDates[index % recentDates.length]; });
   const byBadgePhone = (sn, advisorId) => badges.find(badge => badge.sn === sn || badge.advisorId === advisorId)?.advisorPhone || '';
   const leads = [], recordings = [], uploads = [];
   const levels = ['高', '中', '低'];
@@ -333,7 +341,7 @@
     };
   }
 
-  global.AIQCLinkedDemo = { stores, visits, legacyVisits, leads, recordings, badges, uploads, events,
+  global.AIQCLinkedDemo = { dateRange, stores, visits, legacyVisits, leads, recordings, badges, uploads, events,
     getVisit: id => byVisit.get(id), getLead: id => byLead.get(id), getRecording: id => byRecording.get(id), getBadge: sn => byBadge.get(sn),
     listUrl, badgeUrl, buildLeadPayload, renderLeadJourney, applyRecordingDetail, buildOrganizationView };
 })(window);
