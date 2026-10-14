@@ -83,7 +83,7 @@
       leadId: `LEAD-LINK-${record.businessId.replace(/^BIZ-/, '')}`,
       recordingId: hasAudio ? (record.recordingId || `REC-LINK-${record.businessId.replace(/^BIZ-/, '')}`) : undefined,
       scene: record.scene === '试乘试驾' ? '试乘试驾' : '销售接待', carSeries,
-      detailText: record.status === '已匹配' ? '已匹配完成1段录音' : record.detailText, weight: 1 };
+      detailText: record.detailText, weight: 1 };
   }
   const legacyVisits = [];
   const remaining = legacyTemplates.map(record => record.weight);
@@ -133,9 +133,12 @@
   const byBadgePhone = (sn, advisorId) => badges.find(badge => badge.sn === sn || badge.advisorId === advisorId)?.advisorPhone || '';
   const leads = [], recordings = [], uploads = [];
   const levels = ['高', '中', '低'];
+  let pendingVisitIndex = 0;
   visits.forEach((visit, index) => {
     const dealer = stores.find(store => store.brand === visit.brand && store.dealerCode === visit.storeCode);
     const durationSeconds = Math.max(1, seconds(visit.endTime) - seconds(visit.startTime));
+    const fragmentCount = Math.ceil(durationSeconds / 300);
+    if (visit.status === '已匹配') visit.detailText = `已匹配完成${fragmentCount}段录音`;
     const level = visit.recordingId && visit.status === '已匹配' ? levels[index % 3] : '无法判断';
     const summary = `${visit.customerName}在${visit.store}了解${visit.carSeries}，关注${index % 2 ? '空间和家庭出行' : '价格、续航及金融方案'}。本次${visit.scene}的处理状态为${visit.status}。`;
     const action = visit.status === '已匹配' ? `由${visit.advisor}跟进${visit.carSeries}报价与试驾安排。` : `由${visit.advisor}核查本次到访：${visit.detailText === '—' ? visit.status : visit.detailText}。`;
@@ -178,11 +181,22 @@
         { time: Math.floor(durationSeconds * 0.8), speaker: visit.customerName, text: '请把配置和报价发给我，后续再联系。' }
       ] : [], summary, action };
     recordings.push(recording);
-    uploads.push({ linkedDemo: true, businessId: visit.businessId, recordingId: visit.recordingId,
-      date: visit.date, advisorName: visit.advisor, sn: visit.badgeSn, sequence: String(index + 1),
-      audioTime: `${visit.startTime}—${visit.endTime}`, duration: clock(durationSeconds),
-      size: `${(durationSeconds / 60 * 0.9).toFixed(1)} MB`, status: visit.status === '录音上传中' ? '未上传' : '已上传',
-      completedAt: visit.status === '录音上传中' ? '未上传' : `${visit.date} ${visit.updatedAt}` });
+    const isPending = visit.status === '录音上传中';
+    const uploadedCount = isPending
+      ? (pendingVisitIndex++ % 2 === 0 ? Math.floor(fragmentCount / 2) : 0)
+      : fragmentCount;
+    for (let fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++) {
+      const offset = fragmentIndex * 300;
+      const fragmentSeconds = Math.min(300, durationSeconds - offset);
+      const uploaded = fragmentIndex < uploadedCount;
+      uploads.push({ linkedDemo: true, businessId: visit.businessId, recordingId: visit.recordingId,
+        fragmentId: `FRAGMENT-${visit.businessId}-${pad(fragmentIndex + 1)}`,
+        date: visit.date, advisorName: visit.advisor, sn: visit.badgeSn, sequence: String(fragmentIndex + 1),
+        audioTime: `${clock(seconds(visit.startTime) + offset)}—${clock(seconds(visit.startTime) + offset + fragmentSeconds)}`,
+        duration: clock(fragmentSeconds), size: `${(fragmentSeconds / 60 * 0.9).toFixed(1)} MB`,
+        status: uploaded ? '已上传' : '未上传',
+        completedAt: uploaded ? `${visit.date} ${visit.updatedAt}` : '未上传' });
+    }
   });
   const events = [];
   const badgeDayVisits = new Map();

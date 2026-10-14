@@ -2442,7 +2442,7 @@ function renderVisitUploadDetail(record) {
   badgeUploadModalState.records = detailRecords.map((item, index) => ({
     ...item,
     advisorDisplayName: record.advisor,
-    sequence: isPendingDetail || record.linkedDemo ? String(index + 1) : item.sequence,
+    sequence: item.fragmentId ? item.sequence : isPendingDetail || record.linkedDemo ? String(index + 1) : item.sequence,
     completedAt: isPendingDetail ? '未上传' : item.completedAt
   }));
   badgeUploadModalState.emptyText = isFailedDetail ? getVisitFailedUploadMessage(record) : isPendingDetail ? '当前没有未上传录音。' : '当前日期没有上传完成的录音。';
