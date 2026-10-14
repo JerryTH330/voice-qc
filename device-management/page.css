@@ -1999,7 +1999,7 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 .is-visit-detail .visit-upload-list-head h2 { font-size: 18px; }
 .is-visit-detail .visit-upload-list-head p { line-height: 1.6; }
 .is-visit-detail .badge-upload-modal-body .table-scroll { position: relative; width: calc(100% - 32px); min-height: 0; max-height: none; flex: 1 1 auto; margin: 0 16px; }
-.is-visit-detail .badge-upload-modal-body .data-table { min-width: 1320px; }
+.is-visit-detail .badge-upload-modal-body .data-table { min-width: 960px; }
 .is-visit-detail .badge-upload-modal-body .data-table th { height: auto; padding: 12px 18px; background: #f6f7f9; color: var(--muted); font-weight: 700; line-height: 1.15; }
 .is-visit-detail .badge-upload-modal-body .data-table td { padding: 15px 18px; color: var(--text); line-height: 1.2; }
 .is-visit-detail .badge-upload-modal-body .table-scroll:has(.badge-record-empty) { overflow: hidden; }
@@ -2040,6 +2040,7 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 #importModal .upload-zone:hover,
 #importModal .upload-zone.is-dragover { border-color: var(--blue); background: #eef5ff; }
 #importModal .upload-zone.has-file { border-color: #a8d5bd; background: #f3fbf7; }
+#importModal .upload-zone[data-phase="failed"] { border-color: #f2c8ce; background: #fff5f6; }
 #importModal .visit-import-illustration { display: block; width: 144px; max-width: 100%; height: auto; flex: 0 0 auto; margin-bottom: 16px; object-fit: contain; pointer-events: none; user-select: none; }
 #importModal .upload-zone strong { max-width: 100%; overflow-wrap: anywhere; font-size: 16px; font-weight: 600; line-height: 24px; }
 #importModal .upload-zone p { max-width: 100%; margin: 8px 0 16px; color: #7b8799; font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }

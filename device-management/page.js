@@ -203,7 +203,7 @@ const badgeUploadDefaultFilters = {
 const badgeUploadFilterState = { ...badgeUploadDefaultFilters };
 const badgeUploadDailyPaginationState = { page: 1, pageSize: 10 };
 const badgeUploadModalPaginationState = { page: 1, pageSize: 10 };
-const badgeUploadModalState = { records: [], emptyText: '当前日期没有上传完成的录音。' };
+const badgeUploadModalState = { records: [], isVisitDetail: false, emptyText: '当前日期没有上传完成的录音。' };
 const badgeUploadMenuState = {
   openMenu: null,
   closingMenu: null,
@@ -2345,15 +2345,21 @@ function renderBadgeRecordPagination(containerId, totalItems, key) {
 function renderBadgeUploadModal() {
   const tbody = document.getElementById('badgeUploadTableBody');
   if (!tbody) return;
+  const isVisitDetail = badgeUploadModalState.isVisitDetail;
+  const columns = isVisitDetail
+    ? ['序号', '文件大小', '音频开始时间', '音频时长', '录音上传时间', '匹配时间']
+    : ['序号', '顾问姓名', '工牌 SN', '文件大小', '音频开始时间', '音频时长', '录音上传时间', '匹配时间'];
+  const head = document.getElementById('badgeUploadTableHeadRow');
+  if (head) head.innerHTML = columns.map(label => `<th>${label}</th>`).join('');
   const totalPages = Math.max(1, Math.ceil(badgeUploadModalState.records.length / badgeUploadModalPaginationState.pageSize));
   badgeUploadModalPaginationState.page = Math.min(badgeUploadModalPaginationState.page, totalPages);
   const start = (badgeUploadModalPaginationState.page - 1) * badgeUploadModalPaginationState.pageSize;
   const visibleRecords = badgeUploadModalState.records.slice(start, start + badgeUploadModalPaginationState.pageSize);
   tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
-    <td>${escapeBadgeHtml(item.sequence)}</td><td>${escapeBadgeHtml(item.advisorDisplayName || item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td>
+    <td>${escapeBadgeHtml(item.sequence)}</td>${isVisitDetail ? '' : `<td>${escapeBadgeHtml(item.advisorDisplayName || item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td>`}
     <td>${escapeBadgeHtml(item.size)}</td><td>${escapeBadgeHtml(getBadgeUploadStartTime(item))}</td><td>${escapeBadgeHtml(item.duration)}</td>
     <td>${escapeBadgeHtml(item.completedAt)}</td><td>${escapeBadgeHtml(getBadgeUploadMatchTime(item))}</td>
-  </tr>`).join('') : `<tr><td colspan="8" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
+  </tr>`).join('') : `<tr><td colspan="${columns.length}" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
   renderBadgeRecordPagination('badgeUploadPagination', badgeUploadModalState.records.length, 'modal');
 }
 
@@ -2427,8 +2433,9 @@ function renderVisitUploadDetail(record) {
   document.getElementById('visitUploadStatusLabel').textContent = record.status;
   document.getElementById('visitUploadListTitle').textContent = `${record.date} 录音上传明细`;
   const description = document.getElementById('visitUploadListDescription');
-  description.textContent = isFailedDetail ? record.detailText : isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : '';
+  description.textContent = isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : '';
   description.hidden = !description.textContent;
+  badgeUploadModalState.isVisitDetail = true;
   badgeUploadModalState.records = detailRecords.map((item, index) => ({
     ...item,
     advisorDisplayName: record.advisor,
@@ -5979,6 +5986,7 @@ function renderVisitImportState() {
   visitImportSubmitButton.textContent = busy ? stage : '开始上传';
   visitImportProgress.hidden = visitImportState.phase === 'idle' || visitImportState.phase === 'ready';
   visitImportProgress.setAttribute('data-phase', visitImportState.phase);
+  visitImportDropzone?.setAttribute('data-phase', visitImportState.phase);
   visitImportProgressStage.textContent = stage;
   visitImportProgressPercent.textContent = `${visitImportState.progress}%`;
   visitImportProgressTrack.setAttribute('aria-valuenow', String(visitImportState.progress));
@@ -6709,6 +6717,7 @@ document.addEventListener('click', (event) => {
     renderBadgeUploads();
     badgeUploadDetailTitle.textContent = `${badgeUploadSelectedDate} 录音上传明细`;
     badgeUploadDetailDescription.textContent = '仅展示当前顾问、当前工牌在所选日期上传完成的录音';
+    badgeUploadModalState.isVisitDetail = false;
     badgeUploadModalState.records = getCompletedBadgeUploadRecords().filter((item) => getBadgeUploadCompletedDate(item) === badgeUploadSelectedDate);
     badgeUploadModalState.emptyText = '当前日期没有上传完成的录音。';
     badgeUploadModalPaginationState.page = 1;
