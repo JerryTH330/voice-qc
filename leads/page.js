@@ -11,7 +11,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "../device-management/xlsx-export-utils.js?v=20260902-badge-list-actions-v1",
     "../shared/field-settings-interactions.js?v=20260911-field-settings-select-all-v1",
     "./real-lead-data.js?v=20260910-real-leads-v1",
-    "../shared/linked-demo-data.js?v=20261013-linked-demo-recent-seven-days-v2",
+    "../shared/linked-demo-data.js?v=20261014-linked-demo-first-page-statuses-v3",
     "../app-runtime.js?v=20261010-linked-demo-v1",
     "./leads-modern-runtime.js?v=20261013-leads-table-layout-v6"
   ];

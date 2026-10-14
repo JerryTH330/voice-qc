@@ -11,7 +11,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     `../device-management/xlsx-export-utils.js?v=${version}`,
     `../shared/field-settings-interactions.js?v=${version}`,
     `./real-recording-data.js?v=${version}`,
-    `../shared/linked-demo-data.js?v=20261013-linked-demo-recent-seven-days-v2`,
+    `../shared/linked-demo-data.js?v=20261014-linked-demo-first-page-statuses-v3`,
     `../app-runtime.js?v=${version}`,
     `./session-real-runtime.js?v=20261012-shared-dimension-v1`
   ];

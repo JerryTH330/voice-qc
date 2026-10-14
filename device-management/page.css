@@ -1989,7 +1989,7 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 #visitEventDetailModal.is-visit-detail .modal-head h2,
 #visitEventDetailModal.is-visit-detail .modal-head p { line-height: normal; }
 .is-visit-detail .badge-upload-modal-content { min-height: 0; flex: 1 1 auto; display: flex; flex-direction: column; padding: 24px; background: #f7f9fc; overflow: hidden; container-type: inline-size; }
-#visitUploadStatus { width: fit-content; padding: 5px 12px; border-radius: 20px; background: #e3e9f1; font-size: 14px; line-height: 20px; }
+#visitUploadStatus { width: fit-content; flex-shrink: 0; padding: 5px 12px; border-radius: 20px; background: #e3e9f1; font-size: 14px; line-height: 20px; }
 #visitUploadStatus.green { color: #16834d; background: #d8f2e2; }
 #visitUploadStatus.amber { background: #fff0cf; }
 #visitUploadStatus.red { background: #fee5e5; }

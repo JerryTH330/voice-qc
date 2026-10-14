@@ -122,6 +122,14 @@
     }
   }
   visits.forEach((visit, index) => { visit.date = recentDates[index % recentDates.length]; });
+  // 将原有 12 条不同状态／原因样本安排为今天最新到访，保持列表按时间倒序。
+  visits.slice(0, legacyTemplates.length).forEach((visit, index) => {
+    const shift = 20 * 3600 - index * 5 * 60 - seconds(visit.startTime);
+    visit.date = recentDates[0];
+    for (const key of ['startTime', 'endTime', 'completedAt', 'updatedAt']) {
+      if (visit[key] && visit[key] !== '—') visit[key] = clock(seconds(visit[key]) + shift);
+    }
+  });
   const byBadgePhone = (sn, advisorId) => badges.find(badge => badge.sn === sn || badge.advisorId === advisorId)?.advisorPhone || '';
   const leads = [], recordings = [], uploads = [];
   const levels = ['高', '中', '低'];

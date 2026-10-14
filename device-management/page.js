@@ -6073,7 +6073,7 @@ function downloadVisitImportFailures() {
 
 function downloadVisitTemplate() {
   const link = document.createElement('a');
-  link.href = './templates/到访明细上传模板.xlsx?v=20261013-ten-required-fields-v2';
+  link.href = './templates/到访明细上传模板.xlsx?v=20261014-eleven-required-fields-v3';
   link.download = '到访明细上传模板.xlsx';
   document.body.appendChild(link);
   link.click();

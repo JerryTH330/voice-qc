@@ -4,7 +4,7 @@
   else root.VisitImportDemo = api;
 })(typeof window === 'undefined' ? globalThis : window, function (organizationFilters) {
   'use strict';
-  const templateKeys = Object.freeze(['storeCode', 'store', 'advisor', 'customerName', 'customerPhone', 'scene', 'carSeries', 'date', 'startTime', 'endTime']);
+  const templateKeys = Object.freeze(['storeCode', 'store', 'advisorId', 'advisor', 'customerName', 'customerPhone', 'scene', 'carSeries', 'date', 'startTime', 'endTime']);
 
   function matchStore(record, directory) {
     const code = String(record.storeCode ?? '').trim();
@@ -23,7 +23,7 @@
     if (filename.includes('失败演示')) {
       const examples = [
         { index: 1, changes: { storeCode: 'DEMO-不存在' }, reasons: ['门店编码未找到对应门店'] },
-        { index: 6, changes: { advisor: '' }, reasons: ['顾问姓名不能为空'] },
+        { index: 6, changes: { advisorId: '', advisor: '' }, reasons: ['顾问姓名不能为空'] },
         { index: 13, changes: { date: '2026-13-32', endTime: '08:00:00' }, reasons: ['到访日期格式不正确', '结束时间必须晚于开始时间'] }
       ];
       examples.forEach(({ index, changes, reasons }) => {
@@ -32,6 +32,9 @@
         rowReasons.set(index, reasons);
       });
     }
+    rows.forEach((record, index) => {
+      if (!String(record.advisorId).trim()) rowReasons.set(index, [...(rowReasons.get(index) || []), '顾问 ID 不能为空']);
+    });
     if (directory.length) rows.forEach((record, index) => {
       const match = matchStore(record, directory);
       rows[index] = match.record;
