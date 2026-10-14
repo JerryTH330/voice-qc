@@ -285,7 +285,6 @@
                         <div id="visitTimePanel" role="dialog" aria-label="到访日期范围" hidden></div>
                       </div>
                       <label class="visit-search-control" data-visit-filter-key="businessId"><span>业务 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入业务 ID" autocomplete="off" data-visit-filter="businessId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
-                      <label class="visit-search-control" data-visit-filter-key="recordingId"><span>录音 ID</span><span class="visit-search-field"><input type="search" placeholder="请输入录音 ID" autocomplete="off" data-visit-filter="recordingId" /><i class="visit-search-icon" aria-hidden="true"></i></span></label>
                       <label class="badge-field-filter" data-visit-filter-key="leadId"><span>线索ID</span><input type="search" placeholder="请输入线索ID" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="leadId" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
                       <label class="badge-field-filter" data-visit-filter-key="customerKeyword"><span>客户</span><input type="search" placeholder="输入客户名称或客户号码" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" lang="zh-CN" inputmode="search" data-visit-filter="customerKeyword" /><svg class="visit-filter-search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"></circle><path d="m12.5 12.5 4.5 4.5"></path></svg></label>
                     </div>
@@ -298,12 +297,12 @@
                 <div class="table-headbar session-list-table-headbar">
                   <div class="panel-title"><h3>到访明细</h3></div>
                   <div class="badge-detail-table-head-tools">
-                    <div class="session-filter-summary visit-filter-summary" id="visitResultSummary"><span>共 <strong>1,286</strong> 条</span><span>已匹配 <strong>1,142</strong> 条</span><span>处理中 <strong>112</strong> 条</span><span>异常需处理 <strong>32</strong> 条</span></div>
+                    <div class="session-filter-summary visit-filter-summary" id="visitResultSummary"><span>共 <strong>3,615</strong> 条</span><span>已匹配 <strong>3,036</strong> 条</span><span>处理中 <strong>308</strong> 条</span><span>异常需处理 <strong>271</strong> 条</span></div>
                     <i class="badge-detail-table-divider" aria-hidden="true"></i>
                     <button class="btn primary badge-detail-table-action" type="button" id="visitExportButton" data-visit-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
                   </div>
                 </div>
-              <div class="table-scroll badge-list-table-wrap visits-table-scroll"><table class="data-table visits-table"><thead><tr id="visitTableHeadRow"><th>业务 ID</th><th>线索ID</th><th>品牌</th><th>大区</th><th>战区</th><th>省份</th><th>城市</th><th>店代码</th><th>所属门店</th><th>顾问 ID</th><th>顾问姓名</th><th>巡回员</th><th>治理员</th><th>客户名称</th><th>客户号码</th><th>业务场景</th><th>意向车系</th><th>到访来源</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>录音 ID</th><th>匹配完成时间</th><th>数据更新时间</th><th class="visit-actions-column">操作</th></tr></thead><tbody id="visitTableBody"></tbody></table>
+              <div class="table-scroll badge-list-table-wrap visits-table-scroll"><table class="data-table visits-table"><thead><tr id="visitTableHeadRow"><th>业务 ID</th><th>线索ID</th><th>品牌</th><th>大区</th><th>战区</th><th>省份</th><th>城市</th><th>店代码</th><th>所属门店</th><th>顾问 ID</th><th>顾问姓名</th><th>巡回员</th><th>治理员</th><th>客户名称</th><th>客户号码</th><th>业务场景</th><th>意向车系</th><th>到访来源</th><th>到访日期</th><th>开始时间</th><th>结束时间</th><th>匹配状态</th><th>匹配详情</th><th>匹配完成时间</th><th>数据更新时间</th><th class="visit-actions-column">操作</th></tr></thead><tbody id="visitTableBody"></tbody></table>
                 <div class="badge-list-empty-state" id="visitEmptyState" role="status" hidden>
                   <svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true">
                     <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" />
@@ -361,11 +360,11 @@
                   <div class="panel-title"><h3 id="matchingTableTitle">门店汇总</h3></div>
                   <div class="badge-detail-table-head-tools">
                     <div class="session-filter-summary matching-filter-summary">
-                      <span class="matching-summary-item" title="按业务 ID 去重" aria-describedby="matchingMetricVisitsNote">到访数 <strong id="matchingMetricVisits">1,286</strong><span class="matching-metric-note" id="matchingMetricVisitsNote">按业务 ID 去重</span></span>
-                      <span class="matching-summary-item" title="已完成录音关联的到访" aria-describedby="matchingMetricMatchedNote">已匹配到访 <strong id="matchingMetricMatched">1,142</strong><span class="matching-metric-note" id="matchingMetricMatchedNote">已完成录音关联的到访</span></span>
-                      <span class="matching-summary-item" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数" aria-describedby="matchingMetricRateDescription matchingMetricRateNote">录音匹配率 <strong id="matchingMetricRate">88.8%</strong><span class="matching-metric-note" id="matchingMetricRateDescription">当前状态为已匹配的去重到访数 ÷ 全部去重到访数</span><span class="matching-metric-note" id="matchingMetricRateNote">1,142 ÷ 1,286</span></span>
-                      <span class="matching-summary-item" title="待匹配、上传、转写、分析" aria-describedby="matchingMetricProcessingNote">处理中 <strong id="matchingMetricProcessing">112</strong><span class="matching-metric-note" id="matchingMetricProcessingNote">待匹配、上传、转写、分析</span></span>
-                      <span class="matching-summary-item" title="无录音、匹配失败" aria-describedby="matchingMetricProblemsNote">异常需处理 <strong id="matchingMetricProblems">32</strong><span class="matching-metric-note" id="matchingMetricProblemsNote">无录音、匹配失败</span></span>
+                      <span class="matching-summary-item" title="按业务 ID 去重" aria-describedby="matchingMetricVisitsNote">到访数 <strong id="matchingMetricVisits">3,615</strong><span class="matching-metric-note" id="matchingMetricVisitsNote">按业务 ID 去重</span></span>
+                      <span class="matching-summary-item" title="已完成录音关联的到访" aria-describedby="matchingMetricMatchedNote">已匹配到访 <strong id="matchingMetricMatched">3,036</strong><span class="matching-metric-note" id="matchingMetricMatchedNote">已完成录音关联的到访</span></span>
+                      <span class="matching-summary-item" title="当前状态为已匹配的去重到访数 ÷ 全部去重到访数" aria-describedby="matchingMetricRateDescription matchingMetricRateNote">录音匹配率 <strong id="matchingMetricRate">84.0%</strong><span class="matching-metric-note" id="matchingMetricRateDescription">当前状态为已匹配的去重到访数 ÷ 全部去重到访数</span><span class="matching-metric-note" id="matchingMetricRateNote">3,036 ÷ 3,615</span></span>
+                      <span class="matching-summary-item" title="待匹配、录音上传中" aria-describedby="matchingMetricProcessingNote">处理中 <strong id="matchingMetricProcessing">308</strong><span class="matching-metric-note" id="matchingMetricProcessingNote">待匹配、录音上传中</span></span>
+                      <span class="matching-summary-item" title="无录音、匹配失败" aria-describedby="matchingMetricProblemsNote">异常需处理 <strong id="matchingMetricProblems">271</strong><span class="matching-metric-note" id="matchingMetricProblemsNote">无录音、匹配失败</span></span>
                     </div>
                     <i class="badge-detail-table-divider" aria-hidden="true"></i>
                     <button class="btn primary badge-detail-table-action" type="button" id="matchingExportButton" data-matching-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
@@ -436,7 +435,7 @@
           </section>
           <div class="badge-upload-modal-body">
             <div class="card-head visit-upload-list-head"><div><h2 id="visitUploadListTitle">录音上传明细</h2><p id="visitUploadListDescription" hidden></p></div></div>
-            <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>顾问姓名</th><th>工牌 SN</th><th>录音片段</th><th>文件大小</th><th>音频开始时间</th><th>音频时长</th><th>录音上传时间</th><th>匹配时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
+            <div class="table-scroll"><table class="data-table upload-table"><thead><tr><th>序号</th><th>顾问姓名</th><th>工牌 SN</th><th>文件大小</th><th>音频开始时间</th><th>音频时长</th><th>录音上传时间</th><th>匹配时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
           </div>
         <div class="session-pagination badge-record-pagination badge-upload-modal-pagination" id="badgeUploadPagination"></div>
         </div>
@@ -658,15 +657,15 @@
     <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
     <script src="./organization-data.js?v=20260903-real-stores-v1"></script>
-    <script src="../shared/linked-demo-data.js?v=20261014-linked-demo-five-minute-fragments-v4"></script>
+    <script src="../shared/linked-demo-data.js?v=20261014-linked-demo-five-matching-statuses-v5"></script>
     <script src="./visit-organization-filter.js?v=20261010-matching-org-v1"></script>
-    <script src="./visit-field-settings.js?v=20261009-visits-advisor-id-v1"></script>
+    <script src="./visit-field-settings.js?v=20261014-visits-remove-recording-id-v2"></script>
     <script src="./visit-import-demo.js?v=20261014-import-advisor-required-v8"></script>
     <script src="./matching-field-settings.js?v=20261010-matching-fields-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
     <script src="../shared/field-settings-interactions.js?v=20260914-shared-field-settings-drag-v1"></script>
     <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
-    <script src="./page.js?v=20261014-visit-five-minute-fragments-v9"></script>
+    <script src="./page.js?v=20261014-visits-import-no-lead-id-v13"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

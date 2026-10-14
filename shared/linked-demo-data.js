@@ -7,8 +7,8 @@
   { businessId: 'BIZ-20260811-0735', recordingId: 'REC-20260811-0735', leadId: '', customerName: '郑女士', customerPhone: '137****3091', date: '2026-08-11', startTime: '15:18:20', endTime: '15:52:46', status: '已匹配', detailText: '已匹配完成4段录音', completedAt: '16:01:22', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '16:01:22', scene: '试乘试驾', carSeries: '星海 S7', detailKey: 'matched', weight: 372 },
   { businessId: 'BIZ-20260811-0712', recordingId: 'REC-20260811-0712', leadId: '', customerName: '吴女士', customerPhone: '136****5826', date: '2026-08-11', startTime: '14:36:08', endTime: '15:06:41', status: '已匹配', detailText: '已匹配完成3段录音', completedAt: '15:14:09', advisor: '周宁', badgeSn: 'MN-BDG-004867', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '销售助手', updatedAt: '15:14:09', scene: '进店接待', carSeries: '星海 V6', detailKey: 'matched', weight: 320 },
   { businessId: 'BIZ-20260812-0148', leadId: '', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004836', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
-  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '录音转写中', detailText: '—', completedAt: '—', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
-  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '模型分析中', detailText: '—', completedAt: '—', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
+  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '已匹配', audioStatus: '录音转写中', detailText: '—', completedAt: '14:49:36', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
+  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '已匹配', audioStatus: '模型分析中', detailText: '—', completedAt: '15:48:20', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
   { businessId: 'BIZ-20260812-0171', leadId: '', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 9 },
   { businessId: 'BIZ-20260812-0183', leadId: '', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '进店接待', carSeries: '星海 L9', weight: 5 },
   { businessId: 'BIZ-20260811-0831', leadId: '', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
@@ -74,11 +74,15 @@
   function linkVisit(record, storeIndex, advisorIndex) {
     const dealer = stores[storeIndex];
     const badge = badges[storeIndex * 3 + advisorIndex];
+    const audioStatus = record.audioStatus || (record.status === '已匹配' ? '已完成' : record.status === '匹配失败' ? '失败' : record.status);
+    const status = ['录音转写中', '模型分析中'].includes(record.status) ? '已匹配' : record.status;
     const unbound = record.detailText === '未绑定工牌';
     const noConsent = record.detailText.includes('不同意录音');
     const hasAudio = !unbound && !noConsent && !['无录音', '待匹配'].includes(record.status);
     const carSeries = dealer.brand === '埃安' ? ['埃安Y Plus', '埃安S MAX', '昊铂GT'][storeIndex % 3] : ['传祺M8', '传祺GS8', '传祺E8'][storeIndex % 3];
-    return { ...record, ...organization(dealer), linkedDemo: true, advisor: badge.advisorName,
+    return { ...record, ...organization(dealer), status, audioStatus,
+      completedAt: status === '已匹配' && record.completedAt === '—' ? record.updatedAt : record.completedAt,
+      linkedDemo: true, advisor: badge.advisorName,
       advisorId: badge.advisorId, advisorKey: badge.advisorId, badgeSn: unbound || noConsent ? '' : badge.sn,
       leadId: `LEAD-LINK-${record.businessId.replace(/^BIZ-/, '')}`,
       recordingId: hasAudio ? (record.recordingId || `REC-LINK-${record.businessId.replace(/^BIZ-/, '')}`) : undefined,
@@ -101,12 +105,12 @@
     });
   }
   const visits = [...legacyVisits];
-  const statuses = ['已匹配', '录音上传中', '录音转写中', '模型分析中', '待匹配', '匹配失败', '无录音'];
+  const audioStatuses = ['已匹配', '录音上传中', '录音转写中', '模型分析中', '待匹配', '匹配失败', '无录音'];
   for (let storeIndex = 3; storeIndex < stores.length; storeIndex++) {
     const count = 18 + (storeIndex * 19) % 63;
     const matchedCount = Math.floor(count * (0.52 + (storeIndex % 7) * 0.06));
     for (let index = 0; index < count; index++) {
-      const status = index < matchedCount ? '已匹配' : statuses[1 + (index + storeIndex) % 6];
+      const status = index < matchedCount ? '已匹配' : audioStatuses[1 + (index + storeIndex) % 6];
       const date = index % 3 ? '2026-08-12' : '2026-08-11';
       const start = 9 * 3600 + Math.floor(index / 3) * 15 * 60 + (storeIndex % 9) * 60;
       const duration = (8 + (index * 7 + storeIndex) % 6) * 60;
@@ -138,8 +142,10 @@
     const dealer = stores.find(store => store.brand === visit.brand && store.dealerCode === visit.storeCode);
     const durationSeconds = Math.max(1, seconds(visit.endTime) - seconds(visit.startTime));
     const fragmentCount = Math.ceil(durationSeconds / 300);
+    const status = visit.audioStatus;
+    const analysisCompleted = status === '已完成';
     if (visit.status === '已匹配') visit.detailText = `已匹配完成${fragmentCount}段录音`;
-    const level = visit.recordingId && visit.status === '已匹配' ? levels[index % 3] : '无法判断';
+    const level = visit.recordingId && analysisCompleted ? levels[index % 3] : '无法判断';
     const summary = `${visit.customerName}在${visit.store}了解${visit.carSeries}，关注${index % 2 ? '空间和家庭出行' : '价格、续航及金融方案'}。本次${visit.scene}的处理状态为${visit.status}。`;
     const action = visit.status === '已匹配' ? `由${visit.advisor}跟进${visit.carSeries}报价与试驾安排。` : `由${visit.advisor}核查本次到访：${visit.detailText === '—' ? visit.status : visit.detailText}。`;
     const record = { id: visit.leadId, linkedDemo: true, ...organization(dealer),
@@ -154,9 +160,9 @@
       leadSource: visit.source === '模板导入' ? '线下导入' : '自然到店', source: visit.source === '模板导入' ? '线下导入' : '自然到店',
       secondSource: '门店接待', thirdSource: '', fourthSource: '', recordingCount: visit.recordingId ? 1 : 0,
       validRecording: visit.recordingId ? '是' : '否',
-      aiLeadValidity: visit.status === '已匹配' ? '有效' : visit.recordingId ? '分析中' : '未分析',
+      aiLeadValidity: analysisCompleted ? '有效' : visit.recordingId ? '分析中' : '未分析',
       patrolerCode: dealer.patrolerId?.match(/:code:([^|]+)/)?.[1] || '—',
-      qcClueStatus: visit.status === '已匹配' ? '有效' : '待确认', finalStatus: '', finalInvalidReason: '',
+      qcClueStatus: analysisCompleted ? '有效' : '待确认', finalStatus: '', finalInvalidReason: '',
       qcScene: visit.scene, summary, action, tags: [visit.carSeries, visit.scene, visit.status],
       followUpTime: `${visit.date} 19:00`, businessId: visit.businessId, badgeSn: visit.badgeSn,
       recordingIds: visit.recordingId ? [visit.recordingId] : [],
@@ -165,7 +171,6 @@
       provinceOrganizationPath: `${visit.brand} > ${visit.province} > ${visit.city} > ${visit.store}` };
     leads.push(record);
     if (!visit.recordingId) return;
-    const status = visit.status === '已匹配' ? '已完成' : visit.status === '匹配失败' ? '失败' : visit.status;
     const recording = { ...record, audioId: visit.recordingId, leadId: visit.leadId, leadBrand: visit.brand,
       dealer, dealerKey: `${visit.brand}::${visit.storeCode}`, dealerCode: visit.storeCode,
       advisorKey: `${visit.brand}::${visit.storeCode}::${visit.advisorId}`,

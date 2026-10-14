@@ -220,7 +220,6 @@ const visitDefaultFilters = {
   source: [],
   status: [],
   businessId: '',
-  recordingId: '',
   leadId: '',
   customerKeyword: ''
 };
@@ -242,11 +241,11 @@ const visitEnumFields = Object.freeze({
     options: [
       { value: '全部未匹配', label: '全部未匹配' },
       { value: '异常需处理', label: '无录音、匹配失败' },
-      ...['已匹配', '匹配失败', '无录音', '录音上传中', '待匹配', '录音转写中', '模型分析中'].map((value) => ({ value, label: value }))
+      ...['已匹配', '匹配失败', '无录音', '录音上传中', '待匹配'].map((value) => ({ value, label: value }))
     ]
   }
 });
-const visitProcessingStatuses = new Set(['待匹配', '录音上传中', '录音转写中', '模型分析中']);
+const visitProcessingStatuses = new Set(['待匹配', '录音上传中']);
 const visitWaitingStatuses = new Set(visitProcessingStatuses);
 const visitUploadDetailStatuses = new Set(['已匹配', '匹配失败', '录音上传中']);
 const visitEventDetailStatuses = new Set(['无录音']);
@@ -255,8 +254,8 @@ const visitRecordTemplates = [
   { businessId: 'BIZ-20260811-0735', recordingId: 'REC-20260811-0735', leadId: '', customerName: '郑女士', customerPhone: '137****3091', date: '2026-08-11', startTime: '15:18:20', endTime: '15:52:46', status: '已匹配', detailText: '已匹配完成4段录音', completedAt: '16:01:22', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '16:01:22', scene: '试乘试驾', carSeries: '星海 S7', detailKey: 'matched', weight: 372 },
   { businessId: 'BIZ-20260811-0712', recordingId: 'REC-20260811-0712', leadId: '', customerName: '吴女士', customerPhone: '136****5826', date: '2026-08-11', startTime: '14:36:08', endTime: '15:06:41', status: '已匹配', detailText: '已匹配完成3段录音', completedAt: '15:14:09', advisor: '周宁', badgeSn: 'MN-BDG-004867', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '销售助手', updatedAt: '15:14:09', scene: '进店接待', carSeries: '星海 V6', detailKey: 'matched', weight: 320 },
   { businessId: 'BIZ-20260812-0148', leadId: '', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004836', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
-  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '录音转写中', detailText: '—', completedAt: '—', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
-  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '模型分析中', detailText: '—', completedAt: '—', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
+  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '已匹配', audioStatus: '录音转写中', detailText: '已匹配完成录音关联', completedAt: '14:49:36', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
+  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '已匹配', audioStatus: '模型分析中', detailText: '已匹配完成录音关联', completedAt: '15:48:20', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
   { businessId: 'BIZ-20260812-0171', leadId: '', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 9 },
   { businessId: 'BIZ-20260812-0183', leadId: '', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '进店接待', carSeries: '星海 L9', weight: 5 },
   { businessId: 'BIZ-20260811-0831', leadId: '', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
@@ -370,10 +369,7 @@ function loadVisitFieldSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(visitFieldSettingsModel.storageKey) || 'null');
     const settings = visitFieldSettingsModel.normalizeSettings(saved);
-    if (saved && saved.schemaVersion !== settings.schemaVersion) {
-      settings.order = visitFieldSettingsModel.createDefaultSettings().order;
-      const visible = new Set(settings.visible);
-      settings.visible = settings.order.filter((key) => visible.has(key));
+    if (saved && JSON.stringify(saved) !== JSON.stringify(settings)) {
       try { localStorage.setItem(visitFieldSettingsModel.storageKey, JSON.stringify(settings)); }
       catch (error) { /* 本地存储不可用时仍保留当前会话配置。 */ }
     }
@@ -1572,12 +1568,8 @@ function normalizeDeviceQuery(value) {
   return String(value || '').trim().toLocaleLowerCase('zh-CN').replace(/\s+/g, '');
 }
 
-function getVisitRecordingId(record) {
-  return record.linkedDemo || record.status === '已匹配' ? record.recordingId || '' : '';
-}
-
 function getVisitLeadId(record) {
-  return !record.linkedDemo && record.source === '模板导入' ? '' : String(record.leadId || '').trim();
+  return record.source === '模板导入' ? '' : String(record.leadId || '').trim();
 }
 
 function matchesVisitCustomerKeyword(record, keyword) {
@@ -1595,7 +1587,6 @@ function getFilteredVisitRecords() {
   const linkedVisit = window.AIQCLinkedDemo?.getVisit(visitFilterState.businessId);
   const queryFields = {
     businessId: 'businessId',
-    recordingId: 'recordingId',
     leadId: 'leadId'
   };
   return visitRecords.filter((item) => {
@@ -1611,8 +1602,7 @@ function getFilteredVisitRecords() {
       || item.status === status);
     const queryMatch = Object.entries(queryFields).every(([filterKey, recordKey]) => {
       const query = normalizeDeviceQuery(visitFilterState[filterKey]);
-      const recordValue = filterKey === 'recordingId' ? getVisitRecordingId(item)
-        : filterKey === 'leadId' ? getVisitLeadId(item) : item[recordKey];
+      const recordValue = filterKey === 'leadId' ? getVisitLeadId(item) : item[recordKey];
       return !query || normalizeDeviceQuery(recordValue).includes(query);
     });
     const customerMatch = matchesVisitCustomerKeyword(item, visitFilterState.customerKeyword);
@@ -1716,10 +1706,11 @@ function renderVisitFieldCell(item, field) {
     const tone = { success: 'green', waiting: 'amber', danger: 'red' }[getVisitStatusClass(item.status)];
     return `<span class="status-inline ${tone}"><span class="status-inline-dot" aria-hidden="true"></span><span>${escapeBadgeHtml(item.status)}</span></span>`;
   }
-  if (item.linkedDemo && ['leadId', 'recordingId', 'badgeSn'].includes(field.key) && item[field.key]) {
+  const linkValue = field.key === 'leadId' ? getVisitLeadId(item) : item[field.key];
+  if (item.linkedDemo && ['leadId', 'badgeSn'].includes(field.key) && linkValue) {
     const url = field.key === 'badgeSn' ? window.AIQCLinkedDemo.badgeUrl(item.badgeSn, item.date)
-      : window.AIQCLinkedDemo.listUrl(field.key === 'leadId' ? 'lead' : 'recording', item[field.key]);
-    return `<a class="text-btn" href="${escapeBadgeHtml(url)}">${escapeBadgeHtml(item[field.key])}</a>`;
+      : window.AIQCLinkedDemo.listUrl('lead', linkValue);
+    return `<a class="text-btn" href="${escapeBadgeHtml(url)}">${escapeBadgeHtml(linkValue)}</a>`;
   }
   if (field.key === 'source') return `<span class="source-tag ${item.source === '销售助手' ? 'api' : 'excel'}">${escapeBadgeHtml(item.source)}</span>`;
   return escapeBadgeHtml(getVisitFieldValue(item, field));
@@ -1727,8 +1718,7 @@ function renderVisitFieldCell(item, field) {
 
 function getVisitFieldValue(item, field) {
   if (field.key === 'detail') return item.detailText || '—';
-  const value = field.key === 'recordingId' ? getVisitRecordingId(item)
-    : field.key === 'leadId' ? getVisitLeadId(item)
+  const value = field.key === 'leadId' ? getVisitLeadId(item)
     : field.key === 'businessId' && item.source === '模板导入' ? '' : item[field.key];
   return value || '—';
 }
@@ -1755,7 +1745,7 @@ function getVisitExportFilters() {
   if (visitFilterState.startDate || visitFilterState.endDate) {
     filters.push({ label: '到访日期', value: `${visitFilterState.startDate || '不限'} 至 ${visitFilterState.endDate || '不限'}` });
   }
-  Object.entries({ businessId: '业务 ID', recordingId: '录音 ID', leadId: '线索ID', customerKeyword: '客户' }).forEach(([key, label]) => {
+  Object.entries({ businessId: '业务 ID', leadId: '线索ID', customerKeyword: '客户' }).forEach(([key, label]) => {
     const value = visitFilterState[key].trim();
     if (value) filters.push({ label, value });
   });
@@ -1774,7 +1764,7 @@ async function exportVisitDetailExcel() {
   if (!records.length || !fields.length || visitExportBusy || visitExportButton?.disabled) return;
   const request = {
     source: 'visits', filename: `到访明细_${getBadgeExportTimestamp()}.xlsx`, sheetName: '到访明细', filters: getVisitExportFilters(),
-    columns: fields.map((field) => ({ label: field.label, width: field.key === 'detail' ? 36 : ['businessId', 'leadId', 'recordingId', 'advisorId'].includes(field.key) ? 24 : 16 })),
+    columns: fields.map((field) => ({ label: field.label, width: field.key === 'detail' ? 36 : ['businessId', 'leadId', 'advisorId'].includes(field.key) ? 24 : 16 })),
     rows: records.map((item) => fields.map((field) => getVisitFieldValue(item, field)))
   };
   visitExportBusy = true;
@@ -2360,7 +2350,7 @@ function renderBadgeUploadModal() {
   const start = (badgeUploadModalPaginationState.page - 1) * badgeUploadModalPaginationState.pageSize;
   const visibleRecords = badgeUploadModalState.records.slice(start, start + badgeUploadModalPaginationState.pageSize);
   tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
-    <td>${escapeBadgeHtml(item.advisorDisplayName || item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td><td>${escapeBadgeHtml(item.sequence)}</td>
+    <td>${escapeBadgeHtml(item.sequence)}</td><td>${escapeBadgeHtml(item.advisorDisplayName || item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td>
     <td>${escapeBadgeHtml(item.size)}</td><td>${escapeBadgeHtml(getBadgeUploadStartTime(item))}</td><td>${escapeBadgeHtml(item.duration)}</td>
     <td>${escapeBadgeHtml(item.completedAt)}</td><td>${escapeBadgeHtml(getBadgeUploadMatchTime(item))}</td>
   </tr>`).join('') : `<tr><td colspan="8" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;

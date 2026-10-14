@@ -29,7 +29,6 @@
     { key: 'endTime', label: '结束时间' },
     { key: 'status', label: '匹配状态' },
     { key: 'detail', label: '匹配详情' },
-    { key: 'recordingId', label: '录音 ID' },
     { key: 'completedAt', label: '匹配完成时间' },
     { key: 'updatedAt', label: '数据更新时间' }
   ].map((field) => Object.freeze(field)));
@@ -52,7 +51,6 @@
     source: ['source'],
     status: ['status'],
     businessId: ['businessId'],
-    recordingId: ['recordingId'],
     leadId: ['leadId']
   }));
 
