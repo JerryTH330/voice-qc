@@ -1262,6 +1262,11 @@
     total.textContent = String(recordsForView.length);
     completed.textContent = String(recordsForView.filter(function (record) { return record.status === '已完成'; }).length);
     failed.textContent = String(recordsForView.filter(function (record) { return record.status === '失败'; }).length);
+    if (global.ListSummaryCounters) global.ListSummaryCounters.update('session', [
+      { node: total, value: recordsForView.length },
+      { node: completed, value: recordsForView.filter(function (record) { return record.status === '已完成'; }).length },
+      { node: failed, value: recordsForView.filter(function (record) { return record.status === '失败'; }).length }
+    ], { root: total.closest('.session-filter-summary') });
     var pageSize = Number(state.pageSize || 10);
     var totalPages = Math.max(1, Math.ceil(recordsForView.length / pageSize));
     if ((state.page || 1) > totalPages) state.page = totalPages;

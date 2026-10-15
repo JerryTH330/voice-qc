@@ -173,12 +173,14 @@
       const markup = filtered.slice((page - 1) * size, page * size).map(task => `<tr><td><button class="export-link export-name" data-detail="${escape(task.id)}" title="${escape(task.filename)}">${escape(task.filename)}</button></td><td>${escape(ExportTasks.sources[task.source])}</td><td>${status(task)}</td><td>${task.recordCount.toLocaleString('zh-CN')}</td><td>${date(task.createdAt)}</td><td>${date(task.completedAt)}</td><td>${date(task.expiresAt)}</td><td><div class="export-actions"><button class="export-link" type="button" ${task.status === 'completed' ? `data-download="${escape(task.id)}"` : 'disabled'}>下载</button>${['completed', 'failed', 'expired'].includes(task.status) ? `<button class="export-link danger" data-delete="${escape(task.id)}">删除</button>` : '<span class="export-muted">—</span>'}</div></td></tr>`).join('');
       if (markup !== lastMarkup) { byId('exportRows').innerHTML = markup; lastMarkup = markup; }
       byId('exportCount').innerHTML = `当前匹配 <strong>${filtered.length}</strong> 个任务`;
+      if (window.ListSummaryCounters) window.ListSummaryCounters.update('exports',
+        [{ node: byId('exportCount').querySelector('strong'), value: filtered.length }], { root: byId('exportCount') });
       byId('exportTotal').textContent = `共 ${filtered.length} 条`;
       renderPages();
       byId('exportPrevious').disabled = page <= 1; byId('exportNext').disabled = page >= pages;
       byId('exportEmpty').hidden = filtered.length > 0;
       byId('exportEmpty').querySelector('h3').textContent = all.length ? '没有匹配的导出任务' : '暂无导出任务';
-      byId('exportEmpty').querySelector('p').textContent = all.length ? '试试调整筛选条件或搜索词' : '在录音列表、线索列表、工牌明细、到访明细或录音排查中点击导出，即可创建任务';
+      byId('exportEmpty').querySelector('p').textContent = all.length ? '试试调整筛选条件或搜索词' : '在支持导出的业务列表中点击导出，即可创建任务';
       if (detailId && byId('exportDetail').open) {
         const task = all.find(item => item.id === detailId);
         if (!task) { closeDetail(); ui.notify('任务已被删除', null, 'info'); }

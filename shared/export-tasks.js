@@ -3,7 +3,7 @@
   else root.ExportTasks = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const sources = { session: '录音列表', leads: '线索列表', customers: '客户聚合列表', badges: '工牌明细', visits: '到访明细', matching: '录音排查' };
+  const sources = { session: '录音列表', leads: '线索列表', customers: '客户聚合列表', badges: '工牌明细', visits: '到访明细', matching: '录音排查', stores: '工牌总览', badgeManagement: '工牌管理', badgeEvents: '工牌事件', badgeUploads: '录音上传日志', badgeUploadDetails: '录音上传明细', visitEvents: '到访工牌事件' };
   const statuses = { queued: '排队中', running: '导出中', completed: '已完成', failed: '失败', expired: '已过期' };
   const copy = value => structuredClone(value);
   // 演示耗时：排队 2 秒，准备 8 秒，每 100 条增加 2 秒。

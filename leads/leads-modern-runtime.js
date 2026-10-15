@@ -1070,6 +1070,8 @@
     if (!headbar) return;
     var summary = headbar.querySelector('.session-filter-summary');
     if (summary) summary.innerHTML = '<span>当前匹配 <strong id="leadsFilterCount">' + total + '</strong> 条' + (currentView === 'customers' ? '客户' : '线索') + '</span>';
+    if (global.ListSummaryCounters && summary) global.ListSummaryCounters.update('leads', [{ id: 'leadsFilterCount', value: total }],
+      { root: summary, context: currentView });
     var tools = headbar.querySelector('.lr-table-tools');
     if (!tools) {
       tools = document.createElement('div');

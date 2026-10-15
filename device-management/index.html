@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20261014-visit-upload-columns-v9" />
+    <link rel="stylesheet" href="./page.css?v=20261015-store-flex-height-v13" />
     <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
     <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2" />
@@ -38,48 +38,55 @@
 
         <div class="page-content">
           <section class="page-panel" data-page="stores">
-            <div class="filter-card session-filter-card store-overview-filter-card">
-              <div class="session-filter-toolbar store-filter-toolbar" id="storeFilterControls">
-                <div class="store-filter-control" data-store-filter-root="brand">
-                  <span>品牌</span>
-                  <button class="store-filter-trigger" type="button" data-store-filter-trigger="brand" aria-expanded="false"><strong id="storeBrandFilterText">全部</strong><i aria-hidden="true"></i></button>
-                  <div class="store-filter-menu" data-store-filter-menu="brand" hidden>
-                    <button class="active" type="button" data-store-filter-option="brand" data-value="全部">全部</button>
-                    <button type="button" data-store-filter-option="brand" data-value="传祺">传祺</button>
-                    <button type="button" data-store-filter-option="brand" data-value="埃安">埃安</button>
+            <div class="filter-card badge-session-filter-card store-filter-card store-overview-filter-card" data-store-filter-card>
+              <div id="storeFilterControls" class="is-collapsed">
+                <div id="storeDimensionSwitcher"></div>
+                <div class="badge-filter-primary">
+                  <div class="badge-dynamic-filter-grid" id="storeDimensionFilters" role="tabpanel"></div>
+                  <div class="badge-dynamic-filter-actions store-filter-actions">
+                    <span></span>
+                    <div>
+                      <button class="btn session-reset-btn" type="button" data-store-filter-reset>重置</button>
+                      <button class="session-toggle-text-btn" type="button" data-store-advanced-toggle aria-expanded="false" aria-controls="storeAdvancedFilters">
+                        <span>展开</span>
+                        <svg class="session-toggle-text-btn-icon is-collapsed" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div class="store-filter-control store-organization-combined-control" data-store-filter-root="organization">
-                  <div class="store-organization-combined-main">
-                    <button class="store-filter-trigger store-organization-dimension-trigger" type="button" data-store-filter-trigger="organizationDimension" aria-expanded="false"><strong id="storeOrganizationDimensionText">大区维度</strong><i aria-hidden="true"></i></button>
-                    <button class="store-filter-trigger store-organization-path-trigger" type="button" data-store-filter-trigger="organization" aria-expanded="false"><strong id="storeOrganizationFilterText">全部组织</strong><i aria-hidden="true"></i></button>
+                <div class="badge-filter-extra" id="storeAdvancedFilters" data-store-advanced-search aria-label="工牌总览更多筛选" aria-hidden="true" inert hidden>
+                  <div class="badge-filter-extra-inner">
+                    <div class="badge-dynamic-filter-grid">
+                      <div class="store-personnel-filter-grid" id="storePersonnelFilters"></div>
+                      <div class="badge-field-filter badge-field-filter-date-time store-time-field" data-store-menu-root="time">
+                        <span>查询日期</span>
+                        <button class="session-date-trigger" type="button" data-store-time-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="storeTimePanel">
+                          <strong data-store-time-start>—</strong><em>至</em><strong data-store-time-end>—</strong><span class="session-date-icon" aria-hidden="true"></span>
+                        </button>
+                        <div id="storeTimePanel" role="dialog" aria-label="工牌总览日期范围" hidden></div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="store-filter-menu store-organization-dimension-menu" data-store-filter-menu="organizationDimension" hidden>
-                    <button class="active" type="button" data-store-org-dimension="region">大区维度</button>
-                    <button type="button" data-store-org-dimension="province">省份维度</button>
-                  </div>
-                  <div class="store-organization-menu" data-store-filter-menu="organization" hidden></div>
                 </div>
-                <label class="store-filter-control store-name-search">
-                  <span>门店</span>
-                  <input type="search" data-store-name-search placeholder="输入门店名称" aria-label="输入门店名称快捷筛选" />
-                </label>
-                <div class="store-date-filter-host" id="storeDateFilterControl"></div>
-                <button class="btn session-reset-btn store-filter-reset device-reset-btn" type="button" data-store-filter-reset>重置</button>
               </div>
-            </div>
-            <div class="summary-row store-overview-metrics">
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-store-count.png" alt="" aria-hidden="true" /><div><small>使用工牌门店数</small><strong id="storeMetricStoreCount">0</strong></div></article>
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-assets.png?v=20260814-simplified-v3" alt="" aria-hidden="true" /><div><small>工牌资产数</small><strong id="storeMetricBadgeAssetCount">0</strong></div></article>
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-badge-bindings.png" alt="" aria-hidden="true" /><div><small>工牌绑定数</small><strong id="storeMetricBindingCount">0</strong></div></article>
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-binding-rate.png?v=20260814-revised-v2" alt="" aria-hidden="true" /><div><small>工牌绑定率</small><strong id="storeMetricBindingRate">—</strong></div></article>
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-employee-count.png" alt="" aria-hidden="true" /><div><small>员工数</small><strong id="storeMetricEmployeeCount">0</strong></div></article>
-              <article class="summary-card mini"><img class="summary-icon store-metric-icon" src="../assets/device-store-metrics/metric-bound-employees.png?v=20260814-revised-v2" alt="" aria-hidden="true" /><div><small>绑定工牌员工数</small><strong id="storeMetricBoundEmployeeCount">0</strong></div></article>
             </div>
             <section class="card table-card store-overview-table-card">
               <div class="table-shell">
-                <div class="table-headbar session-list-table-headbar store-overview-table-head"><div class="panel-title"><h2>工牌总览</h2></div><span class="session-filter-summary store-filter-summary"><span>当前展示 <strong id="storeFilteredCount">0</strong> 家门店</span></span></div>
-                <div class="table-wrap session-list-table-wrap store-overview-table-scroll"><table class="data-table session-data-table store-overview-table"><thead><tr><th>品牌</th><th>大区</th><th>战区</th><th>门店名称</th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="badgeAssets">工牌资产数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindings">工牌绑定数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindingRate">工牌绑定率<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="employees">员工数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="boundEmployees">绑定工牌员工数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th>最新数据同步时间</th><th>操作</th></tr></thead><tbody id="storeOverviewTableBody"></tbody></table></div>
+                <div class="table-headbar session-list-table-headbar store-overview-table-head">
+                  <div class="panel-title"><h2>工牌总览</h2></div>
+                  <div class="badge-detail-table-head-tools store-list-head-tools">
+                    <div class="session-filter-summary store-filter-summary">
+                      <span class="store-summary-item">使用工牌门店数 <strong id="storeMetricStoreCount">0</strong></span>
+                      <span class="store-summary-item">工牌资产数 <strong id="storeMetricBadgeAssetCount">0</strong></span>
+                      <span class="store-summary-item">工牌绑定数 <strong id="storeMetricBindingCount">0</strong></span>
+                      <span class="store-summary-item">工牌绑定率 <strong id="storeMetricBindingRate">—</strong></span>
+                      <span class="store-summary-item">员工数 <strong id="storeMetricEmployeeCount">0</strong></span>
+                      <span class="store-summary-item">绑定工牌员工数 <strong id="storeMetricBoundEmployeeCount">0</strong></span>
+                    </div>
+                    <i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="stores" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="stores" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
+                  </div>
+                </div>
+                <div class="table-wrap session-list-table-wrap store-overview-table-scroll"><table class="data-table session-data-table store-overview-table"><thead><tr id="storeOverviewTableHeadRow"><th>品牌</th><th>大区</th><th>战区</th><th>门店名称</th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="badgeAssets">工牌资产数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindings">工牌绑定数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="bindingRate">工牌绑定率<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="employees">员工数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th aria-sort="none"><button class="store-sort-button" type="button" data-store-sort="boundEmployees">绑定工牌员工数<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button></th><th>最新数据同步时间</th><th>操作</th></tr></thead><tbody id="storeOverviewTableBody"></tbody></table></div>
                 <div class="session-pagination store-pagination" id="storeOverviewPagination"></div>
               </div>
             </section>
@@ -159,7 +166,7 @@
             <section class="card table-card badge-management-list-card">
               <div class="table-headbar session-list-table-headbar badge-management-list-head">
                 <div class="panel-title"><h3>工牌列表</h3><p>管理当前门店工牌与员工的绑定关系</p></div>
-                <span class="session-filter-summary">当前展示 <strong id="badgeManagementCount">0</strong> 枚工牌</span>
+                <div class="badge-detail-table-head-tools"><span class="session-filter-summary">当前展示 <strong id="badgeManagementCount">0</strong> 枚工牌</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="management" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="management" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div>
               </div>
               <div class="table-wrap badge-management-table-wrap">
                 <table class="data-table session-data-table badge-management-table">
@@ -223,7 +230,7 @@
               <span data-badge-record-filter-slot="events" hidden></span>
               <div class="badge-event-filter-toolbar" id="badgeEventFilters"></div>
               <section class="card table-card badge-event-record-card">
-                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="badgeEventResultSummary">共 3 组记录</span></div>
+                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="badgeEventResultSummary">共 3 组记录</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
                 <div id="badgeEventTimeline">
               <section class="badge-event-duration-metrics" aria-label="工牌事件时长指标">
                 <article class="badge-event-duration-card">
@@ -244,7 +251,7 @@
               <span data-badge-record-filter-slot="uploads" hidden></span>
               <div class="badge-event-filter-toolbar badge-upload-filter-toolbar" id="badgeUploadFilters"></div>
               <section class="card table-card badge-upload-daily-card">
-                <div class="card-head"><div><h2>每日录音上传数量</h2><p id="badgeUploadDailySummary">当前日期范围内共 0 条上传完成录音</p></div></div>
+                <div class="card-head"><div><h2>每日录音上传数量</h2><p id="badgeUploadDailySummary">当前日期范围内共 0 条上传完成录音</p></div><div class="badge-detail-table-head-tools"><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="uploads" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="uploads" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
                 <div class="table-scroll"><table class="data-table badge-upload-daily-table"><thead><tr><th>日期</th><th>录音上传数量</th></tr></thead><tbody id="badgeUploadDailyTableBody"></tbody></table></div>
                 <div class="session-pagination badge-record-pagination" id="badgeUploadDailyPagination"></div>
               </section>
@@ -299,6 +306,7 @@
                   <div class="badge-detail-table-head-tools">
                     <div class="session-filter-summary visit-filter-summary" id="visitResultSummary"><span>共 <strong>3,615</strong> 条</span><span>已匹配 <strong>3,036</strong> 条</span><span>处理中 <strong>308</strong> 条</span><span>异常需处理 <strong>271</strong> 条</span></div>
                     <i class="badge-detail-table-divider" aria-hidden="true"></i>
+                    <button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="visits" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button>
                     <button class="btn primary badge-detail-table-action" type="button" id="visitExportButton" data-visit-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
                   </div>
                 </div>
@@ -367,6 +375,7 @@
                       <span class="matching-summary-item" title="无录音、匹配失败" aria-describedby="matchingMetricProblemsNote">异常需处理 <strong id="matchingMetricProblems">271</strong><span class="matching-metric-note" id="matchingMetricProblemsNote">无录音、匹配失败</span></span>
                     </div>
                     <i class="badge-detail-table-divider" aria-hidden="true"></i>
+                    <button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="matching" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button>
                     <button class="btn primary badge-detail-table-action" type="button" id="matchingExportButton" data-matching-export aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button>
                   </div>
                 </div>
@@ -434,7 +443,7 @@
             </div>
           </section>
           <div class="badge-upload-modal-body">
-            <div class="card-head visit-upload-list-head"><div><h2 id="visitUploadListTitle">录音上传明细</h2><p id="visitUploadListDescription" hidden></p></div></div>
+            <div class="card-head visit-upload-list-head"><div><h2 id="visitUploadListTitle">录音上传明细</h2><p id="visitUploadListDescription" hidden></p></div><div class="badge-detail-table-head-tools"><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="upload-details" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="upload-details" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
             <div class="table-scroll"><table class="data-table upload-table"><thead><tr id="badgeUploadTableHeadRow"><th>序号</th><th>顾问姓名</th><th>工牌 SN</th><th>文件大小</th><th>音频开始时间</th><th>音频时长</th><th>录音上传时间</th><th>匹配时间</th></tr></thead><tbody id="badgeUploadTableBody"></tbody></table></div>
           </div>
         <div class="session-pagination badge-record-pagination badge-upload-modal-pagination" id="badgeUploadPagination"></div>
@@ -464,7 +473,7 @@
           </section>
           <div class="badge-record-drawer-controls visit-event-filter-preview" id="visitEventFilters"></div>
           <section class="card table-card badge-event-record-card visit-event-card">
-            <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><span class="data-source-note" id="visitEventResultSummary">共 0 条</span></div>
+            <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="visitEventResultSummary">共 0 条</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="visit-events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="visit-events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
             <div class="event-timeline" id="visitEventDetailTimeline"></div>
           </section>
         </div>
@@ -652,7 +661,28 @@
       </div>
     </aside>
 
-    <script src="../unified-navigation-shell.js?v=20261010-store-visits-v1"></script>
+    <div class="drawer-backdrop badge-field-settings-backdrop" id="storeFieldSettingsBackdrop" hidden></div>
+    <aside class="drawer detail-drawer badge-field-settings-drawer" id="storeFieldSettingsDrawer" role="dialog" aria-modal="true" aria-labelledby="storeFieldSettingsTitle" aria-hidden="true" inert>
+      <div class="drawer-head badge-field-settings-head">
+        <div><h2 id="storeFieldSettingsTitle">字段设置</h2><p>勾选字段并拖动调整列表顺序，对应筛选项同步显示或隐藏</p></div>
+        <button class="icon-btn platform-close-icon" type="button" data-store-field-settings-close aria-label="关闭字段设置"></button>
+      </div>
+      <div class="drawer-body badge-field-settings-body">
+        <div class="badge-field-settings-summary">
+          <span>已选 <strong id="storeFieldSettingsSelectedCount">10</strong> / <span id="storeFieldSettingsTotalCount">10</span> 个字段</span>
+          <button type="button" data-store-field-settings-select-all>取消全选</button>
+        </div>
+        <div class="badge-field-settings-list" id="storeFieldSettingsList" aria-label="工牌总览可配置字段列表"></div>
+      </div>
+      <div class="badge-field-settings-footer">
+        <button class="btn ghost" type="button" data-store-field-settings-restore>恢复默认</button>
+        <div><button class="btn ghost" type="button" data-store-field-settings-close>取消</button><button class="btn primary" type="button" data-store-field-settings-save>保存设置</button></div>
+      </div>
+    </aside>
+
+    <script src="../shared/list-header-actions.js?v=20261015-list-actions-v1"></script>
+    <script src="../shared/list-summary-counters.js?v=20261015-list-summary-counters-v1"></script>
+    <script src="../unified-navigation-shell.js?v=20261015-list-actions-v1"></script>
     <script src="../date-filter-component-utils.js?v=20260901-optional-cancel-v1"></script>
     <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
     <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
@@ -661,11 +691,12 @@
     <script src="./visit-organization-filter.js?v=20261010-matching-org-v1"></script>
     <script src="./visit-field-settings.js?v=20261014-visits-remove-recording-id-v2"></script>
     <script src="./visit-import-demo.js?v=20261014-import-advisor-required-v8"></script>
+    <script src="./store-field-settings.js?v=20261015-store-fields-v1"></script>
     <script src="./matching-field-settings.js?v=20261010-matching-fields-v1"></script>
     <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
     <script src="../shared/field-settings-interactions.js?v=20260914-shared-field-settings-drag-v1"></script>
     <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
-    <script src="./page.js?v=20261014-visit-upload-columns-v16"></script>
+    <script src="./page.js?v=20261015-store-fields-v21"></script>
     <script src="../fixed-action-column.js?v=20260817-v1"></script>
   </body>
 </html>

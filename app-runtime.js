@@ -8680,7 +8680,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                     <h3>可直接复用的话术</h3>
                     <p>只保留查话术真正有用的筛选，避免无效按钮干扰。</p>
                   </div>
-                  <div class="mini-pill">${escapeHtml(getScriptLibraryListBadge('quick', items.length))}</div>
+                  <div class="mini-pill" data-list-summary-count="${items.length}" data-list-summary-mode="quick">${escapeHtml(getScriptLibraryListBadge('quick', items.length))}</div>
                 </div>
                 <div class="scriptlib-list">
                   ${items.length ? items.map((item) => `
@@ -8811,7 +8811,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                     <h3>本月训练主题</h3>
                     <p>按训练价值分排序，只保留主管视角真正要用的信息。</p>
                   </div>
-                  <div class="mini-pill">${escapeHtml(getScriptLibraryListBadge('monthly', items.length))}</div>
+                  <div class="mini-pill" data-list-summary-count="${items.length}" data-list-summary-mode="monthly">${escapeHtml(getScriptLibraryListBadge('monthly', items.length))}</div>
                 </div>
                 <div class="scriptlib-list">
                   ${items.length ? items.map((item) => `
@@ -8987,6 +8987,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         body.innerHTML = scriptLibraryState.page === '话术速查'
           ? renderQuickLookupPage()
           : renderMonthlyTrainingPage()
+        const listBadge = body.querySelector('.scriptlib-list-card .panel-header [data-list-summary-count]')
+        if (window.ListSummaryCounters && listBadge) window.ListSummaryCounters.update('script-library', [{
+          node: listBadge, value: Number(listBadge.dataset.listSummaryCount),
+          format: value => getScriptLibraryListBadge(listBadge.dataset.listSummaryMode, Math.round(value))
+        }], { root: listBadge.closest('.panel-header'), context: scriptLibraryState.page })
         bindScriptLibraryEvents()
       }
 

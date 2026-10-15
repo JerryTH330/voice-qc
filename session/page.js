@@ -13,7 +13,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     `./real-recording-data.js?v=${version}`,
     `../shared/linked-demo-data.js?v=20261014-linked-demo-five-matching-statuses-v5`,
     `../app-runtime.js?v=${version}`,
-    `./session-real-runtime.js?v=20261012-shared-dimension-v1`
+    `./session-real-runtime.js?v=20261015-list-summary-counters-v1`
   ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

@@ -56,7 +56,7 @@
   };
   const exportScriptVersions = {
     'device-management/xlsx-export-utils.js': '20260922-v1',
-    'shared/export-tasks.js': '20261010-matching-export-v1',
+    'shared/export-tasks.js': '20261015-list-actions-v1',
     'shared/export-task-browser.js': '20260923-platform-toast-v1'
   };
   window.__exportReady = Object.keys(exportScriptVersions).reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {

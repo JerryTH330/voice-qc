@@ -1,8 +1,8 @@
 const pageMeta = {
   stores: {
     title: '工牌总览',
-    description: '按查询日期、品牌、组织和门店名称查看员工与工牌绑定情况',
-    actions: []
+    description: '按查询日期、组织或地理维度查看员工与工牌绑定情况',
+    actions: [{ label: '字段设置', style: 'badge-field-settings-trigger', action: 'field-settings' }]
   },
   badges: {
     title: '工牌明细',
@@ -1673,6 +1673,7 @@ function renderVisitPagination(totalItems) {
 }
 
 function renderVisits() {
+  window.ListHeaderActions?.sync('visits');
   const tbody = document.getElementById('visitTableBody');
   if (!tbody) return;
   const fields = getVisibleVisitFields();
@@ -1695,6 +1696,9 @@ function renderVisits() {
   const noRecording = countCategory('noRecording');
   const resultSummary = document.getElementById('visitResultSummary');
   if (resultSummary) resultSummary.innerHTML = `<span>共 <strong>${formatDeviceCount(total)}</strong> 条</span><span>已匹配 <strong>${formatDeviceCount(matched)}</strong> 条</span><span>处理中 <strong>${formatDeviceCount(processing)}</strong> 条</span><span>异常需处理 <strong>${formatDeviceCount(failed + noRecording)}</strong> 条</span>`;
+  if (window.ListSummaryCounters && resultSummary) window.ListSummaryCounters.update('visits',
+    [total, matched, processing, failed + noRecording].map((value, index) => ({ node: resultSummary.querySelectorAll('strong')[index], value, grouping: true })),
+    { root: resultSummary });
   tbody.innerHTML = visibleRecords.map((item) => `<tr>${fields.map((field) => `<td data-visit-column="${field.key}">${renderVisitFieldCell(item, field)}</td>`).join('')}<td class="visit-actions-column">${renderVisitActions(item)}</td></tr>`).join('');
   document.getElementById('visitEmptyState').hidden = visibleRecords.length > 0;
   document.querySelector('.visits-table-scroll').classList.toggle('is-empty', !visibleRecords.length);
@@ -1925,8 +1929,9 @@ async function exportMatchingStoreExcel() {
   finally { matchingExportBusy = false; syncMatchingExportButton(); }
 }
 
-function renderMatchingDashboard() {
-  matchingPaginationState.page = 1;
+function renderMatchingDashboard({ preservePage = false } = {}) {
+  window.ListHeaderActions?.sync('matching');
+  if (!preservePage) matchingPaginationState.page = 1;
   const records = getFilteredMatchingVisitRecords();
   const visits = sumVisitWeights(records);
   const matched = sumVisitWeights(records.filter((record) => getMatchingRecordCategory(record) === 'matched'));
@@ -1945,6 +1950,13 @@ function renderMatchingDashboard() {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
   });
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('matching', [
+    { id: 'matchingMetricVisits', value: visits, grouping: true },
+    { id: 'matchingMetricMatched', value: matched, grouping: true },
+    { id: 'matchingMetricRate', value: rate, decimals: 1, suffix: '%' },
+    { id: 'matchingMetricProcessing', value: processing, grouping: true },
+    { id: 'matchingMetricProblems', value: problems, grouping: true }
+  ], { root: document.querySelector('.matching-filter-summary') });
   document.getElementById('matchingMetricRate').closest('.matching-summary-item').title = `当前状态为已匹配的去重到访数 ÷ 全部去重到访数：${metricValues.matchingMetricRateNote}`;
   renderMatchingStoreTable(records);
 }
@@ -2343,6 +2355,7 @@ function renderBadgeRecordPagination(containerId, totalItems, key) {
 }
 
 function renderBadgeUploadModal() {
+  window.ListHeaderActions?.sync('upload-details');
   const tbody = document.getElementById('badgeUploadTableBody');
   if (!tbody) return;
   const isVisitDetail = badgeUploadModalState.isVisitDetail;
@@ -2364,6 +2377,7 @@ function renderBadgeUploadModal() {
 }
 
 function renderBadgeUploads() {
+  window.ListHeaderActions?.sync('uploads');
   const dailyTbody = document.getElementById('badgeUploadDailyTableBody');
   if (!dailyTbody) return;
   const completedRecords = getCompletedBadgeUploadRecords();
@@ -2435,6 +2449,7 @@ function renderVisitUploadDetail(record) {
   const description = document.getElementById('visitUploadListDescription');
   description.textContent = isPendingDetail ? `共 ${detailRecords.length} 条未上传录音` : '';
   description.hidden = !description.textContent;
+  badgeUploadModalState.visitRecord = record;
   badgeUploadModalState.isVisitDetail = true;
   badgeUploadModalState.records = detailRecords.map((item, index) => ({
     ...item,
@@ -2556,6 +2571,7 @@ function handleVisitEventFiltersKeydown(event) {
 }
 
 function renderVisitEvents() {
+  window.ListHeaderActions?.sync('visit-events');
   const { record, date, type } = visitEventFilterState;
   if (!record) return;
   const eventRecord = badgeEventRecords.find((item) => item.sn === record.badgeSn && item.date === date);
@@ -2565,6 +2581,8 @@ function renderVisitEvents() {
     || (type === 'charging' && ['charging-start', 'charging-end'].includes(event.type))
     || event.type === type).length;
   visitEventResultSummary.textContent = `${date} · 共 ${count} 条`;
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('visit-events', [{ node: visitEventResultSummary, value: count, format: value => `${date} · 共 ${Math.round(value)} 条` }],
+    { root: visitEventResultSummary.closest('.card-head') });
   const groups = buildBadgeEventGroups(events).filter((group) => matchesBadgeEventGroupType(group, type));
   visitEventDetailTimeline.classList.toggle('event-timeline-grouped', groups.length > 0);
   const emptyMessage = type !== 'all' ? '当前工牌在所选日期没有该类型事件。'
@@ -2924,6 +2942,7 @@ function matchesBadgeEventGroupType(group, type) {
 }
 
 function renderBadgeEvents() {
+  window.ListHeaderActions?.sync('events');
   const timeline = document.getElementById('badgeEventGroups');
   const summary = document.getElementById('badgeEventResultSummary');
   if (!timeline || !summary) return;
@@ -2933,6 +2952,8 @@ function renderBadgeEvents() {
 
   if (!record) {
     summary.textContent = '共 0 组记录';
+    if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-events', [{ node: summary, value: 0, format: value => `共 ${Math.round(value)} 组记录` }],
+      { root: summary.closest('.card-head') });
     timeline.classList.remove('event-timeline-grouped');
     timeline.innerHTML = '<div class="event-empty-state">当前日期和工牌 SN 下暂无事件，请检查 SN 是否完整或调整查询日期。</div>';
     return;
@@ -2944,6 +2965,8 @@ function renderBadgeEvents() {
   const groupedEvents = buildBadgeEventGroups(record.events.slice().sort((left, right) => left.time.localeCompare(right.time)))
     .filter((group) => matchesBadgeEventGroupType(group, badgeEventFilterState.type));
   summary.textContent = `共 ${groupedEvents.length} 组记录`;
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-events', [{ node: summary, value: groupedEvents.length, format: value => `共 ${Math.round(value)} 组记录` }],
+    { root: summary.closest('.card-head') });
   timeline.classList.toggle('event-timeline-grouped', groupedEvents.length > 0);
   timeline.innerHTML = groupedEvents.length
     ? groupedEvents.map((group) => renderBadgeEventGroup(group, badgeEventFilterState.type)).join('')
@@ -3166,24 +3189,30 @@ const storeDefaultQueryDate = getStoreRelativeDateValue(-1);
 const storeDefaultQueryDateObject = parseStoreDateValue(storeDefaultQueryDate);
 
 const storeOverviewState = {
-  brand: '全部',
-  organizationDimension: 'region',
-  organization: '全部组织',
-  organizationDraft: '全部组织',
-  organizationSearchQuery: '',
-  storeNameQuery: '',
   startDate: storeDefaultQueryDate,
   endDate: storeDefaultQueryDate,
-  dateDraftStartDate: storeDefaultQueryDate,
-  dateDraftEndDate: storeDefaultQueryDate,
-  activeDateField: 'startDate',
-  dateViewYear: storeDefaultQueryDateObject.getFullYear(),
-  dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1,
   sortKey: '',
   sortDirection: 'desc',
   page: 1,
-  pageSize: 10,
-  openFilter: ''
+  pageSize: 10
+};
+
+const storeOrganizationRecords = storeOverviewRecords.flatMap((item) => {
+  const scope = window.VisitOrganizationFilter.organizationRecord(item.dealer);
+  return item.dealer.advisors.map((advisor) => ({
+    ...scope, advisor: advisor.advisorName, advisorId: advisor.advisorId || '', advisorKey: advisor.advisorId || ''
+  }));
+});
+const storeOrganizationModel = window.VisitOrganizationFilter.createModel(
+  storeOverviewRecords.map((item) => item.dealer), storeOrganizationRecords, { mode: 'matching' }
+);
+const storeMenuState = { openMenu: '', closingMenu: null, query: '', pinnedIds: new Set() };
+const storeMenuMotion = { lastRendered: null };
+const storeDefaultFilters = { startDate: storeDefaultQueryDate, endDate: storeDefaultQueryDate };
+const storeDateMenuState = {
+  draftStartDate: storeDefaultQueryDate, draftEndDate: storeDefaultQueryDate,
+  activeField: 'startDate',
+  viewYear: storeDefaultQueryDateObject.getFullYear(), viewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
 
 const badgeTypes = ['充电坞版本工牌', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
@@ -3826,6 +3855,7 @@ function getBadgeManagementRecords() {
 }
 
 function renderBadgeManagementPage() {
+  window.ListHeaderActions?.sync('management');
   const storeName = document.getElementById('badgeManagementStoreName');
   const count = document.getElementById('badgeManagementCount');
   const tableBody = document.getElementById('badgeManagementTableBody');
@@ -3833,6 +3863,8 @@ function renderBadgeManagementPage() {
   const records = getBadgeManagementRecords();
   storeName.textContent = badgeManagementDealer.dealerName;
   count.textContent = records.length;
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-management', [{ node: count, value: records.length }],
+    { root: count.closest('.session-filter-summary') });
   if (badgeManagementState.openMenuSn && !records.some((badge) => badge.sn === badgeManagementState.openMenuSn)) {
     badgeManagementState.openMenuSn = '';
   }
@@ -4243,6 +4275,8 @@ function renderDockDetail() {
   const visibleRecords = records.slice(start, start + dockPaginationState.pageSize);
   const count = document.getElementById('dockFilterCount');
   if (count) count.textContent = records.length.toLocaleString('zh-CN');
+  if (window.ListSummaryCounters && count) window.ListSummaryCounters.update('docks', [{ node: count, value: records.length, grouping: true }],
+    { root: count.closest('.session-filter-summary') });
   tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
     <td><span class="cell-main">${escapeBadgeHtml(item.sn)}</span></td>
     <td><span class="status-inline ${item.status === '在线' ? 'green' : 'gray'}"><span class="status-inline-dot" aria-hidden="true"></span><span>${escapeBadgeHtml(item.status)}</span></span></td>
@@ -5267,6 +5301,9 @@ function renderBadgeDetail() {
     const node = document.getElementById(id);
     if (node) node.textContent = Number(value).toLocaleString('zh-CN');
   });
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badges',
+    Object.entries(summaryValues).map(([id, value]) => ({ id, value, grouping: true })),
+    { root: document.getElementById('badgeFilterCount').closest('.session-filter-summary') });
   const hasVisibleRecords = visibleRecords.length > 0;
   tableWrap?.classList.toggle('is-empty', !hasVisibleRecords);
   if (emptyState) emptyState.hidden = hasVisibleRecords;
@@ -5383,134 +5420,513 @@ function projectDemoTimestampToDate(timestamp, selectedDate) {
   return separatorIndex === -1 ? selectedDate : `${selectedDate}${timestamp.slice(separatorIndex)}`;
 }
 
-function syncStoreDateView(value) {
-  const target = parseStoreDateValue(value);
-  if (!target) return;
-  storeOverviewState.dateViewYear = target.getFullYear();
-  storeOverviewState.dateViewMonth = target.getMonth() + 1;
+const storeFieldSettingsModel = window.StoreFieldSettings;
+let storeFieldSettingsState = loadStoreFieldSettings();
+let storeFieldSettingsDraft = null;
+let storeFieldSettingsTrigger = null;
+const storeFieldSettingsDrawer = document.getElementById('storeFieldSettingsDrawer');
+const storeFieldSettingsBackdrop = document.getElementById('storeFieldSettingsBackdrop');
+const storeFieldSettingsList = document.getElementById('storeFieldSettingsList');
+const storeFieldSettingsDragController = window.__fieldSettingsInteractions.createController({
+  listSelector: '#storeFieldSettingsList',
+  itemSelector: '[data-store-field-settings-item]',
+  scrollerSelector: '#storeFieldSettingsDrawer .badge-field-settings-body',
+  enabled: () => Boolean(storeFieldSettingsDraft),
+  getKey: (item) => item.dataset.storeFieldSettingsItem,
+  onOrderChange: (order) => { if (storeFieldSettingsDraft) storeFieldSettingsDraft.order = order; }
+});
+
+function loadStoreFieldSettings() {
+  try {
+    return storeFieldSettingsModel.normalizeSettings(JSON.parse(localStorage.getItem(storeFieldSettingsModel.storageKey) || 'null'));
+  } catch (error) {
+    return storeFieldSettingsModel.createDefaultSettings();
+  }
 }
 
-function shiftStoreDateView(offset) {
-  let year = storeOverviewState.dateViewYear;
-  let month = storeOverviewState.dateViewMonth + offset;
-  while (month < 1) {
-    month += 12;
-    year -= 1;
-  }
-  while (month > 12) {
-    month -= 12;
-    year += 1;
-  }
-  storeOverviewState.dateViewYear = year;
-  storeOverviewState.dateViewMonth = month;
+function getVisibleStoreFields() {
+  return storeFieldSettingsModel.getVisibleFields(storeFieldSettingsState);
 }
 
-function applyStoreDateDraft(field, value) {
-  if (field === 'startDate') {
-    storeOverviewState.dateDraftStartDate = value;
-    if (!storeOverviewState.dateDraftEndDate || storeOverviewState.dateDraftEndDate < value) {
-      storeOverviewState.dateDraftEndDate = value;
-    }
-    storeOverviewState.activeDateField = 'endDate';
-    syncStoreDateView(storeOverviewState.dateDraftEndDate);
+function isStoreFilterVisible(key) {
+  return storeFieldSettingsModel.isFilterVisible(storeFieldSettingsState, key);
+}
+
+function clearHiddenStoreFilters() {
+  const hidden = storeFieldSettingsModel.getHiddenFilterKeys(storeFieldSettingsState);
+  hidden.forEach((key) => { storeOrganizationModel.draft[key] = []; });
+  if (hidden.includes(storeMenuState.openMenu) || hidden.includes(storeMenuState.closingMenu)) {
+    closeRecordDrawerMenuState(storeMenuState, true);
+    storeMenuState.query = '';
+  }
+  storeOrganizationModel.apply();
+  if (!storeFieldSettingsState.visible.includes(storeOverviewState.sortKey)) storeOverviewState.sortKey = '';
+}
+
+function renderStoreFieldSettings() {
+  if (!storeFieldSettingsDraft) return;
+  const selected = new Set(storeFieldSettingsDraft.visible);
+  document.getElementById('storeFieldSettingsSelectedCount').textContent = selected.size;
+  document.getElementById('storeFieldSettingsTotalCount').textContent = storeFieldSettingsModel.fields.length;
+  storeFieldSettingsDrawer.querySelector('[data-store-field-settings-select-all]').textContent = selected.size === storeFieldSettingsModel.fields.length ? '取消全选' : '全选';
+  const fields = new Map(storeFieldSettingsModel.fields.map((field) => [field.key, field]));
+  storeFieldSettingsList.innerHTML = storeFieldSettingsDraft.order.map((key) => {
+    const checked = selected.has(key);
+    return `<div class="badge-field-settings-item${checked ? ' is-visible' : ''}" draggable="false" data-store-field-settings-item="${key}">
+      <span class="badge-field-drag-handle" aria-hidden="true"><i></i><i></i><i></i></span>
+      <label><input type="checkbox" data-store-field-settings-check="${key}"${checked ? ' checked' : ''} /><span>${fields.get(key).label}</span></label>
+      <small>${checked ? '已显示' : '已隐藏'}</small>
+    </div>`;
+  }).join('');
+}
+
+function openStoreFieldSettings(trigger = document.querySelector('[data-store-field-settings-open]')) {
+  closeStoreFilterMenus({ instant: true });
+  storeFieldSettingsTrigger = trigger;
+  storeFieldSettingsDraft = { order: [...storeFieldSettingsState.order], visible: [...storeFieldSettingsState.visible] };
+  renderStoreFieldSettings();
+  storeFieldSettingsBackdrop.hidden = false;
+  storeFieldSettingsDrawer.inert = false;
+  storeFieldSettingsDrawer.setAttribute('aria-hidden', 'false');
+  trigger?.setAttribute('aria-expanded', 'true');
+  syncBodyScrollLock();
+  window.requestAnimationFrame(() => {
+    if (!storeFieldSettingsDraft) return;
+    storeFieldSettingsDrawer.classList.add('open');
+    storeFieldSettingsDrawer.querySelector('[data-store-field-settings-close]')?.focus();
+  });
+}
+
+function closeStoreFieldSettings({ restoreFocus = true } = {}) {
+  storeFieldSettingsDragController.cancel();
+  storeFieldSettingsDraft = null;
+  storeFieldSettingsDrawer.classList.remove('open');
+  storeFieldSettingsDrawer.inert = true;
+  storeFieldSettingsDrawer.setAttribute('aria-hidden', 'true');
+  storeFieldSettingsTrigger?.setAttribute('aria-expanded', 'false');
+  window.setTimeout(() => { if (!storeFieldSettingsDraft) storeFieldSettingsBackdrop.hidden = true; }, 220);
+  syncBodyScrollLock();
+  if (restoreFocus && storeFieldSettingsTrigger?.isConnected) storeFieldSettingsTrigger.focus({ preventScroll: true });
+}
+
+function saveStoreFieldSettings() {
+  if (!storeFieldSettingsDraft?.visible.length) {
+    showToast('至少保留一个字段', 'error');
     return;
   }
-  storeOverviewState.dateDraftEndDate = value;
-  if (!storeOverviewState.dateDraftStartDate || storeOverviewState.dateDraftStartDate > value) {
-    storeOverviewState.dateDraftStartDate = value;
-  }
+  storeFieldSettingsState = storeFieldSettingsModel.normalizeSettings(storeFieldSettingsDraft);
+  clearHiddenStoreFilters();
+  storeOverviewState.page = 1;
+  try { localStorage.setItem(storeFieldSettingsModel.storageKey, JSON.stringify(storeFieldSettingsState)); }
+  catch (error) { /* 本地存储不可用时仍保留当前会话配置。 */ }
+  closeStoreFieldSettings();
+  renderStoreOrganizationFilters();
+  renderStoreOverview();
+  showToast('字段设置已保存', 'success');
 }
 
-function getStoreDateCells(year, month) {
-  const cells = [];
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDate = new Date(year, month, 0).getDate();
-  const leadingSlots = (firstDay.getDay() + 6) % 7;
-  for (let index = 0; index < leadingSlots; index += 1) cells.push(null);
-  for (let day = 1; day <= lastDate; day += 1) {
-    const value = formatStoreDateValue(new Date(year, month - 1, day));
-    cells.push({
-      day,
-      value,
-      inRange: value >= storeOverviewState.dateDraftStartDate && value <= storeOverviewState.dateDraftEndDate,
-      isStart: value === storeOverviewState.dateDraftStartDate,
-      isEnd: value === storeOverviewState.dateDraftEndDate,
-      isToday: value === storeTodayDateValue
-    });
+function handleStoreFieldSettingsClick(event) {
+  const open = event.target.closest('[data-store-field-settings-open]');
+  if (open) { openStoreFieldSettings(open); return true; }
+  if (event.target.closest('[data-store-field-settings-close]') || event.target === storeFieldSettingsBackdrop) {
+    closeStoreFieldSettings();
+    return true;
   }
-  while (cells.length % 7 !== 0) cells.push(null);
-  return cells;
+  if (event.target.closest('[data-store-field-settings-restore]')) {
+    if (!storeFieldSettingsDraft) return true;
+    storeFieldSettingsDragController.cancel();
+    storeFieldSettingsDraft = storeFieldSettingsModel.createDefaultSettings();
+    renderStoreFieldSettings();
+    showToast('已恢复默认草稿，保存后生效');
+    return true;
+  }
+  if (event.target.closest('[data-store-field-settings-select-all]')) {
+    if (!storeFieldSettingsDraft) return true;
+    storeFieldSettingsDragController.cancel();
+    const all = storeFieldSettingsDraft.order.every((key) => storeFieldSettingsDraft.visible.includes(key));
+    storeFieldSettingsDraft.visible = all ? [] : [...storeFieldSettingsDraft.order];
+    renderStoreFieldSettings();
+    return true;
+  }
+  if (event.target.closest('[data-store-field-settings-save]')) { saveStoreFieldSettings(); return true; }
+  return false;
 }
 
-function renderStoreDateFilter() {
-  const host = document.getElementById('storeDateFilterControl');
-  if (!host) return;
-  const open = storeOverviewState.openFilter === 'date';
-  const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
-  const startLabel = formatStoreDateDisplay(storeOverviewState.startDate);
-  const endLabel = formatStoreDateDisplay(storeOverviewState.endDate);
-  const draftRangeText = `${formatStoreDateDisplay(storeOverviewState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(storeOverviewState.dateDraftEndDate)}`;
-  const menuHtml = open && panelRenderer ? panelRenderer({
-    dataNamespace: 'store-query-date',
-    rangeText: draftRangeText,
-    monthLabel: `${storeOverviewState.dateViewYear}年${storeOverviewState.dateViewMonth}月`,
-    activeField: storeOverviewState.activeDateField,
-    startLabel: formatStoreDateDisplay(storeOverviewState.dateDraftStartDate),
-    endLabel: formatStoreDateDisplay(storeOverviewState.dateDraftEndDate),
-    cells: getStoreDateCells(storeOverviewState.dateViewYear, storeOverviewState.dateViewMonth),
-    shortcuts: [
-      { key: 'today', label: '今天' },
-      { key: 'last3', label: '近3天' },
-      { key: 'last7', label: '近7天' }
-    ],
-    summaryText: `已选择 ${draftRangeText}`,
-    title: '查询日期范围'
-  }) : '';
-  host.innerHTML = `
-    <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date${open ? ' is-open' : ''}" data-store-filter-root="date">
-      <span>查询日期</span>
-      <button type="button" class="session-date-trigger${open ? ' active' : ''}" data-store-query-date-trigger aria-label="查询日期筛选" aria-haspopup="dialog" aria-expanded="${open ? 'true' : 'false'}">
-        <strong>${escapeBadgeHtml(startLabel)}</strong><em>至</em><strong>${escapeBadgeHtml(endLabel)}</strong><span class="session-date-icon" aria-hidden="true"></span>
+function handleStoreFieldSettingsChange(event) {
+  const check = event.target.closest('[data-store-field-settings-check]');
+  if (!check || !storeFieldSettingsDraft) return false;
+  const focused = document.activeElement === check;
+  const selected = new Set(storeFieldSettingsDraft.visible);
+  if (check.checked) selected.add(check.dataset.storeFieldSettingsCheck);
+  else selected.delete(check.dataset.storeFieldSettingsCheck);
+  storeFieldSettingsDraft.visible = storeFieldSettingsDraft.order.filter((key) => selected.has(key));
+  renderStoreFieldSettings();
+  if (focused) storeFieldSettingsList.querySelector(`[data-store-field-settings-check="${check.dataset.storeFieldSettingsCheck}"]`)?.focus({ preventScroll: true });
+  return true;
+}
+
+function handleStoreFieldSettingsKeydown(event) {
+  if (!storeFieldSettingsDraft) return false;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeStoreFieldSettings();
+    return true;
+  }
+  if (event.key === 'Tab') {
+    const focusable = [...storeFieldSettingsDrawer.querySelectorAll('button:not([disabled]), input:not([disabled])')];
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (!storeFieldSettingsDrawer.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first)?.focus(); }
+    else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    return true;
+  }
+  return false;
+}
+
+function getStoreSelectCandidates(key) {
+  return storeOrganizationModel.options(key, { query: storeMenuState.query, pinnedIds: storeMenuState.pinnedIds });
+}
+
+function syncStoreDateDraft() {
+  storeDateMenuState.draftStartDate = storeOverviewState.startDate;
+  storeDateMenuState.draftEndDate = storeOverviewState.endDate;
+  storeDateMenuState.activeField = 'startDate';
+  syncVisitDateView(storeOverviewState.startDate, storeDateMenuState);
+}
+
+function renderStoreMultiSelect(key) {
+  const field = window.VisitOrganizationFilter.fields[key];
+  const open = storeMenuState.openMenu === key;
+  const visible = isRecordDrawerMenuVisible(storeMenuState, key);
+  const selected = new Set(storeOrganizationModel.draft[key]);
+  const candidates = visible ? getStoreSelectCandidates(key) : [];
+  const allSelected = candidates.length > 0 && candidates.every((item) => selected.has(item.value));
+  const someSelected = candidates.some((item) => selected.has(item.value));
+  const placeholder = !selected.size;
+  const label = storeOrganizationModel.display(key) || `请选择${field.label}`;
+  return `<div class="badge-field-filter badge-field-filter-${key === 'advisor' ? 'advisor' : 'select'} session-toolbar-menu${open ? ' is-open' : ''}" data-store-menu-root="${key}">
+    <span>${field.label}</span>
+    <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-store-select-trigger="${key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="storeOptions-${key}">
+      <strong class="${placeholder ? 'is-placeholder' : ''}">${escapeBadgeHtml(label)}</strong><i class="session-select-caret" aria-hidden="true"></i>
+    </button>
+    ${visible ? `<div class="session-menu-panel badge-advisor-menu store-filter-menu" role="dialog" aria-label="${field.label}筛选"${open ? '' : ' inert aria-hidden="true"'}>
+      <label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" value="${escapeBadgeHtml(storeMenuState.query)}" data-store-select-search="${key}" aria-label="搜索${field.label}" placeholder="${key === 'advisor' ? '输入顾问姓名或 ID' : key === 'store' ? '输入店名或店代码' : `搜索${field.label}`}" autocomplete="off" spellcheck="false" /></label>
+      <button type="button" class="badge-advisor-select-all${allSelected ? ' is-selected' : ''}${someSelected && !allSelected ? ' is-partial' : ''}" data-store-select-all="${key}" ${candidates.length ? '' : 'disabled'} aria-pressed="${allSelected}">
+        <span class="badge-advisor-option-check" aria-hidden="true">${allSelected ? '✓' : ''}</span><span>全选</span><strong>共 ${candidates.length} 条数据</strong>
       </button>
-      ${menuHtml}
-    </div>`;
+      <div class="badge-advisor-options" id="storeOptions-${key}" role="listbox" aria-label="${field.label}候选" aria-multiselectable="true">${candidates.length ? candidates.map((item) => {
+        const checked = selected.has(item.value);
+        return `<button type="button" class="badge-advisor-option${checked ? ' is-selected' : ''}" data-store-select-key="${key}" data-store-select-value="${escapeBadgeHtml(item.value)}" role="option" aria-selected="${checked}">
+          <span class="badge-advisor-option-check" aria-hidden="true">${checked ? '✓' : ''}</span><span class="badge-advisor-option-copy"><strong>${escapeBadgeHtml(item.label)}</strong>${item.meta ? `<small>${escapeBadgeHtml(item.meta)}</small>` : ''}</span>
+        </button>`;
+      }).join('') : `<div class="badge-advisor-empty">未找到匹配${field.label}</div>`}</div>
+    </div>` : ''}
+  </div>`;
 }
 
-function getStoreOrganizationParts(path) {
-  return path === '全部组织' ? [] : path.split(' > ');
+function renderStoreOrganizationFilters({ preserveScroll = false } = {}) {
+  const dimensionSwitcher = document.getElementById('storeDimensionSwitcher');
+  const container = document.getElementById('storeDimensionFilters');
+  const personnel = document.getElementById('storePersonnelFilters');
+  const controls = document.getElementById('storeFilterControls');
+  if (!dimensionSwitcher || !container || !personnel || !controls) return;
+  if (!beginRecordDrawerMenuRender(controls, storeMenuState)) {
+    positionStoreFilterMenu();
+    return;
+  }
+  const previousOptions = document.querySelector('.store-filter-menu .badge-advisor-options');
+  const scrollTop = preserveScroll ? previousOptions?.scrollTop || 0 : 0;
+  const dimensionKeys = storeOrganizationModel.dimensionKeys();
+  dimensionSwitcher.innerHTML = window.DimensionSwitcher.render({
+    namespace: 'store', mode: storeOrganizationModel.draft.dimensionMode,
+    label: '工牌总览筛选维度', panelId: 'storeDimensionFilters'
+  });
+  container.innerHTML = dimensionKeys.filter(isStoreFilterVisible).map(renderStoreMultiSelect).join('');
+  window.DimensionSwitcher.sync(controls);
+  personnel.innerHTML = ['patroler', 'governor', 'advisor'].map(renderStoreMultiSelect).join('');
+  syncStoreTimeFilterControl();
+  const options = document.querySelector('.store-filter-menu .badge-advisor-options');
+  if (options) options.scrollTop = scrollTop;
+  positionStoreFilterMenu();
+  const menu = controls.querySelector('.store-filter-menu');
+  if (menu && !menu.animate) {
+    storeMenuMotion.lastRendered = storeMenuState.openMenu;
+    return;
+  }
+  playRecordDrawerMenuMotion(controls, storeMenuState, storeMenuMotion, () => {
+    const focusedTrigger = document.activeElement?.closest('[data-store-select-trigger], [data-store-time-trigger]');
+    const focusedKey = focusedTrigger?.dataset.storeSelectTrigger;
+    const focusedTime = focusedTrigger?.hasAttribute('data-store-time-trigger');
+    storeMenuState.closingMenu = null;
+    storeMenuState.query = '';
+    renderStoreOrganizationFilters();
+    if (focusedTrigger) {
+      const selector = focusedTime ? '[data-store-time-trigger]' : `[data-store-select-trigger="${focusedKey}"]`;
+      document.querySelector(selector)?.focus({ preventScroll: true });
+    }
+  });
 }
 
-function formatStoreOrganizationPath(path) {
-  return path === '全部组织' ? path : path.replaceAll(' > ', ' / ');
+function renderStoreDateMenu() {
+  const startLabel = formatStoreDateDisplay(storeDateMenuState.draftStartDate);
+  const endLabel = formatStoreDateDisplay(storeDateMenuState.draftEndDate);
+  return globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup({
+    dataNamespace: 'store-date',
+    rangeText: `${startLabel} 至 ${endLabel}`,
+    monthLabel: `${storeDateMenuState.viewYear}年${storeDateMenuState.viewMonth}月`,
+    activeField: storeDateMenuState.activeField,
+    startLabel, endLabel,
+    cells: getVisitDateCells(storeDateMenuState),
+    shortcuts: [{ key: 'today', label: '今天' }, { key: 'last3', label: '近3天' }, { key: 'last7', label: '近7天' }],
+    panelClassName: 'session-menu-panel session-menu-panel-date store-filter-menu store-time-panel',
+    title: '工牌总览日期范围',
+    showCancel: false
+  });
 }
 
-function renderStoreOrganizationMenu() {
-  const menu = document.querySelector('[data-store-filter-menu="organization"]');
+function syncStoreTimeFilterControl() {
+  const trigger = document.querySelector('[data-store-time-trigger]');
+  const panel = document.getElementById('storeTimePanel');
+  if (!trigger || !panel) return;
+  const start = formatStoreDateDisplay(storeOverviewState.startDate);
+  const end = formatStoreDateDisplay(storeOverviewState.endDate);
+  trigger.querySelector('[data-store-time-start]').textContent = start;
+  trigger.querySelector('[data-store-time-end]').textContent = end;
+  trigger.title = `${start} 至 ${end}`;
+  trigger.setAttribute('aria-label', `工牌总览日期范围：${trigger.title}`);
+  const open = storeMenuState.openMenu === 'time';
+  trigger.setAttribute('aria-expanded', String(open));
+  trigger.classList.toggle('active', open);
+  trigger.closest('[data-store-menu-root]').classList.toggle('is-open', open);
+  const visible = isRecordDrawerMenuVisible(storeMenuState, 'time');
+  panel.hidden = !visible;
+  panel.inert = !open;
+  panel.setAttribute('aria-hidden', String(!open));
+  if (visible) panel.innerHTML = renderStoreDateMenu();
+}
+
+function positionStoreFilterMenu() {
+  const key = storeMenuState.openMenu || storeMenuState.closingMenu;
+  if (!key) return;
+  const control = document.querySelector(`[data-store-menu-root="${key}"]`);
+  const menu = control?.querySelector('.store-filter-menu');
   if (!menu) return;
-  const draft = storeOverviewState.organizationDraft || storeOverviewState.organization;
-  const query = storeOverviewState.organizationSearchQuery || '';
-  const isSearching = Boolean(query.trim());
-  const columns = sharedOrganizationDirectory.getColumns(draft, storeOverviewState.organizationDimension, storeOverviewState.brand);
-  const searchResults = isSearching
-    ? sharedOrganizationDirectory.search(query, storeOverviewState.organizationDimension, storeOverviewState.brand)
-    : [];
-  const renderNode = (node, fromSearch = false) => `<button type="button" class="store-org-option${fromSearch ? ' organization-search-result' : ''}${draft === node.path || draft.startsWith(`${node.path} > `) ? ' active' : ''}" data-store-org-path="${escapeBadgeHtml(node.path)}" data-store-org-level="${escapeBadgeHtml(node.type)}"><span>${fromSearch ? `<strong>${escapeBadgeHtml(node.label)}</strong><small>${escapeBadgeHtml(sharedOrganizationDirectory.formatPath(node.path, storeOverviewState.brand))}</small>` : escapeBadgeHtml(node.label)}</span>${node.children?.length ? '<i aria-hidden="true"></i>' : ''}</button>`;
-
-  menu.innerHTML = `
-    <div class="store-org-menu-top">
-      <button type="button" class="store-org-clear${draft === '全部组织' ? ' active' : ''}" data-store-org-clear>全部组织</button>
-      <div class="store-org-current"><span>${storeOverviewState.organizationDimension === 'province' ? '省份维度' : '大区维度'}·当前层级</span><strong>${sharedOrganizationDirectory.formatPath(draft, storeOverviewState.brand)}</strong></div>
-    </div>
-    <label class="organization-cascader-search"><span aria-hidden="true">⌕</span><input type="search" value="${escapeBadgeHtml(query)}" data-store-org-search placeholder="搜索组织、门店编码或顾问"></label>
-    ${isSearching
-      ? `<div class="organization-cascader-search-results">${searchResults.length ? searchResults.map((node) => renderNode(node, true)).join('') : '<div class="store-org-empty">未找到匹配结果</div>'}</div>`
-      : `<div class="store-org-columns">${columns.map((nodes) => `<section class="store-org-column"><div class="store-org-options">${nodes.map(renderNode).join('')}</div></section>`).join('')}</div>`}
-    <div class="store-org-menu-footer">
-      <span>筛选将覆盖当前层级及其下属门店与顾问</span>
-      <button type="button" class="btn primary" data-store-org-apply>应用组织</button>
-    </div>`;
-  syncDeviceOrganizationMenuLayout('.store-organization-menu', '.store-org-columns', '--store-org-shift-x');
+  const bounds = control.getBoundingClientRect();
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = window.innerHeight;
+  if (bounds.bottom < 0 || bounds.top > viewportHeight) {
+    closeStoreFilterMenus({ instant: true });
+    return;
+  }
+  const margin = 24;
+  const width = Math.min(key === 'time' ? 392 : 420, viewportWidth - margin * 2);
+  const below = viewportHeight - bounds.bottom - 24;
+  const above = bounds.top - 24;
+  const opensAbove = below < 260 && above > below;
+  const availableHeight = Math.max(0, opensAbove ? above : below);
+  menu.style.width = `${width}px`;
+  menu.style.maxHeight = `${Math.min(availableHeight, viewportHeight - margin * 2)}px`;
+  menu.style.left = `${Math.max(margin, Math.min(bounds.left, viewportWidth - width - margin))}px`;
+  menu.style.top = `${opensAbove ? Math.max(margin, bounds.top - menu.offsetHeight - 8) : Math.max(margin, bounds.bottom + 8)}px`;
 }
+
+function closeStoreFilterMenus({ restoreFocus = false, instant = false } = {}) {
+  const key = storeMenuState.openMenu || storeMenuState.closingMenu;
+  const menu = document.querySelector('.store-filter-card .store-filter-menu');
+  const controls = document.getElementById('storeFilterControls');
+  if (storeMenuState.openMenu && controls?._menuAnimation) {
+    controls._menuAnimation.cancel();
+    controls._menuAnimation = null;
+  }
+  if (!closeRecordDrawerMenuState(storeMenuState, instant || !menu?.animate)) return;
+  if (!storeMenuState.closingMenu) storeMenuState.query = '';
+  renderStoreOrganizationFilters();
+  if (restoreFocus) {
+    const selector = key === 'time' ? '[data-store-time-trigger]' : `[data-store-select-trigger="${key}"]`;
+    document.querySelector(selector)?.focus({ preventScroll: true });
+  }
+}
+
+function handleStoreFilterClick(event) {
+  if (event.target.closest('[data-store-filter-reset]')) {
+    closeStoreFilterMenus({ instant: true });
+    storeOrganizationModel.reset();
+    Object.assign(storeOverviewState, storeDefaultFilters);
+    storeOverviewState.page = 1;
+    syncStoreDateDraft();
+    renderStoreOrganizationFilters();
+    renderStoreOverview();
+    showToast('筛选条件已重置');
+    return true;
+  }
+  if (event.target.closest('[data-store-advanced-toggle]')) {
+    closeStoreFilterMenus({ instant: true });
+    const controls = document.getElementById('storeFilterControls');
+    setVisitFiltersCollapsed(!controls.classList.contains('is-collapsed'), {
+      controlsId: 'storeFilterControls', extraId: 'storeAdvancedFilters',
+      actionsSelector: '.store-filter-actions', toggleSelector: '[data-store-advanced-toggle]'
+    });
+    return true;
+  }
+  const dimension = event.target.closest('[data-store-dimension]');
+  if (dimension) {
+    const nextMode = dimension.dataset.storeDimension;
+    const previousMode = storeOrganizationModel.draft.dimensionMode;
+    if (!['organization', 'geography'].includes(nextMode) || nextMode === previousMode) return true;
+    const cleared = storeOrganizationModel.dimensionKeys().filter((key) => key !== 'brand')
+      .some((key) => storeOrganizationModel.draft[key].length);
+    storeOrganizationModel.setDimension(nextMode);
+    closeRecordDrawerMenuState(storeMenuState, true);
+    storeMenuState.query = '';
+    renderStoreOrganizationFilters();
+    updateStoreResults();
+    const controls = document.getElementById('storeFilterControls');
+    window.DimensionSwitcher.change(controls, {
+      from: previousMode, mode: nextMode, event, cleared,
+      fields: (nextMode === 'geography' ? ['province', 'city'] : ['region', 'zone'])
+        .map((key) => controls.querySelector(`[data-store-menu-root="${key}"]`))
+    });
+    return true;
+  }
+  const timeTrigger = event.target.closest('[data-store-time-trigger]');
+  if (timeTrigger) {
+    if (storeMenuState.openMenu === 'time') closeStoreFilterMenus({ restoreFocus: true });
+    else {
+      openRecordDrawerMenuState(storeMenuState, 'time');
+      storeMenuState.query = '';
+      syncStoreDateDraft();
+      renderStoreOrganizationFilters();
+      document.querySelector('[data-store-date-field="startDate"]')?.focus({ preventScroll: true });
+    }
+    return true;
+  }
+  if (handleStoreDateClick(event)) return true;
+  const trigger = event.target.closest('[data-store-select-trigger]');
+  if (trigger) {
+    const key = trigger.dataset.storeSelectTrigger;
+    if (storeMenuState.openMenu === key) closeStoreFilterMenus({ restoreFocus: true });
+    else {
+      openRecordDrawerMenuState(storeMenuState, key);
+      storeMenuState.query = '';
+      storeMenuState.pinnedIds = new Set(storeOrganizationModel.draft[key]);
+      renderStoreOrganizationFilters();
+      document.querySelector('[data-store-select-search]')?.focus({ preventScroll: true });
+    }
+    return true;
+  }
+  const option = event.target.closest('[data-store-select-value]');
+  const selectAll = event.target.closest('[data-store-select-all]');
+  if (option || selectAll) {
+    const key = option?.dataset.storeSelectKey || selectAll.dataset.storeSelectAll;
+    const selected = new Set(storeOrganizationModel.draft[key]);
+    if (option) {
+      const value = option.dataset.storeSelectValue;
+      if (selected.has(value)) selected.delete(value);
+      else selected.add(value);
+    } else {
+      const candidates = getStoreSelectCandidates(key);
+      const removing = candidates.every((item) => selected.has(item.value));
+      candidates.forEach((item) => removing ? selected.delete(item.value) : selected.add(item.value));
+    }
+    const removed = storeOrganizationModel.set(key, [...selected]);
+    renderStoreOrganizationFilters({ preserveScroll: true });
+    updateStoreResults();
+    if (removed.length) showToast(`已清除不匹配的条件：${removed.join('；')}`);
+    const focusTarget = option
+      ? [...document.querySelectorAll('[data-store-select-value]')].find((item) => item.dataset.storeSelectValue === option.dataset.storeSelectValue)
+      : document.querySelector('[data-store-select-all]');
+    focusTarget?.focus({ preventScroll: true });
+    return true;
+  }
+  if (storeMenuState.openMenu && !event.target.closest('[data-store-menu-root]')) closeStoreFilterMenus();
+  return false;
+}
+
+function handleStoreDateClick(event) {
+  const action = event.target.closest('[data-store-date-field], [data-store-date-nav], [data-store-date-value], [data-store-date-shortcut], [data-store-date-apply]');
+  if (!action) return false;
+  event.stopPropagation();
+  const data = action.dataset;
+  if (data.storeDateApply !== undefined) {
+    storeOverviewState.startDate = storeDateMenuState.draftStartDate;
+    storeOverviewState.endDate = storeDateMenuState.draftEndDate;
+    closeStoreFilterMenus({ restoreFocus: true });
+    updateStoreResults();
+    return true;
+  }
+  if (data.storeDateField) {
+    storeDateMenuState.activeField = data.storeDateField;
+    syncVisitDateView(data.storeDateField === 'startDate' ? storeDateMenuState.draftStartDate : storeDateMenuState.draftEndDate, storeDateMenuState);
+  } else if (data.storeDateNav) {
+    const next = new Date(storeDateMenuState.viewYear, storeDateMenuState.viewMonth - 1 + Number(data.storeDateNav), 1);
+    storeDateMenuState.viewYear = next.getFullYear();
+    storeDateMenuState.viewMonth = next.getMonth() + 1;
+  } else if (data.storeDateValue) {
+    applyVisitDateDraft(storeDateMenuState.activeField, data.storeDateValue, storeDateMenuState);
+  } else if (data.storeDateShortcut) {
+    applyVisitDateShortcut(data.storeDateShortcut, storeDateMenuState);
+  }
+  renderStoreOrganizationFilters();
+  const selector = data.storeDateValue
+    ? `[data-store-date-field="${storeDateMenuState.activeField}"]`
+    : data.storeDateNav ? `[data-store-date-nav="${data.storeDateNav}"]`
+    : data.storeDateShortcut ? `[data-store-date-shortcut="${data.storeDateShortcut}"]`
+    : `[data-store-date-field="${data.storeDateField}"]`;
+  document.querySelector(selector)?.focus({ preventScroll: true });
+  return true;
+}
+
+function updateStoreFilterSearch(input) {
+  const cursorStart = input.selectionStart;
+  const cursorEnd = input.selectionEnd;
+  storeMenuState.query = input.value;
+  renderStoreOrganizationFilters();
+  const nextInput = document.querySelector('[data-store-select-search]');
+  nextInput?.focus({ preventScroll: true });
+  nextInput?.setSelectionRange(cursorStart, cursorEnd);
+}
+
+function handleStoreFilterKeydown(event) {
+  if (window.DimensionSwitcher.handleKeydown(event)) return true;
+  if (storeMenuState.openMenu && event.key === 'Escape') {
+    event.preventDefault();
+    closeStoreFilterMenus({ restoreFocus: true });
+    return true;
+  }
+  const trigger = event.target.closest('[data-store-select-trigger]');
+  if (trigger && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    openRecordDrawerMenuState(storeMenuState, trigger.dataset.storeSelectTrigger);
+    storeMenuState.query = '';
+    storeMenuState.pinnedIds = new Set(storeOrganizationModel.draft[trigger.dataset.storeSelectTrigger]);
+    renderStoreOrganizationFilters();
+    document.querySelector('[data-store-select-search]')?.focus({ preventScroll: true });
+    return true;
+  }
+  const root = event.target.closest('[data-store-menu-root]');
+  if (!root || !storeMenuState.openMenu || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return false;
+  const option = event.target.closest('[data-store-select-value], [data-store-select-all]');
+  const search = event.target.closest('[data-store-select-search]');
+  if (!option && (!search || !['ArrowDown', 'ArrowUp'].includes(event.key))) return false;
+  const options = [...root.querySelectorAll('[data-store-select-all]:not([disabled]), [data-store-select-value]')];
+  if (!options.length) return false;
+  event.preventDefault();
+  const index = options.indexOf(option);
+  const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
+    : index < 0 ? (event.key === 'ArrowUp' ? options.length - 1 : 0)
+    : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+  options[next]?.focus({ preventScroll: true });
+  return true;
+}
+
+function updateStoreResults() {
+  storeOrganizationModel.apply();
+  storeOverviewState.page = 1;
+  renderStoreOverview();
+}
+
+window.addEventListener('resize', positionStoreFilterMenu);
+window.addEventListener('scroll', positionStoreFilterMenu, true);
 
 function syncDeviceOrganizationMenuLayout(panelSelector, columnsSelector, cssVariable) {
   window.requestAnimationFrame(() => {
@@ -5528,38 +5944,20 @@ function syncDeviceOrganizationMenuLayout(panelSelector, columnsSelector, cssVar
   });
 }
 
-function closeStoreFilterMenus(except = '') {
-  document.querySelectorAll('[data-store-filter-menu]').forEach((menu) => {
-    const key = menu.dataset.storeFilterMenu;
-    const shouldOpen = key === except;
-    menu.hidden = !shouldOpen;
-    const root = menu.closest('[data-store-filter-root]');
-    const trigger = root?.querySelector(`[data-store-filter-trigger="${key}"]`);
-    trigger?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-  });
-  document.querySelectorAll('[data-store-filter-root]').forEach((root) => {
-    root.classList.toggle('is-open', Boolean(root.querySelector('[data-store-filter-menu]:not([hidden])')));
-  });
-  storeOverviewState.openFilter = except;
-  renderStoreDateFilter();
-}
-
 function getFilteredStoreRecords() {
+  const selectedAdvisors = storeOrganizationModel.applied.advisor;
   let records = storeOverviewRecords.filter((item) => {
-    const brandMatch = storeOverviewState.brand === '全部' || item.brand === storeOverviewState.brand;
-    const normalizedStoreNameQuery = storeOverviewState.storeNameQuery.trim().toLocaleLowerCase('zh-CN');
-    const storeNameMatch = !normalizedStoreNameQuery || item.name.toLocaleLowerCase('zh-CN').includes(normalizedStoreNameQuery);
-    const organizationPath = sharedOrganizationDirectory.getDealerPath(item.dealer, storeOverviewState.organizationDimension);
-    const advisorPathMatch = item.dealer.advisors.some((advisor) => `${organizationPath} > ${advisor.advisorName}`.startsWith(storeOverviewState.organization));
-    const organizationMatch = storeOverviewState.organization === '全部组织'
-      || organizationPath.startsWith(storeOverviewState.organization)
-      || advisorPathMatch;
-    // 工牌总览是每日快照原型：每个查询日期复用同一份门店数据。
-    return item.bindings >= 1 && brandMatch && storeNameMatch && organizationMatch;
+    if (item.bindings < 1) return false;
+    const scope = window.VisitOrganizationFilter.organizationRecord(item.dealer);
+    if (!selectedAdvisors.length) return storeOrganizationModel.matches(scope);
+    return storeOrganizationRecords.some((record) => record.storeId === scope.storeId && storeOrganizationModel.matches(record));
   });
-  const selectedNode = sharedOrganizationDirectory.findNode(storeOverviewState.organization, storeOverviewState.organizationDimension);
-  if (selectedNode?.type === 'advisor') {
-    records = records.map((item) => ({ ...item, employees: 1, badges: 1, boundEmployees: 1, bindings: 1 }));
+  if (selectedAdvisors.length) {
+    records = records.map((item) => {
+      const scope = window.VisitOrganizationFilter.organizationRecord(item.dealer);
+      const count = new Set(storeOrganizationRecords.filter((record) => record.storeId === scope.storeId && storeOrganizationModel.matches(record)).map((record) => record.advisorKey)).size;
+      return { ...item, employees: count, badges: count, boundEmployees: count, bindings: count };
+    });
   }
   if (!storeOverviewState.sortKey) return records;
   return records.sort((left, right) => {
@@ -5697,6 +6095,11 @@ function animateStoreOverviewMetric(node, target, options = {}) {
 }
 
 function animateStoreOverviewMetrics(metrics) {
+  if (window.ListSummaryCounters) {
+    window.ListSummaryCounters.update('stores', metrics.map(metric => ({ ...metric, grouping: true })),
+      { root: document.querySelector('.store-filter-summary') });
+    return;
+  }
   metrics.forEach((metric, index) => {
     animateStoreOverviewMetric(document.getElementById(metric.id), metric.value, {
       decimals: metric.decimals,
@@ -5707,9 +6110,29 @@ function animateStoreOverviewMetrics(metrics) {
   });
 }
 
+function getStoreFieldValue(item, field) {
+  const values = { brand: item.brand, region: item.organization, zone: item.zone, store: item.name,
+    badgeAssets: getStoreBadgeAssetCount(item) ?? '—', bindings: item.bindings,
+    bindingRate: formatStoreBindingRate(getStoreBindingRate(item)), employees: item.employees,
+    boundEmployees: item.boundEmployees, syncedAt: projectDemoTimestampToDate(item.syncedAt, storeOverviewState.endDate) };
+  return values[field.key];
+}
+
+function renderStoreFieldCell(item, field) {
+  const value = escapeBadgeHtml(getStoreFieldValue(item, field));
+  return field.key === 'store' ? `<strong>${value}</strong>` : value;
+}
+
 function renderStoreOverview() {
+  window.ListHeaderActions?.sync('stores');
   const tbody = document.getElementById('storeOverviewTableBody');
   if (!tbody) return;
+  const fields = getVisibleStoreFields();
+  const head = document.getElementById('storeOverviewTableHeadRow');
+  head.innerHTML = fields.map(field => `<th data-store-column="${field.key}"${field.sortable ? ' aria-sort="none"' : ''}>${field.sortable
+    ? `<button class="store-sort-button" type="button" data-store-sort="${field.key}">${field.label}<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button>`
+    : field.label}</th>`).join('') + '<th>操作</th>';
+  head.closest('table').style.minWidth = `${Math.max(360, fields.length * 132 + 100)}px`;
   const records = getFilteredStoreRecords();
   const totalPages = Math.max(1, Math.ceil(records.length / storeOverviewState.pageSize));
   storeOverviewState.page = Math.min(storeOverviewState.page, totalPages);
@@ -5728,36 +6151,15 @@ function renderStoreOverview() {
     { id: 'storeMetricEmployeeCount', value: sumStoreMetric(records, 'employees') },
     { id: 'storeMetricBoundEmployeeCount', value: sumStoreMetric(records, 'boundEmployees') }
   ]);
-  document.getElementById('storeFilteredCount').textContent = records.length.toLocaleString('zh-CN');
-  document.getElementById('storeBrandFilterText').textContent = storeOverviewState.brand;
-  document.getElementById('storeOrganizationDimensionText').textContent = storeOverviewState.organizationDimension === 'province' ? '省份维度' : '大区维度';
-  document.getElementById('storeOrganizationFilterText').textContent = sharedOrganizationDirectory.formatPath(storeOverviewState.organization, storeOverviewState.brand);
-  renderStoreDateFilter();
-
-  document.querySelectorAll('[data-store-filter-option]').forEach((button) => {
-    button.classList.toggle('active', storeOverviewState[button.dataset.storeFilterOption] === button.dataset.value);
-  });
-  document.querySelectorAll('[data-store-org-dimension]').forEach((button) => {
-    button.classList.toggle('active', storeOverviewState.organizationDimension === button.dataset.storeOrgDimension);
-  });
   updateStoreSortHeaders();
 
   tbody.innerHTML = visibleRecords.length
     ? visibleRecords.map((item) => `
       <tr>
-        <td>${item.brand}</td>
-        <td>${item.organization}</td>
-        <td>${item.zone}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${getStoreBadgeAssetCount(item) ?? '—'}</td>
-        <td>${item.bindings}</td>
-        <td>${formatStoreBindingRate(getStoreBindingRate(item))}</td>
-        <td>${item.employees}</td>
-        <td>${item.boundEmployees}</td>
-        <td>${escapeBadgeHtml(projectDemoTimestampToDate(item.syncedAt, storeOverviewState.endDate))}</td>
+        ${fields.map(field => `<td data-store-column="${field.key}">${renderStoreFieldCell(item, field)}</td>`).join('')}
         <td><button class="text-btn" data-store-drilldown data-store-code="${escapeBadgeHtml(item.code)}" data-store-brand="${escapeBadgeHtml(item.brand)}" data-store-region="${escapeBadgeHtml(item.organization)}" data-store-zone="${escapeBadgeHtml(item.zone)}" data-store-name="${escapeBadgeHtml(item.name)}">查看明细</button></td>
       </tr>`).join('')
-    : '<tr class="store-empty-row"><td colspan="11">当前筛选条件下暂无已绑定工牌的门店，请调整品牌或组织后重试。</td></tr>';
+    : `<tr class="store-empty-row"><td colspan="${fields.length + 1}">当前筛选条件下暂无已绑定工牌的门店，请调整品牌或组织后重试。</td></tr>`;
   renderStoreOverviewPagination(records.length);
 }
 
@@ -5875,7 +6277,7 @@ function renderActions(route) {
     if (item.action === 'field-settings') {
       const action = document.createElement('div');
       action.className = 'badge-field-settings-action';
-      const settingsPage = route === 'visits' || route === 'store-visits' ? 'visit' : route === 'dashboard' ? 'matching' : 'badge';
+      const settingsPage = route === 'visits' || route === 'store-visits' ? 'visit' : route === 'dashboard' ? 'matching' : route === 'stores' ? 'store' : 'badge';
       const settingsAttributes = settingsPage === 'badge' ? 'data-badge-field-settings-open' : `data-${settingsPage}-field-settings-open aria-expanded="false" aria-controls="${settingsPage}FieldSettingsDrawer"`;
       const settingsTooltipId = `${settingsPage}FieldSettingsTooltip`;
       action.innerHTML = `<button class="btn badge-field-settings-trigger" type="button" ${settingsAttributes} aria-describedby="${settingsTooltipId}">
@@ -5904,6 +6306,7 @@ function setRoute(route, updateHash = true) {
   const visitStoreRoute = safeRoute === 'store-visits';
   const visitRoute = safeRoute === 'visits' || visitStoreRoute;
   if (safeRoute !== 'dashboard') closeMatchingFilterMenus({ instant: true });
+  if (safeRoute !== 'stores' && storeFieldSettingsDraft) closeStoreFieldSettings({ restoreFocus: false });
   if (safeRoute !== 'dashboard' && matchingFieldSettingsDraft) closeMatchingFieldSettings({ restoreFocus: false });
   if (!visitRoute && visitFieldSettingsDraft) closeVisitFieldSettings({ restoreFocus: false });
   if (!visitRoute) {
@@ -6113,6 +6516,7 @@ function syncBodyScrollLock() {
     || badgeFieldSettingsDrawer?.getAttribute('aria-hidden') === 'false'
     || visitFieldSettingsDrawer?.getAttribute('aria-hidden') === 'false'
     || matchingFieldSettingsDrawer?.getAttribute('aria-hidden') === 'false'
+    || document.getElementById('storeFieldSettingsDrawer')?.getAttribute('aria-hidden') === 'false'
     || visitDrawer.getAttribute('aria-hidden') === 'false'
     || !importModal.hidden
     || [badgeUploadDetailModal, visitEventDetailModal].some((modal) => !modal.hidden && modal.classList.contains('is-visit-detail'))
@@ -6509,6 +6913,22 @@ document.addEventListener('change', function (event) {
 });
 document.addEventListener('keydown', function (event) {
   if (handleMatchingFieldSettingsKeydown(event) || handleMatchingFilterKeydown(event)) event.stopImmediatePropagation();
+});
+
+document.addEventListener('click', function (event) {
+  if (handleStoreFieldSettingsClick(event) || handleStoreFilterClick(event)) event.stopImmediatePropagation();
+});
+document.addEventListener('keydown', function (event) {
+  if (handleStoreFieldSettingsKeydown(event) || handleStoreFilterKeydown(event)) event.stopImmediatePropagation();
+});
+document.addEventListener('change', function (event) {
+  if (handleStoreFieldSettingsChange(event)) event.stopImmediatePropagation();
+});
+document.addEventListener('input', function (event) {
+  if (event.target.matches('[data-store-select-search]') && !event.isComposing) updateStoreFilterSearch(event.target);
+});
+document.addEventListener('compositionend', function (event) {
+  if (event.target.matches('[data-store-select-search]')) updateStoreFilterSearch(event.target);
 });
 
 document.addEventListener('click', (event) => {
@@ -7262,169 +7682,6 @@ document.addEventListener('click', (event) => {
     }
   }
 
-  if (event.target.closest('[data-store-query-date-trigger]')) {
-    const willOpen = storeOverviewState.openFilter !== 'date';
-    if (willOpen) {
-      storeOverviewState.dateDraftStartDate = storeOverviewState.startDate;
-      storeOverviewState.dateDraftEndDate = storeOverviewState.endDate;
-      storeOverviewState.activeDateField = 'startDate';
-      syncStoreDateView(storeOverviewState.dateDraftStartDate);
-    }
-    closeStoreFilterMenus(willOpen ? 'date' : '');
-    return;
-  }
-
-  const storeDateField = event.target.closest('[data-store-query-date-field]');
-  if (storeDateField) {
-    storeOverviewState.activeDateField = storeDateField.dataset.storeQueryDateField;
-    syncStoreDateView(storeOverviewState.activeDateField === 'startDate'
-      ? storeOverviewState.dateDraftStartDate
-      : storeOverviewState.dateDraftEndDate);
-    renderStoreDateFilter();
-    return;
-  }
-
-  const storeDateNav = event.target.closest('[data-store-query-date-nav]');
-  if (storeDateNav) {
-    shiftStoreDateView(Number(storeDateNav.dataset.storeQueryDateNav));
-    renderStoreDateFilter();
-    return;
-  }
-
-  const storeDateValue = event.target.closest('[data-store-query-date-value]');
-  if (storeDateValue) {
-    applyStoreDateDraft(storeOverviewState.activeDateField, storeDateValue.dataset.storeQueryDateValue);
-    renderStoreDateFilter();
-    return;
-  }
-
-  const storeDateShortcut = event.target.closest('[data-store-query-date-shortcut]');
-  if (storeDateShortcut) {
-    const endDate = parseStoreDateValue(storeTodayDateValue);
-    const startDate = new Date(endDate);
-    if (storeDateShortcut.dataset.storeQueryDateShortcut === 'last3') startDate.setDate(startDate.getDate() - 2);
-    if (storeDateShortcut.dataset.storeQueryDateShortcut === 'last7') startDate.setDate(startDate.getDate() - 6);
-    storeOverviewState.dateDraftStartDate = formatStoreDateValue(startDate);
-    storeOverviewState.dateDraftEndDate = formatStoreDateValue(endDate);
-    storeOverviewState.activeDateField = 'endDate';
-    syncStoreDateView(storeOverviewState.dateDraftEndDate);
-    renderStoreDateFilter();
-    return;
-  }
-
-  if (event.target.closest('[data-store-query-date-cancel]')) {
-    closeStoreFilterMenus();
-    return;
-  }
-
-  if (event.target.closest('[data-store-query-date-apply]')) {
-    storeOverviewState.startDate = storeOverviewState.dateDraftStartDate;
-    storeOverviewState.endDate = storeOverviewState.dateDraftEndDate;
-    storeOverviewState.page = 1;
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    return;
-  }
-
-  const storeFilterTrigger = event.target.closest('[data-store-filter-trigger]');
-  if (storeFilterTrigger) {
-    const key = storeFilterTrigger.dataset.storeFilterTrigger;
-    const nextFilter = storeOverviewState.openFilter === key ? '' : key;
-    if (nextFilter === 'organization') {
-      storeOverviewState.organizationDraft = storeOverviewState.organization;
-      storeOverviewState.organizationSearchQuery = '';
-      renderStoreOrganizationMenu();
-    }
-    closeStoreFilterMenus(nextFilter);
-    return;
-  }
-
-  const storeOrgPath = event.target.closest('[data-store-org-path]');
-  if (storeOrgPath) {
-    storeOverviewState.organizationDraft = storeOrgPath.dataset.storeOrgPath;
-    if (storeOrgPath.dataset.storeOrgLevel === 'advisor') {
-      storeOverviewState.organization = storeOverviewState.organizationDraft;
-      storeOverviewState.page = 1;
-      closeStoreFilterMenus();
-      renderStoreOverview();
-    } else {
-      renderStoreOrganizationMenu();
-      closeStoreFilterMenus('organization');
-    }
-    return;
-  }
-
-  const storeOrgDimension = event.target.closest('[data-store-org-dimension]');
-  if (storeOrgDimension) {
-    const nextDimension = storeOrgDimension.dataset.storeOrgDimension || 'region';
-    if (storeOverviewState.organizationDimension !== nextDimension) {
-      storeOverviewState.organizationDimension = nextDimension;
-      storeOverviewState.organization = '全部组织';
-      storeOverviewState.organizationDraft = '全部组织';
-      storeOverviewState.organizationSearchQuery = '';
-    }
-    storeOverviewState.page = 1;
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    return;
-  }
-
-  if (event.target.closest('[data-store-org-clear]')) {
-    storeOverviewState.organization = '全部组织';
-    storeOverviewState.organizationDraft = '全部组织';
-    storeOverviewState.page = 1;
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    return;
-  }
-
-  if (event.target.closest('[data-store-org-apply]')) {
-    storeOverviewState.organization = storeOverviewState.organizationDraft || '全部组织';
-    storeOverviewState.page = 1;
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    return;
-  }
-
-  const storeFilterOption = event.target.closest('[data-store-filter-option]');
-  if (storeFilterOption) {
-    const filterKey = storeFilterOption.dataset.storeFilterOption;
-    const nextValue = storeFilterOption.dataset.value;
-    if (filterKey === 'brand' && storeOverviewState.brand !== nextValue) {
-      storeOverviewState.organization = '全部组织';
-      storeOverviewState.organizationDraft = '全部组织';
-      storeOverviewState.organizationSearchQuery = '';
-    }
-    storeOverviewState[filterKey] = nextValue;
-    storeOverviewState.page = 1;
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    return;
-  }
-
-  if (event.target.closest('[data-store-filter-reset]')) {
-    storeOverviewState.brand = '全部';
-    storeOverviewState.organizationDimension = 'region';
-    storeOverviewState.organization = '全部组织';
-    storeOverviewState.organizationDraft = '全部组织';
-    storeOverviewState.organizationSearchQuery = '';
-    storeOverviewState.storeNameQuery = '';
-    storeOverviewState.startDate = storeDefaultQueryDate;
-    storeOverviewState.endDate = storeDefaultQueryDate;
-    storeOverviewState.dateDraftStartDate = storeDefaultQueryDate;
-    storeOverviewState.dateDraftEndDate = storeDefaultQueryDate;
-    storeOverviewState.activeDateField = 'startDate';
-    storeOverviewState.dateViewYear = storeDefaultQueryDateObject.getFullYear();
-    storeOverviewState.dateViewMonth = storeDefaultQueryDateObject.getMonth() + 1;
-    storeOverviewState.page = 1;
-    const storeNameSearch = document.querySelector('[data-store-name-search]');
-    if (storeNameSearch) storeNameSearch.value = '';
-    closeStoreFilterMenus();
-    renderStoreOverview();
-    showToast('筛选条件已重置');
-    return;
-  }
-
   const storeSort = event.target.closest('[data-store-sort]');
   if (storeSort) {
     const nextKey = storeSort.dataset.storeSort;
@@ -7457,14 +7714,13 @@ document.addEventListener('click', (event) => {
     return;
   }
 
-  if (!event.target.closest('[data-store-filter-root]')) closeStoreFilterMenus();
 
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action === 'import') {
     resetVisitImport();
     openModal(importModal);
   }
-  if (action === 'export') showToast('导出任务已创建', 'success');
+  if (action === 'export') window.ListHeaderActions?.export('events');
 
   const routeTargetButton = event.target.closest('.route-target');
   const routeTarget = routeTargetButton?.dataset.target;
@@ -7602,24 +7858,6 @@ document.addEventListener('input', (event) => {
   if (event.target.matches('[data-badge-management-directory-search]') && !event.isComposing) {
     badgeManagementState.directoryQuery = event.target.value;
     renderBadgeManagementDirectory();
-    return;
-  }
-  if (event.target.matches('[data-store-org-search]') && !event.isComposing) {
-    const value = event.target.value || '';
-    storeOverviewState.organizationSearchQuery = value;
-    renderStoreOrganizationMenu();
-    closeStoreFilterMenus('organization');
-    requestAnimationFrame(() => {
-      const input = document.querySelector('[data-store-org-search]');
-      input?.focus();
-      input?.setSelectionRange(value.length, value.length);
-    });
-    return;
-  }
-  if (event.target.matches('[data-store-name-search]') && !event.isComposing) {
-    storeOverviewState.storeNameQuery = event.target.value;
-    storeOverviewState.page = 1;
-    renderStoreOverview();
     return;
   }
   if (event.target.matches('[data-dock-search]') && !event.isComposing) {
@@ -7859,8 +8097,10 @@ if (initialRouteState.route === 'store-visits' && !applyVisitStoreDrilldownFromR
   window.location.hash = 'dashboard';
   initialRouteState = { route: 'dashboard', params: new URLSearchParams() };
 }
+clearHiddenStoreFilters();
 setRoute(initialRouteState.route, !window.location.hash);
 renderStoreOverview();
+renderStoreOrganizationFilters();
 renderBadgePage();
 renderBadgeManagementPage();
 renderDockPage();
@@ -7880,3 +8120,95 @@ document.addEventListener('change', function (event) {
   matchingPaginationState.page = 1;
   renderMatchingStoreTable(getFilteredMatchingVisitRecords());
 });
+
+
+function getStoreOverviewExportFilters() {
+  const selected = storeOrganizationModel.applied;
+  const filters = [{ label: '查询日期', value: `${storeOverviewState.startDate} 至 ${storeOverviewState.endDate}` },
+    { label: '筛选维度', value: selected.dimensionMode === 'geography' ? '地理维度' : '组织维度' }];
+  Object.entries(window.VisitOrganizationFilter.fields).forEach(([key, field]) => {
+    if (!selected[key].length) return;
+    const records = key === 'advisor' ? storeOrganizationRecords : storeOrganizationModel.directory;
+    filters.push({ label: field.label, value: selected[key].map(id => records.find(item => String(item[field.idKey]) === id)?.[field.nameKey] || '—').join('、') });
+  });
+  return filters;
+}
+
+function getVisibleEventExportRows(events, type, date, sn) {
+  const groups = buildBadgeEventGroups(events.slice().sort((a, b) => a.time.localeCompare(b.time)))
+    .filter(group => matchesBadgeEventGroupType(group, type));
+  const rows = [];
+  function add(label, start, end, note = '') {
+    rows.push([date, sn, label, start.time, end === undefined ? '—' : end?.time || '进行中',
+      end === undefined ? '—' : end ? formatBadgeEventDuration(start.time, end.time) : '进行中', note || '—']);
+  }
+  groups.forEach(group => {
+    if (group.kind === 'charging') { add('充电', group.start, group.end); return; }
+    if (group.kind === 'standalone') { add(group.event.label, group.event, undefined, group.event.note); return; }
+    if (type === 'all' || type === 'power-on') group.powerOns.forEach(event => add('工牌开机', event));
+    if (type === 'all' || type === 'recording') group.recordings.forEach(recording => add('录音', recording.start, recording.end));
+    if (type === 'all' || type === 'low-battery') group.warnings.forEach(event => add('电量预警', event, undefined, event.note || '请及时充电'));
+    if (type === 'all' || type === 'power-off') group.powerOffs.forEach(event => add('工牌关机', event));
+  });
+  return rows.sort((a, b) => a[3].localeCompare(b[3]));
+}
+
+function getDeviceListExportRequest(key) {
+  let source, title, labels, rows, filters = [];
+  if (key === 'stores') {
+    source = 'stores'; title = '工牌总览';
+    const fields = getVisibleStoreFields();
+    labels = fields.map(field => field.label);
+    rows = getFilteredStoreRecords().map(item => fields.map(field => getStoreFieldValue(item, field)));
+    filters = getStoreOverviewExportFilters();
+  } else if (key === 'management') {
+    source = 'badgeManagement'; title = '工牌管理';
+    labels = ['工牌 SN', '员工姓名', '员工工号', '绑定状态', '连接状态', '剩余电量', '最新同步'];
+    rows = getBadgeManagementRecords().map(item => {
+      const employee = getBadgeManagementEmployee(item.employeeId);
+      return [item.sn, employee?.employeeName || '未绑定员工', employee?.employeeId || '—', employee ? '已绑定' : '未绑定', item.connectionStatus, `${item.battery}%`, item.syncedAt];
+    });
+    filters = [{ label: '当前门店', value: badgeManagementDealer.dealerName }, { label: '搜索', value: badgeManagementState.query || '不限' }, { label: '绑定状态', value: badgeManagementState.status }];
+  } else if (key === 'uploads') {
+    source = 'badgeUploads'; title = '每日录音上传数量'; labels = ['日期', '录音上传数量'];
+    const counts = new Map();
+    getCompletedBadgeUploadRecords().forEach(item => { const date = getBadgeUploadCompletedDate(item); counts.set(date, (counts.get(date) || 0) + 1); });
+    rows = getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate).reverse().map(date => [date, counts.get(date) || 0]);
+    filters = [{ label: '工牌 SN', value: badgeRecordState.sn }, { label: '上传日期', value: `${badgeUploadFilterState.startDate} 至 ${badgeUploadFilterState.endDate}` }];
+  } else if (key === 'upload-details') {
+    source = 'badgeUploadDetails'; title = badgeUploadModalState.isVisitDetail ? '到访匹配上传明细' : '录音上传明细';
+    labels = ['序号', ...(badgeUploadModalState.isVisitDetail ? [] : ['顾问姓名', '工牌 SN']), '文件大小', '音频开始时间', '音频时长', '录音上传时间', '匹配时间'];
+    rows = badgeUploadModalState.records.map(item => [item.sequence,
+      ...(badgeUploadModalState.isVisitDetail ? [] : [item.advisorDisplayName || item.advisorName, item.sn]),
+      item.size, getBadgeUploadStartTime(item), item.duration, item.completedAt, getBadgeUploadMatchTime(item)]);
+    const visit = badgeUploadModalState.isVisitDetail ? badgeUploadModalState.visitRecord : null;
+    filters = visit ? [{ label: '业务 ID', value: visit.businessId }, { label: '工牌 SN', value: visit.badgeSn || '—' },
+      { label: '到访日期', value: visit.date }, { label: '匹配状态', value: visit.status }]
+      : [{ label: '工牌 SN', value: badgeRecordState.sn }, { label: '上传日期', value: badgeUploadSelectedDate }];
+  } else if (key === 'events' || key === 'visit-events') {
+    const visit = key === 'visit-events' ? visitEventFilterState.record : null;
+    if (key === 'visit-events' && !visit) return null;
+    const date = visit ? visitEventFilterState.date : badgeEventFilterState.date;
+    const sn = visit ? visit.badgeSn : badgeEventFilterState.sn;
+    const type = visit ? visitEventFilterState.type : badgeEventFilterState.type;
+    const record = visit ? badgeEventRecords.find(item => item.sn === sn && item.date === date) : getBadgeEventRecord(sn, date);
+    source = visit ? 'visitEvents' : 'badgeEvents'; title = visit ? '到访工牌事件' : '工牌事件';
+    labels = ['日期', '工牌 SN', '事件', '开始时间', '结束时间', '持续时长', '备注'];
+    rows = getVisibleEventExportRows(record?.events || [], type, date, sn);
+    filters = [{ label: '工牌 SN', value: sn || '—' }, { label: '查询日期', value: date },
+      { label: '事件类型', value: badgeEventTypeOptions.find(item => item[0] === type)?.[1] || type }];
+    if (visit) filters.push({ label: '业务 ID', value: visit.businessId }, { label: '顾问', value: visit.advisor || '—' },
+      { label: '到访时段', value: `${visit.date} ${visit.startTime} 至 ${visit.endTime}` });
+  } else return null;
+  return { source, filename: `${title}_${getBadgeExportTimestamp()}.xlsx`, sheetName: title, filters,
+    columns: labels.map(label => ({ label, width: label.includes('时间') || label.includes('日期') ? 24 : 20 })), rows };
+}
+
+if (window.ListHeaderActions) {
+  const renderers = { stores: renderStoreOverview, management: renderBadgeManagementPage, visits: renderVisits,
+    matching: () => renderMatchingDashboard({ preservePage: true }), events: renderBadgeEvents,
+    uploads: renderBadgeUploads, 'upload-details': renderBadgeUploadModal, 'visit-events': renderVisitEvents };
+  Object.entries(renderers).forEach(([key, refresh]) => window.ListHeaderActions.register(key, {
+    refresh, request: () => getDeviceListExportRequest(key)
+  }));
+}
