@@ -586,8 +586,6 @@ function initStoreDashboardPage() {
     getAllowedScenes,
     getSceneLabel,
     normalizeSceneSelection,
-    setSourceSelection,
-    toggleSceneSelection,
     getLegacySceneBucket,
     getInvitationSceneCount,
     getSceneVolumeLabel,
@@ -1129,14 +1127,14 @@ function initStoreDashboardPage() {
   };
 
   const getRecordingDetailUrl = (id, rec = {}) => {
-    const dbRecord = RECORDING_DB[rec.legacyId || id] || {};
+    const dbRecord = RECORDING_DB[rec.templateId || rec.legacyId || id] || {};
     const detail = { ...dbRecord, ...rec };
     const url = new URL(window.location.href);
     url.searchParams.set('route', 'session-detail');
     url.searchParams.delete('leadId');
     url.searchParams.delete('leadSource');
     url.searchParams.set('sessionId', id);
-    url.searchParams.set('sessionStore', detail.store || '上海中心店');
+    url.searchParams.set('sessionStore', detail.store || getStoreDashboardScopeLabel());
     url.searchParams.set('sessionDate', formatStoreRecordingDate(detail.time));
     url.searchParams.set('sessionCustomer', detail.customer || `${detail.advisor || '客户'}相关录音`);
     url.searchParams.set('sessionScene', detail.scene || '进店接待');
@@ -1154,9 +1152,18 @@ function initStoreDashboardPage() {
     ].join(' ');
   };
 
+  const resolveStoreDashboardRecording = (id) => {
+    if (RECORDING_DB[id]) return RECORDING_DB[id];
+    const source = storeRecordingLibraryState?.records.find(record => record.id === id);
+    if (!source || !getStoreDashboardAdvisors().some(advisor => advisor.advisorKey === source.advisorKey)) return null;
+    const template = RECORDING_DB[source.templateId];
+    return { duration: 0, model: '—', highlights: [], transcript: [],
+      ...template, ...source, hasDetailSource: Boolean(template) };
+  };
+
   // 打开录音播放器
   window.openRecordingPlayer = function(id) {
-    const rec = RECORDING_DB[id];
+    const rec = resolveStoreDashboardRecording(id);
     if (!rec) { alert(`录音 ${id} 暂无详情数据`); return; }
 
     // 清理旧播放状态
@@ -1169,7 +1176,7 @@ function initStoreDashboardPage() {
 
     // 生成波形数据
     const barCount = 80;
-    const waveHeights = genWaveHeights(barCount);
+    const waveHeights = rec.duration > 0 ? genWaveHeights(barCount) : [];
 
     const allHitTags = [];
     const pushHitTag = (label, type) => {
@@ -1208,7 +1215,7 @@ function initStoreDashboardPage() {
             <div class="rec-modal-meta">
               <span>🎙️ ${rec.scene}</span>
               <span>📅 ${rec.time}</span>
-              <span>⏱️ ${fmtTime(rec.duration)}</span>
+              <span>⏱️ ${rec.duration > 0 ? fmtTime(rec.duration) : '—'}</span>
               <span>📋 ${id}</span>
             </div>
             <div class="rec-modal-tags">
@@ -1220,12 +1227,12 @@ function initStoreDashboardPage() {
         <div class="rec-player-section">
           <div class="rec-waveform" id="rec-waveform">${barsHtml}</div>
           <div class="rec-controls">
-            <button class="rec-play-btn" id="rec-play-btn">
+            <button type="button" class="rec-play-btn" id="rec-play-btn"${rec.duration > 0 ? '' : ' disabled aria-disabled="true" title="当前演示记录未提供音频"'}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             </button>
-            <div class="rec-time-display"><span class="current" id="rec-current-time">0:00</span> / ${fmtTime(rec.duration)}</div>
+            <div class="rec-time-display"><span class="current" id="rec-current-time">0:00</span> / ${rec.duration > 0 ? fmtTime(rec.duration) : '—'}</div>
             <div class="rec-actions">
-              <a class="rec-detail-link" href="${detailUrl}" target="_blank" rel="noopener noreferrer">跳转录音详情</a>
+              ${rec.hasDetailSource === false ? '' : `<a class="rec-detail-link" href="${detailUrl}" target="_blank" rel="noopener noreferrer">跳转录音详情</a>`}
             </div>
           </div>
         </div>
@@ -1235,7 +1242,7 @@ function initStoreDashboardPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             AI 转写文本 · ${rec.transcript.length} 句
           </div>
-          ${transcriptHtml}
+          ${transcriptHtml || '<div class="store-dashboard-empty">当前演示记录未提供转写文本与音频</div>'}
         </div>
       </div>`;
 
@@ -1255,7 +1262,7 @@ function initStoreDashboardPage() {
     // 更新波形和转写高亮
     const updateUI = () => {
       const bars = document.querySelectorAll('#rec-waveform .rec-wave-bar');
-      const pct = recPlayerState.currentTime / recPlayerState.duration;
+      const pct = recPlayerState.duration > 0 ? recPlayerState.currentTime / recPlayerState.duration : 0;
       const activeIdx = Math.floor(pct * barCount);
       bars.forEach((b, i) => {
         b.classList.toggle('played', i < activeIdx);
@@ -1610,7 +1617,7 @@ function initStoreDashboardPage() {
   };
 
   const getStoreKpiJitter = (key, amplitude = 1) => {
-    const seed = `${currentRole}|${currentSource}|${getEffectiveSceneKey()}|${currentTime}|${currentModel}|${storeTimeStartDate}|${storeTimeEndDate}|${key}`;
+    const seed = `${currentRole}|${currentSource}|${getEffectiveSceneKey()}|${currentTime}|${currentModels.join('|')}|${storeTimeStartDate}|${storeTimeEndDate}|${key}`;
     let hash = 0;
     for (let i = 0; i < seed.length; i += 1) {
       hash = ((hash << 5) - hash) + seed.charCodeAt(i);
@@ -1621,23 +1628,21 @@ function initStoreDashboardPage() {
   };
 
   const getStoreCountFactor = (key) => {
-    const roleFactor = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 1;
     const sceneKey = getEffectiveSceneKey();
     const sceneFactor = STORE_KPI_SCENE_FACTORS[sceneKey]?.[key] ?? 1;
-    const modelFactor = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 1;
+    const modelFactor = getStoreModelFactor(key, 1);
     const jitterFactor = 1 + getStoreKpiJitter(key, 0.055);
-    return roleFactor * sceneFactor * modelFactor * jitterFactor;
+    return sceneFactor * modelFactor * jitterFactor;
   };
 
   const getStoreRateDelta = (key) => {
     const days = getStoreKpiRangeDays();
     const timeDelta = days <= 1 ? 0 : Math.min(4.2, Math.log2(days) * 0.72);
-    const roleDelta = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 0;
     const sceneKey = getEffectiveSceneKey();
     const sceneDelta = STORE_KPI_SCENE_FACTORS[sceneKey]?.[key] ?? 0;
-    const modelDelta = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 0;
+    const modelDelta = getStoreModelFactor(key, 0);
     const jitterDelta = getStoreKpiJitter(`${key}-rate`, 0.85);
-    return roleDelta + sceneDelta + modelDelta + timeDelta + jitterDelta;
+    return sceneDelta + modelDelta + timeDelta + jitterDelta;
   };
 
   const getStoreTrendDirection = (key, options = {}) => {
@@ -1687,23 +1692,24 @@ function initStoreDashboardPage() {
   };
 
   const buildStoreFilteredKpiData = () => {
+    const scopeData = getStoreDashboardKpiBase();
+    if (!getStoreDashboardAdvisors().length) return scopeData;
     const sceneKey = getEffectiveSceneKey();
-    const isDefaultFilter = currentRole === 'all'
-      && currentSource === SOURCE_KEYS.all
+    const isDefaultFilter = currentSource === SOURCE_KEYS.all
       && sceneKey === SCENE_KEYS.all
       && currentTime === '1'
       && currentModel === 'all';
 
     if (isDefaultFilter) {
-      return cloneStoreKpiData(ALL_KPI_DATA);
+      return scopeData;
     }
 
-    const nextData = cloneStoreKpiData(ALL_KPI_DATA);
+    const nextData = scopeData;
     const volumeScale = getStoreKpiVolumeScale();
     const countKeys = ['invitation', 'reception', 'test_drive', 'valid_record'];
 
     countKeys.forEach((key) => {
-      const baseValue = Number(ALL_KPI_DATA[key]?.num || 0);
+      const baseValue = Number(scopeData[key]?.num || 0);
       const scaledValue = baseValue * volumeScale * getStoreCountFactor(key);
       const minValue = key === 'avg_duration' ? 4 : 0;
       nextData[key].num = String(Math.max(minValue, Math.round(scaledValue)));
@@ -1716,7 +1722,7 @@ function initStoreDashboardPage() {
     }
 
     const avgDurationValue = clampStoreKpiValue(
-      12 * getStoreCountFactor('avg_duration') + getStoreKpiJitter('avg-duration-minutes', 1.4),
+      Number(scopeData.avg_duration.num) * getStoreCountFactor('avg_duration') + getStoreKpiJitter('avg-duration-minutes', 1.4),
       7,
       19
     );
@@ -1726,12 +1732,12 @@ function initStoreDashboardPage() {
     const visitRate = clampStoreKpiValue(33.3 + getStoreRateDelta('visit_rate'), 18, 68);
     const driveRate = clampStoreKpiValue(44.4 + getStoreRateDelta('drive_rate'), 24, 72);
     const orderRate = clampStoreKpiValue(12.5 + getStoreRateDelta('order_rate'), 6, 32);
-    const coverRate = clampStoreKpiValue(83.3 + getStoreRateDelta('cover_rate'), 62, 96);
-    const hitRate = clampStoreKpiValue(78 + getStoreRateDelta('hit_rate'), 58, 94);
-    const qaPassRate = clampStoreKpiValue(80 + getStoreRateDelta('qa_pass_rate'), 56, 96);
+    const coverRate = clampStoreKpiValue(Number(scopeData.cover_rate.num) + getStoreRateDelta('cover_rate'), 0, 100);
+    const hitRate = clampStoreKpiValue(Number(scopeData.hit_rate.num) + getStoreRateDelta('hit_rate'), 0, 100);
+    const qaPassRate = clampStoreKpiValue(Number(scopeData.qa_pass_rate.num) + getStoreRateDelta('qa_pass_rate'), 0, 100);
     const riskRate = currentTime === '1'
-      ? clampStoreKpiValue(0 + Math.max(0, getStoreRateDelta('risk_rate') * 0.28), 0, 3.8)
-      : clampStoreKpiValue(2.2 + getStoreRateDelta('risk_rate') * 0.46, 0, 8.6);
+      ? clampStoreKpiValue(Number(scopeData.risk_rate.num) + getStoreRateDelta('risk_rate') * 0.28, 0, 100)
+      : clampStoreKpiValue(Number(scopeData.risk_rate.num) + getStoreRateDelta('risk_rate') * 0.46, 0, 100);
 
     const rateConfig = [
       ['visit_rate', visitRate, 1],
@@ -1837,7 +1843,7 @@ function initStoreDashboardPage() {
 
   const storeSopRecordingAdvisors = ['李昱', '王萌', '韩宇', '许明', '张华', '林涛', '赵强', '陈亮'];
   const storeSopPeople = storeSopRecordingAdvisors.map((name, index) => ({
-    id: advisorData.find(item => item.name === name)?.id || `A${String(index + 1).padStart(3, '0')}`,
+    id: advisorData.find(item => item.name === name)?.id || `UNMAPPED-${index}`,
     name,
     role: advisorData.find(item => item.name === name)?.role || '销售顾问'
   }));
@@ -2293,6 +2299,9 @@ function initStoreDashboardPage() {
   let currentScenes = [SCENE_KEYS.all];
   let currentTime = "1";
   let currentModel = "all";
+  let currentModels = [];
+  let storeModelSelection = [];
+  let storeDashboardBusinessUI = null;
   let currentFilter = "all";
   let currentClientTimeMode = "followup";
   let currentSort = { key: 'qa_pass', desc: true };
@@ -2306,6 +2315,72 @@ function initStoreDashboardPage() {
     typingTimer: null,
     typingDone: false,
     lastText: ''
+  };
+
+  const storeDashboardDataset = window.StoreDashboardDemoData.createDataset({
+    dealers: window.AIQCOrganization.dealers,
+    advisorTemplates: advisorData,
+    clientTemplates: clientData
+  });
+  const storeDashboardOrganizationModel = window.VisitOrganizationFilter.createModel(
+    window.AIQCOrganization.dealers, storeDashboardDataset.advisors, { mode: 'matching' }
+  );
+  const storeDashboardIssueRulesCache = new Map();
+  const getStoreSupportedModelKeys = () => currentModels.filter(key => Object.hasOwn(STORE_KPI_MODEL_FACTORS, key));
+  const getStoreModelFactor = (key, fallback) => {
+    const keys = getStoreSupportedModelKeys();
+    return keys.length ? keys.reduce((total, model) => total + (STORE_KPI_MODEL_FACTORS[model][key] ?? fallback), 0) / keys.length : fallback;
+  };
+  const getStoreBusinessModelOptions = () => {
+    const selected = storeDashboardOrganizationModel.applied.brand;
+    const brands = selected.length ? [...new Set(storeDashboardOrganizationModel.directory.filter(record => selected.includes(record.brandId)).map(record => record.brand))] : [];
+    return window.FactoryOrganizationFilter.leadSeriesOptions(window.__SESSION_REAL_RECORDING_DATA, brands);
+  };
+  const syncStoreModelSelection = () => {
+    const options = getStoreBusinessModelOptions();
+    const selected = options.filter(option => storeModelSelection.includes(option.value));
+    const demoKeys = { 'M8系列': 'M8', '向往S7': 'S7', 'GS8系列': 'GS8', 'E8': 'E8' };
+    storeModelSelection = selected.map(option => option.value);
+    currentModels = selected.map(option => option.meta === '传祺' ? (demoKeys[option.label] || option.label) : option.value);
+    currentModel = selected.length ? selected.map(option => option.label).join('、') : 'all';
+  };
+  const getStoreDashboardAdvisors = () => {
+    if (currentModels.length && !getStoreSupportedModelKeys().length) return [];
+    return storeDashboardDataset.advisors.filter(advisor => (
+      storeDashboardOrganizationModel.matches(advisor) && (currentRole === 'all' || advisor.role === currentRole)
+      && (!currentModels.length || advisor.brand === '传祺')
+    ));
+  };
+  const getStoreDashboardClients = () => {
+    const advisorKeys = new Set(getStoreDashboardAdvisors().map(advisor => advisor.advisorKey));
+    return storeDashboardDataset.clients.filter(client => advisorKeys.has(client.advisorKey)
+      && (!currentModels.length || getStoreSupportedModelKeys().some(model => String(client.car_model).includes(model))));
+  };
+  const getStoreDashboardSummary = () => window.StoreDashboardDemoData.summarize(getStoreDashboardAdvisors());
+  const getStoreDashboardScopeLabel = () => {
+    const stores = [...new Set(getStoreDashboardAdvisors().map(advisor => advisor.store))];
+    return stores.length === 1 ? stores[0] : stores.length ? `${stores.length} 家门店` : '当前范围无演示数据';
+  };
+  const renderStoreDashboardScope = () => {
+    const advisors = getStoreDashboardAdvisors();
+    const storeCount = new Set(advisors.map(advisor => advisor.storeId)).size;
+    const title = document.getElementById('storeDashboardScopeTitle');
+    const scope = document.getElementById('storeDashboardScopeText');
+    if (title) title.textContent = storeCount === 1 ? getStoreDashboardScopeLabel() : '门店经营概览';
+    if (scope) scope.textContent = storeCount ? `${storeCount} 家门店 · ${advisors.length} 名顾问` : '当前筛选范围暂无演示数据';
+  };
+  const getStoreDashboardKpiBase = () => {
+    const summary = getStoreDashboardSummary();
+    const base = cloneStoreKpiData(ALL_KPI_DATA);
+    Object.entries(summary).forEach(([key, value]) => {
+      if (!base[key]) return;
+      base[key].num = value === null ? '—' : formatStoreKpiNumber(value, base[key].unit === '%' || key === 'avg_duration' ? 1 : 0);
+      base[key].trend = '—';
+      base[key].trendDir = '';
+    });
+    base.risk_record.isDanger = summary.risk_record > 0;
+    base.risk_record.isSuccess = summary.risk_record === 0 && getStoreDashboardAdvisors().length > 0;
+    return base;
   };
 
   const storeTimeRangeOptions = [
@@ -2430,16 +2505,16 @@ function initStoreDashboardPage() {
         </div>
       `;
     };
-  const renderStoreDateControlMarkup = ({ currentTime: timeValue, isOpen, startLabel, endLabel, menuHtml }) => renderSharedDateRangeControlMarkup({
-    currentValue: timeValue,
+  const renderStoreDateControlMarkup = ({ isOpen, startLabel, endLabel, menuHtml }) => renderSharedDateRangeControlMarkup({
+    currentValue: 'custom',
     customValue: "custom",
     isOpen,
     startLabel,
     endLabel,
     dataNamespace: "store-date",
-    rootClassName: "store-date-root",
-    triggerClassName: "session-date-trigger store-date-trigger",
-    triggerLabel: "日期范围筛选",
+    rootClassName: "sd-statistics-date-root",
+    triggerClassName: "session-date-trigger",
+    triggerLabel: "统计日期范围筛选",
     menuHtml
   });
 
@@ -2476,7 +2551,9 @@ function initStoreDashboardPage() {
   };
 
   const getStoreTeamSummaryText = () => {
+    if (!getStoreDashboardAdvisors().length) return '当前筛选范围暂无演示数据，请调整组织、地域、门店或人员条件。';
     const scopeParts = [
+      getStoreDashboardScopeLabel(),
       getStoreTimeLabel(),
       getStoreFilterLabel(currentRole, '全员'),
       getStoreSceneLabel(),
@@ -2514,7 +2591,8 @@ function initStoreDashboardPage() {
       custom: '自定义时间范围内请结合活动节奏看转化变化，避免只用单日样本判断。'
     };
 
-    return `${scopeText}：${sceneSummaryMap[sceneKey] || sceneSummaryMap.all}${roleSummaryMap[currentRole] || roleSummaryMap.all}${modelSummaryMap[currentModel] || modelSummaryMap.all}${timeSummaryMap[currentTime] || timeSummaryMap['1']}`;
+    const modelSummary = currentModels.length ? currentModels.map(model => modelSummaryMap[model]).filter(Boolean).join('') : modelSummaryMap.all;
+    return `${scopeText}：${sceneSummaryMap[sceneKey] || sceneSummaryMap.all}${roleSummaryMap[currentRole] || roleSummaryMap.all}${modelSummary}${timeSummaryMap[currentTime] || timeSummaryMap['1']}`;
   };
 
   const getStoreTeamSummaryPlaceholderHtml = () => `
@@ -2583,6 +2661,11 @@ function initStoreDashboardPage() {
     if (!summaryNode) return;
 
     const summaryText = getStoreTeamSummaryText();
+    if (!getStoreDashboardAdvisors().length) {
+      summaryNode.classList.remove('is-obscured');
+      summaryNode.textContent = summaryText;
+      return;
+    }
     if (storeTeamSummaryState.generated) {
       summaryNode.classList.remove('is-obscured');
       if (storeTeamSummaryState.typingDone && storeTeamSummaryState.lastText === summaryText) {
@@ -2957,10 +3040,9 @@ function initStoreDashboardPage() {
   `;
 
   const getStoreRecordingSourceTotal = (key) => {
-    const baseValue = Number(ALL_KPI_DATA[key]?.num) || 0;
-    const roleFactor = STORE_KPI_ROLE_FACTORS[currentRole]?.[key] ?? 1;
-    const modelFactor = STORE_KPI_MODEL_FACTORS[currentModel]?.[key] ?? 1;
-    return Math.max(0, Math.round(baseValue * getStoreKpiVolumeScale() * roleFactor * modelFactor));
+    const baseValue = Number(getStoreDashboardSummary()[key]) || 0;
+    const modelFactor = getStoreModelFactor(key, 1);
+    return Math.max(0, Math.round(baseValue * getStoreKpiVolumeScale() * modelFactor));
   };
 
   const getStoreRecordingSummaryData = () => {
@@ -3151,42 +3233,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   window.addEventListener("resize", drawFunnelFlow);
 
   // ══════════════════════════════════════════════
-  // 5. 人员→场景级联逻辑（v3 核心）
-  // ══════════════════════════════════════════════
-  const syncStoreSceneTabs = () => {
-    const sourceTabs = document.querySelectorAll('#gf-source .gf-tab');
-    const sceneTabs = document.querySelectorAll('#gf-scene .gf-tab');
-    const selection = getStoreSceneSelection();
-    const allowed = new Set(getAllowedScenes(currentSource));
-
-    sourceTabs.forEach((tab) => {
-      const isActive = tab.dataset.source === currentSource;
-      tab.classList.toggle('active', isActive);
-      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-
-    sceneTabs.forEach((tab) => {
-      const scene = tab.dataset.scene;
-      const isAllTab = scene === SCENE_KEYS.all;
-      const isAllowed = isAllTab || allowed.has(scene);
-      const isActive = isAllTab
-        ? selection.isAllSelected
-        : (selection.isAllSelected ? allowed.has(scene) : selection.activeScenes.includes(scene));
-      const isIndeterminate = isAllTab && !selection.isAllSelected && !selection.isNoneSelected;
-      const isHidden = isAllTab || !isAllowed;
-
-      tab.classList.toggle('is-hidden', isHidden);
-      tab.classList.toggle('disabled', !isAllowed);
-      tab.classList.toggle('active', isActive);
-      tab.classList.toggle('is-indeterminate', isIndeterminate);
-      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      tab.setAttribute('aria-checked', isIndeterminate ? 'mixed' : (isActive ? 'true' : 'false'));
-      tab.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
-      tab.tabIndex = isHidden ? -1 : (isAllowed ? 0 : -1);
-    });
-  };
-
-  // ══════════════════════════════════════════════
   // 6. SOP执行排行榜（动态列，v2 逻辑保留）
   // ══════════════════════════════════════════════
   window.sortAdvisor = function(key) {
@@ -3334,7 +3380,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const legacySceneKey = getLegacySceneKey();
 
     // 按角色筛选
-    let filteredData = [...advisorData];
+    let filteredData = getStoreDashboardAdvisors();
     if (currentRole !== 'all') {
       filteredData = filteredData.filter(a => a.role === currentRole);
     }
@@ -3427,7 +3473,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         <td><span class="cell-main advisor-id">${rankIndex + 1}</span></td>
         <td>
           <span class="cell-main advisor-name">${a.name}</span>
-          <span class="cell-sub advisor-role">${a.role}</span>
+          <span class="cell-sub advisor-role">${escapeHtml(a.role)} · ${escapeHtml(a.store)}</span>
         </td>
         ${bizCells}
         <td><span class="advisor-metric-rate advisor-hit-rate${a.danger ? ' danger' : ''}">${a.hit_rate}</span></td>
@@ -3440,7 +3486,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         <tr>${thead}</tr>
       </thead>
       <tbody>
-        ${pagedData.map((a, index) => buildRow(a, startIndex + index)).join("")}
+        ${pagedData.length ? pagedData.map((a, index) => buildRow(a, startIndex + index)).join("") : `<tr><td colspan="${headers.length}" class="store-dashboard-empty">当前筛选范围暂无顾问演示数据</td></tr>`}
       </tbody>
     </table>`;
     renderAdvisorPagination(sortedData.length);
@@ -3456,7 +3502,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   const getClientSupervisionPool = () => {
-    let data = clientData.filter(c => c.status !== "normal");
+    let data = getStoreDashboardClients().filter(c => c.status !== "normal");
     if (currentRole !== "all") data = data.filter(c => c.advisor_role === currentRole);
     return data;
   };
@@ -3486,9 +3532,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const statusRank = { urgent: 0, warn: 1, normal: 2 };
     data = [...data].sort((a, b) => {
       if (currentClientTimeMode === "updated") {
-        return clientData.indexOf(b) - clientData.indexOf(a);
+        return String(b.id).localeCompare(String(a.id));
       }
-      return (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9) || clientData.indexOf(a) - clientData.indexOf(b);
+      return (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9) || String(a.id).localeCompare(String(b.id));
     });
 
     if (!data.length) {
@@ -3508,7 +3554,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       return "b";
     };
     const getAdvisorHitRate = (client) => {
-      const advisor = advisorData.find((item) => item.name === client.advisor);
+      const advisor = getStoreDashboardAdvisors().find((item) => item.advisorKey === client.advisorKey);
       return advisor?.hit_rate || `${client.qa_score}%`;
     };
     const getClientKeyTags = (client) => {
@@ -3530,7 +3576,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <div class="todo-customer-stack">
                   <div class="todo-customer-name">${c.customer_name}</div>
                   <div class="todo-customer-meta-row">
-                    <span class="todo-advisor-chip">顾问 ${c.advisor}</span>
+                    <span class="todo-advisor-chip" title="${escapeAttr(c.advisorId)}">顾问 ${escapeHtml(c.advisor)} · ${escapeHtml(c.store)}</span>
                     <span class="todo-hit-rate-chip">话术执行率 ${getAdvisorHitRate(c)}</span>
                     <span class="todo-intent-badge intent-badge ${getIntentClass(c.intention_series)}">${c.intention_series}意向</span>
                     <span class="todo-model-chip">${c.car_model}</span>
@@ -3594,6 +3640,41 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   // ── 客户洞察渲染 ─────────────────────────
   // arrowSvg is replaced inline
 
+  const scopeStoreInsightTag = (tag, key) => {
+    const sourceRecordings = tag.recordings || [];
+    const people = advisorData.filter(advisor => sourceRecordings.some(record => record.advisor === advisor.name));
+    const expanded = window.StoreDashboardDemoData.expandRule({ id: key, people, recordings: sourceRecordings }, getStoreDashboardAdvisors());
+    const factor = sourceRecordings.length ? expanded.recordings.length / sourceRecordings.length : 0;
+    return { ...tag, count: Math.round(tag.count * factor), recordings: expanded.recordings,
+      customerCount: new Set(expanded.recordings.map(record => `${record.storeId}|${record.templateId}`)).size };
+  };
+  const scopeStoreInsightItems = (items, key) => items.map((item, index) => {
+    const next = { ...item };
+    const tags = [];
+    ['focus', 'resist', 'advantages', 'counters'].forEach(group => {
+      if (!Array.isArray(item[group])) return;
+      next[group] = item[group].map((tag, tagIndex) => scopeStoreInsightTag(tag, `${key}-${index}-${group}-${tagIndex}`)).filter(tag => tag.count > 0);
+      tags.push(...next[group]);
+    });
+    next.count = tags.reduce((total, tag) => total + tag.count, 0);
+    next.customerCount = new Set(tags.flatMap(tag => tag.recordings.map(record => `${record.storeId}|${record.templateId}`))).size;
+    return next;
+  }).filter(item => item.count > 0).sort((left, right) => right.count - left.count);
+
+  const getSelectedStoreModelTags = () => {
+    const datasets = getStoreSupportedModelKeys().map(model => modelTagData[model]).filter(Boolean);
+    if (!datasets.length) return null;
+    return Object.fromEntries(['positive', 'negative', 'neutral'].map(group => {
+      const tags = new Map();
+      datasets.forEach(dataset => (dataset[group] || []).forEach(tag => {
+        const previous = tags.get(tag.name);
+        tags.set(tag.name, previous ? { ...previous, count: previous.count + tag.count,
+          recordings: [...(previous.recordings || []), ...(tag.recordings || [])] } : { ...tag });
+      }));
+      return [group, [...tags.values()].sort((left, right) => right.count - left.count)];
+    }));
+  };
+
   // 渲染单个标签（含次数 + 展开策略和录音）
   const renderTagItem = (tag, cssClass) => {
     const recsHtml = tag.recordings ? tag.recordings.map(r =>
@@ -3620,6 +3701,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const renderInsightList = (containerId, data, type, totalCount, totalCustomer) => {
     const el = document.getElementById(containerId);
     if (!el) return;
+    if (!data.length) {
+      el.innerHTML = '<div class="store-dashboard-empty">当前筛选范围暂无客户洞察演示数据</div>';
+      return;
+    }
     el.innerHTML = data.map((item, i) => {
       const rankClass = i < 3 ? ` r${i + 1}` : '';
       const rankContent = i < 3
@@ -3683,6 +3768,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const renderInsightSection = () => {
     const body = document.getElementById('insight-body');
     if (!body) return;
+    if (!getStoreDashboardAdvisors().length) {
+      body.innerHTML = '<div class="store-dashboard-empty">当前筛选范围暂无客户洞察演示数据</div>';
+      return;
+    }
     if (currentModel === 'all') {
       body.innerHTML = `
         <div class="insight-block">
@@ -3693,15 +3782,19 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="insight-block-title with-icon"><img class="insight-block-title-icon" src="../assets/insight-compete-top5.svg" alt="" aria-hidden="true">竞品车型 TOP5</div>
           <div class="insight-list" id="compete-model-list"></div>
         </div>`;
-      const intentTotal = intentModelData.reduce((s, d) => s + d.count, 0);
-      const intentCustTotal = intentModelData.reduce((s, d) => s + d.customerCount, 0);
-      const competeTotal = competeModelData.reduce((s, d) => s + d.count, 0);
-      const competeCustTotal = competeModelData.reduce((s, d) => s + d.customerCount, 0);
-      renderInsightList('intent-model-list', intentModelData, 'intent', intentTotal, intentCustTotal);
-      renderInsightList('compete-model-list', competeModelData, 'compete', competeTotal, competeCustTotal);
+      const intentItems = scopeStoreInsightItems(intentModelData, 'intent');
+      const competeItems = scopeStoreInsightItems(competeModelData, 'compete');
+      const intentTotal = intentItems.reduce((s, d) => s + d.count, 0);
+      const intentCustTotal = intentItems.reduce((s, d) => s + d.customerCount, 0);
+      const competeTotal = competeItems.reduce((s, d) => s + d.count, 0);
+      const competeCustTotal = competeItems.reduce((s, d) => s + d.customerCount, 0);
+      renderInsightList('intent-model-list', intentItems, 'intent', intentTotal, intentCustTotal);
+      renderInsightList('compete-model-list', competeItems, 'compete', competeTotal, competeCustTotal);
     } else {
-      const tags = modelTagData[currentModel];
-      if (!tags) { body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--color-text-muted);font-size:var(--text-sm)">暂无该车系标签数据</div>'; return; }
+      const sourceTags = getSelectedStoreModelTags();
+      const tags = sourceTags && Object.fromEntries(Object.entries(sourceTags).map(([group, items]) => [group,
+        items.map((tag, index) => scopeStoreInsightTag(tag, `model-${currentModels.join('|')}-${group}-${index}`)).filter(tag => tag.count > 0)]));
+      if (!tags || !Object.values(tags).some(items => items.length)) { body.innerHTML = '<div class="store-dashboard-empty">当前筛选范围暂无该车系标签演示数据</div>'; return; }
       const maxCount = Math.max(...[...tags.positive, ...tags.negative, ...tags.neutral].map(t => t.count));
       const renderBars = (items, polarity) => items.map(t => {
         const hasDetail = t.strategy || (t.recordings && t.recordings.length > 0);
@@ -3734,7 +3827,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }).join('');
       body.innerHTML = `
         <div class="insight-block">
-          <div class="insight-block-title">客户标签分布 · ${currentModel}</div>
+          <div class="insight-block-title">客户标签分布 · ${escapeHtml(currentModel)}</div>
           <div class="tag-section-label"><span class="polarity-dot" style="background:#22C55E"></span>正向标签</div>
           <div class="tag-grid">${renderBars(tags.positive, 'positive')}</div>
           <div class="tag-section-label"><span class="polarity-dot" style="background:#EF4444"></span>负向标签</div>
@@ -3751,29 +3844,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     return nextDate;
   };
 
-  const parseStoreAnchorDateValue = (value) => {
-    const match = String(value || "").match(/(\d{1,2})[-/](\d{1,2})/);
-    if (!match) {
-      return null;
-    }
-
-    const year = new Date().getFullYear();
-    return new Date(year, Number(match[1]) - 1, Number(match[2]));
-  };
-
-  const getStoreAnchorDate = () => {
-    let latestDate = null;
-    clientData.forEach((item) => {
-      const candidate = parseStoreAnchorDateValue(item.time);
-      if (candidate && (!latestDate || candidate.getTime() > latestDate.getTime())) {
-        latestDate = candidate;
-      }
-    });
-    return latestDate || new Date();
-  };
-
   const getStoreRangeValues = (rangeKey) => {
-    const anchorDate = getStoreAnchorDate();
+    const anchorDate = new Date();
     let startDate = anchorDate;
     let endDate = anchorDate;
 
@@ -3916,6 +3988,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     return renderSharedDateRangePanelMarkup({
       dataNamespace: "store-date",
+      panelClassName: 'session-menu-panel session-menu-panel-date sd-statistics-date-panel',
+      title: '统计日期范围',
+      showCancel: false,
       rangeText: getSessionDateRangeText(startDate, endDate),
       monthLabel: formatSessionMonthLabel(storeDateState.viewYear, storeDateState.viewMonth),
       activeField,
@@ -3950,9 +4025,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       return;
     }
 
-    host.addEventListener("click", (event) => {
+    host.onclick = (event) => {
       event.stopPropagation();
-    });
+    };
 
     host.querySelectorAll("[data-store-date-trigger]").forEach((node) => {
       node.addEventListener("click", (event) => {
@@ -4023,20 +4098,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       return;
     }
 
-    if (currentTime !== "custom") {
-      host.innerHTML = "";
-      return;
-    }
-
-    host.innerHTML = renderStoreDateControlMarkup({
-      currentTime,
+    host.classList.toggle('is-open', storeDateState.open);
+    host.innerHTML = '<span>统计日期</span>' + renderStoreDateControlMarkup({
       isOpen: storeDateState.open,
       startLabel: formatSessionDateDisplay(storeTimeStartDate),
       endLabel: formatSessionDateDisplay(storeTimeEndDate),
-      menuHtml: renderStoreDateMenu()
+      menuHtml: storeDateState.open ? renderStoreDateMenu() : ''
     });
 
     bindStoreDateEvents();
+    const panel = host.querySelector('.sd-statistics-date-panel');
+    if (panel) {
+      const rect = panel.getBoundingClientRect();
+      panel.style.marginLeft = Math.min(0, window.innerWidth - 16 - rect.right) + 'px';
+    }
   }
 
   function closeStoreDatePicker(shouldRender = true) {
@@ -4051,6 +4126,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   }
 
   function openStoreDatePicker() {
+    storeDashboardFilterUI.closeMenu();
+    storeDashboardBusinessUI?.closeMenu();
     if (!storeTimeStartDate || !storeTimeEndDate) {
       syncStoreTimeRangeFromQuickFilter("7");
     }
@@ -4082,139 +4159,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   // ══════════════════════════════════════════════
   // 8. 全局筛选栏 事件绑定
   // ══════════════════════════════════════════════
-  const bindGlobalFilter = (containerId, dataAttr, stateUpdater) => {
-    const tabs = document.querySelectorAll(`#${containerId} .gf-tab`);
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        if (tab.classList.contains('disabled')) return;
-        tabs.forEach(t => {
-          t.classList.remove("active");
-          t.setAttribute("aria-pressed", "false");
-        });
-        tab.classList.add("active");
-        tab.setAttribute("aria-pressed", "true");
-        stateUpdater(tab.dataset[dataAttr]);
-        // 自定义时间先进入日期选择态，应用后再真正生效
-        if (containerId === 'gf-time' && tab.dataset[dataAttr] === 'custom') return;
-        applyGlobalFilter();
-      });
-    });
-  };
-
-  bindGlobalFilter("gf-role", "role", val => {
-    currentRole = val;
-  });
-
-  document.getElementById('gf-source')?.addEventListener('click', (event) => {
-    const tab = event.target.closest('[data-source]');
-    if (!tab) return;
-    currentSource = tab.dataset.source;
-    currentScenes = setSourceSelection(currentSource);
-    syncStoreSceneTabs();
-    applyGlobalFilter();
-  });
-
-  document.getElementById('gf-scene')?.addEventListener('click', (event) => {
-    const tab = event.target.closest('[data-scene]');
-    if (!tab || tab.classList.contains('disabled') || tab.classList.contains('is-hidden')) return;
-    const nextScenes = toggleSceneSelection(currentSource, currentScenes, tab.dataset.scene);
-    if (Array.isArray(nextScenes) && nextScenes.length === 0) return;
-    currentScenes = nextScenes;
-    syncStoreSceneTabs();
-    applyGlobalFilter();
-  });
-
-  bindGlobalFilter("gf-time", "time", val => {
-    currentTime = val;
-    if (val === 'custom') {
-      if (!storeTimeStartDate || !storeTimeEndDate) {
-        syncStoreTimeRangeFromQuickFilter("7");
-      }
-      closeStoreDatePicker(false);
-      renderStoreDateControl();
-    } else {
-      syncStoreTimeRangeFromQuickFilter(val);
-      closeStoreDatePicker(false);
-      renderStoreDateControl();
-    }
-  });
-
-  syncStoreSceneTabs();
-
-  // 车系下拉筛选
-  const initStoreModelDropdown = () => {
-    const root = document.getElementById('store-model-dropdown');
-    const trigger = document.getElementById('store-model-trigger');
-    const panel = document.getElementById('store-model-panel');
-    const display = document.getElementById('store-model-display');
-    if (!root || !trigger || !panel || !display) return;
-
-    const modelLabels = { all: '全部车系', M8: '传祺M8', S7: '传祺S7', GS8: '传祺GS8', E8: '传祺E8' };
-
-    const openDropdown = () => {
-      root.classList.add('is-open');
-      panel.classList.add('show');
-      trigger.classList.add('active');
-      trigger.setAttribute('aria-expanded', 'true');
-    };
-
-    const closeDropdown = () => {
-      root.classList.remove('is-open');
-      panel.classList.remove('show');
-      trigger.classList.remove('active');
-      trigger.setAttribute('aria-expanded', 'false');
-    };
-
-    const selectModel = (model) => {
-      panel.querySelectorAll('.store-model-option').forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.model === model);
-      });
-      currentModel = model;
-      display.textContent = modelLabels[model] || model;
-      closeDropdown();
-      applyGlobalFilter();
-    };
-
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (panel.classList.contains('show')) {
-        closeDropdown();
-      } else {
-        openDropdown();
-      }
-    });
-
-    panel.addEventListener('click', (e) => {
-      const option = e.target.closest('.store-model-option');
-      if (option && option.dataset.model) {
-        selectModel(option.dataset.model);
-      }
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!trigger.contains(e.target) && !panel.contains(e.target)) {
-        closeDropdown();
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeDropdown();
-    });
-  };
-  initStoreModelDropdown();
-
-  document.addEventListener('click', (e) => {
-    const customBtn = document.getElementById('gf-custom-btn');
-    const clickedInsideStoreDateRoot = e.target && typeof e.target.closest === 'function'
-      ? e.target.closest('[data-store-date-root]')
-      : null;
-    const clickedCustomTrigger = e.target && typeof e.target.closest === 'function'
-      ? e.target.closest('#gf-custom-btn')
-      : null;
-
-    if (storeDateState.open && !clickedInsideStoreDateRoot && !clickedCustomTrigger && (!customBtn || !customBtn.contains(e.target))) {
-      closeStoreDatePicker();
-    }
+  document.addEventListener('click', (event) => {
+    if (storeDateState.open && !event.target.closest('[data-store-date-root]')) closeStoreDatePicker();
   });
 
   document.addEventListener('keydown', (event) => {
@@ -4227,8 +4173,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   // 全局筛选应用
   const applyGlobalFilter = () => {
+    document.getElementById('rec-close-btn')?.click();
+    window.closeStoreIssueRecordingLibrary?.();
+    document.getElementById('lead-detail-overlay')?.remove();
     resetStoreTeamSummaryState({ render: false });
+    storeDashboardIssueRulesCache.clear();
     advisorPaginationState.page = 1;
+    renderStoreDashboardScope();
     renderHeroKPI();
     renderClientList();
     renderAdvisorTable();
@@ -4238,6 +4189,63 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     buildChart(getStoreTrendRangeKey());
     renderStoreTeamSummary();
   };
+
+  const closeStoreDashboardPopovers = () => {
+    storeDashboardBusinessUI?.closeMenu();
+    closeStoreDatePicker();
+  };
+  const resetStoreDashboardBusinessFilters = () => {
+    currentRole = 'all';
+    currentSource = SOURCE_KEYS.all;
+    currentScenes = [SCENE_KEYS.all];
+    currentTime = '1';
+    currentModel = 'all';
+    currentModels = [];
+    storeModelSelection = [];
+    currentFilter = 'all';
+    syncStoreTimeRangeFromQuickFilter(currentTime);
+    closeStoreDatePicker();
+    renderStoreDateControl();
+    storeDashboardBusinessUI?.render();
+    document.querySelectorAll('.todo-filter-tab[data-filter]').forEach(button => {
+      const active = button.dataset.filter === 'all';
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  };
+  const storeDashboardBusinessFilters = document.getElementById('storeDashboardBusinessFilters');
+  const storeDashboardFilterUI = window.StoreDashboardOrganizationFilter.mount({
+    root: document.getElementById('storeDashboardOrganizationFilters'),
+    model: storeDashboardOrganizationModel,
+    businessFilters: storeDashboardBusinessFilters,
+    onBeforeChange: closeStoreDashboardPopovers,
+    onReset: resetStoreDashboardBusinessFilters,
+    onChange: (change = {}) => {
+      syncStoreModelSelection();
+      storeDashboardBusinessUI?.render();
+      applyGlobalFilter();
+      if (change.removed?.length) window.PlatformToast?.show('已清除与当前上级不匹配的筛选条件。');
+    }
+  });
+  storeDashboardBusinessUI = window.StoreDashboardBusinessFilters.mount({
+    root: storeDashboardBusinessFilters,
+    sceneOptions: getAllowedScenes(SOURCE_KEYS.all).map(value => ({ value, label: getSceneLabel(value) })),
+    modelOptions: getStoreBusinessModelOptions,
+    getSelection: key => key === 'model' ? storeModelSelection : currentScenes.includes(SCENE_KEYS.all) ? [] : currentScenes,
+    onBeforeOpen: () => {
+      storeDashboardFilterUI.closeMenu();
+      closeStoreDatePicker();
+    },
+    onChange: (key, values) => {
+      if (key === 'scene') currentScenes = values.length ? [...values] : [SCENE_KEYS.all];
+      else {
+        storeModelSelection = [...values];
+        syncStoreModelSelection();
+      }
+      applyGlobalFilter();
+    }
+  });
+  storeDashboardBusinessFilters.addEventListener('click', () => storeDashboardFilterUI.closeMenu());
 
   // 督办清单筛选（意向等级）
   document.querySelectorAll(".todo-filter-tab[data-filter]").forEach(pill => {
@@ -4287,7 +4295,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   // ── 9. 话术薄弱项 & 风险命中项（交互式卡片）──
   const getScopeMeta = (count) => {
-    const safeTotal = Math.max(TOTAL_ADVISOR_COUNT || 0, 1);
+    const safeTotal = Math.max(getStoreDashboardAdvisors().length, 1);
     const safeCount = Math.max(1, Math.min(safeTotal, Number(count) || 1));
     const ratio = `${safeCount}/${safeTotal}`;
     if (safeCount >= Math.ceil(safeTotal / 2)) {
@@ -4352,14 +4360,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       if (title.includes('金融方案')) delta -= 0.9;
     }
 
-    if (currentModel === 'M8' || currentModel === 'GS8') {
-      if (title.includes('竞品对比')) delta += 1.6;
-    } else if (currentModel === 'E8') {
-      if (title.includes('金融方案')) delta += 1.5;
-      if (title.includes('购车时间')) delta += 0.8;
-    } else if (currentModel === 'S7') {
-      if (title.includes('价格异议')) delta += 1.7;
-    }
+    const models = getStoreSupportedModelKeys();
+    delta += models.reduce((total, model) => {
+      let adjustment = 0;
+      if ((model === 'M8' || model === 'GS8') && title.includes('竞品对比')) adjustment += 1.6;
+      if (model === 'E8' && title.includes('金融方案')) adjustment += 1.5;
+      if (model === 'E8' && title.includes('购车时间')) adjustment += 0.8;
+      if (model === 'S7' && title.includes('价格异议')) adjustment += 1.7;
+      return total + adjustment;
+    }, 0) / Math.max(models.length, 1);
 
     return delta;
   };
@@ -4384,16 +4393,17 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       delta -= 0.9;
     }
 
-    if (currentModel === 'M8' || currentModel === 'GS8') {
-      if (title.includes('贬低竞品')) delta += 0.9;
-    } else if (currentModel === 'E8') {
-      if (title.includes('优惠方案')) delta += 1.1;
-    }
+    const models = getStoreSupportedModelKeys();
+    delta += models.reduce((total, model) => {
+      if ((model === 'M8' || model === 'GS8') && title.includes('贬低竞品')) return total + 0.9;
+      if (model === 'E8' && title.includes('优惠方案')) return total + 1.1;
+      return total;
+    }, 0) / Math.max(models.length, 1);
 
     return delta;
   };
   const sortIssuesByPopulationShare = (a, b) => {
-    const safeTotal = Math.max(TOTAL_ADVISOR_COUNT || 0, 1);
+    const safeTotal = Math.max(getStoreDashboardAdvisors().length, 1);
     const shareDiff = (b.advisor_count / safeTotal) - (a.advisor_count / safeTotal);
     if (Math.abs(shareDiff) > 1e-6) return shareDiff;
     const ratioDiff = (b.animated_ratio || 0) - (a.animated_ratio || 0);
@@ -4679,6 +4689,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   const scopeStoreInsightRuleToCurrentScenes = (rule) => {
+    rule = window.StoreDashboardDemoData.expandRule(rule, getStoreDashboardAdvisors());
     const selectedScenes = new Set(getStoreSelectedInsightScenes());
     const applicableScenes = (rule.applicableScenes || []).filter(scene => selectedScenes.has(scene));
     if (!applicableScenes.length) return null;
@@ -4753,8 +4764,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     STORE_ISSUE_RULE_CONFIG[type] || STORE_ISSUE_RULE_CONFIG.sop
   );
   const getStoreIssueRules = (type = storeSopRuleState.activeTab) => {
+    if (storeDashboardIssueRulesCache.has(type)) return storeDashboardIssueRulesCache.get(type);
     const rules = getStoreIssueRuleConfig(type).getRules();
-    return rules.map(scopeStoreInsightRuleToCurrentScenes).filter(Boolean);
+    const scopedRules = rules.map(scopeStoreInsightRuleToCurrentScenes).filter(Boolean);
+    storeDashboardIssueRulesCache.set(type, scopedRules);
+    return scopedRules;
   };
   const getStoreIssueSortOptions = (config = getStoreIssueRuleConfig()) => STORE_SOP_SORT_OPTIONS.map(option => {
     if (option.value === 'rate-desc') return { ...option, label: `${config.metricLabel}从高到低` };
@@ -5002,10 +5016,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           </div>
           <div class="issue-org-rank-list">
             ${people.map((person, index) => `
-              <button type="button" class="issue-org-row" data-store-sop-person="${escapeHtml(person.name)}">
+              <button type="button" class="issue-org-row" data-store-sop-person="${escapeHtml(person.advisorKey)}">
                 <span class="issue-org-main">
                   <em>${index + 1}</em>
-                  <span class="store-sop-person-copy"><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.role)}</small></span>
+                  <span class="store-sop-person-copy"><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.role)} · ${escapeHtml(person.store)}</small></span>
                 </span>
                 <span class="issue-org-rate">${person.rate}%</span>
                 <span class="issue-org-count">${person.hitCount}/${person.sampleCount}</span>
@@ -5154,6 +5168,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   function renderStoreIssueSections() {
     renderStoreSopRuleSection('store-issue-sop-analysis-root', storeSopRuleState);
     renderStoreSopRuleSection('store-issue-rule-analysis-root', storeInsightRuleState);
+    [['strength', 'sop-summary-trend-text'], ['weakness', 'sop-summary-weakness-text'], ['risk', 'sop-summary-risk-text']].forEach(([type, id]) => {
+      const node = document.getElementById(id);
+      if (!node) return;
+      const rules = getStoreIssueRules(type).slice().sort((left, right) => right.hit_count - left.hit_count);
+      node.textContent = rules.length ? `当前范围：${rules.slice(0, 3).map(rule => rule.title).join('、')}；共 ${rules.length} 项演示分析。` : '当前筛选范围暂无对应演示分析';
+    });
   }
 
   renderStoreIssueSections();
@@ -5581,7 +5601,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     });
   };
 
-  window.openStoreIssueRecordingLibrary = function(type, ruleRef, advisorName = '') {
+  window.openStoreIssueRecordingLibrary = function(type, ruleRef, advisorKey = '') {
     const items = getStoreIssueRules(type);
     const issue = typeof ruleRef === 'number'
       ? getVisibleStoreSopRules(type)[ruleRef]
@@ -5591,31 +5611,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const existing = document.getElementById('issue-recording-library-overlay');
     if (existing) existing.remove();
 
-    const allAdvisors = ['林涛', '张华', '王萌', '赵强', '李昱', '韩宇', '许明', '陈亮'];
     const fallbackTimes = ['3-25 15:20', '3-25 11:05', '3-24 16:40', '3-24 10:15', '3-23 14:20'];
-    const baseId = type === 'risk' ? 2087346132915122176n : 2087346017925713920n;
-    const advisorOrgMap = {
-      '林涛': '华南大区-粤桂战区-广州店-林涛',
-      '张华': '华南大区-粤桂战区-深圳店-张华',
-      '王萌': '华东大区-浙沪战区-杭州店-王萌',
-      '赵强': '华北大区-京津战区-北京店-赵强',
-      '李昱': '华东大区-浙沪战区-上海店-李昱',
-      '韩宇': '华中大区-湘鄂战区-武汉店-韩宇',
-      '许明': '华中大区-湘鄂战区-长沙店-许明',
-      '陈亮': '西南大区-云贵战区-昆明店-陈亮'
-    };
-
-    const isAdvisorScoped = Boolean(advisorName);
+    const scopedPerson = advisorKey ? issue.people.find(person => person.advisorKey === advisorKey) : null;
+    if (advisorKey && !scopedPerson) return;
+    const advisorName = scopedPerson?.name || '';
+    const isAdvisorScoped = Boolean(advisorKey);
     const isInsightDialog = type !== 'sop' && !isAdvisorScoped;
     const allRecords = (issue.recordings || []).map((r, i) => ({
       ...r,
-      id: String(baseId + BigInt(i)),
+      id: r.id,
       time: r.time || fallbackTimes[i % fallbackTimes.length],
       customer: r.customer || `${r.advisor || '顾问'}相关客户`,
-      orgPath: `${r.orgPath || advisorOrgMap[r.advisor] || r.advisor}-${r.customer || `${r.advisor || '顾问'}相关客户`}`
+      orgPath: `${r.orgPath} > ${r.advisor} > ${r.customer || `${r.advisor || '顾问'}相关客户`}`
     }));
     const records = isAdvisorScoped
-      ? allRecords.filter(record => record.advisor === advisorName)
+      ? allRecords.filter(record => record.advisorKey === advisorKey)
       : allRecords;
 
     const { maxDate } = getStoreRecordingDateLimitRange(records);
@@ -5658,7 +5668,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <h2 id="issue-recording-library-title">${escapeHtml(insightCategoryLabel)} · ${escapeHtml(getStoreInsightDisplayTitle(issue, type))}</h2>
             <p>${escapeHtml(insightSubtitle)}</p>
           </div>
-          <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
+          <button type="button" class="recording-library-close platform-close-icon" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()"></button>
         </div>
         <div class="uat-review-dialog-body">
           ${renderStoreInsightDialogFilters()}
@@ -5672,7 +5682,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <h2 id="issue-recording-library-title">${type === 'sop' ? 'SOP 质检录音' : type === 'risk' ? '风险命中录音' : type === 'strength' ? '优势项录音' : '短板项录音'}·${escapeHtml(type === 'sop' ? issue.title : getStoreInsightDisplayTitle(issue, type))}${advisorName ? `·${escapeHtml(advisorName)}` : ''}</h2>
             <p>${isAdvisorScoped ? `集中展示${escapeHtml(advisorName)}在该规则下的录音证据。` : `${type === 'weakness' ? '按短板出现样本查看原声证据' : type === 'strength' ? '按优势命中样本查看原声证据' : type === 'risk' ? '按风险命中样本查看原声证据' : '按规则命中样本查看原声证据'}，支持按销售姓名、客户姓名、日期、录音ID筛选。`}</p>
           </div>
-          <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()">×</button>
+          <button type="button" class="recording-library-close platform-close-icon" aria-label="关闭录音列表" onclick="closeStoreIssueRecordingLibrary()"></button>
         </div>
         ${isAdvisorScoped ? '' : `<div class="recording-library-summary">
           ${renderStoreRecordingSummaryCard({
@@ -5973,7 +5983,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const nationalDiffLabelEl = nationalDiffVal?.querySelector('.sop-national-diff-label');
   const nationalDiffArrowEl = nationalDiffVal?.querySelector('.sop-national-diff-arrow');
   const teamEfficiencyDialFrames = new Set();
-  const SOP_NATIONAL_AVG = 73;
   const SOP_PERIOD_DELTA = 3;
 
   const cancelTeamEfficiencyDialFrames = () => {
@@ -5982,41 +5991,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   };
 
   const getTeamEfficiencyDialScores = () => {
-    const sceneKey = getEffectiveSceneKey();
-    const isDefaultFilter = currentRole === 'all'
-      && currentSource === SOURCE_KEYS.all
-      && sceneKey === SCENE_KEYS.all
-      && currentTime === '1'
-      && currentModel === 'all';
-
-    if (isDefaultFilter) {
-      return { team: 82, zone: 78 };
-    }
-
-    const qualityDelta = getStoreRateDelta('qa_pass_rate');
-    const sceneDelta = sceneKey === SCENE_KEYS.firstFollow || sceneKey === SCENE_KEYS.inviteStore || sceneKey === SCENE_KEYS.scheduleConfirm || sceneKey === SCENE_KEYS.cloudMulti ? -0.8
-      : sceneKey === SCENE_KEYS.storeReception ? 1.1
-      : sceneKey === SCENE_KEYS.testDrive ? 1.8
-      : 0;
-    const roleDelta = currentRole === '销售顾问' ? 0.9
-      : currentRole === '邀约专员' ? -0.4
-      : 0;
-    const timeDelta = Math.min(2.4, Math.log2(Math.max(getStoreKpiRangeDays(), 1)) * 0.36);
-    const team = clampStoreKpiValue(
-      82 + (qualityDelta * 0.72) + sceneDelta + roleDelta + timeDelta + getStoreKpiJitter('team-efficiency-score', 0.9),
-      58,
-      96
-    );
-    const zone = clampStoreKpiValue(
-      78 + (qualityDelta * 0.36) + (sceneDelta * 0.4) + timeDelta + getStoreKpiJitter('zone-average-score', 0.7),
-      56,
-      92
-    );
-
-    return {
-      team: Math.round(team),
-      zone: Math.round(zone)
-    };
+    const advisors = getStoreDashboardAdvisors();
+    if (!advisors.length) return { team: null, zone: null };
+    const regions = new Set(advisors.map(advisor => advisor.regionId));
+    const zone = window.StoreDashboardDemoData.summarize(storeDashboardDataset.advisors.filter(advisor => regions.has(advisor.regionId))).qa_pass_rate;
+    return { team: Number(buildStoreFilteredKpiData().qa_pass_rate.num), zone: zone === null ? null : Math.round(zone) };
   };
 
   const setDialScoreDisplay = (node, value) => {
@@ -6066,6 +6045,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   const updateTeamEfficiencyDials = ({ fromZero = false } = {}) => {
     cancelTeamEfficiencyDialFrames();
     const { team, zone } = getTeamEfficiencyDialScores();
+    if (team === null) {
+      if (teamScoreVal) teamScoreVal.textContent = '—';
+      if (nationalAvgVal) nationalAvgVal.textContent = '—';
+      if (periodChangeValueEl) periodChangeValueEl.textContent = '—';
+      if (nationalDiffValueEl) nationalDiffValueEl.textContent = '—';
+      if (nationalDiffLabelEl) nationalDiffLabelEl.textContent = '';
+      if (dialFill) dialFill.style.strokeDashoffset = 2 * Math.PI * 65;
+      document.querySelector('.sop-metric-card-store')?.setAttribute('aria-label', '门店质检合格率暂无数据');
+      return;
+    }
     const teamStart = fromZero ? 0 : null;
 
     if (fromZero && dialFill) {
@@ -6084,9 +6073,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       periodChangeVal.classList.toggle('up', periodDelta >= 0);
       periodChangeVal.classList.toggle('down', periodDelta < 0);
     }
-    if (nationalAvgVal) nationalAvgVal.textContent = `${SOP_NATIONAL_AVG}`;
+    if (nationalAvgVal) nationalAvgVal.textContent = `${zone}`;
     if (nationalDiffVal) {
-      const nationalDiff = Math.round(team - SOP_NATIONAL_AVG);
+      const nationalDiff = Math.round(team - zone);
       const diffText = `${Math.abs(nationalDiff)}%`;
       if (nationalDiffValueEl) {
         nationalDiffValueEl.textContent = diffText;
@@ -6119,6 +6108,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     if (!ctx) return;
     if (chart?.destroy) chart.destroy();
     chart = null;
+    const hasData = getStoreDashboardAdvisors().length > 0;
+    ctx.hidden = !hasData;
+    const emptyState = document.getElementById('storeTrendEmpty');
+    if (emptyState) emptyState.hidden = hasData;
+    if (!hasData) {
+      const legend = document.getElementById('chart-legend');
+      if (legend) legend.innerHTML = '';
+      return;
+    }
     const d = TREND_DATA[range] || TREND_DATA["1"];
 
     // Pick volume series & label based on current scene
@@ -6140,6 +6138,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       volData = d.invitation.map((v, i) => v + d.test_drive[i] + d.order_count[i]);
       volLabel = getSceneVolumeLabel(sceneKey);
     }
+
+    const summary = getStoreRecordingSummaryData();
+    const totalVolume = [summary.cloud, summary.badge].filter(group => group.visible)
+      .reduce((total, group) => total + group.scenes.reduce((sum, scene) => sum + scene.value, 0), 0);
+    const totalWeight = volData.reduce((sum, value) => sum + value, 0);
+    volData = volData.map(value => totalWeight ? Math.floor(value * totalVolume / totalWeight) : 0);
+    for (let remaining = totalVolume - volData.reduce((sum, value) => sum + value, 0), index = 0; remaining > 0; remaining -= 1, index += 1) {
+      volData[index % volData.length] += 1;
+    }
+    const quality = getTeamEfficiencyDialScores();
+    const scores = d.scores.map(value => clampStoreKpiValue(value - d.scores[d.scores.length - 1] + quality.team, 0, 100));
+    const zoneScores = d.zoneAvg.map(() => quality.zone);
 
     // Update legend dynamically
     const legendEl = document.getElementById("chart-legend");
@@ -6164,8 +6174,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     const trendData = {
       labels: d.labels,
-      personalQualifiedRate: d.scores,
-      storeAverageRate: d.zoneAvg,
+      personalQualifiedRate: scores,
+      storeAverageRate: zoneScores,
       recordingVolume: volData,
       tooltipLabels: {
         primary: '门店质检合格率',
@@ -6218,7 +6228,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   // ── 12. 线索详情跳转 ─────────────────────────
   window.openLeadDetail = function(clientId) {
-    const client = clientData.find(c => c.id === clientId);
+    const client = getStoreDashboardClients().find(c => c.id === clientId);
     if (!client) { alert(`线索 ${clientId} 暂无详情`); return; }
 
     // Remove old overlay if any
@@ -6371,6 +6381,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
   }
 
   // ── 12. 初始化 ───────────────────────────────
+  renderStoreDashboardScope();
   renderHeroKPI();
   renderClientList();
   renderAdvisorTable();
@@ -17918,8 +17929,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const disableNextMonth = currentMonthIndex >= maxMonthIndex
         const cells = getSessionDateCells(salesRoleDateState.viewYear, salesRoleDateState.viewMonth)
 
-        return renderSharedDateRangePanelMarkup({
+        return window.__dateFilterComponentUtils.renderDateRangePanelMarkup({
           dataNamespace: 'sales-date',
+          title: '统计日期范围',
+          panelClassName: 'session-menu-panel session-menu-panel-date sales-statistics-date-panel',
           rangeText: getSessionDateRangeText(startDate, endDate),
           monthLabel: formatSessionMonthLabel(salesRoleDateState.viewYear, salesRoleDateState.viewMonth),
           activeField,
@@ -17956,32 +17969,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const open = salesRoleDateState.openRole === role
-        const isCustom = roleState.recommendRangeTab === 'custom'
         host.innerHTML = `
-          <div class="todo-filter-tabs sales-role-quick-range-tabs">
-            <span class="gf-label sales-role-date-label">时间</span>
-            ${salesRecommendRangeOptions.map((option) => `
-              <button
-                type="button"
-                class="todo-filter-tab${roleState.recommendRangeTab === option.key ? ' active' : ''}"
-                data-sales-range-mode="${escapeHtml(option.key)}"
-              >
-                ${escapeHtml(option.label)}
-              </button>
-            `).join('')}
+          <div class="so-filter-control badge-field-filter sales-statistics-date-control">
+            <span>统计日期</span>
+            ${window.__dateFilterComponentUtils.renderDateRangeControlMarkup({
+              currentValue: 'custom',
+              customValue: 'custom',
+              isOpen: open,
+              startLabel: formatSessionDateDisplay(roleState.recommendDateStart),
+              endLabel: formatSessionDateDisplay(roleState.recommendDateEnd),
+              dataNamespace: 'sales-date',
+              rootClassName: 'sales-role-date-root',
+              triggerClassName: 'session-date-trigger sales-role-date-trigger',
+              triggerLabel: '统计日期范围',
+              menuHtml: open ? renderSalesRoleDateMenu() : ''
+            })}
           </div>
-          ${isCustom ? renderSharedDateRangeControlMarkup({
-            currentValue: roleState.recommendRangeTab,
-            customValue: 'custom',
-            isOpen: open,
-            startLabel: formatSessionDateDisplay(roleState.recommendDateStart),
-            endLabel: formatSessionDateDisplay(roleState.recommendDateEnd),
-            dataNamespace: 'sales-date',
-            rootClassName: 'sales-role-date-root',
-            triggerClassName: 'session-date-trigger sales-role-date-trigger',
-            triggerLabel: '日期范围筛选',
-            menuHtml: open ? renderSalesRoleDateMenu() : ''
-          }) : ''}
         `
 
         bindSalesRoleDateEvents(role)
@@ -18569,42 +18572,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const state = getSalesRoleState(role)
         if (!host || !state) return
 
-        const allowedScenes = getSalesReviewAllowedScenes(role)
-        const selectedScenes = getSalesReviewSelectedScenes(role)
-        const isAllSelected = selectedScenes.length === allowedScenes.length
-
-        host.innerHTML = `
-          <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-intent">
-            <span class="gf-label">业务场景</span>
-            <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
-              <button type="button" class="gf-tab todo-filter-tab${isAllSelected ? ' active' : ''} is-hidden" data-scene="all" aria-pressed="${isAllSelected ? 'true' : 'false'}" aria-hidden="true" tabindex="-1">全部</button>
-              ${allowedScenes.map((scene) => {
-                const active = selectedScenes.includes(scene)
-                return `<button type="button" class="gf-tab todo-filter-tab${active ? ' active' : ''}" data-scene="${escapeHtml(scene)}" aria-pressed="${active ? 'true' : 'false'}" aria-checked="${active ? 'true' : 'false'}" aria-hidden="false" tabindex="0">${escapeHtml(scene)}</button>`
-              }).join('')}
-            </div>
-          </div>
-        `
-
-        host.querySelectorAll('[data-scene]').forEach((button) => {
-          button.addEventListener('click', (event) => {
-            event.stopPropagation()
-            const scene = button.dataset.scene
-            if (scene === 'all') {
-              state.reviewScenes = [...allowedScenes]
-            } else if (selectedScenes.includes(scene)) {
-              const nextScenes = selectedScenes.filter((item) => item !== scene)
-              if (!nextScenes.length) return
-              state.reviewScenes = nextScenes
-            } else {
-              state.reviewScenes = allowedScenes.filter((item) => selectedScenes.includes(item) || item === scene)
-            }
+        host.salesSceneFilter?.destroy()
+        host.innerHTML = '<div data-sales-business-control="scene"></div>'
+        host.salesSceneFilter = window.SalesBusinessSceneFilter.mount({
+          root: host,
+          sceneOptions: getSalesReviewAllowedScenes(role).map((scene) => ({ value: scene, label: scene })),
+          getSelection: () => state.reviewScenes,
+          onBeforeOpen: () => closeSalesRoleDatePicker(),
+          onChange: (key, values) => {
+            state.reviewScenes = values
             state.reviewInsightPage = 1
             state.sopReviewPage = 1
-            renderSalesReviewSceneControl(role)
             renderSalesSopReview(role)
             renderSalesReviewInsights(role)
-          })
+          }
         })
       }
 

@@ -93,7 +93,7 @@
   const renderInlineCheckboxFilterGroupMarkup = typeof renderSharedInlineCheckboxFilterGroupMarkup === 'function'
     ? renderSharedInlineCheckboxFilterGroupMarkup
     : fallbackRenderInlineCheckboxFilterGroupMarkup;
-  const FACTORY_DASHBOARD_HTML = `<section class="factory-filter-panel factory-filter-sticky-body global-filter-bar session-filter-card" aria-label="全局筛选">
+  const FACTORY_DASHBOARD_HTML = `<section class="factory-filter-panel factory-filter-sticky-body global-filter-bar session-filter-card badge-session-filter-card dashboard-filter-card" aria-label="全局筛选">
     <div class="store-filter-shell session-filter-toolbar">
       <div class="session-filter-row session-filter-row-segment factory-filter-row-segment factory-filter-row-segment-primary">
         <div id="factoryOrgControlSlot" class="factory-org-control-slot"></div>
@@ -774,7 +774,7 @@
       { key: 'scene', label: '业务场景', options: FACTORY_SCENE_FILTER_OPTIONS.filter(item => item.value !== SCENE_KEYS.all) },
       { key: 'model', label: '车系', groupByBrand: true, options: selections => window.FactoryOrganizationFilter.leadSeriesOptions(window.__SESSION_REAL_RECORDING_DATA, selections.brand) }
     ],
-    renderTrailing: () => '<div id="store-date-control" class="fo-control fo-date-control"></div>',
+    renderTrailing: () => '<div id="store-date-control" class="fo-control badge-field-filter fo-date-control"></div>',
     onRender() {
       if (!factoryDateReady) return;
       factoryDateState.open = false;

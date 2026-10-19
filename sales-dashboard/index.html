@@ -3,9 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260902-global-brand-v1" />
+        <link rel="stylesheet" href="./page.css?v=20261019-sales-leads-style-v2" />
+    <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
+    <link rel="stylesheet" href="./organization-filter.css?v=20261019-dashboard-filter-standard-v1" />
+    <link rel="stylesheet" href="./business-filters.css?v=20261019-dashboard-filter-standard-v1" />
+    <link rel="stylesheet" href="./source-tabs.css?v=20261019-sales-leads-style-v2" />
+    <link rel="stylesheet" href="../shared/dashboard-responsive.css?v=20261019-dashboard-filter-standard-v1" />
+    <link rel="stylesheet" href="./filter-layout.css?v=20261019-dashboard-filter-standard-v1" />
 <title>销售看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
+    <link rel="stylesheet" href="../shared/dashboard-filters.css?v=20261019-dashboard-filter-standard-v1" />
     </head>
   <body>
     <div class="page-shell">
@@ -133,15 +141,18 @@
             <div class="sales-role-shell">
               <div class="sales-role-main-column">
                 <div class="sales-role-nav">
-                  <div class="role-page-switch">
+                  <div class="role-page-switch" data-sales-source="dcc" role="tablist" aria-label="录音来源">
+                    <span class="sales-source-indicator" aria-hidden="true"><span class="sales-source-indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
                     <button type="button" class="role-switch-link active" data-route="sales-dcc">云外呼</button>
                     <button type="button" class="role-switch-link" data-route="sales-advisor">工牌</button>
                   </div>
-                  <div class="sales-role-nav-divider" aria-hidden="true"></div>
-                  <div class="sales-role-nav-filters">
-                    <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
-                    <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
-                  </div>
+                  <section class="card session-filter-card badge-session-filter-card dashboard-filter-card sales-filter-card">
+                    <div class="sales-organization-filter" data-sales-organization-filters="dcc"></div>
+                    <div class="sales-role-nav-filters">
+                      <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
+                      <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
+                    </div>
+                  </section>
                 </div>
 
                 <section class="sales-role-hero role-hero-bar sales-role-hero-with-review">
@@ -335,15 +346,18 @@
             <div class="sales-role-shell">
               <div class="sales-role-main-column">
                 <div class="sales-role-nav">
-                  <div class="role-page-switch">
+                  <div class="role-page-switch" data-sales-source="advisor" role="tablist" aria-label="录音来源">
+                    <span class="sales-source-indicator" aria-hidden="true"><span class="sales-source-indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
                     <button type="button" class="role-switch-link" data-route="sales-dcc">云外呼</button>
                     <button type="button" class="role-switch-link active" data-route="sales-advisor">工牌</button>
                   </div>
-                  <div class="sales-role-nav-divider" aria-hidden="true"></div>
-                  <div class="sales-role-nav-filters">
-                    <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
-                    <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
-                  </div>
+                  <section class="card session-filter-card badge-session-filter-card dashboard-filter-card sales-filter-card">
+                    <div class="sales-organization-filter" data-sales-organization-filters="advisor"></div>
+                    <div class="sales-role-nav-filters">
+                      <div class="sales-role-scene-host" id="salesReviewSceneControl"></div>
+                      <div class="sales-role-date-host" id="salesRecommendDateControl"></div>
+                    </div>
+                  </section>
                 </div>
 
                 <section class="sales-role-hero role-hero-bar sales-role-hero-with-review">
@@ -907,6 +921,6 @@
 
     <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="./page.js?v=20260814-sales-followup-alert-v2"></script>
+<script src="./page.js?v=20261019-dashboard-filter-standard-v1"></script>
   </body>
 </html>

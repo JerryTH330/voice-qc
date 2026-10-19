@@ -1,0 +1,22 @@
+/* 销售顶部采用线索列表的来源Tab、筛选卡和共享四列字段规范。 */
+.sales-role-dashboard-page .sales-role-nav,
+.sales-role-dashboard-page .sales-role-nav.is-stuck {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  gap: 16px;
+}
+.sales-role-dashboard-page .sales-role-nav.is-stuck { gap: 0; }
+.sales-role-dashboard-page .sales-role-nav .sales-filter-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.sales-role-dashboard-page .sales-role-nav-filters { display: contents; }

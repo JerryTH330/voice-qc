@@ -1,0 +1,183 @@
+/* 看板顶部复用 badge-list-components.css；这里只处理宿主、弹层及日期适配。 */
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card {
+  --text: #172033;
+  --muted: #68758a;
+  --line: #e7ebf2;
+  --blue-dark: #1d4ed8;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 20px;
+  margin-bottom: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(243, 247, 253, .95));
+  box-shadow: var(--shadow-soft);
+  color: var(--text);
+  font-family: "PingFang SC", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
+  overflow: visible;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .dashboard-filter-card.is-stuck {
+  background: rgba(255, 255, 255, .8);
+  border-color: rgba(217, 226, 239, .92);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .dashboard-filter-card.is-stuck { background: rgba(255, 255, 255, .96); }
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-filter-shell.session-filter-toolbar {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-filter-card :is(.factory-organization-filters, .sd-organization-filters, .so-organization-filters) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+.dashboard-filter-card :is(.fo-primary, .sd-filter-primary, .so-filter-primary, .fo-extra, .sd-filter-extra, .so-filter-extra) { min-width: 0; }
+.dashboard-filter-card :is(.sd-filter-extra, .so-filter-extra)[hidden] { display: none; }
+.dashboard-filter-card :is(.fo-extra-inner, .sd-filter-extra-inner, .so-filter-extra-inner) { padding-top: 12px; }
+.dashboard-filter-card :is(.sd-filter-personnel, .sd-filter-business, .sd-business-filters, .so-filter-personnel) { display: contents; }
+.dashboard-filter-card :is(.factory-organization-filters, .sd-organization-filters, .so-organization-filters).is-collapsed :is(.fo-primary, .sd-filter-primary, .so-filter-primary) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.dashboard-filter-card .badge-dynamic-filter-actions {
+  justify-content: flex-end;
+  gap: 12px;
+}
+.dashboard-filter-card .is-collapsed .badge-dynamic-filter-actions { margin-top: 0; }
+.dashboard-filter-card .badge-dynamic-filter-actions > span:empty { display: none; }
+.dashboard-filter-card .session-toggle-text-btn { gap: 4px; font-weight: 500; }
+.dashboard-filter-card .session-toggle-text-btn-icon { width: 14px; height: 14px; }
+.dashboard-filter-card :is(button, input) { font-family: inherit; touch-action: manipulation; }
+.dashboard-filter-card :is(button, input):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.dashboard-filter-card .badge-field-filter { position: relative; }
+.dashboard-filter-card .badge-field-filter > span:first-child { font-weight: 400; }
+.dashboard-filter-card .badge-field-filter.is-open,
+.dashboard-filter-card .badge-field-filter:has(.session-menu-panel) { z-index: 32; }
+.dashboard-filter-card .badge-field-filter .session-select-trigger {
+  width: auto;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+}
+.dashboard-filter-card .session-select-trigger strong.is-placeholder { color: #a0aaba; font-weight: 400; }
+.dashboard-filter-card .session-select-caret { flex: 0 0 auto; }
+
+.dashboard-filter-card .badge-advisor-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  z-index: 1000;
+  overflow: hidden;
+  font: inherit;
+}
+.dashboard-filter-card .badge-advisor-search {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  margin: 0;
+}
+.dashboard-filter-card .badge-advisor-search > span { box-sizing: border-box; pointer-events: none; }
+.dashboard-filter-card .badge-advisor-search input { font: inherit; }
+.dashboard-filter-card .badge-advisor-search input::placeholder { opacity: 1; }
+.dashboard-filter-card .badge-advisor-select-all {
+  flex: 0 0 auto;
+  font: inherit;
+}
+.dashboard-filter-card .badge-advisor-select-all small { margin-left: auto; color: #8a96a8; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.dashboard-filter-card .badge-advisor-options {
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+.dashboard-filter-card .badge-advisor-option { font: inherit; }
+.dashboard-filter-card :is(.fo-menu-group, .sd-filter-group, .so-filter-group) + :is(.fo-menu-group, .sd-filter-group, .so-filter-group) { margin-top: 6px; border-top: 1px solid var(--line); }
+.dashboard-filter-card :is(.fo-menu-group-label, .sd-filter-group-label, .so-filter-group-label) { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
+
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) :is(.fo-date-root, .sd-statistics-date-root, .sales-role-date-root) {
+  position: static;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .session-date-trigger {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.dashboard-filter-card .session-date-trigger strong { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-filter-card .session-date-trigger em { flex: 0 0 auto; font-style: normal; font-weight: 600; }
+.dashboard-filter-card .session-date-icon { flex: 0 0 auto; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) :is(.fo-date-panel, .sd-statistics-date-panel, .sales-statistics-date-panel) {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  box-sizing: border-box;
+  min-width: 0;
+  width: min(392px, calc(100vw - 48px));
+  max-width: min(392px, calc(100vw - 48px));
+  max-height: min(620px, calc(100vh - 32px));
+  overflow-y: auto;
+  z-index: 1000;
+}
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-panel-copy span, .session-date-nav strong, .session-date-tab span, .session-date-tab strong, .session-date-weekdays span, .session-date-day, .session-date-shortcut, .session-date-footer span) { font-size: 14px; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-panel-copy strong, .session-date-nav strong, .session-date-tab strong) { font-weight: 700; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-panel-copy span, .session-date-tab span, .session-date-weekdays span, .session-date-footer > span) { font-weight: 400; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-day, .session-date-shortcut, .session-date-action-btn) { font-weight: 600; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .session-date-action-btn { border-radius: 999px; font-size: 14px; }
+.dashboard-filter-card .session-date-shortcuts { flex-wrap: wrap; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(4n) :is(.fo-menu, .fo-date-panel) { left: auto; right: 0; }
+
+@media (max-width: 980px) {
+  .dashboard-filter-card :is(.factory-organization-filters, .sd-organization-filters, .so-organization-filters).is-collapsed :is(.fo-primary, .sd-filter-primary, .so-filter-primary) { display: block; }
+  .dashboard-filter-card .is-collapsed .badge-dynamic-filter-actions { margin-top: 14px; }
+  :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(2n) :is(.fo-menu, .fo-date-panel) { left: auto; right: 0; }
+  :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(2n + 1) :is(.fo-menu, .fo-date-panel) { left: 0; right: auto; }
+  :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .sd-statistics-date-panel { left: auto; right: 0; }
+}
+@media (max-width: 620px) {
+  :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(n) :is(.fo-menu, .fo-date-panel) { left: 0; right: auto; }
+  :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .sd-statistics-date-panel { left: 0; right: auto; }
+}
+@media (pointer: coarse) {
+  .dashboard-filter-card .badge-advisor-search input { font-size: 16px; }
+  .dashboard-filter-card :is(.badge-advisor-select-all, .badge-advisor-option) { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-filter-card :is(.badge-field-filter, .btn, .session-toggle-text-btn, .session-toggle-text-btn-icon) { transition: none; }
+}

@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20260902-global-brand-v1" />
+        <link rel="stylesheet" href="./page.css?v=20261019-dashboard-filter-standard-v1" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
+    <link rel="stylesheet" href="../shared/dashboard-responsive.css?v=20261019-dashboard-filter-standard-v1" />
 <title>门店看板 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
+    <link rel="stylesheet" href="../shared/dashboard-filters.css?v=20261019-dashboard-filter-standard-v1" />
     </head>
   <body>
     <div class="page-shell">
@@ -53,56 +56,20 @@
       <main class="dashboard" role="main">
         <section class="store-page-header" aria-label="页面标题">
           <h1 class="store-page-title">门店看板</h1>
-          <p class="store-page-desc">广汽体系门店管理看板，聚焦线索转化、重点客户督办与顾问效能提升。</p>
+          <p class="store-page-desc">广汽体系门店管理看板，聚焦线索转化、重点客户督办与顾问效能提升。当前展示多门店演示数据。</p>
         </section>
     
         <section class="store-top-nav" aria-label="顶部导航与筛选">
         <!-- ══════════════════════════════════════
              全局筛选栏（v3：筛选置顶，紧贴导航栏下方）
              ══════════════════════════════════════ -->
-        <section class="global-filter-bar session-filter-card" aria-label="全局筛选">
+        <section class="global-filter-bar session-filter-card badge-session-filter-card dashboard-filter-card" aria-label="全局筛选">
           <div class="store-filter-shell session-filter-toolbar">
-            <div class="session-filter-row session-filter-row-segment store-filter-row-segment">
-            <div class="gf-group store-filter-box session-toolbar-control session-toolbar-segment-control session-toolbar-control-intent">
-              <span class="gf-label">业务场景</span>
-              <div class="gf-tabs todo-filter-tabs" id="gf-scene" role="group" aria-label="业务场景">
-                <button class="gf-tab todo-filter-tab active is-hidden" data-scene="all" aria-pressed="true" aria-hidden="true" tabindex="-1">全部</button>
-                <button class="gf-tab todo-filter-tab" data-scene="first_follow" aria-pressed="false">首触跟进</button>
-                <button class="gf-tab todo-filter-tab" data-scene="invite_store" aria-pressed="false">邀约进店</button>
-                <button class="gf-tab todo-filter-tab" data-scene="schedule_confirm" aria-pressed="false">排程确认</button>
-                <button class="gf-tab todo-filter-tab" data-scene="store_reception" aria-pressed="false">进店接待</button>
-                <button class="gf-tab todo-filter-tab" data-scene="test_drive" aria-pressed="false">试乘试驾</button>
-              </div>
-            </div>
-            <div class="gf-group gf-time-group store-filter-box session-toolbar-control session-toolbar-segment-control store-toolbar-control-time">
-              <span class="gf-label">时间</span>
-              <div class="gf-tabs todo-filter-tabs" id="gf-time" role="group" aria-label="时间">
-                <button class="gf-tab todo-filter-tab active" data-time="1" aria-pressed="true">昨日</button>
-                <button class="gf-tab todo-filter-tab" data-time="7" aria-pressed="false">近7天</button>
-                <button class="gf-tab todo-filter-tab" data-time="15" aria-pressed="false">近半月</button>
-                <button class="gf-tab todo-filter-tab" data-time="30" aria-pressed="false">近1月</button>
-                <button class="gf-tab gf-tab-custom todo-filter-tab" data-time="custom" id="gf-custom-btn" aria-pressed="false">自定义</button>
-              </div>
-            </div>
-            <div class="store-date-filter-shell store-date-popover-anchor" id="store-date-control"></div>
-            </div>
-            <div class="session-filter-row session-filter-row-main store-filter-row-main">
-            <div class="gf-group store-filter-box session-toolbar-control session-toolbar-menu session-toolbar-control-car store-model-dropdown" id="store-model-dropdown">
-                <span class="gf-label">车系</span>
-                <button type="button" class="store-model-trigger session-select-trigger" id="store-model-trigger" aria-haspopup="listbox" aria-expanded="false">
-                  <strong id="store-model-display">全部车系</strong>
-                  <span class="store-model-caret session-select-caret"></span>
-                </button>
-                <div class="store-model-panel session-menu-panel" id="store-model-panel">
-                  <div class="session-menu-option-list">
-                  <button type="button" class="store-model-option session-menu-option active" data-model="all"><span>全部车系</span></button>
-                  <button type="button" class="store-model-option session-menu-option" data-model="M8"><span>传祺M8</span></button>
-                  <button type="button" class="store-model-option session-menu-option" data-model="S7"><span>传祺S7</span></button>
-                  <button type="button" class="store-model-option session-menu-option" data-model="GS8"><span>传祺GS8</span></button>
-                  <button type="button" class="store-model-option session-menu-option" data-model="E8"><span>传祺E8</span></button>
-                  </div>
-                </div>
-            </div>
+            <div id="storeDashboardOrganizationFilters"></div>
+            <div id="storeDashboardBusinessFilters">
+              <div data-store-business-control="scene"></div>
+              <div data-store-business-control="model"></div>
+              <div class="sd-filter-control badge-field-filter sd-statistics-date-control" id="store-date-control"></div>
             </div>
           </div>
         </section>
@@ -115,13 +82,13 @@
             <img class="hero-avatar" src="../assets/store-core-metrics/manager-avatar.png" alt="" aria-hidden="true">
             <div class="hero-meta">
               <div class="hero-name-row">
-                <span class="hero-name">赵总</span>
+                <span class="hero-name" id="storeDashboardScopeTitle">门店经营概览</span>
               </div>
             </div>
             <div class="hero-profile-tags" aria-label="所属门店">
               <span class="hero-profile-tag">
                 <img src="../assets/store-core-metrics/store-icon.svg" alt="" aria-hidden="true">
-                <span>门店：上海中心店</span>
+                <span id="storeDashboardScopeText">全部门店</span>
               </span>
             </div>
           </div>
@@ -368,6 +335,7 @@
               </div>
               <div class="trend-chart-wrap">
                 <canvas id="storeTrendChart" aria-label="SOP执行趋势分布图" role="img"></canvas>
+                <div id="storeTrendEmpty" class="store-dashboard-empty" hidden>当前筛选范围暂无趋势演示数据</div>
               </div>
             <div class="sales-trend-footer store-trend-footer">
               <div class="trend-legend chart-legend" id="chart-legend"></div>
@@ -756,6 +724,7 @@
 
     <script src="../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20260813-back-to-top-v2"></script>
+    <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
+    <script src="./page.js?v=20261019-dashboard-filter-standard-v1"></script>
   </body>
 </html>

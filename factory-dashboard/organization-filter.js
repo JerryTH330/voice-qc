@@ -94,14 +94,14 @@
       const items = visibleOptions(key), selected = model.selections[key];
       const all = items.length > 0 && items.every(item => selected.includes(item.value));
       const partial = !all && selected.some(id => items.some(item => item.value === id));
-      const renderOption = item => `<button type="button" class="fo-option${selected.includes(item.value) ? ' is-selected' : ''}" role="option" aria-selected="${selected.includes(item.value)}" data-fo-option="${escape(item.value)}"><span class="fo-check ${selected.includes(item.value) ? 'selected' : ''}">${selected.includes(item.value) ? '✓' : ''}</span><span class="fo-option-copy"><strong>${escape(item.label)}</strong>${item.meta ? `<small>${escape(item.meta)}</small>` : ''}</span></button>`;
+      const renderOption = item => `<button type="button" class="fo-option badge-advisor-option${selected.includes(item.value) ? ' is-selected' : ''}" role="option" aria-selected="${selected.includes(item.value)}" data-fo-option="${escape(item.value)}"><span class="fo-check badge-advisor-option-check ${selected.includes(item.value) ? 'selected' : ''}">${selected.includes(item.value) ? '✓' : ''}</span><span class="fo-option-copy badge-advisor-option-copy"><strong>${escape(item.label)}</strong>${item.meta ? `<small>${escape(item.meta)}</small>` : ''}</span></button>`;
       const optionMarkup = fields.find(field => field.key === key)?.groupByBrand
         ? ['传祺', '埃安'].map(brand => { const group = items.filter(item => item.meta === brand); return group.length ? `<div class="fo-menu-group"><div class="fo-menu-group-label">${brand}</div>${group.map(renderOption).join('')}</div>` : ''; }).join('')
         : items.map(renderOption).join('');
-      return `<div class="session-menu-panel fo-menu" role="dialog" aria-label="选择${labels[key]}"><label class="fo-search"><span aria-hidden="true"></span><input type="search" data-fo-search aria-label="搜索${labels[key]}" placeholder="${key === 'store' ? '输入店名或店代码' : '搜索' + labels[key]}" value="${escape(query)}"></label><button type="button" class="fo-all${all ? ' is-selected' : partial ? ' is-partial' : ''}" data-fo-all ${items.length ? '' : 'disabled'} aria-pressed="${all}"><span class="fo-check ${all ? 'selected' : ''}">${all ? '✓' : ''}</span>全选<small>共 ${items.length} 条数据</small></button><div class="fo-options" role="listbox" aria-label="${labels[key]}" aria-multiselectable="true">${optionMarkup || '<p class="fo-empty">未找到匹配数据</p>'}</div></div>`;
+      return `<div class="session-menu-panel fo-menu badge-advisor-menu" role="dialog" aria-label="选择${labels[key]}"><label class="fo-search badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-fo-search aria-label="搜索${labels[key]}" placeholder="${key === 'store' ? '输入店名或店代码' : '搜索' + labels[key]}" value="${escape(query)}"></label><button type="button" class="fo-all badge-advisor-select-all${all ? ' is-selected' : partial ? ' is-partial' : ''}" data-fo-all ${items.length ? '' : 'disabled'} aria-pressed="${all}"><span class="fo-check badge-advisor-option-check ${all ? 'selected' : ''}">${all ? '✓' : ''}</span>全选<small>共 ${items.length} 条数据</small></button><div class="fo-options badge-advisor-options" role="listbox" aria-label="${labels[key]}" aria-multiselectable="true">${optionMarkup || '<p class="fo-empty badge-advisor-empty">未找到匹配数据</p>'}</div></div>`;
     };
-    const control = key => `<div class="fo-control ${open === key ? 'is-open' : ''}" data-fo-control="${key}"><span>${labels[key]}</span><button type="button" class="session-select-trigger" data-fo-trigger="${key}" aria-label="${labels[key]}" aria-expanded="${open === key}"><strong class="${model.selections[key].length ? '' : 'is-placeholder'}">${escape(model.display(key))}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${open === key ? renderMenu(key) : ''}</div>`;
-    const renderActions = () => `<div class="fo-actions"><span></span><div><button type="button" class="btn session-reset-btn" data-fo-reset>重置</button><button type="button" class="session-toggle-text-btn" data-fo-collapse aria-expanded="${!collapsed}"><span>${collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div></div>`;
+    const control = key => `<div class="fo-control badge-field-filter badge-field-filter-select ${open === key ? 'is-open' : ''}" data-fo-control="${key}"><span>${labels[key]}</span><button type="button" class="session-select-trigger" data-fo-trigger="${key}" aria-label="${labels[key]}" aria-expanded="${open === key}"><strong class="${model.selections[key].length ? '' : 'is-placeholder'}">${escape(model.display(key))}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${open === key ? renderMenu(key) : ''}</div>`;
+    const renderActions = () => `<div class="fo-actions badge-dynamic-filter-actions"><span></span><div><button type="button" class="btn session-reset-btn" data-fo-reset>重置</button><button type="button" class="session-toggle-text-btn" data-fo-collapse aria-expanded="${!collapsed}"><span>${collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div></div>`;
     const settleExtra = extra => {
       if (!extra) return;
       extra.style.height = collapsed ? '0px' : '';
@@ -121,14 +121,14 @@
       }
       root.classList.add('factory-organization-filters');
       root.classList.toggle('is-collapsed', collapsed);
-      const extraInner = ['patroler', 'governor', 'advisor', ...fields.map(field => field.key)].map(control).join('') + renderTrailing();
+      const extraInner = ['advisor', 'patroler', 'governor', ...fields.map(field => field.key)].map(control).join('') + renderTrailing();
       const keepExtra = extraInner && (!collapsed || collapseChanged);
       root.innerHTML = global.DimensionSwitcher.render({
         namespace: 'fo', mode: model.dimension, label: '厂端组织筛选维度', panelId: 'factoryDimensionFilters',
         path: model.primary().map(key => model.selections[key].length ? model.display(key) : '全部' + labels[key])
       }) +
-        `<div class="fo-primary"><div class="fo-grid" id="factoryDimensionFilters">${model.primary().map(control).join('')}</div>${collapsed ? renderActions() : ''}</div>` +
-        (keepExtra ? `<div class="fo-extra" data-fo-extra><div class="fo-extra-inner"><div class="fo-grid fo-secondary">${extraInner}</div></div></div>` : '') +
+        `<div class="fo-primary"><div class="fo-grid badge-dynamic-filter-grid" id="factoryDimensionFilters">${model.primary().map(control).join('')}</div>${collapsed ? renderActions() : ''}</div>` +
+        (keepExtra ? `<div class="fo-extra" data-fo-extra><div class="fo-extra-inner"><div class="fo-grid badge-dynamic-filter-grid fo-secondary">${extraInner}</div></div></div>` : '') +
         (collapsed ? '' : renderActions());
       global.DimensionSwitcher.sync(root);
       onRender();

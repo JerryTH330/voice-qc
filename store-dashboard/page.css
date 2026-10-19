@@ -1,6 +1,23 @@
 /* 门店看板 independent page styles. */
 @import url("../voice-qc-admin.css?v=20260902-global-brand-v1");
 @import url("../app-inline.css?v=20260811-figma-panels-v13");
+@import url("../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2");
+@import url("./organization-filter.css?v=20261019-dashboard-filter-standard-v1");
+
+.store-dashboard-page .store-dashboard-empty {
+  padding: 24px 16px;
+  color: var(--muted, #64748b);
+  text-align: center;
+}
+
+.store-dashboard-page #storeTrendEmpty[hidden],
+.store-dashboard-page #storeTrendChart[hidden] {
+  display: none;
+}
+
+.store-dashboard-page #storeDashboardBusinessFilters {
+  display: contents;
+}
 
 /* Figma 546:1160 — 门店核心指标 */
 .store-dashboard-page .hero-panel {
@@ -1647,28 +1664,6 @@
   padding: 0;
 }
 
-@container (max-width: 1180px) {
-  .store-dashboard-page #main-panel-advisors > .tab-dual-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .store-dashboard-page #main-panel-advisors .sop-overview-track,
-  .store-dashboard-page #main-panel-advisors .advisor-rank-card,
-  .store-dashboard-page #main-panel-advisors .issue-overview-wrapper {
-    grid-column: 1;
-    grid-row: auto;
-    height: auto;
-  }
-
-  .store-dashboard-page .store-recording-summary {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .store-dashboard-page .store-hero-metrics .hm-layout-bottom {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @container review-panel (max-width: 560px) {
   .store-dashboard-page #main-panel-advisors :is(#detail-sop, #detail-sop-analysis) .store-sop-rule-toolbar {
     grid-template-columns: minmax(0, 1fr);
@@ -1688,31 +1683,10 @@
 }
 
 @container store-dashboard (max-width: 900px) {
-  .store-dashboard-page .sop-overview-primary-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .store-dashboard-page .store-filter-shell,
   .store-dashboard-page .store-filter-row-segment,
   .store-dashboard-page .store-filter-row-main {
     width: 100%;
-  }
-}
-
-@container store-dashboard (max-width: 720px) {
-  .store-dashboard-page .store-hero-metrics .hm-layout-bottom {
-    grid-template-columns: 1fr !important;
-  }
-
-  .store-dashboard-page .sop-overview-track .summary-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
-@container store-dashboard (max-width: 480px) {
-  .store-dashboard-page .store-hero-metrics .hm-layout-bottom,
-  .store-dashboard-page .sop-overview-track .summary-list {
-    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 

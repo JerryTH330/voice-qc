@@ -1,0 +1,106 @@
+/* 来源切换与线索列表视图Tab共用同一套尺寸、渐变及裁切白字。 */
+.sales-role-dashboard-page .sales-role-nav .role-page-switch {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 216px;
+  max-width: 100%;
+  height: 44px;
+  max-height: 44px;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.sales-role-dashboard-page .sales-role-nav .sales-source-indicator {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 2);
+  height: 36px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-2));
+  pointer-events: none;
+  transition: transform 180ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.sales-role-dashboard-page .sales-role-nav .sales-source-indicator-labels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 200%;
+  height: 100%;
+  color: var(--card);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 180ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.sales-role-dashboard-page .sales-role-nav .sales-source-indicator-labels > span {
+  display: grid;
+  place-items: center;
+}
+
+.sales-role-dashboard-page .sales-role-nav [data-sales-source="advisor"] .sales-source-indicator {
+  transform: translateX(100%);
+}
+
+.sales-role-dashboard-page .sales-role-nav [data-sales-source="advisor"] .sales-source-indicator-labels {
+  transform: translateX(-50%);
+}
+
+.sales-role-dashboard-page .sales-role-nav .role-switch-link {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  justify-content: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: none;
+}
+
+.sales-role-dashboard-page .sales-role-nav .role-switch-link:hover {
+  border: 0;
+  color: var(--text);
+  background: transparent;
+}
+
+.sales-role-dashboard-page .sales-role-nav .role-switch-link.active,
+.sales-role-dashboard-page .sales-role-nav .role-switch-link.active:hover {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.sales-role-dashboard-page .sales-role-nav .role-switch-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.sales-role-dashboard-page .sales-role-nav.is-stuck .role-page-switch {
+  padding-block: 0;
+  border-block-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sales-role-dashboard-page .sales-role-nav .sales-source-indicator,
+  .sales-role-dashboard-page .sales-role-nav .sales-source-indicator-labels {
+    transition: none;
+  }
+}

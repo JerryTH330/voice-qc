@@ -1,0 +1,259 @@
+/* 三个看板均按扣除侧栏和留白后的业务内容宽度适配。 */
+.factory-dashboard-page {
+  container: dashboard-layout / inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+.store-dashboard-page .dashboard {
+  container-name: store-dashboard dashboard-layout;
+  container-type: inline-size;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :where(
+  .dashboard-content, .main-panel, .tab-dual-grid, .tab-left-stack,
+  .tab-right-stack, .track, .track-body, .store-section-content,
+  .issue-detail-section, .issue-detail-pad, .trend-chart-wrap
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .hero-identity {
+  flex-wrap: wrap;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .hero-profile-tags {
+  flex-wrap: wrap;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary.is-single-source {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary-total {
+  flex-wrap: wrap;
+  padding-right: 123px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary-scenes {
+  grid-template-columns: repeat(var(--recording-scene-count, 3), minmax(0, 1fr));
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary-scene-label {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-item.single-metric {
+  padding: 12px 30px 12px 58px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-label-icon-image {
+  left: 12px;
+  width: 36px;
+  height: 36px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-label {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-val-row {
+  flex-wrap: wrap;
+  gap: 4px 7px;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) > .tab-dual-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) :is(.sop-overview-track, .sop-rank-track, .advisor-rank-card, .trend-section) {
+  grid-column: 1 / -1;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-track {
+  grid-row: 1;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .issue-sop-analysis-wrapper {
+  grid-column: 1;
+  grid-row: 2;
+  height: 100%;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .issue-overview-wrapper {
+  grid-column: 2;
+  grid-row: 2;
+  height: 100%;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) :is(.sop-rank-track, .advisor-rank-card) {
+  grid-row: 3;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .trend-section {
+  grid-row: 4;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-primary-row {
+  grid-template-columns: minmax(0, 32.04%) minmax(0, 1fr);
+  overflow: visible;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-ai-summary {
+  min-height: 86px;
+  height: auto;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-metric-row {
+  min-width: 0;
+}
+
+/* 既有总结组件使用 !important；此处仅接管它的列数。 */
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-track .summary-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+:is(#factoryDashboardPage, .store-dashboard-page) :is(#rank-table-wrap, .advisor-list) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.factory-dashboard-page #panel-sop-execution .factory-qc-rank-table {
+  min-width: 880px;
+}
+
+.factory-dashboard-page #panel-sop-execution .factory-qc-rank-table.factory-qc-rank-nested {
+  min-width: 0;
+}
+
+@container dashboard-layout (max-width: 1580px) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container dashboard-layout (max-width: 1100px) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) > .tab-dual-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) :is(.sop-overview-track, .issue-sop-analysis-wrapper, .issue-overview-wrapper, .sop-rank-track, .advisor-rank-card, .trend-section) {
+    grid-column: 1;
+    grid-row: auto;
+    height: auto;
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-primary-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+}
+
+@container dashboard-layout (max-width: 960px) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-track .summary-list {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* 保留更窄窗口的基础堆叠，桌面适配不扩大为手机界面改版。 */
+@container dashboard-layout (max-width: 720px) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-overview-primary-row {
+    overflow-x: auto;
+  }
+
+  :is(#factoryDashboardPage, .store-dashboard-page) :is(#panel-sop-execution, #main-panel-advisors) .sop-metric-row {
+    min-width: 720px;
+  }
+}
+
+@container dashboard-layout (max-width: 600px) {
+  :is(#factoryDashboardPage, .store-dashboard-page) .store-recording-summary-scenes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sales-role-dashboard-page {
+  container: dashboard-layout / inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+:is(.sales-role-dashboard-page) :where(.sales-role-shell, .sales-role-main-column, .sales-insight-row, .sales-sop-review-card, .sales-inline-review-card, .hm-body) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sales-role-dashboard-page .hero-metrics {
+  --sales-metric-basis: calc((100% - 60px) / 6);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sales-role-dashboard-page .hero-metrics .hm-item {
+  box-sizing: border-box;
+  flex: 1 1 var(--sales-metric-basis);
+  min-width: 0;
+  min-height: 78px;
+}
+
+.sales-role-dashboard-page .hero-metrics .hm-item-summary {
+  flex-basis: calc((100% - 12px) / 2);
+}
+
+.sales-role-dashboard-page .hero-metrics .hm-sep { display: none; }
+.sales-role-dashboard-page .hero-metrics .hm-label { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+.sales-role-dashboard-page .hero-metrics .hm-val-row { flex-wrap: wrap; gap: 4px 7px; }
+.sales-role-dashboard-page .hero-profile,
+.sales-role-dashboard-page .hero-profile-tags { flex-wrap: wrap; }
+.sales-role-dashboard-page .sales-insight-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sales-role-dashboard-page .customer-table-wrap { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.sales-role-dashboard-page #all-leads-table { min-width: 880px; }
+
+@container dashboard-layout (max-width: 1580px) {
+  .sales-role-dashboard-page .hero-metrics { --sales-metric-basis: calc((100% - 24px) / 3); }
+}
+
+@container dashboard-layout (max-width: 1100px) {
+  .sales-role-dashboard-page .sales-insight-row { grid-template-columns: minmax(0, 1fr); }
+  .sales-role-dashboard-page .sales-insight-row > :is(.sales-sop-review-card, .sales-inline-review-card) { height: auto; min-height: 0; }
+  .sales-role-dashboard-page :is(.sales-sop-review-body, .sales-sop-review-list, .sales-inline-review-card .review-scroll-area, .sales-inline-review-card .review-insight-panel, .sales-inline-review-card .sales-review-top-five-list) { height: auto; min-height: 0; flex-basis: auto; }
+}
+
+@container dashboard-layout (max-width: 960px) {
+  .sales-role-dashboard-page .hero-metrics { --sales-metric-basis: calc((100% - 12px) / 2); }
+}
+
+@container dashboard-layout (max-width: 720px) {
+  .sales-role-dashboard-page .hero-metrics { --sales-metric-basis: 100%; }
+  .sales-role-dashboard-page .hero-metrics .hm-item-summary { flex-basis: 100%; }
+}

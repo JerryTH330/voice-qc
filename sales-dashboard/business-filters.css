@@ -1,0 +1,2 @@
+.sales-role-dashboard-page :is(.sales-role-scene-host, .sales-role-date-host) { width: 100%; min-width: 0; }
+.sales-role-dashboard-page .sales-role-scene-host { display: block; }
