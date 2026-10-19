@@ -28,7 +28,9 @@
   } = FACTORY_HERO_UTILS;
   const {
     sortIssueOrgRows = (rows) => (Array.isArray(rows) ? [...rows] : []),
-    aggregateIssueRulesByScenes = (rules) => (Array.isArray(rules) ? [...rules] : [])
+    aggregateIssueRulesByScenes = (rules) => (Array.isArray(rules) ? [...rules] : []),
+    buildIssueOrgRows,
+    scopeIssueRules
   } = ISSUE_RULE_ANALYSIS_UTILS;
   const {
     renderCheckboxFilterOptionsMarkup: renderSharedCheckboxFilterOptionsMarkup,
@@ -4038,10 +4040,6 @@
     { value: 'sample-desc', label: '样本数量优先' }
   ];
 
-  const clampPercent = (value) => Math.max(1, Math.min(98, Math.round(value)));
-
-  const textHash = (value) => String(value || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
   const getActiveIssueRuleConfig = (state = issueRuleAnalysisState) => ISSUE_RULE_TABS[state.activeTab] || ISSUE_RULE_TABS.sop;
 
   const getSelectedIssueScenes = () => {
@@ -4051,9 +4049,24 @@
       : selection.activeScenes;
   };
 
+  const getIssueRuleScopeRecords = () => {
+    const records = getFactoryScopedRecordings();
+    const selected = organizationFilter.selections.model;
+    if (!selected.length) return records;
+    const brands = new Set(organizationFilter.options('model').filter(item => selected.includes(item.value)).map(item => item.meta));
+    return records.filter(record => brands.has(record.dealer.brand));
+  };
+
   const getIssueRulesForCurrentFilter = (state = issueRuleAnalysisState) => {
     const config = getActiveIssueRuleConfig(state);
-    return aggregateIssueRulesByScenes(config.rules, getSelectedIssueScenes());
+    const rules = aggregateIssueRulesByScenes(config.rules, getSelectedIssueScenes());
+    const selected = organizationFilter.selections.model;
+    const options = organizationFilter.options('model');
+    const brands = new Set(options.filter(item => selected.includes(item.value)).map(item => item.meta));
+    const modelCount = options.filter(item => brands.has(item.meta)).length;
+    const modelShare = selected.length ? selected.length / Math.max(1, modelCount) : 1;
+    const days = getFactoryRangeInclusiveDays(factoryTimeStartDate, factoryTimeEndDate);
+    return scopeIssueRules(rules, getIssueRuleScopeRecords().length, sharedOrganizationDirectory.recordings.length, days * modelShare);
   };
 
   const getActiveIssueRule = (state = issueRuleAnalysisState) => (
@@ -4095,79 +4108,13 @@
     progressive: true,
   });
 
-  const getIssueRuleBaseOrg = () => {
-    const region = currentRegion !== 'all'
-      ? SOP_RANK_DATA.regions.find(item => item.name === currentRegion)
-      : null;
-    const zone = region && currentZone !== 'all'
-      ? (region.zones || []).find(item => item.name === currentZone)
-      : null;
-    const store = zone && currentStore !== 'all'
-      ? (zone.stores || []).find(item => item.name === currentStore)
-      : null;
-
-    return { region, zone, store };
-  };
-
-  const getCurrentOrgChildren = (state = issueRuleAnalysisState) => {
-    const { region: baseRegion, zone: baseZone, store: baseStore } = getIssueRuleBaseOrg();
-    const [firstCrumb, secondCrumb] = state.path;
-
-    if (baseStore) {
-      return [{ ...baseStore, level: 'store' }];
-    }
-
-    if (baseZone) {
-      return (baseZone.stores || []).map(store => ({ ...store, level: 'store' }));
-    }
-
-    if (baseRegion) {
-      if (!firstCrumb) {
-        return (baseRegion.zones || []).map(zone => ({ ...zone, level: 'zone' }));
-      }
-      const zone = (baseRegion.zones || []).find(item => item.name === firstCrumb.name);
-      if (!zone) return [];
-      return (zone.stores || []).map(store => ({ ...store, level: 'store' }));
-    }
-
-    if (!firstCrumb) {
-      return SOP_RANK_DATA.regions.map(region => ({ ...region, level: 'region' }));
-    }
-    const region = SOP_RANK_DATA.regions.find(item => item.name === firstCrumb.name);
-    if (!region) return [];
-    if (!secondCrumb) {
-      return (region.zones || []).map(zone => ({ ...zone, level: 'zone' }));
-    }
-    const zone = (region.zones || []).find(item => item.name === secondCrumb.name);
-    if (!zone) return [];
-    return (zone.stores || []).map(store => ({ ...store, level: 'store' }));
-  };
-
-  const buildOrgRuleStats = (rule, org, index, state = issueRuleAnalysisState) => {
-    const tab = state.activeTab;
-    const hashOffset = (textHash(`${rule.id}-${org.name}`) % 13) - 6;
-    const levelOffset = org.level === 'region' ? 0 : org.level === 'zone' ? -1 : -2;
-    const sampleBase = org.level === 'region' ? 980 : org.level === 'zone' ? 360 : 118;
-    const ruleScopeFactor = Math.max(0.2, Math.min(1.2, (Number(rule.sampleCount) || 0) / 1200));
-    const sampleCount = Math.max(20, Math.round((sampleBase - index * 23 + (textHash(org.name) % 37)) * ruleScopeFactor));
-    const orgSopRate = Number(org.sopRate || 75);
-    const orgWeakItems = Number(org.weakItems || 4);
-    const orgRiskRate = Number(org.riskHit || 6);
-    const rate = tab === 'defect'
-      ? clampPercent(rule.rate + (orgWeakItems - 4) * 6.2 + hashOffset + levelOffset)
-      : tab === 'risk'
-        ? clampPercent(rule.rate + (orgRiskRate - 6) * 3.4 + hashOffset + levelOffset)
-        : clampPercent(rule.rate + (orgSopRate - 75) * 0.56 + hashOffset + levelOffset);
-
-    return {
-      name: org.name,
-      level: org.level,
-      rate,
-      sampleCount,
-      hitCount: Math.round(sampleCount * rate / 100),
-      drillable: org.level !== 'store'
-    };
-  };
+  const getCurrentOrgChildren = (state = issueRuleAnalysisState, rule = {}) => buildIssueOrgRows({
+    records: getIssueRuleScopeRecords(),
+    dimension: organizationFilter.dimension,
+    selections: organizationFilter.selections,
+    path: state.path,
+    rule
+  });
 
   const getVisibleIssueRules = (state = issueRuleAnalysisState) => {
     const availableRules = getIssueRulesForCurrentFilter(state);
@@ -4379,16 +4326,16 @@
       </div>
       <div class="issue-org-rank-list">
         ${rows.map((row, index) => `
-          <button type="button" class="issue-org-row${row.drillable ? '' : ' disabled'}" data-org-name="${escapeHtml(row.name)}" ${row.drillable ? '' : 'disabled'}>
+          <button type="button" class="issue-org-row${row.drillable ? '' : ' disabled'}" data-org-id="${escapeHtml(row.id)}" ${row.drillable ? '' : 'disabled'}>
             <span class="issue-org-main">
               <em>${index + 1}</em>
               <strong>${escapeHtml(row.name)}</strong>
             </span>
-            <span class="issue-org-rate">${row.rate}%</span>
+            <span class="issue-org-rate">${row.rate === null ? '—' : row.rate + '%'}</span>
             <span class="issue-org-count">${row.hitCount}/${row.sampleCount}</span>
             <span class="issue-org-drill${row.drillable ? ' drill-link' : ''}">${row.drillable ? '下钻' : '门店层'}</span>
           </button>
-        `).join('')}
+        `).join('') || '<div class="issue-rule-empty">当前筛选范围暂无组织统计</div>'}
       </div>
     </div>
   `;
@@ -4430,7 +4377,10 @@
   };
 
   const renderOrgDrillView = (config, rule, state = issueRuleAnalysisState) => {
-    const children = getCurrentOrgChildren(state).map((org, index) => buildOrgRuleStats(rule, org, index, state));
+    const children = getCurrentOrgChildren(state, rule);
+    const sampleCount = children.reduce((sum, row) => sum + row.sampleCount, 0);
+    const hitCount = children.reduce((sum, row) => sum + row.hitCount, 0);
+    const rate = sampleCount ? Math.round(hitCount * 100 / sampleCount) + '%' : '—';
     const sortedRows = sortIssueOrgRows(children, state.sort);
     const canBackLevel = state.path.length > 0;
 
@@ -4443,7 +4393,7 @@
             </div>
             <div class="issue-selected-metric-body">
               <span class="issue-selected-metric-label">${config.metricLabel}</span>
-              <strong class="issue-selected-metric-value">${rule.rate}%</strong>
+              <strong class="issue-selected-metric-value">${rate}</strong>
             </div>
           </div>
         </div>
@@ -4454,7 +4404,7 @@
             </div>
             <div class="issue-selected-metric-body">
               <span class="issue-selected-metric-label">${config.countLabel}</span>
-              <strong class="issue-selected-metric-value">${rule.hitCount}/${rule.sampleCount}</strong>
+              <strong class="issue-selected-metric-value">${hitCount}/${sampleCount}</strong>
             </div>
           </div>
         </div>
@@ -4464,7 +4414,7 @@
         ${canBackLevel ? '<button type="button" class="issue-org-back">返回上一级</button>' : ''}
       </div>
       <div class="issue-org-rank-grid">
-        ${renderOrgRankList('当前组织列表', sortedRows, config)}
+        ${renderOrgRankList('当前组织列表（演示统计）', sortedRows, config)}
       </div>
     `;
   };
@@ -4674,7 +4624,7 @@
 
     root.querySelectorAll('.issue-org-row:not(.disabled)').forEach(row => {
       row.addEventListener('click', () => {
-        state.path.push({ name: row.dataset.orgName });
+        state.path.push({ id: row.dataset.orgId });
         const render = rootId === 'issue-sop-analysis-root' ? renderSOPAnalysis : renderIssueRuleAnalysis;
         render();
       });

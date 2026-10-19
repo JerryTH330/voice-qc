@@ -6,7 +6,9 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');
-    const scriptVersion = ['./organization-filter.js', './factory-dashboard.js'].includes(scripts[index]) ? '20261019-dashboard-filter-standard-v1' : assetVersion;
+    const scriptVersion = ['./factory-dashboard.js', './issue-rule-analysis-utils.js'].includes(scripts[index])
+      ? '20261019-factory-rule-org-scope-v1'
+      : scripts[index] === './organization-filter.js' ? '20261019-dashboard-filter-standard-v1' : assetVersion;
     script.src = `${scripts[index]}?v=${scriptVersion}`;
     script.onload = () => loadNext(index + 1);
     script.onerror = () => { throw new Error('Failed to load ' + scripts[index]); };

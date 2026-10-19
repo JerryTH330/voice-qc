@@ -72,8 +72,80 @@
     }).filter(Boolean);
   };
 
+  const allocateCounts = (total, weights) => {
+    const weight = weights.reduce((sum, value) => sum + value, 0);
+    if (!weight) return weights.map(() => 0);
+    const shares = weights.map(value => total * value / weight);
+    const counts = shares.map(Math.floor);
+    let remainder = total - counts.reduce((sum, value) => sum + value, 0);
+    const order = shares.map((value, index) => ({ index, fraction: value - counts[index] }))
+      .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+    for (const item of order) {
+      if (remainder-- <= 0) break;
+      counts[item.index]++;
+    }
+    return counts;
+  };
+
+  const buildIssueOrgRows = ({ records, dimension, selections, path = [], rule = {} }) => {
+    const levels = dimension === 'geography' ? ['province', 'city', 'store'] : ['region', 'zone', 'store'];
+    const value = (dealer, level) => level === 'region' ? dealer.area : level === 'store' ? dealer.dealerName : dealer[level];
+    const key = (dealer, level) => {
+      if (level === 'store') return JSON.stringify(['store', dealer.brand, dealer.dealerCode]);
+      const ancestors = levels.slice(0, levels.indexOf(level) + 1);
+      return JSON.stringify([level, dealer.brand, ...ancestors.map(field => dealer[field + 'Id'] || value(dealer, field) || '')]);
+    };
+    const group = (items, level, parent) => {
+      const groups = new Map();
+      for (const record of items) {
+        const id = key(record.dealer, level);
+        if (!groups.has(id)) groups.set(id, { id, name: value(record.dealer, level) || '未知', level, records: [] });
+        groups.get(id).records.push(record);
+      }
+      const rows = [...groups.values()].sort((a, b) => a.id.localeCompare(b.id, 'zh-CN'));
+      const counts = new Map();
+      rows.forEach(row => counts.set(row.name, (counts.get(row.name) || 0) + 1));
+      const samples = allocateCounts(parent.sampleCount, rows.map(row => row.records.length));
+      const hits = allocateCounts(parent.hitCount, samples);
+      return rows.map((row, index) => ({
+        ...row,
+        name: counts.get(row.name) > 1
+          ? [row.records[0].dealer.brand, ...levels.slice(0, levels.indexOf(level) + 1).map(field => value(row.records[0].dealer, field))].join(' · ')
+          : row.name,
+        sampleCount: samples[index],
+        hitCount: hits[index],
+        rate: samples[index] ? Math.round(hits[index] * 100 / samples[index]) : null,
+        drillable: level !== 'store'
+      }));
+    };
+    let levelIndex = selections.store?.length || selections[levels[1]]?.length ? 2 : selections[levels[0]]?.length ? 1 : 0;
+    let items = records;
+    let parent = { sampleCount: Math.max(0, Math.round(Number(rule.sampleCount) || 0)), hitCount: Math.max(0, Math.round(Number(rule.hitCount) || 0)) };
+    parent.hitCount = Math.min(parent.hitCount, parent.sampleCount);
+    for (const crumb of path) {
+      if (levelIndex >= levels.length) return [];
+      const selected = group(items, levels[levelIndex], parent).find(row => row.id === crumb.id);
+      if (!selected || !selected.drillable) return [];
+      items = selected.records;
+      parent = selected;
+      levelIndex++;
+    }
+    return group(items, levels[levelIndex], parent);
+  };
+
+  const scopeIssueRules = (rules, scopeCount, totalCount, factor = 1) => {
+    if (!scopeCount || !totalCount || factor <= 0) return [];
+    return rules.map(rule => {
+      const sampleCount = Math.max(rule.sampleCount > 0 ? 1 : 0, Math.round(rule.sampleCount * scopeCount / totalCount * factor));
+      const hitCount = Math.min(sampleCount, Math.round(sampleCount * (rule.sampleCount ? rule.hitCount / rule.sampleCount : 0)));
+      return { ...rule, sampleCount, hitCount, rate: sampleCount ? Math.round(hitCount * 100 / sampleCount) : 0 };
+    });
+  };
+
   return {
     sortIssueOrgRows,
-    aggregateIssueRulesByScenes
+    aggregateIssueRulesByScenes,
+    buildIssueOrgRows,
+    scopeIssueRules
   };
 });
