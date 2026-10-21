@@ -121,7 +121,7 @@
       }
       root.classList.add('factory-organization-filters');
       root.classList.toggle('is-collapsed', collapsed);
-      const extraInner = ['advisor', 'patroler', 'governor', ...fields.map(field => field.key)].map(control).join('') + renderTrailing();
+      const extraInner = ['patroler', 'governor', ...fields.map(field => field.key)].map(control).join('') + renderTrailing();
       const keepExtra = extraInner && (!collapsed || collapseChanged);
       root.innerHTML = global.DimensionSwitcher.render({
         namespace: 'fo', mode: model.dimension, label: '厂端组织筛选维度', panelId: 'factoryDimensionFilters',

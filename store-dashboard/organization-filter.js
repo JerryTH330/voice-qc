@@ -2,12 +2,17 @@
   'use strict';
 
   const labels = { brand: '品牌', region: '大区', zone: '战区', province: '省份', city: '城市', store: '门店', advisor: '顾问', patroler: '巡回员', governor: '治理员' };
-  const personnelKeys = ['advisor', 'patroler', 'governor'];
+  const personnelKeys = ['patroler', 'governor'];
   const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
   function mount({ root, model, businessFilters, onChange = () => {}, onReset = () => {}, onBeforeChange = () => {} }) {
     const document = root.ownerDocument;
     const window = document.defaultView || global;
+    if (model.draft.advisor.length || model.applied.advisor.length) {
+      model.set('advisor', []);
+      model.apply();
+      onChange({ advisorRemoved: true });
+    }
     let openKey = '', query = '', pinnedIds = [], collapsed = true, composing = false;
     let collapseAnimation = null;
     let collapseTimer = null;

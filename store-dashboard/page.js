@@ -11,9 +11,9 @@ window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
     '../shared/organization-directory.js?v=20260828-shared-org-v2',
     '../device-management/visit-organization-filter.js?v=20261010-matching-org-v1',
     '../session/real-recording-data.js?v=20261009-advisor-meta-v1',
-    '../factory-dashboard/organization-filter.js?v=20261019-dashboard-filter-standard-v1',
+    '../factory-dashboard/organization-filter.js?v=20261021-dashboard-no-advisor-v1',
     './demo-data.js?v=20261016-store-organization-v1',
-    './organization-filter.js?v=20261019-dashboard-filter-standard-v1',
+    './organization-filter.js?v=20261021-dashboard-no-advisor-v1',
     './business-filters.js?v=20261019-dashboard-filter-standard-v1',
     '../app-runtime.js?v=20261016-store-business-filters-v1'
   ];

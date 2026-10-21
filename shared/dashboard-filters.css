@@ -4,6 +4,7 @@
   --muted: #68758a;
   --line: #e7ebf2;
   --blue-dark: #1d4ed8;
+  --dashboard-filter-actions-width: 146px;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -48,7 +49,7 @@
 .dashboard-filter-card :is(.sd-filter-personnel, .sd-filter-business, .sd-business-filters, .so-filter-personnel) { display: contents; }
 .dashboard-filter-card :is(.factory-organization-filters, .sd-organization-filters, .so-organization-filters).is-collapsed :is(.fo-primary, .sd-filter-primary, .so-filter-primary) {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) var(--dashboard-filter-actions-width);
   align-items: center;
   gap: 12px;
 }
@@ -62,6 +63,15 @@
 .dashboard-filter-card .session-toggle-text-btn-icon { width: 14px; height: 14px; }
 .dashboard-filter-card :is(button, input) { font-family: inherit; touch-action: manipulation; }
 .dashboard-filter-card :is(button, input):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.dashboard-filter-card .dashboard-fixed-filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--dashboard-filter-actions-width);
+  align-items: start;
+  gap: 12px;
+}
+.dashboard-filter-card .dashboard-fixed-filter-row .badge-dynamic-filter-actions { flex-direction: row; align-items: center; margin: 0; padding: 0; }
+.dashboard-filter-card .dashboard-fixed-filter-row .session-reset-btn { width: 80px; min-width: 80px; height: 44px; min-height: 44px; padding: 0; }
 
 .dashboard-filter-card .badge-field-filter { position: relative; }
 .dashboard-filter-card .badge-field-filter > span:first-child { font-weight: 400; }
@@ -164,6 +174,8 @@
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(4n) :is(.fo-menu, .fo-date-panel) { left: auto; right: 0; }
 
 @media (max-width: 980px) {
+  .dashboard-filter-card .dashboard-fixed-filter-row { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-filter-card .dashboard-fixed-filter-row .badge-dynamic-filter-actions { justify-content: flex-end; }
   .dashboard-filter-card :is(.factory-organization-filters, .sd-organization-filters, .so-organization-filters).is-collapsed :is(.fo-primary, .sd-filter-primary, .so-filter-primary) { display: block; }
   .dashboard-filter-card .is-collapsed .badge-dynamic-filter-actions { margin-top: 14px; }
   :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(2n) :is(.fo-menu, .fo-date-panel) { left: auto; right: 0; }
