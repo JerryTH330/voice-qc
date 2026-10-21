@@ -741,19 +741,8 @@
 
   function renderDimensionSwitcher() {
     var viewState = state();
-    var keys = dimensionKeys();
-    var path = keys.map(function (key) {
-      var values = selected(key);
-      if (!values.length) return '全部' + FILTER_LABELS[key];
-      var options = currentOptions(key);
-      if (values.length === 1) {
-        var found = options.find(function (item) { return item.value === values[0]; });
-        return found ? found.label : values[0];
-      }
-      return values.length + '项' + FILTER_LABELS[key];
-    });
     return global.DimensionSwitcher.render({
-      namespace: 'lr', mode: viewState.dimensionMode, path: path,
+      namespace: 'lr', mode: viewState.dimensionMode,
       label: currentView === 'customers' ? '客户聚合组织筛选维度' : '线索组织筛选维度',
       panelId: 'leadsDimensionFilters'
     });

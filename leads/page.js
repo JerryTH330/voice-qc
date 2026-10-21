@@ -13,7 +13,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "./real-lead-data.js?v=20260910-real-leads-v1",
     "../shared/linked-demo-data.js?v=20261014-linked-demo-five-matching-statuses-v5",
     "../app-runtime.js?v=20261010-linked-demo-v1",
-    "./leads-modern-runtime.js?v=20261015-list-summary-counters-v1"
+    "./leads-modern-runtime.js?v=20261021-leads-static-path-v1"
   ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
