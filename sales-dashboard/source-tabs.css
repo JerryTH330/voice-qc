@@ -7,7 +7,7 @@
   max-width: 100%;
   height: 44px;
   max-height: 44px;
-  padding: 3px;
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
@@ -19,10 +19,10 @@
 .sales-role-dashboard-page .sales-role-nav .sales-source-indicator {
   position: absolute;
   z-index: 2;
-  top: 3px;
-  left: 3px;
-  width: calc((100% - 6px) / 2);
-  height: 36px;
+  top: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 2);
+  height: 34px;
   overflow: hidden;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--blue), var(--blue-2));
@@ -61,7 +61,7 @@
   width: auto;
   justify-content: center;
   min-width: 0;
-  height: 36px;
+  height: 34px;
   padding: 0;
   border: 0;
   background: transparent;
