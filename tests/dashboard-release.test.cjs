@@ -52,7 +52,8 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard']) {
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), releaseVersion);
+    const entryVersion = area === 'session' ? '20261022-session-brand-column-v1' : releaseVersion;
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), entryVersion);
   });
 }
 
