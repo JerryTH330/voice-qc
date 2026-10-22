@@ -320,5 +320,5 @@
 
   global.SalesDashboardOrganizationFilter = { mount, connect };
   const host = global.document?.getElementById('pageHost');
-  if (host) connect(host);
+  if (host && !global.AIQCData) connect(host);
 })(window);

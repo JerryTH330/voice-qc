@@ -84,6 +84,8 @@ function renderSharedInsightTop5Cards(items, options = {}) {
 }
 
 function initStickyFilterBars() {
+  if (typeof IntersectionObserver === 'undefined') return () => {};
+  const cleanup = [];
   const bars = document.querySelectorAll('.global-filter-bar.session-filter-card, .sales-role-nav');
   bars.forEach((bar) => {
     if (bar.dataset.stickyInit === 'true') return;
@@ -107,7 +109,9 @@ function initStickyFilterBars() {
     }, { root, threshold: 0, rootMargin: '-24px 0px 0px 0px' });
 
     observer.observe(sentinel);
+    cleanup.push(() => { observer.disconnect(); sentinel.remove(); delete bar.dataset.stickyInit; });
   });
+  return () => cleanup.forEach(dispose => dispose());
 }
 
 function initGlobalBackToTop() {
@@ -519,6 +523,17 @@ function getCompactIssueRulePaginationPages(pageCount, currentPage) {
   return new Set([startPage, startPage + 1, startPage + 2]);
 }
 
+function renderDashboardPageSizeControl(pageSize, options = [5, 10, 20, 50]) {
+  return `
+    <div class="custom-select-container page-select page-size-select dashboard-page-size-select">
+      <button type="button" class="custom-select-trigger page-size-trigger" data-dashboard-page-size-trigger aria-label="每页 ${pageSize} 条，选择每页条数" aria-haspopup="listbox" aria-expanded="false"><span>${pageSize} 条/页</span><i class="session-select-caret" aria-hidden="true"></i></button>
+      <div class="custom-select-options page-size-options" role="listbox" aria-label="每页条数">
+        ${options.map(size => `<button type="button" class="custom-option page-size-option${size === pageSize ? ' active' : ''}" data-dashboard-page-size="${size}" role="option" aria-selected="${size === pageSize}"><span>${size} 条/页</span></button>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function renderUnifiedIssueRulePagination({ totalItems, currentPage, pageCount, pageSize }) {
   const compactPages = getCompactIssueRulePaginationPages(pageCount, currentPage);
   return `
@@ -579,6 +594,7 @@ function bindUnifiedIssueRulePagination(root, { currentPage, pageCount, onPageCh
 }
 
 function initStoreDashboardPage() {
+  if (window.AIQCDashboard) return window.AIQCDashboard.mount({kind:'store',root:document.getElementById('pageHost')});
   const FILTER_UTILS = window.__dashboardFilterUtils;
   const {
     SOURCE_KEYS,
@@ -7934,6 +7950,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildRealLeadRecords() {
+        if (window.AIQCData) return window.AIQCData.leads
         const source = (Array.isArray(window.__LEADS_REAL_DATA) ? window.__LEADS_REAL_DATA : []).concat(window.AIQCLinkedDemo?.leads || [])
         if (!source.length) return []
         const directory = Array.isArray(window.__DEVICE_ORGANIZATION_DEALERS)
@@ -11334,6 +11351,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getLeadNaturalCustomerKey(item = {}) {
+        if (window.AIQCData) return window.AIQCData.customerKey(item)
         const customerPhone = String(item.customerPhone || '').trim()
         const customerName = String(item.customerName || '').trim()
         return customerPhone && customerName
@@ -11350,6 +11368,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildLeadCustomerAggregateRecords(records) {
+        if (window.AIQCData) return window.AIQCData.customers(records)
         const customerMap = new Map()
         const sortedRecords = [...records].sort((left, right) => parseDateTimeValue(right.recordStartTime) - parseDateTimeValue(left.recordStartTime))
 
@@ -12456,7 +12475,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .join('')
       }
 
-      function renderSessionDetailWaveform(progressPercent = (sessionDetailState.currentTime / sessionDetailState.duration) * 100) {
+      function renderSessionDetailWaveform(progressPercent = (sessionDetailState.currentTime / (sessionDetailState.duration || 1)) * 100) {
+        if (window.AIQCData) {
+          const waveform = document.getElementById('sessionWaveform')
+          if (waveform) waveform.textContent = '当前数据未提供音频'
+          return
+        }
         const waveform = document.getElementById('sessionWaveform')
         if (!waveform) {
           return
@@ -12518,7 +12542,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        const percent = (sessionDetailState.currentTime / sessionDetailState.duration) * 100
+        const percent = (sessionDetailState.currentTime / (sessionDetailState.duration || 1)) * 100
         range.max = String(sessionDetailState.duration)
         range.value = String(Math.round(sessionDetailState.currentTime))
         range.style.setProperty('--player-progress', `${percent}%`)
@@ -12528,7 +12552,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const currentTimeText = formatSessionClock(sessionDetailState.currentTime)
         const durationText = formatSessionClock(sessionDetailState.duration)
         const rateText = `${sessionDetailState.playbackRate}x`
-        const progressPercent = (sessionDetailState.currentTime / sessionDetailState.duration) * 100
+        const progressPercent = (sessionDetailState.currentTime / (sessionDetailState.duration || 1)) * 100
 
         pageHost.querySelectorAll('[data-session-time-current]').forEach((node) => {
           node.textContent = currentTimeText
@@ -14312,6 +14336,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildCustomerDetailPayload(selection = customerDetailSelection) {
+        if (window.AIQCData) return window.AIQCData.customerPayload(selection)
         const aggregateRecord = getCustomerDetailAggregateRecord(selection)
         const safeSelection = {
           ...customerDetailDefaultSelection,
@@ -14900,7 +14925,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <div class="journey-body">
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                    <div class="journey-section-content">${renderJourneySessionSummaryList()}</div>
+                    <div class="journey-section-content">${payload.unified ? escapeHtml(entry.summary) : renderJourneySessionSummaryList()}</div>
                   </div>
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
@@ -14937,7 +14962,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         setText('#customerDetailStoreCount', `关联门店：${payload.aggregateStoreCount}个门店`)
         setText('#customerDetailLeadRecordingCoverage', `线索录音覆盖：${formatCustomerRecordCoverage(payload.recordCoverage, payload.aggregateRecordedLeadCount, payload.aggregateLeadCount)}`)
         setText('#customerDetailStoreRecordingCoverage', `门店录音覆盖：${formatCustomerRecordCoverage(payload.storeRecordCoverage, payload.aggregateRecordedStoreCount, payload.aggregateStoreCount)}`)
-        setText('#customerDetailRecordingSummary', `录音总数：${payload.aggregateAudioCount}条`)
+        setText('#customerDetailRecordingSummary', payload.unified ? `原始标注：${payload.declaredAudioCount}条 · 已加载：${payload.aggregateAudioCount}条${payload.associationMissing ? ' · 关联缺失' : ''}` : `录音总数：${payload.aggregateAudioCount}条`)
         setText('#customerDetailHeroSubtitle', payload.subtitle)
         setText('#customerDetailCurrentStoreTitle', payload.currentStoreTitle)
         setText('#customerDetailCurrentStoreStatus', payload.currentStoreStatus)
@@ -15210,6 +15235,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderCustomerAiPortraitGeneration() {
+        if (window.AIQCData) {
+          const panel = pageHost.querySelector('.customer-ai-generate-panel')
+          if (panel) panel.innerHTML = '<div class="empty-state-card">暂无客户综合画像分析结果</div>'
+          return
+        }
         const panel = pageHost.querySelector('.customer-ai-generate-panel')
         if (!panel) {
           return
@@ -15615,8 +15645,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
         renderCustomerAiPortraitGeneration()
-        bindCustomerAiPortraitGeneration()
-        initCustomerDemoModeSwitcher()
+        if (!window.AIQCData) {
+          bindCustomerAiPortraitGeneration()
+          initCustomerDemoModeSwitcher()
+        } else {
+          pageHost.querySelectorAll('[data-customer-demo-mode]').forEach(node => node.remove())
+        }
       }
 
       function destroyCustomerDetailPage() {
@@ -15640,6 +15674,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getLeadDetailLead(leadId, role) {
+        if (window.AIQCData) return window.AIQCData.getLead(leadId) || null
         if (!leadId || !role) {
           return null
         }
@@ -15680,8 +15715,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function normalizeLeadDetailSceneLabel(scene, role) {
-        if (scene === '进店接待' || scene === '接待') {
-          return '到店接待'
+        if (['销售接待', '进店接待', '到店接待', '接待'].includes(scene)) {
+          return '销售接待'
+        }
+        if (scene === '邀约进店') {
+          return '邀约到店'
         }
         if (scene === '试驾前确认') {
           return '试驾PDC'
@@ -15693,7 +15731,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return scene
         }
 
-        return role === 'advisor' ? '到店接待' : '邀约'
+        return role === 'advisor' ? '销售接待' : '邀约'
       }
 
       function getLeadDetailIntentLevelText(intent) {
@@ -15762,6 +15800,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function buildLeadDetailPayload(lead, role) {
+        if (window.AIQCData) return window.AIQCData.leadPayload(lead)
         if (lead.linkedDemo) return window.AIQCLinkedDemo.buildLeadPayload(lead)
         const roleMeta = getLeadDetailRoleMeta(role)
         const phone = getLeadDetailPhone(lead.id, role)
@@ -15858,6 +15897,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderLeadDetailConversationMap(tags) {
+        if (window.AIQCData && !tags?.length) return '<p class="muted-text">暂无对话标签</p>'
         const positions = [1, 2, 3, 7, 8, 4, 6, 5]
         const tones = ['blue', 'red', 'green', 'violet', 'blue', 'green', 'amber', 'red']
         const paths = Array.from({ length: 9 }, (_, index) => {
@@ -15872,6 +15912,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderLeadDetailPublicProfile(profile) {
+        if (window.AIQCData && !profile?.groups?.some(items => items.length)) return '<p class="muted-text">暂无公域画像数据</p>'
         const groups = profile?.groups || [profile?.highlights || [], profile?.attributes || []]
         return `<div class="public-profile-groups">${groups.map((items, index) => {
           const tags = items.map((item) => `<span class="public-profile-tag tone-${escapeHtml(item.tone)}"><img src="${escapeHtml(item.icon)}" alt="" aria-hidden="true" />${escapeHtml(item.label)}</span>`).join('')
@@ -15998,6 +16039,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderLeadDetailJourneyEntries(payload) {
+        if (window.AIQCData && !payload?.linkedDemo) {
+          const timeline = pageHost.querySelector('.lead-journey-scroll')
+          if (timeline) timeline.innerHTML = '<div class="empty-state-card">关联缺失：当前数据未提供该线索的录音旅程。</div>'
+          return
+        }
         if (payload?.linkedDemo) { window.AIQCLinkedDemo.renderLeadJourney(payload, pageHost); return }
         if (!payload?.isMultiNodeJourneyDemo) return
 
@@ -16323,7 +16369,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         const setHtml = (selector, value) => {
           const element = pageHost.querySelector(selector)
-          if (element && value) {
+          if (element && value !== undefined && value !== null) {
             element.innerHTML = value
           }
         }
@@ -16403,6 +16449,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           bindLeadDetailEvolutionUI()
           bindLeadJourneyNodeNavigation()
           syncLeadDetailModelRow(leadPayload.models, true)
+        } else if (window.AIQCData) {
+          pageHost.innerHTML = '<div class="empty-state-card"><p>未找到对应线索记录，关联缺失。请核对线索ID。</p><a class="btn" href="?route=leads">返回线索列表</a></div>'
+          return
         } else {
           window.requestAnimationFrame(syncLeadDetailTagCloudLayout)
         }
@@ -16588,6 +16637,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         config.datasets.forEach((dataset) => {
           const baselineY = dataset.axis === 'left' ? mapLeftY(leftAxis.min) : mapRightY(rightAxis.min)
           const points = dataset.data.map((value, index) => ({
+            missing: value === null || value === undefined,
             x: mapX(index),
             y: dataset.axis === 'left' ? mapLeftY(value) : mapRightY(value)
           }))
@@ -16601,6 +16651,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             const startPoint = points[settledIndex]
             const endPoint = points[settledIndex + 1]
             activePoint = {
+              missing: startPoint.missing || endPoint.missing,
               x: startPoint.x + ((endPoint.x - startPoint.x) * segmentProgress),
               y: startPoint.y + ((endPoint.y - startPoint.y) * segmentProgress)
             }
@@ -16611,6 +16662,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           }
 
           const tracePath = (pathPoints) => {
+            if (pathPoints.some(point => point.missing)) {
+              let segment = []
+              pathPoints.forEach(point => {
+                if (point.missing) { tracePath(segment); segment = [] }
+                else segment.push(point)
+              })
+              tracePath(segment)
+              return
+            }
             if (!pathPoints.length) {
               return
             }
@@ -16639,14 +16699,21 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             })
           }
 
-          if (dataset.fillColor && visiblePoints.length > 1) {
-            context.beginPath()
-            tracePath(visiblePoints)
-            context.lineTo(visiblePoints[visiblePoints.length - 1].x, baselineY)
-            context.lineTo(visiblePoints[0].x, baselineY)
-            context.closePath()
-            context.fillStyle = dataset.fillColor
-            context.fill()
+          if (dataset.fillColor) {
+            const segments = [[]]
+            visiblePoints.forEach(point => {
+              if (point.missing) segments.push([])
+              else segments[segments.length - 1].push(point)
+            })
+            segments.filter(segment => segment.length > 1).forEach(segment => {
+              context.beginPath()
+              tracePath(segment)
+              context.lineTo(segment[segment.length - 1].x, baselineY)
+              context.lineTo(segment[0].x, baselineY)
+              context.closePath()
+              context.fillStyle = dataset.fillColor
+              context.fill()
+            })
           }
 
           if (visiblePoints.length > 1) {
@@ -16663,6 +16730,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
           const settledPoints = points.slice(0, Math.min(settledIndex + 1, points.length))
           settledPoints.forEach((point) => {
+            if (point.missing) return
             context.beginPath()
             context.fillStyle = dataset.color
             context.arc(point.x, point.y, dataset.pointRadius || 3, 0, Math.PI * 2)
@@ -16676,7 +16744,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             }
           })
 
-          if (activePoint && clampedProgress < 1 && segmentProgress > 0) {
+          if (activePoint && !activePoint.missing && clampedProgress < 1 && segmentProgress > 0) {
             context.beginPath()
             context.fillStyle = dataset.color
             context.arc(activePoint.x, activePoint.y, dataset.pointRadius || 3, 0, Math.PI * 2)
@@ -16988,8 +17056,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         '风险录音': '含违规或风险话术的录音条数'
       }
 
-      function renderSalesMetricHelp(label) {
-        const description = SALES_METRIC_DEFS[label]
+      function renderSalesMetricHelp(label, description = SALES_METRIC_DEFS[label]) {
         if (!description) return ''
         const safeLabel = escapeHtml(label)
         return `<button class="hm-help metric-def-btn" type="button" aria-label="${safeLabel}指标说明">?<span class="metric-def-tooltip" role="tooltip">${escapeHtml(description)}</span></button>`
@@ -19481,18 +19548,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function getSessionDetailRouteContext() {
         const params = new URLSearchParams(window.location.search)
         return {
-          sessionId: params.get('sessionId') || buildMockRecordingId(0),
+          sessionId: params.get('sessionId') || (window.AIQCData ? '' : buildMockRecordingId(0)),
           sessionStore: params.get('sessionStore') || '上海浦东门店',
           sessionDate: params.get('sessionDate') || '2026/03/13',
           sessionCustomer: params.get('sessionCustomer') || '王先生',
-          sessionScene: params.get('sessionScene') || '邀约'
+          sessionScene: normalizeLeadDetailSceneLabel(params.get('sessionScene'))
         }
       }
 
       function applySessionDetailRouteContext() {
         const context = getSessionDetailRouteContext()
-        const linkedRecording = window.AIQCLinkedDemo?.getRecording(context.sessionId)
-        if (linkedRecording) { window.AIQCLinkedDemo.applyRecordingDetail(linkedRecording, pageHost, sessionDetailState); return }
+        const linkedRecording = (window.AIQCData || window.AIQCLinkedDemo)?.getRecording(context.sessionId)
+        if (linkedRecording) { (window.AIQCDashboard || window.AIQCLinkedDemo).applyRecordingDetail(linkedRecording, pageHost, sessionDetailState); return }
+        if (window.AIQCData) {
+          window.AIQCDashboard.applyRecordingDetail({audioId:context.sessionId,store:'—',advisorName:'—',startTime:'',customerNameMasked:'—',scenario:'—',status:'未找到记录',associationLabel:'关联缺失：未找到对应录音',durationMs:0,intentLevel:'—',carSeries:'—'},pageHost,sessionDetailState)
+          return
+        }
         const recordIdNode = document.getElementById('sessionDetailRecordId')
         const storeNode = document.getElementById('sessionDetailStore')
         const dateNode = document.getElementById('sessionDetailDate')
@@ -20440,6 +20511,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function initSalesDccPage() {
+        if (window.AIQCDashboard) return window.AIQCDashboard.mount({kind:'sales',role:'dcc',root:pageHost})
         resetDccState()
         loadDccCompletedLeads()
         renderDccProfile()
@@ -21415,6 +21487,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function initSalesAdvisorPage() {
+        if (window.AIQCDashboard) return window.AIQCDashboard.mount({kind:'sales',role:'advisor',root:pageHost})
         resetAdvisorState()
         loadAdvisorCompletedLeads()
         renderAdvisorProfile()
@@ -21839,6 +21912,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        window.__unifiedDashboardController?.destroy()
+        window.__unifiedDashboardController = null
         clearSalesDashboardCounterAnimations()
         clearSalesReviewCounterAnimations()
         stopSalesTrendChartAnimation()
@@ -22002,6 +22077,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       })
 
+      window.AIQCDashboardPresentation = {
+        drawTrendChart: drawSalesTrendChart,
+        salesMetricIcon: renderSalesHeroMetricIcon,
+        salesMetricHelp: renderSalesMetricHelp,
+        salesMetricValue: renderSalesHeroValue,
+        executionMetric: renderExecutionMetricCard,
+        salesEmptyState: renderSalesTodoEmptyState,
+        paginationItems: getSalesTodoPaginationItems,
+        pageSizeControl: renderDashboardPageSizeControl,
+        updateScoreRing: updateReviewScoreRing,
+        initStickyFilters: initStickyFilterBars
+      }
       renderPage(getCurrentRoute())
       initGlobalBackToTop()
     

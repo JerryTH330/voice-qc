@@ -11,10 +11,10 @@
   var FILTER_MOTION_MS = 180;
   var FILTER_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
   var VIEW_CONTENT_MOTION_MS = 160;
-  var DEFAULT_DATE = '2026-09-10';
+  var DEFAULT_DATE = global.AIQCData?.defaultRange.endDate || '2026-09-10';
   var LEAD_COLUMN_SCHEMA_VERSION = '20260915-lead-overview-order-v1';
   var CUSTOMER_COLUMN_SCHEMA_VERSION = '20260921-customer-overview-order-v1';
-  var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析'];
+  var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析', '关联缺失'];
   var ORGANIZATION_KEYS = ['brand', 'region', 'zone', 'province', 'city', 'patroler', 'governor', 'store', 'advisor'];
   var FILTER_LABELS = {
     brand: '品牌',
@@ -153,6 +153,7 @@
   }
 
   function advisorValue(record) {
+    if (global.AIQCData) return record.advisorKey || 'lead-local:' + storeValue(record) + '::' + text(record.advisorName);
     if (record.linkedDemo) return record.advisorId;
     return storeValue(record) + '::' + text(record.advisorName);
   }
@@ -188,7 +189,7 @@
     if (!recordOrganizationByDealer.has(key)) recordOrganizationByDealer.set(key, record);
   });
 
-  var records = sourceRows.map(function (row) {
+  var records = global.AIQCData ? global.AIQCData.leads : sourceRows.map(function (row) {
     if (row.linkedDemo) return Object.assign({}, row);
     var directory = directoryByDealer.get(dealerKey(row.brand, row.dealerCode)) || {};
     var hash = stableHash(row.id);
@@ -244,13 +245,13 @@
       selections: {},
       leadIdQuery: '',
       recordingCountQuery: '',
-      startDate: DEFAULT_DATE,
+      startDate: global.AIQCData?.defaultRange.startDate || DEFAULT_DATE,
       endDate: DEFAULT_DATE,
-      dateDraftStart: DEFAULT_DATE,
+      dateDraftStart: global.AIQCData?.defaultRange.startDate || DEFAULT_DATE,
       dateDraftEnd: DEFAULT_DATE,
       dateActiveField: 'startDate',
-      dateViewYear: 2026,
-      dateViewMonth: 9,
+      dateViewYear: Number(DEFAULT_DATE.slice(0,4)),
+      dateViewMonth: Number(DEFAULT_DATE.slice(5,7)),
       openMenu: null,
       closingMenu: null,
       menuQueries: {},
@@ -270,7 +271,7 @@
     leads: createState('leads'),
     customers: createState('customers')
   };
-  var linkedLead = global.AIQCLinkedDemo?.getLead(new URLSearchParams(global.location.search).get('focusLeadId'));
+  var linkedLead = (global.AIQCData || global.AIQCLinkedDemo)?.getLead(new URLSearchParams(global.location.search).get('focusLeadId'));
   if (linkedLead) {
     currentView = 'leads';
     states.leads.leadIdQuery = linkedLead.id;
@@ -511,6 +512,7 @@
   }
 
   function buildCustomerRecords(input) {
+    if (global.AIQCData) return global.AIQCData.customers(input);
     var groups = new Map();
     input.forEach(function (record) {
       var key = record.customerPhone + '::' + record.customerName;
@@ -556,7 +558,7 @@
   function filteredLeadRecords(targetState) {
     return records.filter(function (record) {
       var leadIdQuery = normalizedQuery(targetState.leadIdQuery);
-      var linkedTarget = global.AIQCLinkedDemo?.getLead(targetState.leadIdQuery);
+      var linkedTarget = (global.AIQCData || global.AIQCLinkedDemo)?.getLead(targetState.leadIdQuery);
       if (linkedTarget && record.id !== linkedTarget.id) return false;
       var recordingCountQuery = text(targetState.recordingCountQuery);
       return recordMatchesOrganization(record, targetState)
@@ -918,7 +920,7 @@
     if (key === 'crossStore') return item.crossStore ? '是' : '否';
     if (key === 'multiLead') return item.multiLead ? '是' : '否';
     if (key === 'validRecording') return text(item.validRecording) === '是' ? '有录音' : '无录音';
-    if (key === 'recordingCount' || key === 'aggregateAudioCount') return String(Number(item[key]) || 0);
+    if (key === 'recordingCount' || key === 'aggregateAudioCount') return String(Number(item[key]) || 0) + (item.associationMissing ? '（已加载' + (key === 'recordingCount' ? item.loadedRecordingCount : item.aggregateLoadedAudioCount) + '，关联缺失）' : '');
     return text(item[key]) || '—';
   }
 

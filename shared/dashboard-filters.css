@@ -149,6 +149,7 @@
   font: inherit;
   cursor: pointer;
 }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .sales-role-date-trigger { gap: 4px; }
 .dashboard-filter-card .session-date-trigger strong { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-filter-card .session-date-trigger em { flex: 0 0 auto; font-style: normal; font-weight: 600; }
 .dashboard-filter-card .session-date-icon { flex: 0 0 auto; }

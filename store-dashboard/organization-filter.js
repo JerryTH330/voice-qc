@@ -5,7 +5,7 @@
   const personnelKeys = ['patroler', 'governor'];
   const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
-  function mount({ root, model, businessFilters, onChange = () => {}, onReset = () => {}, onBeforeChange = () => {} }) {
+  function mount({ root, model, businessFilters, fixedSubject = false, onChange = () => {}, onReset = () => {}, onBeforeChange = () => {} }) {
     const document = root.ownerDocument;
     const window = document.defaultView || global;
     if (model.draft.advisor.length || model.applied.advisor.length) {
@@ -19,7 +19,7 @@
     let destroyed = false;
 
     root.classList.add('sd-organization-filters');
-    root.innerHTML = '<div data-sd-dimension-slot></div><div class="sd-filter-primary"><div class="sd-filter-grid badge-dynamic-filter-grid" id="storeDashboardDimensionFilters"></div></div><div class="sd-filter-extra" data-sd-extra hidden inert aria-hidden="true"><div class="sd-filter-extra-inner"><div class="sd-filter-grid badge-dynamic-filter-grid sd-filter-secondary"><div class="sd-filter-personnel" data-sd-personnel></div><div class="sd-filter-business" data-sd-business></div></div></div></div><div class="sd-filter-actions badge-dynamic-filter-actions" data-sd-actions></div>';
+    root.innerHTML = (fixedSubject ? '' : '<div data-sd-dimension-slot></div>') + '<div class="sd-filter-primary"><div class="sd-filter-grid badge-dynamic-filter-grid" id="storeDashboardDimensionFilters"></div></div>' + (fixedSubject ? '' : '<div class="sd-filter-extra" data-sd-extra hidden inert aria-hidden="true"><div class="sd-filter-extra-inner"><div class="sd-filter-grid badge-dynamic-filter-grid sd-filter-secondary"><div class="sd-filter-personnel" data-sd-personnel></div><div class="sd-filter-business" data-sd-business></div></div></div></div>') + '<div class="sd-filter-actions badge-dynamic-filter-actions" data-sd-actions></div>';
     const dimensionSlot = root.querySelector('[data-sd-dimension-slot]');
     const primaryGrid = root.querySelector('#storeDashboardDimensionFilters');
     const primary = primaryGrid.parentElement;
@@ -27,7 +27,7 @@
     const personnel = root.querySelector('[data-sd-personnel]');
     const businessSlot = root.querySelector('[data-sd-business]');
     const actions = root.querySelector('[data-sd-actions]');
-    if (businessFilters) businessSlot.appendChild(businessFilters);
+    if (businessFilters) (fixedSubject ? primaryGrid : businessSlot).appendChild(businessFilters);
 
     const candidates = key => model.options(key, { query: openKey === key ? query : '', pinnedIds });
     const menuMarkup = key => {
@@ -76,6 +76,16 @@
       if (destroyed) return;
       const scrollTop = preserveScroll ? root.querySelector('.sd-filter-options')?.scrollTop || 0 : 0;
       const activeBusinessNode = businessFilters?.contains(document.activeElement) ? document.activeElement : null;
+      if (fixedSubject) {
+        actions.innerHTML = '<button type="button" class="btn session-reset-btn" data-sd-reset>重置</button>';
+        primary.classList.add('dashboard-fixed-filter-row');
+        primary.appendChild(actions);
+        const options = root.querySelector('.sd-filter-options');
+        if (options) options.scrollTop = scrollTop;
+        positionMenu();
+        if (activeBusinessNode && document.activeElement !== activeBusinessNode) activeBusinessNode.focus({ preventScroll: true });
+        return;
+      }
       const keys = model.dimensionKeys();
       dimensionSlot.innerHTML = window.DimensionSwitcher.render({
         namespace: 'sd', mode: model.draft.dimensionMode, label: '门店看板筛选维度', panelId: 'storeDashboardDimensionFilters',
@@ -253,7 +263,8 @@
       options[index].scrollIntoView?.({ block: 'nearest' });
     }
     function outside(event) {
-      if (openKey && (!root.contains(event.target) || businessFilters?.contains(event.target))) closeMenu();
+      const path = event.composedPath();
+      if (openKey && (!path.includes(root) || path.includes(businessFilters))) closeMenu();
     }
     function viewportChange() { positionMenu(); }
 

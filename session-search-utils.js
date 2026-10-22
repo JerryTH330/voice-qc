@@ -74,7 +74,7 @@
       return '云外呼';
     }
 
-    if (stage === '试驾' || stage === '到店接待') {
+    if (stage === '试驾' || stage === '销售接待' || stage === '到店接待') {
       return '工牌';
     }
 

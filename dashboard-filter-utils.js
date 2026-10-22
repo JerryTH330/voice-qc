@@ -56,9 +56,9 @@
   const SCENE_LABELS = {
     [SCENE_KEYS.all]: '全部',
     [SCENE_KEYS.firstFollow]: '首触跟进',
-    [SCENE_KEYS.inviteStore]: '邀约进店',
+    [SCENE_KEYS.inviteStore]: '邀约到店',
     [SCENE_KEYS.scheduleConfirm]: '排程确认',
-    [SCENE_KEYS.storeReception]: '进店接待',
+    [SCENE_KEYS.storeReception]: '销售接待',
     [SCENE_KEYS.testDrive]: '试乘试驾',
     [SCENE_KEYS.cloudMulti]: '云外呼'
   };
@@ -206,7 +206,7 @@
 
   function getSceneVolumeLabel(sceneKey) {
     if (sceneKey === SCENE_KEYS.firstFollow) return '首触跟进录音数';
-    if (sceneKey === SCENE_KEYS.inviteStore) return '邀约进店录音数';
+    if (sceneKey === SCENE_KEYS.inviteStore) return '邀约到店录音数';
     if (sceneKey === SCENE_KEYS.scheduleConfirm) return '排程确认录音数';
     if (sceneKey === SCENE_KEYS.cloudMulti) return '云外呼录音数';
     if (sceneKey === SCENE_KEYS.storeReception) return '接待数';

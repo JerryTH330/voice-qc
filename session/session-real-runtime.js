@@ -15,9 +15,9 @@
 
   var scenarioDefinitions = [
     { value: '首触跟进', label: '首触跟进', source: '云外呼' },
-    { value: '邀约到店', label: '邀约进店', source: '云外呼' },
+    { value: '邀约到店', label: '邀约到店', source: '云外呼' },
     { value: '排程确认', label: '排程确认', source: '云外呼' },
-    { value: '销售接待', label: '进店接待', source: '工牌' },
+    { value: '销售接待', label: '销售接待', source: '工牌' },
     { value: '试乘试驾', label: '试乘试驾', source: '工牌' }
   ];
   var intentOptions = ['高', '中', '低', '无', '无法判断'];
@@ -223,9 +223,9 @@
     });
   }
 
-  var records = hydrateRecords();
-  var defaultStartDate = '2026-08-27';
-  var defaultEndDate = '2026-09-07';
+  var records = global.AIQCData ? global.AIQCData.recordings : hydrateRecords();
+  var defaultStartDate = global.AIQCData?.defaultRange.startDate || '2026-08-27';
+  var defaultEndDate = global.AIQCData?.defaultRange.endDate || '2026-09-07';
   var filterKeys = ['brand', 'scenario', 'sourceType', 'intentLevel', 'carSeries', 'leadCarSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'customer', 'status'];
   var state = {
     selections: {},
@@ -257,8 +257,8 @@
     pageSize: 10
   };
   filterKeys.forEach(function (key) { state.selections[key] = []; });
-  state.selections.status = ['已完成'];
-  var linkedRecording = global.AIQCLinkedDemo?.getRecording(new URLSearchParams(global.location.search).get('focusRecordingId'));
+  state.selections.status = global.AIQCData ? [] : ['已完成'];
+  var linkedRecording = (global.AIQCData || global.AIQCLinkedDemo)?.getRecording(new URLSearchParams(global.location.search).get('focusRecordingId'));
   if (linkedRecording) {
     state.queries.audioId = linkedRecording.audioId;
     state.startDate = state.endDate = linkedRecording.startTime.slice(0, 10);
@@ -538,7 +538,7 @@
     if ((!ignore || ignore !== 'carSeries') && !matchesCarSeries(record)) return false;
     if ((!ignore || ignore !== 'leadCarSeries') && !matchesLeadCarSeries(record)) return false;
     if (!dealerMatches(record.dealer, { ignore: ignore && ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(ignore) ? ignore : undefined })) return false;
-    if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', record.advisorId)) return false;
+    if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', global.AIQCData ? record.advisorKey : record.advisorId)) return false;
     if ((!ignore || ignore !== 'customer') && !matchesSelection('customer', record.leadId)) return false;
     if ((!ignore || ignore !== 'status') && !matchesSelection('status', record.status)) return false;
     if (!options || !options.ignoreDate) {
@@ -548,7 +548,7 @@
     }
     if (!options || !options.ignoreQueries) {
       var audioIdQuery = normalize(state.queries.audioId);
-      var linkedTarget = global.AIQCLinkedDemo?.getRecording(state.queries.audioId);
+      var linkedTarget = (global.AIQCData || global.AIQCLinkedDemo)?.getRecording(state.queries.audioId);
       if (linkedTarget && record.audioId !== linkedTarget.audioId) return false;
       var leadQuery = normalize(state.queries.leadId);
       var advisorPhoneQuery = normalizeDigits(state.queries.advisorPhone);
@@ -634,16 +634,18 @@
       return dealerMatches(record.dealer, { ignore: 'advisor' });
     }).forEach(function (record) {
       if (!record.advisorId || record.advisorId === '—') return;
-      if (!map.has(record.advisorId)) {
-        map.set(record.advisorId, {
-          value: record.advisorId,
+      var key = global.AIQCData ? record.advisorKey : record.advisorId;
+      if (!map.has(key)) {
+        map.set(key, {
+          value: key,
+          advisorId: record.advisorId,
           label: record.advisorName,
           phones: new Set(),
           stores: new Set()
         });
       }
-      if (record.advisorPhone && record.advisorPhone !== '—') map.get(record.advisorId).phones.add(record.advisorPhone);
-      if (record.store && record.store !== '—') map.get(record.advisorId).stores.add(record.store);
+      if (record.advisorPhone && record.advisorPhone !== '—') map.get(key).phones.add(record.advisorPhone);
+      if (record.store && record.store !== '—') map.get(key).stores.add(record.store);
     });
     return Array.from(map.values()).map(function (option) {
       var phones = Array.from(option.phones);
@@ -651,7 +653,7 @@
       return {
         value: option.value,
         label: option.label,
-        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.value,
+        meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.advisorId,
         search: option.label + ' ' + option.value + ' ' + phones.join(' '),
         searchDigits: phones.map(normalizeDigits).join(' ')
       };
@@ -1114,7 +1116,7 @@
       advisorId: record.advisorId,
       advisorName: record.advisorName,
       advisorPhone: record.advisorPhone,
-      leadId: record.leadId,
+      leadId: record.leadId + (record.associationMissing ? '（关联缺失）' : ''),
       leadBrand: record.leadBrand,
       customerName: record.customerNameMasked,
       customerPhone: record.customerPhone,
