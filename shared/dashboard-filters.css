@@ -152,6 +152,20 @@
 .dashboard-filter-card .session-date-trigger strong { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-filter-card .session-date-trigger em { flex: 0 0 auto; font-style: normal; font-weight: 600; }
 .dashboard-filter-card .session-date-icon { flex: 0 0 auto; }
+:is(#factoryDashboardPage, .store-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control) .session-date-trigger {
+  position: static;
+  padding-inline-end: 24px;
+}
+:is(#factoryDashboardPage, .store-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control) .session-date-icon {
+  position: absolute;
+  inset-inline-end: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  pointer-events: none;
+}
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) :is(.fo-date-panel, .sd-statistics-date-panel, .sales-statistics-date-panel) {
   position: absolute;
   top: calc(100% + 6px);
