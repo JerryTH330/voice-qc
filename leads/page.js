@@ -15,7 +15,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "../date-filter-component-utils.js?v=20260906-date-filter-v1",
     "../device-management/xlsx-export-utils.js?v=20260902-badge-list-actions-v1",
     "../shared/field-settings-interactions.js?v=20260911-field-settings-select-all-v1",
-    "../shared/unified-dashboard.js?v=20261022-dashboard-filter-release-v1",
+    "../shared/unified-dashboard.js?v=20261023-session-analysis-result-v1",
     "../app-runtime.js?v=20261022-dashboard-filter-release-v1",
     "./leads-modern-runtime.js?v=20261022-dashboard-filter-release-v1"
 ];

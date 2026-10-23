@@ -15,9 +15,9 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     "../shared/issue-rule-list.js?v=20261020-unified-data-v3",
     "../device-management/xlsx-export-utils.js?v=20261020-unified-data-v3",
     "../shared/field-settings-interactions.js?v=20261020-unified-data-v3",
-    "../shared/unified-dashboard.js?v=20261022-dashboard-filter-release-v1",
+    "../shared/unified-dashboard.js?v=20261023-session-analysis-result-v1",
     "../app-runtime.js?v=20261022-dashboard-filter-release-v1",
-    "./session-real-runtime.js?v=20261022-session-brand-column-v1"
+    "./session-real-runtime.js?v=20261023-session-analysis-result-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

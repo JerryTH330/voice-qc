@@ -22,12 +22,16 @@
   ];
   var intentOptions = ['高', '中', '低', '无', '无法判断'];
   var brandOptions = ['传祺', '埃安'];
-  var statusOptions = ['已完成', '失败', '录音上传中', '录音转写中', '模型分析中'];
+  var statusOptions = ['已完成', '失败'];
   var sourceTypeOptions = ['实体卡', '虚拟号', '工作号'];
   var sourceOptions = Array.isArray(data.sources) && data.sources.length
     ? data.sources.filter(function (value) { return value && value !== '未知'; })
     : ['云外呼', '工牌'];
   var customerPhoneCache = new Map();
+
+  function analysisResult(record) {
+    return statusOptions.includes(record.status) ? record.status : '';
+  }
 
   function text(value) {
     return String(value == null ? '' : value);
@@ -264,7 +268,8 @@
     state.startDate = state.endDate = linkedRecording.startTime.slice(0, 10);
     state.dateDraftStartDate = state.dateDraftEndDate = state.startDate;
     state.dateViewYear = Number(state.startDate.slice(0, 4)); state.dateViewMonth = Number(state.startDate.slice(5, 7));
-    state.selections.status = [linkedRecording.status];
+    var focusedResult = analysisResult(linkedRecording);
+    state.selections.status = focusedResult ? [focusedResult] : [];
   }
   var lastRenderedOpenMenu = null;
   var MENU_MOTION_MS = 180;
@@ -539,7 +544,7 @@
     if (!dealerMatches(record.dealer, { ignore: ignore && ['province', 'city', 'store', 'region', 'zone', 'patroler', 'governor'].includes(ignore) ? ignore : undefined })) return false;
     if ((!ignore || ignore !== 'advisor') && !matchesSelection('advisor', global.AIQCData ? record.advisorKey : record.advisorId)) return false;
     if ((!ignore || ignore !== 'customer') && !matchesSelection('customer', record.leadId)) return false;
-    if ((!ignore || ignore !== 'status') && !matchesSelection('status', record.status)) return false;
+    if ((!ignore || ignore !== 'status') && !matchesSelection('status', analysisResult(record))) return false;
     if (!options || !options.ignoreDate) {
       var recordDate = text(record.startTime).slice(0, 10);
       if (state.startDate && recordDate < state.startDate) return false;
@@ -1101,7 +1106,7 @@
       brand: record.brand,
       startTime: formatDateTime(record.startTime),
       uploadTime: formatDateTime(record.uploadTime),
-      status: record.status,
+      status: analysisResult(record),
       duration: record.duration,
       province: record.province,
       city: record.city,
@@ -1285,6 +1290,7 @@
       var cells = visible.map(function (column) {
         var value = cellValue(record, column.key);
         if (column.key === 'status') {
+          if (value === '—') return '<td>—</td>';
           return '<td><span class="status-inline ' + statusClass(value) + '"><span class="status-inline-dot" aria-hidden="true"></span><span>' + escapeHtml(value) + '</span></span></td>';
         }
         if (column.key === 'intentLevel') {

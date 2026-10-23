@@ -347,6 +347,14 @@
       set('.session-detail-actions-main',`<a class="btn" href="${escape(listUrl('recording',record.audioId))}">返回录音列表</a>${global.AIQCData.getLead(record.leadId)?`<a class="btn" href="${escape(detailUrl('lead',record.leadId))}">关联线索</a>`:'<span class="muted-text">线索关联缺失</span>'}`,true);
       playerState.duration=Math.floor(record.durationMs/1000);playerState.currentTime=0;
     }
+    const resultStatus=['已完成','失败'].includes(record.status)?record.status:'—';
+    const context=host.querySelector('#sessionDetailContextPill');
+    if(context)context.textContent=record.status==='未找到记录'?'未找到对应录音记录':`${record.customerNameMasked || record.customerName || '—'} / ${record.scenario || '—'} / ${resultStatus}`;
+    if(record.linkedDemo && resultStatus==='—') {
+      const summary=host.querySelector('.session-ai-sketch-text');if(summary)summary.textContent='暂无分析结果';
+      const cloud=host.querySelector('#sessionDetailSketchCloud');if(cloud)cloud.innerHTML='';
+      const evidence=host.querySelector('.session-ai-intention-list .session-ai-intention-row:first-child p');if(evidence)evidence.textContent='暂无分析结果';
+    }
     host.querySelectorAll('.session-metrics-card .metric-card').forEach(card=>{
       const label=card.querySelector('.metric-note')?.textContent || '',value=card.querySelector('strong');
       if(value)value.textContent=label.includes('时长')?`${number(record.durationMs/60000)} min`:label.includes('命中率')?(record.qualifiedRate || '—'):(record.followUpTime || '—');

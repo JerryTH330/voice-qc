@@ -1,0 +1,42 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const {parseHTML}=require(process.env.AIQC_DOM_MODULE || 'linkedom');
+let nativeMatches;
+const root=path.resolve(__dirname, "../..");
+function setup(kind,role='dcc',options={}) {
+  const file=options.file || (kind==='store'?'store-dashboard/index.html':kind==='factory'?'factory-dashboard/index.html':'sales-dashboard/index.html');
+  const dom=parseHTML(fs.readFileSync(path.join(root,file),'utf8'));
+  const window=new Proxy(Object.create(null),{get:(target,key)=>Object.hasOwn(target,key)?target[key]:dom[key],set:(target,key,value)=>{target[key]=value;return true;}});
+  Object.defineProperty(window.document,'defaultView',{value:window});
+  Object.defineProperty(window.HTMLElement.prototype,'tBodies',{configurable:true,get(){return this.querySelectorAll('tbody');}});
+  nativeMatches ||= window.HTMLElement.prototype.matches;
+  window.HTMLElement.prototype.matches=function(selector){return selector===':focus-visible'?false:nativeMatches.call(this,selector);};
+  const ctx2d=new Proxy({},{get:(t,k)=>k==='measureText'?()=>({width:50}):()=>{}});
+  window.HTMLCanvasElement.prototype.getContext=()=>ctx2d;
+  window.HTMLElement.prototype.getBoundingClientRect=()=>({left:0,top:0,bottom:44,height:44,width:900});
+  window.HTMLElement.prototype.focus=function(){window.document.__focused=this;};
+  window.PlatformToast={show(){}};
+  window.matchMedia=()=>({matches:true});window.innerWidth=1303;window.innerHeight=900;
+  const pending=[];
+  window.HTMLElement.prototype.scrollIntoView=()=>{};window.HTMLElement.prototype.scrollTo=()=>{};
+  window.requestAnimationFrame=()=>1;window.cancelAnimationFrame=()=>{};window.setTimeout=(fn,delay=0)=>{if(delay===0)pending.push(fn);return pending.length;};window.clearTimeout=()=>{};
+  window.setInterval=()=>1;window.clearInterval=()=>{};
+  const storage=new Map(Object.entries(options.storage || {}));
+  window.localStorage={getItem:k=>storage.get(k) ?? null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)};window.sessionStorage=window.localStorage;window.history={replaceState(){},pushState(){}};window.scrollTo=()=>{};window.getComputedStyle=()=>({getPropertyValue:()=>'',display:'block',position:'static'});
+  let locationUrl=new URL('file://'+path.join(root,file)+(options.search || ''));
+  window.location={get href(){return locationUrl.href;},set href(value){locationUrl=new URL(value,locationUrl);},get search(){return locationUrl.search;},set search(value){locationUrl.search=value;},get pathname(){return locationUrl.pathname;},get hash(){return locationUrl.hash;}};
+  window.history.replaceState=window.history.pushState=(_state,_title,url)=>{window.location.href=url;};
+  const c=vm.createContext({window,document:window.document,URL,URLSearchParams,console,localStorage:window.localStorage,sessionStorage:window.sessionStorage,history:window.history,MutationObserver:window.MutationObserver,navigator:{},ResizeObserver:class {observe(){} disconnect(){}},getComputedStyle:window.getComputedStyle,setTimeout:window.setTimeout,clearTimeout:window.clearTimeout,Date:class extends Date{constructor(...args){super(...(args.length?args:['2026-10-20T12:00:00+08:00']));}},requestAnimationFrame:window.requestAnimationFrame,cancelAnimationFrame:window.cancelAnimationFrame});
+  for(const f of ['leads/organization-data.js','shared/organization-directory.js','device-management/organization-data.js','session/real-recording-data.js','leads/real-lead-data.js','shared/linked-demo-data.js','shared/badge-history-data.js','shared/unified-data.js','dashboard-filter-utils.js','factory-multi-select-filter-utils.js','factory-dashboard/factory-hero-utils.js','factory-dashboard/issue-rule-analysis-utils.js','date-filter-component-utils.js','device-management/visit-organization-filter.js','shared/dimension-switcher.js','store-dashboard/organization-filter.js','store-dashboard/business-filters.js','sales-dashboard/business-scene-filter.js','sales-dashboard/source-tabs.js','sales-dashboard/organization-filter.js','shared/unified-dashboard.js'])vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c,{filename:f});
+  window.__dateFilterComponentUtils=c.__dateFilterComponentUtils;
+  if(options.saved)window.__unifiedDashboardStates=options.saved;
+  if(options.subject)window.__AI_QC_DASHBOARD_CONTEXT=options.subject;
+  let host=window.document.getElementById('pageHost');
+  window.__AI_QC_DEFAULT_ROUTE=kind==='store'?'dashboard':kind==='factory'?'factory-dashboard':role==='dcc'?'sales-dcc':'sales-advisor';
+  vm.runInContext(fs.readFileSync(path.join(root,'shared/issue-rule-list.js'),'utf8'),c,{filename:'shared/issue-rule-list.js'});
+  c.IssueRuleList=window.IssueRuleList;
+  if(kind==='factory')vm.runInContext(fs.readFileSync(path.join(root,'factory-dashboard/factory-dashboard.js'),'utf8'),c,{filename:'factory-dashboard/factory-dashboard.js'});
+  vm.runInContext(fs.readFileSync(path.join(root,'app-runtime.js'),'utf8'),c,{filename:'app-runtime.js'});
+  return {window,c,host,storage,flush(){let limit=50;while(pending.length && limit--)pending.shift()();},controller:window.__unifiedDashboardController,run(file){vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),c,{filename:file});},click(selector){const el=window.document.querySelector(selector);assert(el,selector);if(!el.disabled)el.dispatchEvent(new window.Event('click',{bubbles:true}));return el;},key(key){const event=new window.Event('keydown',{bubbles:true});event.key=key;window.document.dispatchEvent(event);}};
+}
+
+module.exports={setup};

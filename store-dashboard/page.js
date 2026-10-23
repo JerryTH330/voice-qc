@@ -20,7 +20,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
     "./demo-data.js?v=20261016-store-organization-v1",
     "./organization-filter.js?v=20261022-dashboard-filter-release-v1",
     "./business-filters.js?v=20261019-dashboard-filter-standard-v1",
-    "../shared/unified-dashboard.js?v=20261022-dashboard-filter-release-v1",
+    "../shared/unified-dashboard.js?v=20261023-session-analysis-result-v1",
     "../app-runtime.js?v=20261022-dashboard-filter-release-v1"
 ];
   const loadNext = (index) => {

@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 const releaseVersion = '20261022-dashboard-filter-release-v1';
+const analysisResultVersion = '20261023-session-analysis-result-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -47,13 +48,16 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard']) {
     assert(index('shared/unified-data.js') < index('shared/unified-dashboard.js'));
     assert(index('shared/unified-dashboard.js') < index('app-runtime.js'));
     for (const file of ['shared/unified-data.js', 'shared/unified-dashboard.js', 'app-runtime.js']) {
-      assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), releaseVersion, file);
+      const moduleVersion = file === 'shared/unified-dashboard.js' ? analysisResultVersion : releaseVersion;
+      assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), moduleVersion, file);
     }
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    const entryVersion = area === 'session' ? '20261022-session-brand-column-v1' : releaseVersion;
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), entryVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), analysisResultVersion);
+    if (area === 'session') {
+      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), analysisResultVersion);
+    }
   });
 }
 
