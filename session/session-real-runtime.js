@@ -37,6 +37,12 @@
     return String(value == null ? '' : value);
   }
 
+  function clearEntryParams(keys) {
+    var url = new URL(global.location.href);
+    keys.forEach(function (key) { url.searchParams.delete(key); });
+    global.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+
   function decodeSeriesLabel(value) {
     return text(value)
       .replace(/&nbsp;/gi, ' ')
@@ -262,7 +268,28 @@
   };
   filterKeys.forEach(function (key) { state.selections[key] = []; });
   state.selections.status = global.AIQCData ? [] : ['已完成'];
-  var linkedRecording = (global.AIQCData || global.AIQCLinkedDemo)?.getRecording(new URLSearchParams(global.location.search).get('focusRecordingId'));
+  var entryParams = new URLSearchParams(global.location.search);
+  var focusRecordingId = entryParams.has('focusRecordingId') ? entryParams.get('focusRecordingId').trim() : null;
+  var linkedRecording = (global.AIQCData || global.AIQCLinkedDemo)?.getRecording(focusRecordingId);
+  var entryScopeError = '';
+  if (focusRecordingId !== null) state.queries.audioId = focusRecordingId;
+  if (entryParams.get('recordingScope') === 'advisor') {
+    var person = global.AIQCData?.advisors.find(function (item) {
+      return item.storeId === entryParams.get('storeId') && item.advisorId === entryParams.get('advisorId');
+    });
+    var validDate = function (value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value)); };
+    var start = entryParams.get('startDate'), end = entryParams.get('endDate');
+    if (!person || !validDate(start) || !validDate(end) || start > end) entryScopeError = '未找到对应顾问范围，请核对链接中的门店、顾问和日期。';
+    else {
+      state.selections.store = [person.brand + '::' + person.dealerCode];
+      state.selections.advisor = [person.advisorKey];
+      state.selections.scenario = entryParams.getAll('scene');
+      state.selections.leadCarSeries = entryParams.getAll('model');
+      state.startDate = state.dateDraftStartDate = start;
+      state.endDate = state.dateDraftEndDate = end;
+      state.dateViewYear = Number(start.slice(0, 4)); state.dateViewMonth = Number(start.slice(5, 7));
+    }
+  }
   if (linkedRecording) {
     state.queries.audioId = linkedRecording.audioId;
     state.startDate = state.endDate = linkedRecording.startTime.slice(0, 10);
@@ -534,6 +561,7 @@
   }
 
   function recordMatches(record, options) {
+    if (entryScopeError || (focusRecordingId !== null && record.audioId !== focusRecordingId)) return false;
     var ignore = options && options.ignore;
     if ((!ignore || ignore !== 'brand') && !matchesSelection('brand', record.brand)) return false;
     if ((!ignore || ignore !== 'scenario') && !matchesSelection('scenario', record.scenario)) return false;
@@ -1278,7 +1306,12 @@
     var start = ((state.page || 1) - 1) * pageSize;
     var pageRecords = recordsForView.slice(start, start + pageSize);
     var emptyState = document.getElementById('sessionRealEmptyState');
-    if (emptyState) emptyState.hidden = recordsForView.length > 0;
+    if (emptyState) {
+      emptyState.hidden = recordsForView.length > 0;
+      var missingFocus = focusRecordingId !== null && !linkedRecording;
+      emptyState.querySelector('strong').textContent = missingFocus ? '未找到对应录音记录' : entryScopeError ? '未找到对应顾问范围' : '暂无符合条件的录音';
+      emptyState.querySelector('p').textContent = missingFocus ? '录音ID：' + (focusRecordingId || '未提供') + '，请核对录音ID或重置筛选。' : entryScopeError || '请调整筛选条件后重试';
+    }
     table.closest('.session-list-table-wrap').classList.toggle('is-empty', !recordsForView.length);
     if (!recordsForView.length) {
       body.innerHTML = '';
@@ -1758,6 +1791,10 @@
     var value = node.value;
     var cursor = node.selectionStart;
     state.queries[key] = value;
+    if (key === 'audioId') {
+      focusRecordingId = null;
+      clearEntryParams(['focusRecordingId']);
+    }
     state.page = 1;
     rerender();
     global.requestAnimationFrame(function () {
@@ -1984,6 +2021,9 @@
       if (node.dataset.srBound === 'true') return;
       node.dataset.srBound = 'true';
       node.addEventListener('click', function () {
+        focusRecordingId = null;
+        entryScopeError = '';
+        clearEntryParams(['focusRecordingId', 'recordingScope', 'storeId', 'advisorId', 'startDate', 'endDate', 'scene', 'model']);
         filterKeys.forEach(function (key) { state.selections[key] = []; });
         state.selections.status = ['已完成'];
         Object.keys(state.queries).forEach(function (key) { state.queries[key] = ''; });

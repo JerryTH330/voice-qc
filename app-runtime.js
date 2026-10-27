@@ -6626,8 +6626,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           userName: '平台管理员',
           userMeta: '最近巡检 08:10',
           actions: [
-            { label: '导出审计日志', primary: false },
-            { label: '新增角色组', primary: true }
+            { label: '导出审计日志', primary: false, systemAction: 'export-audit' },
+            { label: '新增角色组', primary: true, systemAction: 'add-role' }
           ],
           filters: ['组织: 全国', '环境: 生产', '巡检: 今日'],
           templateId: 'tpl-system'
@@ -8292,57 +8292,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;')
-      }
-
-      const journeySessionSummaryItems = [
-        {
-          title: '客户购车需求',
-          paragraphs: [
-            '核心购车诉求：本次通话未体现预算范围、购车用途、付款方式、是否贷款、是否置换、是否关注补贴或优惠政策等信息。',
-            '总结性描述：本次通话未体现客户核心购车诉求相关信息。'
-          ]
-        },
-        {
-          title: '客户对产品关注',
-          paragraphs: ['核心关注拍照、车辆；拍照关注车辆拍照，车辆关注车辆印象，其中客户最担心的是车辆拍照会影响对车辆的印象。']
-        },
-        {
-          title: '客户竞品识别',
-          paragraphs: ['未讨论']
-        },
-        {
-          title: '成交阻碍',
-          paragraphs: ['本次通话未体现客户未能快速下订或继续推进成交的原因及典型托词，客户当前状态不明。']
-        },
-        {
-          title: '生成客户描摹',
-          paragraphs: [
-            '【客户情况概括】客户是有7座车购车意向的用户，预算在几万块区间，主要关注本品空间、优惠政策和车辆拍照，未讨论竞品，目前处于收集优惠信息阶段，担心车辆拍照影响印象，客户状态仍不明朗。',
-            '【购车需求】预算几万块，关注七座车和20000块钱的优惠，本次通话未提及购车用途、付款方式、是否贷款、是否置换等信息，仍处于收集优惠阶段。',
-            '【产品关注点】核心关注拍照、车辆；拍照关注车辆拍照，车辆关注车辆印象，其中客户最担心的是车辆拍照会影响对车辆的印象。',
-            '【竞品对比】未讨论竞品相关内容，没有进行竞品在价格、配置、空间、续航等方面的对比，本次通话也无相关讨论。',
-            '【成交阻碍】客户目前处于收集优惠信息阶段，还未明确是否下订，主要顾虑车辆优惠是否足够划算，本次通话未提及成交相关内容，客户状态未进一步明确。'
-          ]
-        }
-      ]
-
-      function renderJourneySessionSummaryList() {
-        return `<ul class="journey-session-summary-list">${journeySessionSummaryItems.map((item) => `
-          <li class="journey-session-summary-item">
-            <strong class="journey-session-summary-title">${escapeHtml(item.title)}</strong>
-            <div class="journey-session-summary-copy">${item.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>
-          </li>
-        `).join('')}</ul>`
-      }
-
-      function applyJourneySessionSummaryLists() {
-        pageHost.querySelectorAll('.journey-section').forEach((section) => {
-          const label = section.querySelector('.journey-section-label')
-          const content = section.querySelector('.journey-section-content')
-          if (label?.textContent?.includes('会话小结') && content) {
-            content.innerHTML = renderJourneySessionSummaryList()
-          }
-        })
       }
 
       function initJourneyCardAccordions(routeId) {
@@ -12476,15 +12425,20 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderSessionDetailWaveform(progressPercent = (sessionDetailState.currentTime / (sessionDetailState.duration || 1)) * 100) {
-        if (window.AIQCData) {
-          const waveform = document.getElementById('sessionWaveform')
-          if (waveform) waveform.textContent = '当前数据未提供音频'
-          return
-        }
         const waveform = document.getElementById('sessionWaveform')
-        if (!waveform) {
+        if (!waveform) return
+        if (window.AIQCData) {
+          waveform.classList.add('is-empty')
+          waveform.removeAttribute('aria-hidden')
+          waveform.setAttribute('role', 'status')
+          waveform.style.removeProperty('--wave-count')
+          delete waveform.dataset.waveProgress
+          waveform.textContent = '当前数据未提供音频'
           return
         }
+        waveform.classList.remove('is-empty')
+        waveform.removeAttribute('role')
+        waveform.setAttribute('aria-hidden', 'true')
 
         const progress = Math.max(0, Math.min(100, progressPercent))
         waveform.dataset.waveProgress = String(progress)
@@ -13461,7 +13415,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           container.innerHTML = `
             <section class="custom-option-group">
               <div class="custom-option-list">
-                <button type="button" class="custom-option custom-option-all" onclick="clearCustomOptions('modelSelectOptions')">
+                <button type="button" class="custom-option custom-option-all" onclick="selectAllCustomOptions('modelSelectOptions')">
                   <span>全部车型</span>
                 </button>
               </div>
@@ -13526,8 +13480,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         ).map((input) => (input.nextElementSibling ? input.nextElementSibling.textContent : input.value))
 
         if (checkedValues.length === 0) {
-          trigger.textContent = triggerId.includes('model') ? '全部车型' : '请选择场景...'
+          trigger.textContent = triggerId.includes('model') ? '请选择车型...' : '请选择场景...'
           trigger.style.color = 'var(--muted)'
+          syncCustomSelectState(containerId)
+          return
+        }
+
+        if (containerId === 'modelSelectOptions' && checkedValues.length === container.querySelectorAll('input[type="checkbox"]').length) {
+          trigger.textContent = '全部车型'
+          trigger.style.color = 'var(--text)'
           syncCustomSelectState(containerId)
           return
         }
@@ -13592,6 +13553,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         updateCustomSelectTrigger(containerId, containerId.includes('model') ? 'modelSelectTrigger' : 'scenarioSelectTrigger')
       }
 
+      function selectAllCustomOptions(containerId) {
+        const container = document.getElementById(containerId)
+        if (!container) return
+        container.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach((input) => {
+          input.checked = true
+        })
+        updateCustomSelectTrigger(containerId, 'modelSelectTrigger')
+      }
+
       function syncCustomSelectState(containerId) {
         const container = document.getElementById(containerId)
         if (!container) {
@@ -13599,8 +13569,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         if (containerId === 'modelSelectOptions') {
-          const hasChecked = Boolean(container.querySelector('input[type="checkbox"]:checked'))
-          container.querySelector('.custom-option-all')?.classList.toggle('active', !hasChecked)
+          const choices = container.querySelectorAll('input[type="checkbox"]')
+          const selected = container.querySelectorAll('input[type="checkbox"]:checked')
+          container.querySelector('.custom-option-all')?.classList.toggle('active', choices.length > 0 && selected.length === choices.length)
         }
       }
 
@@ -13901,8 +13872,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        task.taskName = document.getElementById('taskNameInput')?.value || ''
-
+        const ruleDraft = readTaskRuleDraft()
+        if (!ruleDraft) return
         const currentModelValues = getCustomSelectValues('modelSelectOptions')
         const currentScenarioValue = getCustomSelectValues('scenarioSelectOptions')[0] || ''
 
@@ -13972,6 +13943,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return candidateScenario === currentScenarioValue && candidateModels.some((model) => currentModelValues.includes(model))
         }).length
 
+        task.taskName = document.getElementById('taskNameInput')?.value || ''
         task.model = currentModelValues
         task.scenario = currentScenarioValue
         task.applyHistory = false
@@ -13980,10 +13952,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         task.dateRange = ''
         task.promptRole = document.getElementById('promptRole')?.value || defaultPromptRole
         task.promptSteps = document.getElementById('promptSteps')?.value || defaultPromptSteps
-        task.rules = currentRules.map((card) => ({
-          name: card.querySelector('.rule-input')?.value || '',
-          desc: card.querySelector('.rule-textarea')?.value || ''
-        }))
+        task.rules = ruleDraft
 
         const now = new Date()
         task.updatedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
@@ -14025,6 +13994,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
+        const ruleDraft = readTaskRuleDraft()
+        if (!ruleDraft) return
         task.taskName = document.getElementById('taskNameInput')?.value || ''
         task.model = getCustomSelectValues('modelSelectOptions')
         task.scenario = getCustomSelectValues('scenarioSelectOptions')[0] || ''
@@ -14034,10 +14005,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         task.dateRange = ''
         task.promptRole = document.getElementById('promptRole')?.value || defaultPromptRole
         task.promptSteps = document.getElementById('promptSteps')?.value || defaultPromptSteps
-        task.rules = Array.from(document.querySelectorAll('.rule-card')).map((card) => ({
-          name: card.querySelector('.rule-input')?.value || '',
-          desc: card.querySelector('.rule-textarea')?.value || ''
-        }))
+        task.rules = ruleDraft
 
         const now = new Date()
         task.updatedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
@@ -14110,6 +14078,25 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         enableTaskConfig()
       }
 
+      function readTaskRuleDraft() {
+        const rules = Array.from(pageHost.querySelectorAll('.rule-card')).map((card) => ({
+          name: (card.querySelector('.rule-input')?.value || '').trim(),
+          desc: card.querySelector('.rule-textarea')?.value || ''
+        }))
+        const names = new Set()
+        const duplicates = new Set()
+        rules.forEach((rule) => {
+          if (!rule.name) return
+          if (names.has(rule.name)) duplicates.add(rule.name)
+          names.add(rule.name)
+        })
+        if (duplicates.size) {
+          openFeedbackModal({ title: '质检标准名称重复', message: `以下标准名称重复，请修改后再保存：${Array.from(duplicates).join('、')}` })
+          return null
+        }
+        return rules
+      }
+
       function addRuleItem(name = '', desc = '') {
         const container = document.getElementById('ruleContainer')
         if (!container) {
@@ -14120,11 +14107,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         wrapper.className = 'rule-card'
         wrapper.innerHTML = `
           <div class="rule-card-head">
-            <input type="text" class="rule-input" placeholder="标准名称 (如: 意向车型)" value="${name}" oninput="updatePromptPreview()">
+            <input type="text" class="rule-input" placeholder="标准名称 (如: 意向车型)" oninput="updatePromptPreview()">
             <button class="text-link" style="color:var(--red);" onclick="this.closest('.rule-card').remove(); updatePromptPreview()">删除</button>
           </div>
-          <textarea class="rule-textarea" placeholder="✅ 合格示例：- 您咨询的是哪款车？❌ 不合格示例：仅自我介绍、仅说有什么可以帮您" oninput="updatePromptPreview(); autoResize(this)">${desc}</textarea>
+          <textarea class="rule-textarea" placeholder="✅ 合格示例：- 您咨询的是哪款车？❌ 不合格示例：仅自我介绍、仅说有什么可以帮您" oninput="updatePromptPreview(); autoResize(this)"></textarea>
         `
+        wrapper.querySelector('.rule-input').value = name
+        wrapper.querySelector('.rule-textarea').value = desc
         container.appendChild(wrapper)
         autoResize(wrapper.querySelector('.rule-textarea'))
         updatePromptPreview()
@@ -14136,9 +14125,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return
         }
 
-        const rules = {}
+        const rules = Object.create(null)
         document.querySelectorAll('.rule-card').forEach((card) => {
-          const name = card.querySelector('.rule-input')?.value || ''
+          const name = (card.querySelector('.rule-input')?.value || '').trim()
           if (name) {
             rules[name] = [true, '匹配到的原句或空字符串']
           }
@@ -14925,7 +14914,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <div class="journey-body">
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                    <div class="journey-section-content">${payload.unified ? escapeHtml(entry.summary) : renderJourneySessionSummaryList()}</div>
+                    <div class="journey-section-content">${escapeHtml(entry.summary || '当前录音未提供会话小结')}</div>
                   </div>
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
@@ -16089,7 +16078,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <div class="journey-body">
                 <div class="journey-section">
                   <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                  <div class="journey-section-content">${renderJourneySessionSummaryList()}</div>
+                  <div class="journey-section-content">${escapeHtml(entry.summary || '当前录音未提供会话小结')}</div>
                 </div>
                 <div class="journey-section">
                   <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
@@ -21569,9 +21558,158 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             if (typeof item === 'string') {
               return `<div class="${pillClass}">${item}</div>`
             }
+            if (item.systemAction) {
+              return `<button type="button" class="${item.primary ? 'btn-primary' : 'btn'}" data-system-action="${item.systemAction}">${escapeHtml(item.label)}</button>`
+            }
             return `<div class="${item.primary ? 'btn-primary' : 'btn'}">${item.label}</div>`
           })
           .join('')
+      }
+
+      const systemRoleStorageKey = 'aiqc-system-local-roles-v1'
+      let systemLocalRoles = []
+      let systemLocalAudit = []
+      let systemRoleReturnFocus = null
+
+      function appendSystemTableRow(table, values) {
+        const row = document.createElement('div')
+        row.className = 'table-list-row'
+        row.setAttribute('style', table.querySelector('.head')?.getAttribute('style') || '')
+        values.forEach((value) => {
+          const cell = document.createElement('div')
+          cell.textContent = String(value)
+          row.appendChild(cell)
+        })
+        table.appendChild(row)
+      }
+
+      function buildSystemAuditCsv() {
+        return Array.from(pageHost.querySelectorAll('[data-system-audit] .table-list-row')).map((row) => (
+          Array.from(row.children).map((cell) => {
+            let value = cell.textContent.trim()
+            if (/^[=+@-]/.test(value)) value = "'" + value
+            return '"' + value.replaceAll('"', '""') + '"'
+          }).join(',')
+        )).join('\r\n')
+      }
+
+      function downloadSystemAudit() {
+        const csv = buildSystemAuditCsv()
+        if (!csv) return
+        const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }))
+        const link = document.createElement('a')
+        link.href = url
+        const now = new Date()
+        const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+        link.download = `操作审计日志_${date}.csv`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      }
+
+      function openSystemRoleDialog() {
+        const dialog = document.getElementById('systemRoleDialog')
+        if (!dialog) return
+        systemRoleReturnFocus = document.querySelector('[data-system-action="add-role"]')
+        document.getElementById('systemRoleName').value = ''
+        document.getElementById('systemRoleScope').value = '门店'
+        document.getElementById('systemRoleError').textContent = ''
+        dialog.showModal()
+        document.getElementById('systemRoleName').focus()
+      }
+
+      function initSystemPage() {
+        const sectionFor = (title) => Array.from(pageHost.querySelectorAll('.system-layout .card')).find((card) => (
+          card.querySelector('h3')?.textContent.trim() === title
+        ))
+        const roleSection = sectionFor('组织与权限')
+        const roles = roleSection?.querySelector('.table-list')
+        const audit = sectionFor('操作审计日志')?.querySelector('.table-list')
+        if (!roles || !audit) return
+        roles.setAttribute('data-system-roles', '')
+        audit.setAttribute('data-system-audit', '')
+        roleSection.querySelector('.panel-title p').textContent = '查看演示角色与当前浏览器中创建的角色组。'
+        systemLocalRoles = []
+        systemLocalAudit = []
+        try {
+          const saved = JSON.parse(localStorage.getItem(systemRoleStorageKey) || 'null')
+          if (saved) {
+            systemLocalRoles = Array.isArray(saved.roles) ? saved.roles.filter((role) => (
+              typeof role.name === 'string' && role.name.trim() && ['全局', '区域', '门店'].includes(role.scope)
+            )) : []
+            systemLocalAudit = Array.isArray(saved.audit) ? saved.audit.filter((row) => (
+              Array.isArray(row) && row.length === 4 && row.every((value) => typeof value === 'string')
+            )) : []
+          }
+        } catch (error) {
+          window.PlatformToast?.show('无法读取本地角色组，请检查浏览器存储后重试', { kind: 'error' })
+        }
+        systemLocalRoles.forEach((role) => appendSystemTableRow(roles, [role.name, 0, role.scope]))
+        systemLocalAudit.forEach((row) => appendSystemTableRow(audit, row))
+
+        const dialog = document.createElement('dialog')
+        dialog.id = 'systemRoleDialog'
+        dialog.className = 'system-role-dialog'
+        dialog.setAttribute('aria-labelledby', 'systemRoleDialogTitle')
+        dialog.setAttribute('aria-describedby', 'systemRoleLocalNote')
+        dialog.innerHTML = `
+          <form id="systemRoleForm">
+            <div class="system-role-dialog-head"><h2 id="systemRoleDialogTitle">新增角色组</h2><button type="button" class="btn" data-system-role-close aria-label="关闭新增角色组">关闭</button></div>
+            <p id="systemRoleLocalNote" class="system-role-note">角色组仅保存在当前浏览器，不会授予线上权限。</p>
+            <label class="system-role-field" for="systemRoleName">角色名称<input id="systemRoleName" name="roleName" type="text" maxlength="40" required autocomplete="off" placeholder="请输入角色名称" /></label>
+            <label class="system-role-field" for="systemRoleScope">演示权限范围<select id="systemRoleScope" name="roleScope"><option value="门店">门店</option><option value="区域">区域</option><option value="全局">全局</option></select></label>
+            <p id="systemRoleError" class="system-role-error" role="alert"></p>
+            <div class="system-role-dialog-actions"><button type="button" class="btn" data-system-role-close>取消</button><button type="submit" class="btn-primary">创建角色组</button></div>
+          </form>`
+        pageHost.appendChild(dialog)
+        dialog.querySelectorAll('[data-system-role-close]').forEach((button) => {
+          button.addEventListener('click', () => dialog.close())
+        })
+        dialog.addEventListener('close', () => systemRoleReturnFocus?.focus())
+        dialog.querySelector('form').addEventListener('submit', (event) => {
+          event.preventDefault()
+          const nameInput = document.getElementById('systemRoleName')
+          const name = nameInput.value.trim()
+          const scope = document.getElementById('systemRoleScope').value
+          const error = document.getElementById('systemRoleError')
+          const existingNames = Array.from(roles.querySelectorAll('.table-list-row:not(.head)')).map((row) => row.firstElementChild.textContent.trim().toLocaleLowerCase('zh-CN'))
+          if (!name || name.length > 40) {
+            error.textContent = '请输入 1–40 个字符的角色名称'
+            nameInput.focus()
+            return
+          }
+          if (existingNames.includes(name.toLocaleLowerCase('zh-CN'))) {
+            error.textContent = `角色“${name}”已存在，请使用其他名称`
+            nameInput.focus()
+            return
+          }
+          if (!['门店', '区域', '全局'].includes(scope)) {
+            error.textContent = '请选择演示权限范围'
+            return
+          }
+          const now = new Date()
+          const pad = (value) => String(value).padStart(2, '0')
+          const time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+          const role = { name, scope }
+          const auditRow = [time, '当前用户（本地）', `新增本地角色组：${name}`, '已保存']
+          const nextRoles = [...systemLocalRoles, role]
+          const nextAudit = [...systemLocalAudit, auditRow]
+          try {
+            localStorage.setItem(systemRoleStorageKey, JSON.stringify({ roles: nextRoles, audit: nextAudit }))
+          } catch (failure) {
+            error.textContent = '保存失败，无法写入浏览器存储，请重试'
+            return
+          }
+          systemLocalRoles = nextRoles
+          systemLocalAudit = nextAudit
+          appendSystemTableRow(roles, [name, 0, scope])
+          appendSystemTableRow(audit, auditRow)
+          dialog.close()
+          window.PlatformToast?.show('角色组已保存', { kind: 'success' })
+        })
+        document.querySelector('[data-system-action="add-role"]')?.addEventListener('click', openSystemRoleDialog)
+        document.querySelector('[data-system-action="export-audit"]')?.addEventListener('click', downloadSystemAudit)
       }
 
       function playTodoProcessStamp(button, onDone) {
@@ -21972,6 +22110,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           initConfigPage()
         }
 
+        if (activeRouteId === 'system') {
+          initSystemPage()
+        }
+
         if (activeRouteId === 'leads') {
           renderLeadsPage()
         }
@@ -21985,7 +22127,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         if (activeRouteId === 'leads-detail' || activeRouteId === 'customer-detail') {
-          applyJourneySessionSummaryLists()
           initJourneyCardAccordions(activeRouteId)
         }
 

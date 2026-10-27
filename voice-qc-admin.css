@@ -10708,6 +10708,13 @@ body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination)
   padding: 18px 20px;
 }
 
+.waveform-grid.is-empty {
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+}
+
 .waveform-bar {
   width: 72%;
   height: clamp(12px, calc(var(--wave-h, 36) * 1%), 72px);

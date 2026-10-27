@@ -1,3 +1,29 @@
 /* 系统管理 independent page styles. */
-@import url("../voice-qc-admin.css?v=20260902-global-brand-v1");
+@import url("../voice-qc-admin.css?v=20261027-global-audit-fixes-v1");
 @import url("../app-inline.css");
+
+.system-role-dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card, #fff);
+  color: var(--text);
+  overflow: auto;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+}
+.system-role-dialog::backdrop { background: rgba(15, 23, 42, 0.4); }
+.system-role-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.system-role-dialog-head h2 { margin: 0; font-size: 20px; }
+.system-role-note { margin: 12px 0 24px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.system-role-field { display: grid; gap: 8px; margin-top: 16px; font-size: 14px; }
+.system-role-field input,
+.system-role-field select { box-sizing: border-box; width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--card, #fff); color: var(--text); padding: 10px 12px; font: inherit; font-size: 16px; }
+.system-role-field input:focus-visible,
+.system-role-field select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.system-role-error { min-height: 22px; margin: 12px 0; color: var(--red); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.system-role-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.system-role-dialog button { min-height: 44px; }
+[data-system-roles] .table-list-row > div,
+[data-system-audit] .table-list-row > div { min-width: 0; overflow-wrap: anywhere; }

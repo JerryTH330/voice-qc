@@ -3804,8 +3804,8 @@ const badgeManagementEmployees = [
   { ...badgeManagementDirectoryEmployees[0] }
 ];
 const badgeManagementBadges = badgeDetailRecords
-  .filter((item) => item.dealer?.dealerCode === badgeManagementDealer.dealerCode)
-  .slice(0, 5)
+  .filter((item) => (item.brand || item.dealer?.brand) === badgeManagementDealer.brand
+    && (item.dealerCode || item.dealer?.dealerCode) === badgeManagementDealer.dealerCode)
   .map((item) => ({
     sn: item.sn,
     employeeId: item.advisorId,
@@ -3813,14 +3813,11 @@ const badgeManagementBadges = badgeDetailRecords
     battery: item.battery,
     syncedAt: item.syncedAt
   }));
-badgeManagementBadges.push({
-  sn: `MN-BDG-${String(4821 + (badgeManagementDealer.advisors?.length || 5) * 7).padStart(6, '0')}`,
-  employeeId: '',
-  connectionStatus: '未连接',
-  battery: 82,
-  syncedAt: '2026-08-13 13:26:18'
-});
-
+for (const badge of badgeManagementBadges) {
+  if (!badge.employeeId || badgeManagementEmployees.some((employee) => employee.employeeId === badge.employeeId)) continue;
+  const asset = badgeDetailRecords.find((item) => item.sn === badge.sn);
+  badgeManagementEmployees.push({ employeeId: badge.employeeId, employeeName: asset.advisorName || '姓名未提供', storeName: badgeManagementDealer.dealerName });
+}
 const badgeManagementState = {
   query: '',
   status: '全部',

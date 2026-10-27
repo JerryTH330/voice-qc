@@ -6,7 +6,8 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');
-    const scriptVersion = ['./factory-dashboard.js', './issue-rule-analysis-utils.js'].includes(scripts[index])
+    const scriptVersion = scripts[index] === '../app-runtime.js' ? '20261027-global-audit-fixes-v1'
+      : ['./factory-dashboard.js', './issue-rule-analysis-utils.js'].includes(scripts[index])
       ? '20261019-factory-rule-org-scope-v1'
       : scripts[index] === './organization-filter.js' ? '20261021-dashboard-no-advisor-v1' : assetVersion;
     script.src = `${scripts[index]}?v=${scriptVersion}`;

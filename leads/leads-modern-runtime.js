@@ -125,6 +125,13 @@
     return String(value == null ? '' : value).trim();
   }
 
+  function clearFocusedLead() {
+    focusLeadId = null;
+    var url = new URL(global.location.href);
+    url.searchParams.delete('focusLeadId');
+    global.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+
   function escapeHtml(value) {
     return text(value)
       .replace(/&/g, '&amp;')
@@ -271,7 +278,13 @@
     leads: createState('leads'),
     customers: createState('customers')
   };
-  var linkedLead = (global.AIQCData || global.AIQCLinkedDemo)?.getLead(new URLSearchParams(global.location.search).get('focusLeadId'));
+  var entryParams = new URLSearchParams(global.location.search);
+  var focusLeadId = entryParams.has('focusLeadId') ? entryParams.get('focusLeadId').trim() : null;
+  var linkedLead = (global.AIQCData || global.AIQCLinkedDemo)?.getLead(focusLeadId);
+  if (focusLeadId !== null) {
+    currentView = 'leads';
+    states.leads.leadIdQuery = focusLeadId;
+  }
   if (linkedLead) {
     currentView = 'leads';
     states.leads.leadIdQuery = linkedLead.id;
@@ -557,6 +570,7 @@
 
   function filteredLeadRecords(targetState) {
     return records.filter(function (record) {
+      if (focusLeadId !== null && record.id !== focusLeadId) return false;
       var leadIdQuery = normalizedQuery(targetState.leadIdQuery);
       var linkedTarget = (global.AIQCData || global.AIQCLinkedDemo)?.getLead(targetState.leadIdQuery);
       if (linkedTarget && record.id !== linkedTarget.id) return false;
@@ -1098,7 +1112,10 @@
     if (emptyState) {
       emptyState.hidden = items.length > 0;
       var emptyTitle = document.getElementById('leadsEmptyStateTitle');
-      if (emptyTitle) emptyTitle.textContent = currentView === 'customers' ? '暂无符合条件的客户' : '暂无符合条件的线索';
+      var missingFocus = currentView === 'leads' && focusLeadId !== null && !linkedLead;
+      if (emptyTitle) emptyTitle.textContent = missingFocus ? '未找到对应线索记录' : currentView === 'customers' ? '暂无符合条件的客户' : '暂无符合条件的线索';
+      var emptyHint = emptyState.querySelector('p');
+      if (emptyHint) emptyHint.textContent = missingFocus ? '线索ID：' + (focusLeadId || '未提供') + '，请核对线索ID或重置筛选。' : '请调整筛选条件后重试';
     }
     if (tableWrap) tableWrap.classList.toggle('is-empty', !items.length);
     body.innerHTML = pageItems.length ? pageItems.map(function (item) {
@@ -1278,6 +1295,7 @@
   }
 
   function resetFilters() {
+    clearFocusedLead();
     var replacement = createState(currentView);
     replacement.pageSize = state().pageSize;
     states[currentView] = replacement;
@@ -1590,6 +1608,7 @@
   function handleInput(event) {
     var directSearch = event.target.closest('[data-lr-query]');
     if (directSearch) {
+      if (directSearch.dataset.lrQuery === 'leadIdQuery') clearFocusedLead();
       state()[directSearch.dataset.lrQuery] = directSearch.value;
       state().page = 1;
       renderTable();

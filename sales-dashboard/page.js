@@ -20,8 +20,8 @@ window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
     "./organization-filter.js?v=20261022-dashboard-filter-release-v1",
     "../store-dashboard/organization-filter.js?v=20261022-dashboard-filter-release-v1",
     "../store-dashboard/business-filters.js?v=20261020-unified-data-v3",
-    "../shared/unified-dashboard.js?v=20261023-session-analysis-result-v1",
-    "../app-runtime.js?v=20261022-dashboard-filter-release-v1"
+    "../shared/unified-dashboard.js?v=20261027-global-audit-fixes-v1",
+    "../app-runtime.js?v=20261027-global-audit-fixes-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
