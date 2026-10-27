@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const releaseVersion = '20261022-dashboard-filter-release-v1';
 const analysisResultVersion = '20261027-global-audit-fixes-v1';
+const sessionFilterVersion = '20261027-session-advisor-phone-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -54,9 +55,9 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard']) {
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), analysisResultVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), area === 'session' ? sessionFilterVersion : analysisResultVersion);
     if (area === 'session') {
-      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), analysisResultVersion);
+      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), sessionFilterVersion);
     }
   });
 }

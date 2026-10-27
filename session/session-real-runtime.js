@@ -672,22 +672,18 @@
           value: key,
           advisorId: record.advisorId,
           label: record.advisorName,
-          phones: new Set(),
           stores: new Set()
         });
       }
-      if (record.advisorPhone && record.advisorPhone !== '—') map.get(key).phones.add(record.advisorPhone);
       if (record.store && record.store !== '—') map.get(key).stores.add(record.store);
     });
     return Array.from(map.values()).map(function (option) {
-      var phones = Array.from(option.phones);
       var stores = Array.from(option.stores);
       return {
         value: option.value,
         label: option.label,
         meta: (stores.length ? stores.join('、') : '—') + ' · ' + option.advisorId,
-        search: option.label + ' ' + option.value + ' ' + phones.join(' '),
-        searchDigits: phones.map(normalizeDigits).join(' ')
+        search: option.label + ' ' + option.advisorId
       };
     }).sort(function (left, right) {
       return left.label.localeCompare(right.label, 'zh-CN') || left.value.localeCompare(right.value, 'zh-CN');
@@ -814,8 +810,9 @@
     var options = currentValueOptions(key);
     if (!query) return sortOptions(options, key);
     return options.filter(function (option) {
-      var textMatched = normalize(option.label + ' ' + (option.meta || '') + ' ' + (option.submeta || '') + ' ' + (option.search || '')).includes(query);
-      var phoneMatched = ['advisor', 'customer'].includes(key) && queryDigits && text(option.searchDigits).includes(queryDigits);
+      var searchText = key === 'advisor' ? option.search : option.label + ' ' + (option.meta || '') + ' ' + (option.submeta || '') + ' ' + (option.search || '');
+      var textMatched = normalize(searchText).includes(query);
+      var phoneMatched = key === 'customer' && queryDigits && text(option.searchDigits).includes(queryDigits);
       return textMatched || phoneMatched;
     });
   }
@@ -847,7 +844,7 @@
           var group = options.filter(function (option) { return option.meta === brand; });
           return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
         }).join('') : options.map(renderOption).join('')) : '<div class="badge-advisor-empty">未找到匹配' + escapeHtml(getFilterLabel(key)) + '</div>';
-    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名、ID或手机号' : key === 'customer' ? '输入客户名称、线索ID或手机号' : '搜索' + getFilterLabel(key);
+    var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名或ID' : key === 'customer' ? '输入客户名称、线索ID或手机号' : '搜索' + getFilterLabel(key);
     return '<div class="session-menu-panel badge-advisor-menu" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
       '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
       '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + allActive + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
@@ -1018,6 +1015,7 @@
     secondary = secondary.concat(['intentLevel', 'leadCarSeries', 'carSeries'].filter(isColumnVisible));
     if (isColumnVisible('status')) secondary.push('status');
     var textControls = [
+      { key: 'advisorPhone', label: '顾问手机号', placeholder: '输入顾问手机号' },
       { key: 'leadId', label: '线索ID' },
       { key: 'audioId', label: '录音ID' }
     ].filter(function (field) { return isColumnVisible(field.key); });
@@ -1026,7 +1024,7 @@
         ? renderTextControl('customerKeyword', '客户', '输入客户名称或客户号码')
         : renderFilterControl(key);
     }).join('') +
-      textControls.map(function (field) { return renderTextControl(field.key, field.label); }).join('') +
+      textControls.map(function (field) { return renderTextControl(field.key, field.label, field.placeholder); }).join('') +
       (isColumnVisible('startTime') ? renderDateControl() : '');
     var keepExtra = !!extraInner && (!state.collapsed || collapseChanged);
     container.classList.toggle('is-collapsed', state.collapsed);
@@ -1669,7 +1667,7 @@
         return item ? item.label : value;
       }).join('、') };
     });
-    var queryLabels = { audioId: '录音ID', leadId: '线索ID', advisorPhone: '顾问号码', customerKeyword: '客户关键词', customerName: '客户名称', customerPhone: '客户号码' };
+    var queryLabels = { audioId: '录音ID', leadId: '线索ID', advisorPhone: '顾问手机号', customerKeyword: '客户关键词', customerName: '客户名称', customerPhone: '客户号码' };
     Object.keys(state.queries).forEach(function (key) { if (state.queries[key]) filters.push({ label: queryLabels[key], value: state.queries[key] }); });
     filters.push({ label: '录音日期', value: state.startDate + ' 至 ' + state.endDate });
     var now = new Date();

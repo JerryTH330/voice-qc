@@ -17,7 +17,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     "../shared/field-settings-interactions.js?v=20261020-unified-data-v3",
     "../shared/unified-dashboard.js?v=20261027-global-audit-fixes-v1",
     "../app-runtime.js?v=20261027-global-audit-fixes-v1",
-    "./session-real-runtime.js?v=20261027-global-audit-fixes-v1"
+    "./session-real-runtime.js?v=20261027-session-advisor-phone-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
