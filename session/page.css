@@ -267,7 +267,7 @@ body > .sr-intent-rule-tooltip[data-placement="top"]::before {
 }
 .sr-menu-group + .sr-menu-group { margin-top: 6px; border-top: 1px solid var(--line); }
 .sr-menu-group-label { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
-.session-real-root .sr-date-control { grid-column: span 2; max-width: 360px; padding-inline: 10px; gap: 6px; }
+.session-real-root .sr-date-control { padding-inline: 10px; gap: 6px; }
 .session-real-root .sr-date-control > span:first-child { white-space: nowrap; }
 .session-real-root .sr-date-control .session-date-trigger {
   display: flex;
@@ -277,12 +277,9 @@ body > .sr-intent-rule-tooltip[data-placement="top"]::before {
   padding: 0;
   overflow: visible;
 }
-.session-real-root .sr-date-control .session-date-trigger strong { flex: 0 0 auto; }
+.session-real-root .sr-date-control .session-date-trigger strong { flex: 0 1 auto; min-width: 0; }
 .session-real-root .sr-date-control .session-date-trigger em { flex: 0 0 auto; font-style: normal; }
 .session-real-root .sr-date-control .session-date-icon { position: static; transform: none; margin: 0 0 0 auto; }
-@media (max-width: 620px) {
-  .session-real-root .sr-date-control { grid-column: auto; max-width: none; }
-}
 .sr-scenario-group-select {
   width: 100%;
   min-height: 42px;
@@ -311,7 +308,7 @@ body > .sr-intent-rule-tooltip[data-placement="top"]::before {
   border-top: 1px solid rgba(217, 226, 239, .82);
 }
 .sr-scenario-source-group .badge-advisor-option { padding-left: 39px; }
-.session-real-root .sr-date-control .session-date-trigger strong { overflow: visible; font-size: 14px; white-space: nowrap; }
+.session-real-root .sr-date-control .session-date-trigger strong { overflow: hidden; text-overflow: ellipsis; font-size: 14px; white-space: nowrap; }
 .session-real-root .badge-field-filter-select .session-select-trigger strong.is-placeholder {
   color: #a0aaba;
   font-weight: 400;

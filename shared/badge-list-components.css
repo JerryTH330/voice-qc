@@ -430,11 +430,8 @@
   overflow: visible;
   z-index: 4;
 }
-/* 日期范围整体跨列，标签和起止日期保持一行；窄屏只让控件整体换行。 */
-.badge-dynamic-filter-grid .badge-field-filter-date-time { grid-column: span 2; max-width: 360px; padding-inline: 10px; gap: 6px; }
-@media (max-width: 620px) {
-  .badge-dynamic-filter-grid .badge-field-filter-date-time { grid-column: auto; max-width: none; }
-}
+/* 日期沿用普通筛选项的动态列宽，日期值在剩余空间内省略。 */
+.badge-dynamic-filter-grid .badge-field-filter-date-time { padding-inline: 10px; gap: 6px; }
 .badge-field-filter-date-time.is-open { z-index: 32; }
 .badge-field-filter-date-time .session-date-trigger {
   min-width: 0;
@@ -444,7 +441,7 @@
   padding: 0;
   gap: 6px;
 }
-.badge-field-filter-date-time .session-date-trigger strong { font-size: 13px; font-weight: 500; }
+.badge-field-filter-date-time .session-date-trigger strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
 .badge-field-filter-date-time .session-date-trigger em { font-style: normal; }
 .badge-sync-date-time-panel {
   left: 0;
