@@ -197,7 +197,8 @@
   min-width: 0;
   width: min(392px, calc(100vw - 48px));
   max-width: min(392px, calc(100vw - 48px));
-  max-height: min(620px, calc(100vh - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 14px;
   overflow-y: auto;
   z-index: 1000;
 }
@@ -206,7 +207,18 @@
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-panel-copy span, .session-date-tab span, .session-date-weekdays span, .session-date-footer > span) { font-weight: 400; }
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.session-date-day, .session-date-shortcut, .session-date-action-btn) { font-weight: 600; }
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .session-date-action-btn { border-radius: 999px; font-size: 14px; }
-.dashboard-filter-card .session-date-shortcuts { flex-wrap: wrap; }
+/* 保留共享日期弹层的间距，避免门店页面的全局 reset 清零。 */
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .session-date-nav { flex-shrink: 0; gap: 6px; padding: 4px; }
+:is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .session-date-nav strong { min-width: 80px; white-space: nowrap; }
+.dashboard-filter-card .session-date-panel-copy strong { white-space: nowrap; }
+.dashboard-filter-card .session-date-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+.dashboard-filter-card .session-date-tab { padding: 10px 12px; }
+.dashboard-filter-card .session-date-weekdays { margin-top: 16px; }
+.dashboard-filter-card .session-date-grid { margin-top: 8px; }
+.dashboard-filter-card .session-date-shortcuts { flex-wrap: wrap; margin-top: 14px; }
+.dashboard-filter-card .session-date-shortcut { padding: 0 12px; }
+.dashboard-filter-card .session-date-footer { margin-top: 14px; padding-top: 12px; }
+.dashboard-filter-card .session-date-apply-btn { padding: 0 16px; }
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card .badge-dynamic-filter-grid > :nth-child(4n) :is(.fo-menu, .fo-date-panel) { left: auto; right: 0; }
 
 @media (max-width: 980px) {
