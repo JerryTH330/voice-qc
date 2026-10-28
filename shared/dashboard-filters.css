@@ -105,6 +105,8 @@
 }
 .dashboard-filter-card .badge-advisor-search > span { box-sizing: border-box; pointer-events: none; }
 .dashboard-filter-card .badge-advisor-search input { font: inherit; }
+/* 搜索焦点由外层 focus-within 显示，避免输入框再次出现方形描边。 */
+.dashboard-filter-card .badge-advisor-search input:focus-visible { outline: none; }
 .dashboard-filter-card .badge-advisor-search input::placeholder { opacity: 1; }
 .dashboard-filter-card .badge-advisor-select-all {
   flex: 0 0 auto;
