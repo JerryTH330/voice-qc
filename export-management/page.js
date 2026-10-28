@@ -16,12 +16,10 @@
   const status = task => `<span class="export-status ${escape(task.status)}">${escape(ExportTasks.statuses[task.status])}</span>`;
   let detailDownloadBusy = false;
   function filterValue(filter) {
-    const value = escape(filter.value);
-    if (['门店', '大区', '录音日期'].includes(filter.label)) return `<span class="export-filter-scope">${value}</span>`;
-    return value;
+    return `<span class="export-filter-scope">${escape(filter.value)}</span>`;
   }
   function detail(task) {
-    const visibleFilters = (task.filters || []).filter(filter => filter.label !== '分析结果');
+    const visibleFilters = task.filters || [];
     return `<section class="export-file-summary" aria-label="任务信息">
       <div class="export-file-art"><img src="../assets/export-detail/excel.svg" width="72" height="72" alt=""><span>XLSX</span></div>
       <div class="export-file-copy"><h3>${escape(task.filename)}</h3><p>来源：<strong>${escape(ExportTasks.sources[task.source])}</strong></p>${status(task)}</div>

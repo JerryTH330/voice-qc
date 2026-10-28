@@ -1,4 +1,4 @@
-@import url("../voice-qc-admin.css?v=20261027-global-audit-fixes-v1");
+@import url("../voice-qc-admin.css?v=20261028-full-sync-v1");
 
 :root {
   --blue: #2563eb;
@@ -2025,4 +2025,14 @@ body .badge-session-filter-card #sessionFilterControls.is-collapsed {
 }
 @media (prefers-reduced-motion: reduce) {
   [data-list-refresh].is-refreshing .badge-detail-refresh-icon { animation: none; }
+}
+
+/* 门店下钻沿用录音排查的四列网格及窄窗口操作区布局。 */
+@media (max-width: 980px) {
+  .visits-filter-grid #visitFilterControls.is-store-drilldown.is-collapsed .badge-filter-primary {
+    display: block;
+  }
+  .visits-filter-grid #visitFilterControls.is-store-drilldown.is-collapsed .visits-filter-actions {
+    margin-top: 14px;
+  }
 }

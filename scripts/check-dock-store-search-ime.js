@@ -55,7 +55,8 @@ const target = {
   value: '北京',
   selectionStart: 2,
   selectionEnd: 2,
-  matches(selector) { return selector === '[data-dock-store-search]'; }
+  matches(selector) { return selector === '[data-dock-store-search]'; },
+  closest(selector) { return this.matches(selector) ? this : null; }
 };
 
 listeners.input({ target, isComposing: true });

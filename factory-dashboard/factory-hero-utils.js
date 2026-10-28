@@ -36,7 +36,7 @@
         tone: 'blue',
         scenes: [
           createScene('first_follow', '首触跟进'),
-          createScene('invite_store', '邀约进店'),
+          createScene('invite_store', '邀约到店'),
           createScene('schedule_confirm', '排程确认')
         ].filter((scene) => selected.has(scene.key))
       },
@@ -47,7 +47,7 @@
         unit: '条',
         tone: 'green',
         scenes: [
-          createScene('store_reception', '进店接待'),
+          createScene('store_reception', '销售接待'),
           createScene('test_drive', '试乘试驾')
         ].filter((scene) => selected.has(scene.key))
       }

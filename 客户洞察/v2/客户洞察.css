@@ -1,4 +1,4 @@
-@import url("../../voice-qc-admin.css?v=20261027-global-audit-fixes-v1");
+@import url("../../voice-qc-admin.css?v=20261028-full-sync-v1");
 
 :root {
   --insight-blue: #2f6ff4;
@@ -2437,28 +2437,6 @@ a:focus-visible {
   border-color: var(--insight-blue);
   color: var(--insight-blue);
   background: var(--insight-blue-soft);
-}
-
-.toast {
-  position: fixed;
-  z-index: 200;
-  right: 28px;
-  bottom: 28px;
-  padding: 11px 15px;
-  border-radius: 11px;
-  color: #fff;
-  background: #25344b;
-  box-shadow: 0 12px 30px rgba(21, 34, 53, 0.24);
-  font-size: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(10px);
-  transition: 0.2s ease;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .overview-page,

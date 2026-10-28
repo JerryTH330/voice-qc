@@ -161,6 +161,7 @@
       secondSource: '门店接待', thirdSource: '', fourthSource: '', recordingCount: visit.recordingId ? 1 : 0,
       validRecording: visit.recordingId ? '是' : '否',
       aiLeadValidity: analysisCompleted ? '有效' : visit.recordingId ? '分析中' : '未分析',
+      isFinalStatus: analysisCompleted ? '是' : '否',
       patrolerCode: dealer.patrolerId?.match(/:code:([^|]+)/)?.[1] || '—',
       qcClueStatus: analysisCompleted ? '有效' : '待确认', finalStatus: '', finalInvalidReason: '',
       qcScene: visit.scene, summary, action, tags: [visit.carSeries, visit.scene, visit.status],

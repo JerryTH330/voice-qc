@@ -102,3 +102,49 @@ test('reset keeps the existing completed default without restoring a process fil
   assert.deepEqual(options.map(option => option.dataset.srOptionValue), ['已完成', '失败']);
   assert.deepEqual(options.filter(option => option.getAttribute('aria-selected') === 'true').map(option => option.dataset.srOptionValue), ['已完成']);
 });
+
+test('reset after hiding analysis result keeps all outcomes and exports the same scope', async () => {
+  const h = list();
+  const expected = h.window.AIQCData.query(h.window.AIQCData.defaultRange).recordings;
+  h.click('[data-sr-settings]');
+  const checkbox = h.window.document.querySelector('[data-sr-column-visible="status"]');
+  checkbox.checked = false;
+  checkbox.dispatchEvent(new h.window.Event('change', {bubbles: true}));
+  h.click('[data-sr-settings-save]');
+  h.click('[data-sr-reset]');
+  h.click('[data-sr-collapse]');
+  assert.equal(h.host.querySelector('[data-sr-trigger="status"]'), null);
+  h.click('[data-sr-export]');
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(h.submitted.length, 1);
+  assert.equal(h.submitted[0].rows.length, expected.length);
+  assert(!h.submitted[0].filters.some(filter => filter.label === '分析结果'));
+  assert(!h.submitted[0].columns.some(column => column.label === '分析结果'));
+
+  h.click('[data-sr-settings]');
+  const restored = h.window.document.querySelector('[data-sr-column-visible="status"]');
+  restored.checked = true;
+  restored.dispatchEvent(new h.window.Event('change', {bubbles: true}));
+  h.click('[data-sr-settings-save]');
+  assert.deepEqual(openResultMenu(h).filter(option => option.getAttribute('aria-selected') === 'true'), []);
+});
+
+test('invalid phone input stays empty and cannot export; clearing it restores the current scope', () => {
+  const h = list();
+  h.click('[data-sr-collapse]');
+  const input = h.host.querySelector('[data-sr-query="advisorPhone"]');
+  input.value = 'ABC';
+  input.dispatchEvent(new h.window.Event('input', {bubbles: true}));
+  h.flush();
+  assert.equal(h.host.querySelectorAll('#sessionRealTable [data-session-real-row]').length, 0);
+  assert.equal(h.host.querySelector('[data-sr-export]').disabled, true);
+  assert.match(h.host.querySelector('#sessionRealEmptyState').textContent, /手机号需包含数字/);
+  const currentInput = h.host.querySelector('[data-sr-query="advisorPhone"]');
+  assert.equal(currentInput.getAttribute('placeholder'), '输入顾问手机号');
+  currentInput.value = '';
+  currentInput.dispatchEvent(new h.window.Event('input', {bubbles: true}));
+  h.flush();
+  assert(h.host.querySelectorAll('#sessionRealTable [data-session-real-row]').length > 0);
+  assert.equal(h.host.querySelector('[data-sr-export]').disabled, false);
+});

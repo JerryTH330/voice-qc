@@ -59,72 +59,7 @@ const pageMeta = {
   }
 };
 
-const badgeEventRecords = [
-  {
-    date: '2026-08-11',
-    sn: 'MN-BDG-004821',
-    employeeName: '陈佳',
-    storeName: '上海浦东体验中心',
-    powerOnDuration: '06:42:00',
-    uploadedRecordingDuration: '05:55:00',
-    events: [
-      { type: 'power-on', label: '工牌开机', time: '08:03:32', color: 'green' },
-      { type: 'recording-start', label: '开始录音', time: '08:05:00', icon: '录', color: 'blue' },
-      { type: 'recording-end', label: '结束录音', time: '10:36:57', icon: '停', color: 'red' },
-      { type: 'power-off', label: '工牌关机', time: '10:36:57', color: 'neutral' },
-      { type: 'charging-start', label: '开始充电', time: '10:36:59', icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: '11:35:58', icon: '满', color: 'neutral' },
-      { type: 'power-on', label: '工牌开机', time: '11:36:00', color: 'green' },
-      { type: 'recording-start', label: '开始录音', time: '11:36:13', icon: '录', color: 'blue' },
-      { type: 'recording-end', label: '结束录音', time: '14:59:16', icon: '停', color: 'red' },
-      { type: 'low-battery', label: '工牌电量预警', time: '15:43:00', icon: '低', color: 'red', note: '剩余电量 19%' },
-      { type: 'power-off', label: '工牌关机', time: '15:44:35', color: 'neutral' }
-    ]
-  },
-  {
-    date: '2026-08-11',
-    sn: 'MN-BDG-004836',
-    employeeName: '李洋',
-    storeName: '上海浦东体验中心',
-    powerOnDuration: '07:55:00',
-    uploadedRecordingDuration: '03:15:00',
-    events: [
-      { type: 'power-on', label: '工牌开机', time: '08:30:00', color: 'green' },
-      { type: 'recording-start', label: '开始录音', time: '08:45:00', icon: '录', color: 'blue' },
-      { type: 'recording-end', label: '结束录音', time: '12:00:00', icon: '停', color: 'red' },
-      { type: 'low-battery', label: '工牌电量预警', time: '16:00:00', icon: '低', color: 'red', note: '剩余电量 18%' },
-      { type: 'charging-start', label: '开始充电', time: '16:15:00', icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: '17:00:00', icon: '满', color: 'neutral' },
-      { type: 'power-on', label: '工牌开机', time: '17:00:00', color: 'green' },
-      { type: 'power-off', label: '工牌关机', time: '17:10:00', color: 'neutral' }
-    ]
-  },
-  {
-    date: '2026-08-11',
-    sn: 'MN-BDG-004792',
-    employeeName: '韩如臣',
-    storeName: '杭州滨江体验中心',
-    powerOnDuration: '10:28:32',
-    uploadedRecordingDuration: '01:13:20',
-    events: [
-      { type: 'power-on', label: '工牌开机', time: '08:03:32', color: 'green' },
-      { type: 'recording-start', label: '开始录音', time: '09:30:00', icon: '录', color: 'blue' },
-      { type: 'recording-end', label: '结束录音', time: '10:36:57', icon: '停', color: 'red' },
-      { type: 'recording-start', label: '开始录音', time: '11:36:13', icon: '录', color: 'blue' },
-      { type: 'recording-end', label: '结束录音', time: '11:42:36', icon: '停', color: 'red' },
-      { type: 'power-off', label: '工牌关机', time: '18:32:04', color: 'neutral' }
-    ]
-  },
-  {
-    date: '2026-08-12',
-    sn: 'MN-BDG-004845',
-    employeeName: '李洋',
-    storeName: '上海浦东体验中心',
-    powerOnDuration: '—',
-    uploadedRecordingDuration: '—',
-    events: []
-  }
-];
+const badgeEventRecords = window.AIQCData ? window.AIQCData.badgeEvents : [...(window.__BADGE_HISTORY_DATA?.events || []), ...(window.AIQCLinkedDemo?.events || [])];
 
 const badgeEventDefaultFilters = {
   date: '2026-08-11',
@@ -175,26 +110,9 @@ const badgeRecordState = {
   advisorName: '陈佳'
 };
 
-const badgeUploadRecords = [
-  { date: '2026-08-08', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '09:02:18—09:07:18', duration: '00:05:00', size: '4.7 MB', status: '已上传', completedAt: '2026-08-08 09:07:56' },
-  { date: '2026-08-09', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '10:16:04—10:21:04', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-09 10:21:43' },
-  { date: '2026-08-09', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '10:21:04—10:26:04', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-09 10:26:45' },
-  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '15:32:10—15:37:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-11 15:37:51' },
-  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '15:37:10—15:42:10', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-11 15:42:49' },
-  { date: '2026-08-11', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '3', audioTime: '15:42:10—15:47:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-11 15:47:54' },
-  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '1', audioTime: '13:03:03—13:08:03', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-12 13:08:41' },
-  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '2', audioTime: '13:08:03—13:13:03', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:13:42' },
-  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '3', audioTime: '13:13:03—13:18:03', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-12 13:20:34' },
-  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '4', audioTime: '13:18:03—13:23:03', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:33:48' },
-  { date: '2026-08-12', advisorName: '陈佳', sn: 'MN-BDG-004821', sequence: '5', audioTime: '13:23:03—13:28:03', duration: '00:05:00', size: '4.7 MB', status: '已上传', completedAt: '2026-08-12 13:34:58' },
-  { date: '2026-08-10', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '1', audioTime: '11:05:10—11:10:10', duration: '00:05:00', size: '4.8 MB', status: '已上传', completedAt: '2026-08-10 11:10:49' },
-  { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '2', audioTime: '13:20:58—13:25:58', duration: '00:05:00', size: '4.9 MB', status: '已上传', completedAt: '2026-08-12 13:26:37' },
-  { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '3', audioTime: '13:25:58—13:30:58', duration: '00:05:00', size: '4.7 MB', status: '未上传', completedAt: '未上传' },
-  { date: '2026-08-12', advisorName: '李洋', sn: 'MN-BDG-004836', sequence: '4 · 结束片段', audioTime: '13:30:58—13:35:58', duration: '00:05:00', size: '4.6 MB', status: '未上传', completedAt: '未上传' }
-];
+const badgeUploadRecords = window.AIQCData ? window.AIQCData.badgeUploads : [...(window.__BADGE_HISTORY_DATA?.uploads || []), ...(window.AIQCLinkedDemo?.uploads || [])];
 
-badgeUploadRecords.push(...(window.AIQCLinkedDemo?.uploads || []));
-badgeEventRecords.push(...(window.AIQCLinkedDemo?.events || []));
+
 
 const badgeUploadDefaultFilters = {
   startDate: '2026-08-06',
@@ -220,6 +138,7 @@ const visitDefaultFilters = {
   source: [],
   status: [],
   businessId: '',
+  linkedBusinessId: null,
   leadId: '',
   customerKeyword: ''
 };
@@ -250,18 +169,18 @@ const visitWaitingStatuses = new Set(visitProcessingStatuses);
 const visitUploadDetailStatuses = new Set(['已匹配', '匹配失败', '录音上传中']);
 const visitEventDetailStatuses = new Set(['无录音']);
 const visitRecordTemplates = [
-  { businessId: 'BIZ-20260812-0136', recordingId: 'REC-20260812-0136', leadId: '', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配完成5段录音', completedAt: '13:36:10', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '进店接待', carSeries: '星海 S7', detailKey: 'matched', weight: 450 },
+  { businessId: 'BIZ-20260812-0136', recordingId: 'REC-20260812-0136', leadId: '', customerName: '王先生', customerPhone: '138****0628', date: '2026-08-12', startTime: '13:04:00', endTime: '13:28:00', status: '已匹配', detailText: '已匹配完成5段录音', completedAt: '13:36:10', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '13:36:10', scene: '销售接待', carSeries: '星海 S7', detailKey: 'matched', weight: 450 },
   { businessId: 'BIZ-20260811-0735', recordingId: 'REC-20260811-0735', leadId: '', customerName: '郑女士', customerPhone: '137****3091', date: '2026-08-11', startTime: '15:18:20', endTime: '15:52:46', status: '已匹配', detailText: '已匹配完成4段录音', completedAt: '16:01:22', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '16:01:22', scene: '试乘试驾', carSeries: '星海 S7', detailKey: 'matched', weight: 372 },
-  { businessId: 'BIZ-20260811-0712', recordingId: 'REC-20260811-0712', leadId: '', customerName: '吴女士', customerPhone: '136****5826', date: '2026-08-11', startTime: '14:36:08', endTime: '15:06:41', status: '已匹配', detailText: '已匹配完成3段录音', completedAt: '15:14:09', advisor: '周宁', badgeSn: 'MN-BDG-004867', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '销售助手', updatedAt: '15:14:09', scene: '进店接待', carSeries: '星海 V6', detailKey: 'matched', weight: 320 },
+  { businessId: 'BIZ-20260811-0712', recordingId: 'REC-20260811-0712', leadId: '', customerName: '吴女士', customerPhone: '136****5826', date: '2026-08-11', startTime: '14:36:08', endTime: '15:06:41', status: '已匹配', detailText: '已匹配完成3段录音', completedAt: '15:14:09', advisor: '周宁', badgeSn: 'MN-BDG-004867', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '销售助手', updatedAt: '15:14:09', scene: '销售接待', carSeries: '星海 V6', detailKey: 'matched', weight: 320 },
   { businessId: 'BIZ-20260812-0148', leadId: '', customerName: '赵女士', customerPhone: '159****8312', date: '2026-08-12', startTime: '13:22:45', endTime: '13:56:08', status: '录音上传中', detailText: '可能存在未上传录音', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004836', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:14:02', scene: '试乘试驾', carSeries: '星海 L9', detailKey: 'uploading', weight: 67 },
-  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '已匹配', audioStatus: '录音转写中', detailText: '已匹配完成录音关联', completedAt: '14:49:36', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '进店接待', carSeries: '星海 L9', weight: 21 },
-  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '已匹配', audioStatus: '模型分析中', detailText: '已匹配完成录音关联', completedAt: '15:48:20', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '进店接待', carSeries: '星海 S7', weight: 22 },
-  { businessId: 'BIZ-20260812-0171', leadId: '', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '进店接待', carSeries: '星海 S7', weight: 9 },
-  { businessId: 'BIZ-20260812-0183', leadId: '', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '进店接待', carSeries: '星海 L9', weight: 5 },
-  { businessId: 'BIZ-20260811-0831', leadId: '', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '进店接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
+  { businessId: 'BIZ-20260812-0154', leadId: '', customerName: '郑先生', customerPhone: '136****4195', date: '2026-08-12', startTime: '14:08:20', endTime: '14:41:12', status: '已匹配', audioStatus: '录音转写中', detailText: '已匹配完成录音关联', completedAt: '14:49:36', advisor: '李洋', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '14:49:36', scene: '销售接待', carSeries: '星海 L9', weight: 21 },
+  { businessId: 'BIZ-20260812-0162', leadId: '', customerName: '吴先生', customerPhone: '137****5220', date: '2026-08-12', startTime: '15:06:18', endTime: '15:42:31', status: '已匹配', audioStatus: '模型分析中', detailText: '已匹配完成录音关联', completedAt: '15:48:20', advisor: '陈佳', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '15:48:20', scene: '销售接待', carSeries: '星海 S7', weight: 22 },
+  { businessId: 'BIZ-20260812-0171', leadId: '', customerName: '孙女士', customerPhone: '158****2754', date: '2026-08-12', startTime: '16:12:04', endTime: '16:39:28', status: '匹配失败', detailText: '到访和结束日期非同一天', completedAt: '—', advisor: '陈佳', badgeSn: 'MN-BDG-004821', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '16:46:11', scene: '销售接待', carSeries: '星海 S7', weight: 9 },
+  { businessId: 'BIZ-20260812-0183', leadId: '', customerName: '林先生', customerPhone: '133****6187', date: '2026-08-12', startTime: '17:05:16', endTime: '17:26:44', status: '无录音', detailText: '工牌未开机', completedAt: '—', advisor: '李洋', badgeSn: 'MN-BDG-004845', region: '华东大区', zone: '上海战区', store: '上海浦东体验中心', storeCode: 'SH-PD-001', source: '销售助手', updatedAt: '17:30:02', scene: '销售接待', carSeries: '星海 L9', weight: 5 },
+  { businessId: 'BIZ-20260811-0831', leadId: '', customerName: '刘先生', customerPhone: '186****1045', date: '2026-08-11', startTime: '18:31:35', endTime: '18:31:55', status: '无录音', detailText: '工牌未录音', completedAt: '—', advisor: '韩如臣', badgeSn: 'MN-BDG-004792', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:32:06', scene: '销售接待', carSeries: '星海 S7', detailKey: 'no-record', weight: 6 },
   { businessId: 'BIZ-20260811-0816', leadId: '', customerName: '钱女士', customerPhone: '189****4036', date: '2026-08-11', startTime: '17:42:08', endTime: '18:05:20', status: '待匹配', detailText: '到访记录已接收，等待录音匹配', completedAt: '—', advisor: '韩如臣', region: '华东大区', zone: '浙江战区', store: '杭州滨江体验中心', storeCode: 'HZ-BJ-003', source: '销售助手', updatedAt: '18:06:03', scene: '试乘试驾', carSeries: '星海 S7', weight: 2 },
-  { businessId: 'BIZ-20260811-0793', leadId: '', customerName: '沈女士', customerPhone: '139****7272', date: '2026-08-11', startTime: '16:46:15', endTime: '17:03:40', status: '无录音', detailText: '客户明确不同意录音，本次未采集', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:04:12', scene: '进店接待', carSeries: '星海 V6', weight: 3 },
-  { businessId: 'BIZ-20260811-0772', leadId: '', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '匹配失败', detailText: '未绑定工牌', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '进店接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 9 }
+  { businessId: 'BIZ-20260811-0793', leadId: '', customerName: '沈女士', customerPhone: '139****7272', date: '2026-08-11', startTime: '16:46:15', endTime: '17:03:40', status: '无录音', detailText: '客户明确不同意录音，本次未采集', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:04:12', scene: '销售接待', carSeries: '星海 V6', weight: 3 },
+  { businessId: 'BIZ-20260811-0772', leadId: '', customerName: '周女士', customerPhone: '135****2776', date: '2026-08-11', startTime: '16:23:41', endTime: '17:08:02', status: '匹配失败', detailText: '未绑定工牌', completedAt: '—', advisor: '周宁', region: '华东大区', zone: '江苏战区', store: '苏州园区体验中心', storeCode: 'SZ-YQ-006', source: '模板导入', updatedAt: '17:09:11', scene: '销售接待', carSeries: '星海 V6', detailKey: 'unbound', weight: 9 }
 ];
 
 function expandVisitRecordTemplates(templates) {
@@ -295,6 +214,7 @@ function getBadgeUploadStartTime(item) {
 }
 
 function getBadgeUploadMatchTime(item) {
+  if (window.AIQCData && !item.businessId) return '—（关联缺失）';
   if (item.linkedDemo) {
     const visit = window.AIQCLinkedDemo.getVisit(item.businessId);
     return visit?.status === '已匹配' ? `${visit.date} ${visit.completedAt}` : '—';
@@ -384,6 +304,7 @@ function getVisibleVisitFields() {
 }
 
 function isVisitFilterVisible(key) {
+  if (visitStoreDrilldownState.active && window.VisitOrganizationFilter.fields[key]) return false;
   return visitMatchingFilterKeys.has(key) || visitFieldSettingsModel.isFilterVisible(visitFieldSettingsState, key);
 }
 
@@ -600,9 +521,24 @@ function renderVisitOrganizationFilters({ preserveScroll = false } = {}) {
     namespace: 'visit', mode: visitOrganizationModel.draft.dimensionMode,
     label: '到访组织筛选维度', panelId: 'visitDimensionFilters'
   });
-  container.innerHTML = keys.map(renderVisitMultiSelect).join('');
+  const timeControl = controls.querySelector('[data-visit-filter-key="time"]');
+  const businessControl = controls.querySelector('[data-visit-filter-key="businessId"]');
+  const advancedGrid = personnel.parentElement;
+  controls.classList.toggle('is-store-drilldown', visitStoreDrilldownState.active);
+  if (visitStoreDrilldownState.active && timeControl && businessControl && advancedGrid) {
+    if (enums.parentElement !== container || timeControl.parentElement !== container || businessControl.parentElement !== container) {
+      container.replaceChildren(enums, timeControl, businessControl);
+    }
+  } else {
+    if (timeControl && advancedGrid) {
+      advancedGrid.insertBefore(enums, personnel.nextSibling);
+      advancedGrid.insertBefore(timeControl, enums.nextSibling);
+      if (businessControl) advancedGrid.insertBefore(businessControl, timeControl.nextSibling);
+    }
+    container.innerHTML = keys.map(renderVisitMultiSelect).join('');
+  }
   window.DimensionSwitcher.sync(controls);
-  personnel.innerHTML = ['patroler', 'governor', 'advisor'].filter(isVisitFilterVisible).map(renderVisitMultiSelect).join('');
+  personnel.innerHTML = ['advisor', 'patroler', 'governor'].filter(isVisitFilterVisible).map(renderVisitMultiSelect).join('');
   enums.innerHTML = ['source', 'status'].filter(isVisitFilterVisible).map(renderVisitMultiSelect).join('');
   document.querySelectorAll('[data-visit-filter-key]').forEach((control) => {
     control.hidden = !isVisitFilterVisible(control.dataset.visitFilterKey);
@@ -1209,7 +1145,7 @@ function renderMatchingOrganizationFilters({ preserveScroll = false } = {}) {
   });
   container.innerHTML = dimensionKeys.filter(isMatchingFilterVisible).map(renderMatchingMultiSelect).join('');
   window.DimensionSwitcher.sync(controls);
-  personnel.innerHTML = ['patroler', 'governor', 'advisor'].filter(isMatchingFilterVisible).map(renderMatchingMultiSelect).join('');
+  personnel.innerHTML = ['advisor', 'patroler', 'governor'].filter(isMatchingFilterVisible).map(renderMatchingMultiSelect).join('');
   syncMatchingTimeFilterControl();
   const options = document.querySelector('.matching-filter-menu .badge-advisor-options');
   if (options) options.scrollTop = scrollTop;
@@ -1584,14 +1520,15 @@ function matchesVisitCustomerKeyword(record, keyword) {
 }
 
 function getFilteredVisitRecords() {
-  const linkedVisit = window.AIQCLinkedDemo?.getVisit(visitFilterState.businessId);
+  const linkedBusinessId = visitFilterState.linkedBusinessId === visitFilterState.businessId
+    ? visitFilterState.linkedBusinessId : window.AIQCLinkedDemo?.getVisit(visitFilterState.businessId)?.businessId;
   const queryFields = {
     businessId: 'businessId',
     leadId: 'leadId'
   };
   return visitRecords.filter((item) => {
     if (visitStoreDrilldownState.active && item.storeId !== visitStoreDrilldownState.storeId) return false;
-    if (linkedVisit && item.businessId !== linkedVisit.businessId) return false;
+    if (linkedBusinessId != null && item.businessId !== linkedBusinessId) return false;
     const dateMatch = (!visitFilterState.startDate || item.date >= visitFilterState.startDate)
       && (!visitFilterState.endDate || item.date <= visitFilterState.endDate);
     const organizationMatch = visitOrganizationModel.matches(item);
@@ -1700,7 +1637,14 @@ function renderVisits() {
     [total, matched, processing, failed + noRecording].map((value, index) => ({ node: resultSummary.querySelectorAll('strong')[index], value, grouping: true })),
     { root: resultSummary });
   tbody.innerHTML = visibleRecords.map((item) => `<tr>${fields.map((field) => `<td data-visit-column="${field.key}">${renderVisitFieldCell(item, field)}</td>`).join('')}<td class="visit-actions-column">${renderVisitActions(item)}</td></tr>`).join('');
-  document.getElementById('visitEmptyState').hidden = visibleRecords.length > 0;
+  const emptyState = document.getElementById('visitEmptyState');
+  emptyState.hidden = visibleRecords.length > 0;
+  const missingLinkedVisit = visitFilterState.linkedBusinessId != null
+    && visitFilterState.linkedBusinessId === visitFilterState.businessId
+    && !visitRecords.some((item) => item.businessId === visitFilterState.linkedBusinessId);
+  emptyState.querySelector('strong').textContent = missingLinkedVisit ? '未找到对应到访记录' : '暂无符合条件的到访记录';
+  emptyState.querySelector('p').textContent = missingLinkedVisit
+    ? `业务 ID：${visitFilterState.businessId || '未提供'}，请核对业务 ID 或重置筛选。` : '请调整筛选条件后重试';
   document.querySelector('.visits-table-scroll').classList.toggle('is-empty', !visibleRecords.length);
   renderVisitPagination(records.length);
 }
@@ -1983,6 +1927,9 @@ function getVisitStoreDrilldownHash() {
 
 function resetVisitFilters() {
   closeVisitFilterMenu({ instant: true });
+  if (!visitStoreDrilldownState.active && visitFilterState.linkedBusinessId != null) {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search + '#visits');
+  }
   visitOrganizationModel.reset();
   Object.assign(visitFilterState, getVisitDefaultFilters());
   visitMatchingFilterKeys.clear();
@@ -2276,6 +2223,11 @@ function closeBadgeUploadMenus(instant = false) {
 }
 
 function getBadgeRecordProfile() {
+  if (window.AIQCData) {
+    const history = badgeEventRecords.find(item => item.sn === badgeRecordState.sn && item.date === badgeEventFilterState.date);
+    const asset = window.AIQCData.getBadge(badgeRecordState.sn);
+    return {sn: badgeRecordState.sn, advisorName: history ? history.employeeName + (history.associationMissing ? '（历史人员关联缺失）' : '') : '历史人员关联缺失', storeName: history?.storeName || asset?.store || '—'};
+  }
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
   if (detailRecord) return { advisorName: detailRecord.advisorName, storeName: detailRecord.store, sn: detailRecord.sn };
   const eventRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
@@ -2301,6 +2253,7 @@ function renderBadgeRecordHeader() {
 }
 
 function getCurrentBadgeUploadRecords() {
+  if (window.AIQCData) return badgeUploadRecords.filter(item => item.sn === badgeRecordState.sn);
   const matchedRecords = badgeUploadRecords.filter((item) => item.sn === badgeRecordState.sn);
   if (matchedRecords.length) return matchedRecords;
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
@@ -2369,7 +2322,7 @@ function renderBadgeUploadModal() {
   const start = (badgeUploadModalPaginationState.page - 1) * badgeUploadModalPaginationState.pageSize;
   const visibleRecords = badgeUploadModalState.records.slice(start, start + badgeUploadModalPaginationState.pageSize);
   tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
-    <td>${escapeBadgeHtml(item.sequence)}</td>${isVisitDetail ? '' : `<td>${escapeBadgeHtml(item.advisorDisplayName || item.advisorName)}</td><td>${escapeBadgeHtml(item.sn)}</td>`}
+    <td>${escapeBadgeHtml(item.sequence)}</td>${isVisitDetail ? '' : `<td>${escapeBadgeHtml(item.advisorDisplayName || (item.advisorName + (item.associationMissing ? '（历史人员关联缺失）' : '')))}</td><td>${escapeBadgeHtml(item.sn)}</td>`}
     <td>${escapeBadgeHtml(item.size)}</td><td>${escapeBadgeHtml(getBadgeUploadStartTime(item))}</td><td>${escapeBadgeHtml(item.duration)}</td>
     <td>${escapeBadgeHtml(item.completedAt)}</td><td>${escapeBadgeHtml(getBadgeUploadMatchTime(item))}</td>
   </tr>`).join('') : `<tr><td colspan="${columns.length}" class="badge-record-empty">${escapeBadgeHtml(badgeUploadModalState.emptyText)}</td></tr>`;
@@ -2948,6 +2901,7 @@ function renderBadgeEvents() {
   if (!timeline || !summary) return;
 
   const record = getBadgeEventRecord(badgeEventFilterState.sn, badgeEventFilterState.date);
+  if (window.AIQCData) renderBadgeRecordHeader();
   renderBadgeEventDurationMetrics(record);
 
   if (!record) {
@@ -2969,7 +2923,7 @@ function renderBadgeEvents() {
     { root: summary.closest('.card-head') });
   timeline.classList.toggle('event-timeline-grouped', groupedEvents.length > 0);
   timeline.innerHTML = groupedEvents.length
-    ? groupedEvents.map((group) => renderBadgeEventGroup(group, badgeEventFilterState.type)).join('')
+    ? (record.associationMissing ? '<p class="muted-text">历史人员关联缺失：保留原始事件，未套用当前绑定人员。</p>' : '') + groupedEvents.map((group) => renderBadgeEventGroup(group, badgeEventFilterState.type)).join('')
     : `<div class="event-empty-state">${emptyMessage}</div>`;
 }
 
@@ -3115,6 +3069,8 @@ const visitEventFilterControls = document.getElementById('visitEventFilters');
 const visitEventResultSummary = document.getElementById('visitEventResultSummary');
 const visitEventDetailTimeline = document.getElementById('visitEventDetailTimeline');
 const visitDrawer = document.getElementById('visitDetail');
+let visitDrawerTrigger = null;
+let visitDrawerCloseTimer = null;
 const drawerBackdrop = document.getElementById('visitDrawer');
 const drawerStatus = document.getElementById('drawerStatus');
 const drawerBusinessId = document.getElementById('drawerBusinessId');
@@ -3128,6 +3084,7 @@ const badgeRecordDrawerContentHost = document.getElementById('badgeRecordDrawerC
 const badgeRecordDrawerTitle = document.getElementById('badgeRecordDrawerTitle');
 const badgeRecordDrawerSubtitle = document.getElementById('badgeRecordDrawerSubtitle');
 const badgeFieldSettingsDrawer = document.getElementById('badgeFieldSettingsDrawer');
+let badgeFieldSettingsTrigger = null;
 const badgeFieldSettingsBackdrop = document.getElementById('badgeFieldSettingsBackdrop');
 const badgeFieldSettingsList = document.getElementById('badgeFieldSettingsList');
 const badgeFieldSettingsSelectedCount = document.getElementById('badgeFieldSettingsSelectedCount');
@@ -3147,7 +3104,7 @@ let visitImportFile = null;
 const visitImportState = { phase: 'idle', progress: 0, result: null, timer: 0 };
 
 const sharedOrganizationDirectory = window.AIQCLinkedDemo?.buildOrganizationView(window.AIQCOrganization) || window.AIQCOrganization;
-const storeOverviewRecords = (sharedOrganizationDirectory?.dealers || []).map((dealer, index) => ({
+const storeOverviewRecords = window.AIQCData ? window.AIQCData.stores : (sharedOrganizationDirectory?.dealers || []).map((dealer, index) => ({
   brand: dealer.brand,
   organization: dealer.area,
   zone: dealer.zone,
@@ -3163,7 +3120,7 @@ const storeOverviewRecords = (sharedOrganizationDirectory?.dealers || []).map((d
   syncedAt: `2026-08-12 14:${String(59 - (index % 50)).padStart(2, '0')}:${String((index * 7) % 60).padStart(2, '0')}`
 }));
 
-(window.AIQCLinkedDemo?.stores || []).forEach(dealer => {
+(window.AIQCData ? [] : window.AIQCLinkedDemo?.stores || []).forEach(dealer => {
   const linkedBadges = window.AIQCLinkedDemo.badges.filter(badge => badge.brand === dealer.brand && badge.storeCode === dealer.dealerCode);
   const existing = storeOverviewRecords.find(store => store.brand === dealer.brand && store.code === dealer.dealerCode);
   if (existing) {
@@ -3185,12 +3142,12 @@ function getStoreRelativeDateValue(offsetDays) {
 }
 
 const storeTodayDateValue = getStoreRelativeDateValue(0);
-const storeDefaultQueryDate = getStoreRelativeDateValue(-1);
+const storeDefaultQueryDate = window.AIQCData?.defaultRange.startDate || getStoreRelativeDateValue(-1);
 const storeDefaultQueryDateObject = parseStoreDateValue(storeDefaultQueryDate);
 
 const storeOverviewState = {
   startDate: storeDefaultQueryDate,
-  endDate: storeDefaultQueryDate,
+  endDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate,
   sortKey: '',
   sortDirection: 'desc',
   page: 1,
@@ -3208,9 +3165,9 @@ const storeOrganizationModel = window.VisitOrganizationFilter.createModel(
 );
 const storeMenuState = { openMenu: '', closingMenu: null, query: '', pinnedIds: new Set() };
 const storeMenuMotion = { lastRendered: null };
-const storeDefaultFilters = { startDate: storeDefaultQueryDate, endDate: storeDefaultQueryDate };
+const storeDefaultFilters = { startDate: storeDefaultQueryDate, endDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate };
 const storeDateMenuState = {
-  draftStartDate: storeDefaultQueryDate, draftEndDate: storeDefaultQueryDate,
+  draftStartDate: storeDefaultQueryDate, draftEndDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate,
   activeField: 'startDate',
   viewYear: storeDefaultQueryDateObject.getFullYear(), viewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
@@ -3261,7 +3218,7 @@ function getBadgeStoreId(store) {
   return badgeOrganizationByStore.get(`${store.brand}|${store.code}`)?.storeId || '';
 }
 
-const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badge, index) => {
+const badgeDetailRecords = window.AIQCData ? window.AIQCData.badges : (sharedOrganizationDirectory?.badges || []).map((badge, index) => {
   const hasAdvisorBinding = index % 47 !== 9;
   const advisorId = hasAdvisorBinding ? badge.advisorId : '';
   const advisorName = hasAdvisorBinding ? badge.advisorName : '';
@@ -3296,7 +3253,7 @@ const badgeDetailRecords = (sharedOrganizationDirectory?.badges || []).map((badg
   };
 });
 
-badgeDetailRecords.push(...(window.AIQCLinkedDemo?.badges || []));
+if (!window.AIQCData) badgeDetailRecords.push(...(window.AIQCLinkedDemo?.badges || []));
 
 function formatGeneratedBadgeEventTime(totalSeconds) {
   const safeSeconds = Math.max(0, Math.min((24 * 60 * 60) - 1, totalSeconds));
@@ -3348,6 +3305,7 @@ function getBadgeEventRecord(sn, date = '') {
   const fixedRecord = badgeEventRecords.find((item) => item.sn.toLowerCase() === normalizedSn
     && (!date || item.date === date));
   if (fixedRecord) return fixedRecord;
+  if (window.AIQCData) return null;
 
   const detailRecord = badgeDetailRecords.find((item) => item.sn.toLowerCase() === normalizedSn);
   if (!detailRecord || (date && detailRecord.queryDate !== date)) return null;
@@ -5146,6 +5104,7 @@ function getBadgeExportColumnWidth(field) {
 }
 
 function getBadgeExportCellValue(item, field) {
+  if (field.key === 'pendingUploads') return String(item.pendingUploads) + (item.pendingAssociationMissing ? `（已加载${item.loadedPendingUploads}，关联缺失）` : '');
   if (field.key === 'bindingStatus') return getBadgeBindingStatus(item);
   if (field.key === 'dockConnected') return item.dockConnected ? '已接入' : '未接入';
   if (field.key === 'battery' || field.key === 'remainingMemory') return `${item[field.key]}%`;
@@ -5262,7 +5221,7 @@ function renderBadgeFieldCell(item, field) {
   if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
   if (field.key === 'battery') return renderBatteryIndicator(item.battery);
   if (field.key === 'remainingMemory') return `<strong class="${item.remainingMemory < 20 ? 'danger-text' : ''}">${item.remainingMemory}%</strong>`;
-  if (field.key === 'pendingUploads') return `<strong class="${item.pendingUploads >= 5 ? 'danger-text' : item.pendingUploads > 0 ? 'amber-text' : ''}">${item.pendingUploads}</strong>`;
+  if (field.key === 'pendingUploads') return `<strong class="${item.pendingUploads >= 5 ? 'danger-text' : item.pendingUploads > 0 ? 'amber-text' : ''}">${escapeBadgeHtml(getBadgeExportCellValue(item, field))}</strong>`;
   return escapeBadgeHtml(item[field.key]);
 }
 
@@ -5336,12 +5295,14 @@ function renderBadgeFieldSettings() {
 
 function openBadgeFieldSettings() {
   if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
+  badgeFieldSettingsTrigger = document.activeElement;
   closeBadgeFilterMenu(true);
   closeBadgePageSizeMenu();
   renderBadgeFilters();
   badgeFieldSettingsDraft = { order: [...badgeFieldSettingsState.order], visible: [...badgeFieldSettingsState.visible] };
   renderBadgeFieldSettings();
   badgeFieldSettingsBackdrop.hidden = false;
+  badgeFieldSettingsDrawer.inert = false;
   badgeFieldSettingsDrawer.setAttribute('aria-hidden', 'false');
   window.requestAnimationFrame(() => {
     badgeFieldSettingsDrawer.classList.add('open');
@@ -5353,7 +5314,10 @@ function openBadgeFieldSettings() {
 function closeBadgeFieldSettings() {
   if (!badgeFieldSettingsDrawer || !badgeFieldSettingsBackdrop) return;
   badgeFieldSettingsDragController.cancel();
+  if (badgeFieldSettingsTrigger?.isConnected) badgeFieldSettingsTrigger.focus();
+  badgeFieldSettingsTrigger = null;
   badgeFieldSettingsDrawer.classList.remove('open');
+  badgeFieldSettingsDrawer.inert = true;
   badgeFieldSettingsDrawer.setAttribute('aria-hidden', 'true');
   window.setTimeout(() => { badgeFieldSettingsBackdrop.hidden = true; }, 220);
   badgeFieldSettingsDraft = null;
@@ -5640,7 +5604,7 @@ function renderStoreOrganizationFilters({ preserveScroll = false } = {}) {
   });
   container.innerHTML = dimensionKeys.filter(isStoreFilterVisible).map(renderStoreMultiSelect).join('');
   window.DimensionSwitcher.sync(controls);
-  personnel.innerHTML = ['patroler', 'governor', 'advisor'].map(renderStoreMultiSelect).join('');
+  personnel.innerHTML = ['advisor', 'patroler', 'governor'].map(renderStoreMultiSelect).join('');
   syncStoreTimeFilterControl();
   const options = document.querySelector('.store-filter-menu .badge-advisor-options');
   if (options) options.scrollTop = scrollTop;
@@ -5942,6 +5906,7 @@ function syncDeviceOrganizationMenuLayout(panelSelector, columnsSelector, cssVar
 }
 
 function getFilteredStoreRecords() {
+  if (window.AIQCData && !window.AIQCData.storesAt(storeOverviewState).length) return [];
   const selectedAdvisors = storeOrganizationModel.applied.advisor;
   let records = storeOverviewRecords.filter((item) => {
     if (item.bindings < 1) return false;
@@ -6111,7 +6076,7 @@ function getStoreFieldValue(item, field) {
   const values = { brand: item.brand, region: item.organization, zone: item.zone, store: item.name,
     badgeAssets: getStoreBadgeAssetCount(item) ?? '—', bindings: item.bindings,
     bindingRate: formatStoreBindingRate(getStoreBindingRate(item)), employees: item.employees,
-    boundEmployees: item.boundEmployees, syncedAt: projectDemoTimestampToDate(item.syncedAt, storeOverviewState.endDate) };
+    boundEmployees: item.boundEmployees, syncedAt: window.AIQCData ? item.syncedAt : projectDemoTimestampToDate(item.syncedAt, storeOverviewState.endDate) };
   return values[field.key];
 }
 
@@ -6130,6 +6095,12 @@ function renderStoreOverview() {
     ? `<button class="store-sort-button" type="button" data-store-sort="${field.key}">${field.label}<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button>`
     : field.label}</th>`).join('') + '<th>操作</th>';
   head.closest('table').style.minWidth = `${Math.max(360, fields.length * 132 + 100)}px`;
+  const snapshotNote = document.getElementById('storeBindingSnapshotNote') || document.createElement('p');
+  if (window.AIQCData) {
+    snapshotNote.id = 'storeBindingSnapshotNote'; snapshotNote.className = 'muted-text';
+    snapshotNote.textContent = `绑定数据为 ${window.AIQCData.bindingSnapshotDate} 的载入快照；同步时间保留源值，其他日期暂无历史快照。`;
+    if (!snapshotNote.isConnected) tbody.closest('.table-card')?.prepend(snapshotNote);
+  }
   const records = getFilteredStoreRecords();
   const totalPages = Math.max(1, Math.ceil(records.length / storeOverviewState.pageSize));
   storeOverviewState.page = Math.min(storeOverviewState.page, totalPages);
@@ -6156,7 +6127,7 @@ function renderStoreOverview() {
         ${fields.map(field => `<td data-store-column="${field.key}">${renderStoreFieldCell(item, field)}</td>`).join('')}
         <td><button class="text-btn" data-store-drilldown data-store-code="${escapeBadgeHtml(item.code)}" data-store-brand="${escapeBadgeHtml(item.brand)}" data-store-region="${escapeBadgeHtml(item.organization)}" data-store-zone="${escapeBadgeHtml(item.zone)}" data-store-name="${escapeBadgeHtml(item.name)}">查看明细</button></td>
       </tr>`).join('')
-    : `<tr class="store-empty-row"><td colspan="${fields.length + 1}">当前筛选条件下暂无已绑定工牌的门店，请调整品牌或组织后重试。</td></tr>`;
+    : `<tr class="store-empty-row"><td colspan="${fields.length + 1}">${window.AIQCData && !window.AIQCData.storesAt(storeOverviewState).length ? `当前仅提供 ${window.AIQCData.bindingSnapshotDate} 的绑定快照，所选日期无历史快照。` : '当前筛选条件下暂无已绑定工牌的门店，请调整品牌或组织后重试。'}</td></tr>`;
   renderStoreOverviewPagination(records.length);
 }
 
@@ -6171,23 +6142,26 @@ function getRouteState() {
 
 function applyLinkedDemoRoute(routeState) {
   const demo = window.AIQCLinkedDemo;
-  if (!demo) return;
   if (routeState.route === 'visits') {
-    const record = demo.getVisit(routeState.params.get('businessId'));
-    if (!record) return;
+    const hasBusinessId = routeState.params.has('businessId');
+    if (!hasBusinessId && visitFilterState.linkedBusinessId == null) return;
+    const businessId = hasBusinessId ? routeState.params.get('businessId') : '';
+    const record = demo?.getVisit(businessId);
     visitOrganizationModel.reset(); visitOrganizationModel.apply();
-    Object.assign(visitFilterState, getVisitDefaultFilters(), { businessId: record.businessId, startDate: record.date, endDate: record.date });
-    visitMatchingFilterKeys.add('businessId'); visitMatchingFilterKeys.add('time');
+    Object.assign(visitFilterState, getVisitDefaultFilters(), { businessId, linkedBusinessId: hasBusinessId ? businessId : null },
+      record ? { startDate: record.date, endDate: record.date } : {});
+    visitMatchingFilterKeys.clear();
+    if (hasBusinessId) { visitMatchingFilterKeys.add('businessId'); visitMatchingFilterKeys.add('time'); }
     visitPaginationState.page = 1;
     syncVisitDateDraft(); renderVisitOrganizationFilters(); renderVisits();
   } else if (routeState.route === 'store-badges') {
-    const badge = demo.getBadge(routeState.params.get('sn'));
+    const badge = demo?.getBadge(routeState.params.get('sn'));
     if (!badge) return;
     badgeFilterState.snQuery = badge.sn;
     renderBadgePage();
     const trigger = document.querySelector(`[data-badge-sn="${badge.sn}"]`) || null;
     if (!trigger) selectBadgeRecord(badge.sn, badge.advisorName);
-    openBadgeRecordDrawer(trigger, 'events');
+    openBadgeRecordDrawer('events', trigger);
     const date = routeState.params.get('date');
     if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
       badgeEventFilterState.date = date;
@@ -6471,7 +6445,7 @@ function downloadVisitImportFailures() {
 
 function downloadVisitTemplate() {
   const link = document.createElement('a');
-  link.href = './templates/到访明细上传模板.xlsx?v=20261014-eleven-required-fields-v3';
+  link.href = './templates/到访明细上传模板.xlsx?v=20261028-full-sync-v1';
   link.download = '到访明细上传模板.xlsx';
   document.body.appendChild(link);
   link.click();
@@ -6723,6 +6697,7 @@ function openBadgeRecordDrawer(tab, trigger) {
   if (badgeRecordDrawerTitle) badgeRecordDrawerTitle.textContent = '工牌记录';
   if (badgeRecordDrawerSubtitle) badgeRecordDrawerSubtitle.textContent = '查看当前顾问工牌的设备事件和录音上传记录';
   badgeRecordDrawerBackdrop.hidden = false;
+  badgeRecordDrawer.inert = false;
   badgeRecordDrawer.setAttribute('aria-hidden', 'false');
   window.requestAnimationFrame(() => {
     badgeRecordDrawer.classList.add('open');
@@ -6738,6 +6713,7 @@ function openDockDetailDrawer(trigger) {
   setBadgeRecordDrawerMode(true);
   renderBadgeDockDrawer(trigger?.dataset.dockSn);
   badgeRecordDrawerBackdrop.hidden = false;
+  badgeRecordDrawer.inert = false;
   badgeRecordDrawer.setAttribute('aria-hidden', 'false');
   window.requestAnimationFrame(() => {
     badgeRecordDrawer.classList.add('open');
@@ -6755,6 +6731,8 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
   badgeDockEventMenuState.open = false;
   badgeDockDateMenuState.open = false;
   badgeRecordDrawer.classList.remove('open');
+  if (restoreFocus && trigger?.isConnected) trigger.focus();
+  badgeRecordDrawer.inert = true;
   badgeRecordDrawer.setAttribute('aria-hidden', 'true');
 
   const finishClose = () => {
@@ -6816,6 +6794,8 @@ visitImportDropzone?.addEventListener('click', (event) => {
 });
 
 function openDrawer(type) {
+  window.clearTimeout(visitDrawerCloseTimer);
+  visitDrawerTrigger = document.activeElement;
   const record = visitRecords.find((item) => item.businessId === type);
   const detail = detailData[type]
     || (record?.detailKey ? detailData[record.detailKey] : null)
@@ -6825,15 +6805,23 @@ function openDrawer(type) {
   drawerBusinessId.textContent = detail.businessId;
   drawerBody.innerHTML = detail.html;
   drawerBackdrop.hidden = false;
+  visitDrawer.inert = false;
   visitDrawer.setAttribute('aria-hidden', 'false');
-  window.requestAnimationFrame(() => visitDrawer.classList.add('open'));
+  window.requestAnimationFrame(() => {
+    visitDrawer.classList.add('open');
+    visitDrawer.querySelector('.close-drawer')?.focus();
+  });
   syncBodyScrollLock();
 }
 
 function closeDrawer() {
+  window.clearTimeout(visitDrawerCloseTimer);
+  if (visitDrawerTrigger?.isConnected) visitDrawerTrigger.focus();
+  visitDrawerTrigger = null;
   visitDrawer.classList.remove('open');
+  visitDrawer.inert = true;
   visitDrawer.setAttribute('aria-hidden', 'true');
-  window.setTimeout(() => { drawerBackdrop.hidden = true; }, 220);
+  visitDrawerCloseTimer = window.setTimeout(() => { drawerBackdrop.hidden = true; }, 220);
   syncBodyScrollLock();
 }
 
@@ -7208,6 +7196,7 @@ document.addEventListener('click', (event) => {
     badgeEventFilterState.date = badgeEventDateValue.dataset.badgeEventDateValue;
     closeBadgeEventMenus();
     renderBadgeEvents();
+    renderBadgeRecordHeader();
     return;
   }
 
@@ -7222,6 +7211,7 @@ document.addEventListener('click', (event) => {
     badgeEventFilterState.type = badgeEventTypeValue.dataset.badgeEventTypeValue;
     closeBadgeEventMenus();
     renderBadgeEvents();
+    renderBadgeRecordHeader();
     return;
   }
 
@@ -8176,7 +8166,7 @@ function getDeviceListExportRequest(key) {
     source = 'badgeUploadDetails'; title = badgeUploadModalState.isVisitDetail ? '到访匹配上传明细' : '录音上传明细';
     labels = ['序号', ...(badgeUploadModalState.isVisitDetail ? [] : ['顾问姓名', '工牌 SN']), '文件大小', '音频开始时间', '音频时长', '录音上传时间', '匹配时间'];
     rows = badgeUploadModalState.records.map(item => [item.sequence,
-      ...(badgeUploadModalState.isVisitDetail ? [] : [item.advisorDisplayName || item.advisorName, item.sn]),
+      ...(badgeUploadModalState.isVisitDetail ? [] : [item.advisorDisplayName || (item.advisorName + (item.associationMissing ? '（历史人员关联缺失）' : '')), item.sn]),
       item.size, getBadgeUploadStartTime(item), item.duration, item.completedAt, getBadgeUploadMatchTime(item)]);
     const visit = badgeUploadModalState.isVisitDetail ? badgeUploadModalState.visitRecord : null;
     filters = visit ? [{ label: '业务 ID', value: visit.businessId }, { label: '工牌 SN', value: visit.badgeSn || '—' },
@@ -8192,6 +8182,7 @@ function getDeviceListExportRequest(key) {
     source = visit ? 'visitEvents' : 'badgeEvents'; title = visit ? '到访工牌事件' : '工牌事件';
     labels = ['日期', '工牌 SN', '事件', '开始时间', '结束时间', '持续时长', '备注'];
     rows = getVisibleEventExportRows(record?.events || [], type, date, sn);
+    if (record?.associationMissing) rows = rows.map(row => [...row.slice(0, -1), [row.at(-1), '历史人员关联缺失'].filter(Boolean).join('；')]);
     filters = [{ label: '工牌 SN', value: sn || '—' }, { label: '查询日期', value: date },
       { label: '事件类型', value: badgeEventTypeOptions.find(item => item[0] === type)?.[1] || type }];
     if (visit) filters.push({ label: '业务 ID', value: visit.businessId }, { label: '顾问', value: visit.advisor || '—' },

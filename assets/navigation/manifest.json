@@ -1,0 +1,70 @@
+{
+  "fileKey": "5nY2kC6LvaldZ85UuxjF28",
+  "nodeId": "819:2906",
+  "icons": {
+    "customerInsight": {
+      "file": "customer-insight.svg",
+      "nodeId": "819:3226"
+    },
+    "factoryDashboard": {
+      "file": "factory-dashboard.svg",
+      "nodeId": "819:3231"
+    },
+    "storeDashboard": {
+      "file": "store-dashboard.svg",
+      "nodeId": "819:3237"
+    },
+    "salesDashboard": {
+      "file": "sales-dashboard.svg",
+      "nodeId": "819:3277"
+    },
+    "scriptLibrary": {
+      "file": "script-library.svg",
+      "nodeId": "819:2949"
+    },
+    "session": {
+      "file": "session.svg",
+      "nodeId": "819:2956"
+    },
+    "leads": {
+      "file": "leads.svg",
+      "nodeId": "819:2962"
+    },
+    "badgeOverview": {
+      "file": "badge-overview.svg",
+      "nodeId": "819:2976"
+    },
+    "badgeDetail": {
+      "file": "badge-detail.svg",
+      "nodeId": "819:2983"
+    },
+    "badgeManagement": {
+      "file": "badge-management.svg",
+      "nodeId": "819:2991"
+    },
+    "chargingDock": {
+      "file": "charging-dock.svg",
+      "nodeId": "819:2998"
+    },
+    "recordingInspection": {
+      "file": "recording-inspection.svg",
+      "nodeId": "819:3284"
+    },
+    "visits": {
+      "file": "visits.svg",
+      "nodeId": "819:3300"
+    },
+    "exportManagement": {
+      "file": "export-management.svg",
+      "nodeId": "819:3256"
+    },
+    "config": {
+      "file": "config.svg",
+      "nodeId": "819:3263"
+    },
+    "system": {
+      "file": "system.svg",
+      "nodeId": "819:3267"
+    }
+  }
+}

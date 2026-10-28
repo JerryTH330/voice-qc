@@ -6,8 +6,8 @@
     <meta name="description" content="从品牌与车型总览进入邀约场景、门店场景分析，并回溯真实对话证据" />
     <title>客户洞察 · AI质检平台</title>
     <link rel="icon" href="../../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./客户洞察.css?v=20261027-global-audit-fixes-v1" />
-    <link rel="stylesheet" href="../../fixed-action-column.css?v=20260817-v1" />
+    <link rel="stylesheet" href="./客户洞察.css?v=20261028-full-sync-v1" />
+    <link rel="stylesheet" href="../../fixed-action-column.css?v=20261028-full-sync-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -451,7 +451,7 @@
 
     <div class="modal-backdrop" id="groupModal" hidden>
       <section class="modal group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
-        <header><div><span class="section-kicker" id="groupModalKicker">客群对比</span><h2 id="groupModalTitle">选择 A/B 客群线索状态</h2><p id="groupModalDescription">分别选择两组线索结果，比较对应客群的对话信号、销售动作与结果差异。</p></div><button class="icon-button" data-close="groupModal" type="button" aria-label="关闭">×</button></header>
+        <header><div><span class="section-kicker" id="groupModalKicker">客群对比</span><h2 id="groupModalTitle">选择 A/B 客群线索状态</h2><p id="groupModalDescription">分别选择两组线索结果，比较对应客群的对话信号、销售动作与结果差异。</p></div><button class="icon-button platform-close-icon" data-close="groupModal" type="button" aria-label="关闭"></button></header>
         <div class="preset-row"><span>常用组合</span><button id="applyPreset" type="button">下订单 <b>vs</b> 战败</button></div>
         <div class="group-editor">
           <div class="group-box group-a"><div class="group-box-title"><span>A</span><div><strong>对比组 A</strong><small>至少选择 1 个状态</small></div></div><div class="status-grid" data-group="a"></div></div>
@@ -465,14 +465,13 @@
 
     <div class="drawer-backdrop" id="detailDrawer" hidden>
       <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
-        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">邀约场景 · 最终未到店</p></div><button class="icon-button" data-close="detailDrawer" type="button" aria-label="关闭">×</button></header>
+        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">邀约场景 · 最终未到店</p></div><button class="icon-button platform-close-icon" data-close="detailDrawer" type="button" aria-label="关闭"></button></header>
         <div class="drawer-body" id="drawerBody"></div>
       </aside>
     </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="../../unified-navigation-shell.js?v=20260826-dock-inline-icon-v4"></script>
-    <script src="./客户洞察.js"></script>
-    <script src="../../fixed-action-column.js?v=20260817-v1"></script>
+    <script src="../../unified-navigation-shell.js?v=20261028-full-sync-v1"></script>
+    <script src="./客户洞察.js?v=20261028-full-sync-v1"></script>
+    <script src="../../fixed-action-column.js?v=20261028-full-sync-v1"></script>
   </body>
 </html>

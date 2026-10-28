@@ -690,12 +690,8 @@
       .replaceAll("'", "&#039;");
   }
 
-  function showToast(message) {
-    const toast = $("#toast");
-    toast.textContent = message;
-    toast.classList.add("show");
-    window.clearTimeout(showToast.timer);
-    showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2200);
+  function showToast(message, kind = 'info') {
+    window.PlatformToast.show(message, { kind, duration: 2200 });
   }
 
   function renderTrend(metric) {
@@ -2263,7 +2259,7 @@
         row[6] = button.dataset.decision;
         $$("[data-decision]", $("#drawerBody")).forEach((item) => item.classList.toggle("active", item === button));
         renderCandidates();
-        showToast(`候选动作已标记为“${button.dataset.decision}”`);
+        showToast(`候选动作已标记为“${button.dataset.decision}”`, 'success');
       });
     });
     $("#detailDrawer").hidden = false;
@@ -2526,7 +2522,7 @@
     state.datePickerOpen = false;
     renderStage();
     invalidateOverviewAiSummary();
-    showToast(`统计日期已更新为 ${getDateRangeLabel(state.startDate, state.endDate)}`);
+    showToast(`统计日期已更新为 ${getDateRangeLabel(state.startDate, state.endDate)}`, 'success');
   });
 
   $("#stageDateTrigger").addEventListener("click", () => {
@@ -2580,14 +2576,14 @@
     state.stageDatePickerOpen = false;
     invalidateCompareAiSummary();
     renderStage();
-    showToast(`统计周期已更新为 ${getDateRangeLabel(state.stageStartDate, state.stageEndDate)}`);
+    showToast(`统计周期已更新为 ${getDateRangeLabel(state.stageStartDate, state.stageEndDate)}`, 'success');
   });
 
   $$(".date-tabs button").forEach((button) => {
     button.addEventListener("click", () => {
       const batchValue = button.dataset.batchDays;
       if (batchValue === "custom") {
-        showToast(`自定义开始日不得晚于 ${getBatchDateRange(1)}`);
+        showToast(`自定义开始日不得晚于 ${getBatchDateRange(1)}`, 'error');
         return;
       }
       state.batchDays = Number(batchValue);
@@ -2595,10 +2591,10 @@
       $$(".date-tabs button").forEach((item) => item.classList.toggle("active", item === button));
       renderStage();
       if (state.stage === "overview") {
-        showToast(`已切换为 ${button.textContent} 进入的客户`);
+        showToast(`已切换为 ${button.textContent} 进入的客户`, 'success');
       } else {
         invalidateCompareAiSummary();
-        showToast(`已切换为 ${button.textContent} 进入的客户，A/B 对比洞察待重新生成`);
+        showToast(`已切换为 ${button.textContent} 进入的客户，A/B 对比洞察待重新生成`, 'info');
       }
     });
   });
@@ -2618,7 +2614,7 @@
         invalidateCompareAiSummary();
       }
       renderStage();
-      showToast(`已改为观察 ${state.windowDays} 天后判断结果`);
+      showToast(`已改为观察 ${state.windowDays} 天后判断结果`, 'success');
     });
   });
 
@@ -2640,7 +2636,7 @@
       renderStage();
       invalidateOverviewAiSummary();
       invalidateCompareAiSummary();
-      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成");
+      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成", state.stage === "overview" ? 'success' : 'info');
     });
   });
 
@@ -2652,7 +2648,7 @@
       renderStage();
       invalidateOverviewAiSummary();
       invalidateCompareAiSummary();
-      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成");
+      showToast(state.stage === "overview" ? "经营范围已更新" : "分析范围已更新，A/B 对比洞察待重新生成", state.stage === "overview" ? 'success' : 'info');
     });
   });
 
@@ -2665,7 +2661,7 @@
     renderOverviewStatusFilter();
     renderStage();
     invalidateOverviewAiSummary();
-    showToast("线索状态筛选已更新");
+    showToast("线索状态筛选已更新", 'success');
   });
 
   $("#applyPreset").addEventListener("click", () => {
@@ -2688,7 +2684,7 @@
     state.activeRow = 0;
     closeLayer("groupModal");
     renderStage();
-    showToast(`${state.stage === "online" ? "邀约" : "门店"}场景客群已配置；重叠客户将在两组中分别保留`);
+    showToast(`${state.stage === "online" ? "邀约" : "门店"}场景客群已配置；重叠客户将在两组中分别保留`, 'success');
   });
 
   $("#editGroupsButton").addEventListener("click", openGroupModal);
@@ -2736,10 +2732,10 @@
       renderInsightView($("#modelFilter").value);
     });
   });
-  $("#exportButton").addEventListener("click", () => showToast("当前视图已加入导出任务"));
+  $("#exportButton").addEventListener("click", () => showToast("当前视图已加入导出任务", 'success'));
   $("#metricGlossaryButton").addEventListener("click", openMetricGlossaryDrawer);
-  $("#exportAdopted").addEventListener("click", () => showToast("已采纳动作已加入导出任务"));
-  $("#generateCandidate").addEventListener("click", () => showToast("已基于当前范围更新标准动作候选"));
+  $("#exportAdopted").addEventListener("click", () => showToast("已采纳动作已加入导出任务", 'success'));
+  $("#generateCandidate").addEventListener("click", () => showToast("已基于当前范围更新标准动作候选", 'success'));
   $("#viewAllVoices").addEventListener("click", () => showToast("已展示该信号的全部脱敏客户原声"));
   $("#openSopDetail").addEventListener("click", () => showToast("将携带当前窗口、客群、组织、品牌与车型条件进入 SOP 专门页面"));
 

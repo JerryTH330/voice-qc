@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 检查 page.js assetVersion 和 tests/*.test.js 硬编码 version 是否一致。
+// 检查 page.js assetVersion 和 tests/*.test.{js,cjs} 硬编码 version 是否一致。
 // 退出码：0=一致，1=不一致（同步失败）
 //
 // 用法：node scripts/check-version-sync.js
@@ -12,7 +12,7 @@ const root = path.resolve(__dirname, '..');
 function findAllPageJsFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    if (['node_modules', 'output', 'test-results', 'playwright-report'].includes(entry.name) || entry.name.startsWith('.')) continue;
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       findAllPageJsFiles(p, results);
@@ -26,7 +26,7 @@ function findAllPageJsFiles(dir, results = []) {
 function findAllAssetFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    if (['node_modules', 'output', 'test-results', 'playwright-report'].includes(entry.name) || entry.name.startsWith('.')) continue;
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       findAllAssetFiles(p, results);
@@ -58,16 +58,9 @@ function extractPageJsVersions() {
 }
 
 function findTestVersions(text) {
-  // 匹配引号内**包含** 20\d{6,} 开头的 version 字符串
-  // 例如 'page.css?v=20260804-foo' 或 '20260805-bar'
-  // 用一个 capture group 提取前缀+version，再用 \1 反向引用，再额外 capture version 部分
-  const re = /(['"])((?:[^'"]{0,200}?)?(20\d{6,}[\w-]*))\1/g;
-  const out = new Set();
-  let m;
-  while ((m = re.exec(text))) {
-    out.add(m[3]);
-  }
-  return out;
+  // 仅识别资源 URL 或 Version 常量，保留业务 ID、时间戳和存储迁移版本。
+  const re = /(?:(?:const|let)\s+\w*[Vv]ersion\s*=\s*['"]|[?&]v=)(20\d{6}[\w-]*)/g;
+  return new Set([...text.matchAll(re)].map(match => match[1]));
 }
 
 const allowedVersions = extractPageJsVersions();
@@ -77,7 +70,7 @@ if (allowedVersions.size === 0) {
 }
 
 const testDir = path.join(root, 'tests');
-const testFiles = fs.readdirSync(testDir).filter((f) => f.endsWith('.test.js'));
+const testFiles = fs.readdirSync(testDir).filter((f) => /\.test\.(?:js|cjs)$/.test(f));
 
 let totalStale = 0;
 const staleFiles = [];

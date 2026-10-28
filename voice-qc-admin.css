@@ -264,22 +264,6 @@ body::before {
   color: currentColor;
 }
 
-.nav-icon-mask {
-  display: block;
-  background-color: currentColor;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-}
-
-.nav-icon-headset {
-  -webkit-mask-image: url('./assets/headset.svg');
-  mask-image: url('./assets/headset.svg');
-}
-
 .nav-text {
   flex: 1 1 auto;
   min-width: 0;
@@ -8539,33 +8523,6 @@ body::before {
   cursor: not-allowed;
 }
 
-.session-feedback-toast {
-  position: fixed;
-  top: 24px;
-  left: 50%;
-  z-index: 1000;
-  max-width: min(520px, calc(100vw - 32px));
-  padding: 11px 18px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.94);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: center;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -10px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.session-feedback-toast.is-visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
 .session-filter-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -9372,6 +9329,39 @@ body .session-pagination:is(.dashboard-badge-pagination, .sales-todo-pagination)
   }
 }
 
+.session-pagination.sales-todo-pagination {
+  container-type: inline-size;
+}
+
+@container (max-width: 640px) {
+  body .session-pagination:is(.issue-rule-pagination, .sales-todo-pagination) .dashboard-pagination {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+
+  body .session-pagination:is(.issue-rule-pagination, .sales-todo-pagination) .dashboard-pagination-controls {
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+
+  body .session-pagination:is(.issue-rule-pagination, .sales-todo-pagination) :is(.page-group, .page-jump-group) {
+    gap: 4px;
+  }
+
+  body .session-pagination:is(.issue-rule-pagination, .sales-todo-pagination) :is(.page-arrow, .page-num) {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+  }
+}
+
+@container (max-width: 400px) {
+  .session-pagination:is(.issue-rule-pagination, .sales-todo-pagination) .page-num:not(.active) {
+    display: none;
+  }
+}
 
 .session-pagination .session-page-jump-label,
 .session-pagination .session-page-jump-suffix {

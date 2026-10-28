@@ -12,7 +12,7 @@
   var FILTER_MOTION_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
   var VIEW_CONTENT_MOTION_MS = 160;
   var DEFAULT_DATE = global.AIQCData?.defaultRange.endDate || '2026-09-10';
-  var LEAD_COLUMN_SCHEMA_VERSION = '20260915-lead-overview-order-v1';
+  var LEAD_COLUMN_SCHEMA_VERSION = '20261021-lead-final-status-v1';
   var CUSTOMER_COLUMN_SCHEMA_VERSION = '20260921-customer-overview-order-v1';
   var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析', '关联缺失'];
   var ORGANIZATION_KEYS = ['brand', 'region', 'zone', 'province', 'city', 'patroler', 'governor', 'store', 'advisor'];
@@ -32,6 +32,7 @@
     intentGrade: '意向级别',
     leadStatus: '线索状态',
     aiLeadValidity: 'AI线索有效性',
+    isFinalStatus: '是否最终状态',
     validRecording: '录音状态',
     customerCrossStore: '是否跨门店',
     customerStoreCountRange: '关联门店数',
@@ -76,6 +77,7 @@
     column('intentGrade', '意向级别', 12),
     column('leadStatus', '线索状态', 14),
     column('aiLeadValidity', 'AI线索有效性', 17),
+    column('isFinalStatus', '是否最终状态', 16),
     column('validRecording', '录音状态', 14),
     column('recordingCount', '录音数', 12),
     column('lastContact', '最近联系', 20),
@@ -130,6 +132,12 @@
     var url = new URL(global.location.href);
     url.searchParams.delete('focusLeadId');
     global.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  function finalStatusValue(value) {
+    if (value === true || value === '是') return '是';
+    if (value === false || value === '否') return '否';
+    return '';
   }
 
   function escapeHtml(value) {
@@ -331,15 +339,25 @@
       if (!saved || !Array.isArray(saved.order) || !Array.isArray(saved.hidden)) return fallback;
       var validKeys = columns.map(function (item) { return item.key; });
       var schemaVersion = view === 'customers' ? CUSTOMER_COLUMN_SCHEMA_VERSION : LEAD_COLUMN_SCHEMA_VERSION;
-      if (global.localStorage.getItem(storageVersionKey(view)) !== schemaVersion) {
+      var outdated = global.localStorage.getItem(storageVersionKey(view)) !== schemaVersion;
+      if (view === 'customers' && outdated) {
         var migrated = { order: fallback.order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
         global.localStorage.setItem(storageKey(view), JSON.stringify(migrated));
         global.localStorage.setItem(storageVersionKey(view), schemaVersion);
         return migrated;
       }
       var order = saved.order.filter(function (key) { return validKeys.includes(key); });
-      validKeys.forEach(function (key) { if (!order.includes(key)) order.push(key); });
-      return { order: order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
+      validKeys.forEach(function (key) {
+        if (order.includes(key)) return;
+        if (view === 'leads' && key === 'isFinalStatus') order.splice(order.indexOf('aiLeadValidity') + 1, 0, key);
+        else order.push(key);
+      });
+      var normalized = { order: order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
+      if (outdated || JSON.stringify(normalized) !== JSON.stringify(saved)) {
+        global.localStorage.setItem(storageKey(view), JSON.stringify(normalized));
+        global.localStorage.setItem(storageVersionKey(view), schemaVersion);
+      }
+      return normalized;
     } catch (error) {
       return fallback;
     }
@@ -497,6 +515,7 @@
     if (key === 'customerLeadCountRange' || key === 'customerAudioCountRange') return ['1条', '2条', '3条', '4条及以上'].map(function (value) { return option(value); });
     if (key === 'customerRecordCoverage' || key === 'customerStoreRecordCoverage') return ['全部有录音', '部分有录音', '全部无录音'].map(function (value) { return option(value); });
     if (key === 'aiLeadValidity') return AI_LEAD_VALIDITY_OPTIONS.map(function (value) { return option(value); });
+    if (key === 'isFinalStatus') return ['是', '否'].map(function (value) { return option(value); });
     if (key === 'validRecording') return ['是', '否'].map(function (value) { return option(value, value === '是' ? '有录音' : '无录音'); });
     var source = targetState.view === 'customers' ? customerRecords : records.filter(function (record) {
       return recordMatchesOrganization(record, targetState);
@@ -579,6 +598,7 @@
         && matchesValues(record.leadStatus, selected('leadStatus', targetState))
         && matchesValues(record.intentGrade, selected('intentGrade', targetState))
         && matchesValues(record.aiLeadValidity, selected('aiLeadValidity', targetState))
+        && matchesValues(finalStatusValue(record.isFinalStatus), selected('isFinalStatus', targetState))
         && matchesValues(record.validRecording, selected('validRecording', targetState))
         && (!leadIdQuery || normalizedQuery(record.id).includes(leadIdQuery))
         && (!recordingCountQuery || String(record.recordingCount) === recordingCountQuery)
@@ -620,7 +640,7 @@
 
   function selectionText(key) {
     var values = selected(key);
-    if (!values.length) return '请选择' + FILTER_LABELS[key];
+    if (!values.length) return key === 'isFinalStatus' ? '全部' : '请选择' + FILTER_LABELS[key];
     var options = currentOptions(key);
     var labels = values.map(function (value) {
       var item = options.find(function (entry) { return entry.value === value; });
@@ -657,10 +677,11 @@
     var selectedCount = options.filter(function (item) { return values.includes(item.value); }).length;
     var allActive = options.length > 0 && selectedCount === options.length;
     var partial = selectedCount > 0 && !allActive;
+    if (key === 'isFinalStatus') { allActive = values.length === 0; partial = false; }
     var placeholder = key === 'store' ? '输入店名或店代码' : '搜索' + FILTER_LABELS[key];
     return '<div class="session-menu-panel badge-advisor-menu lr-filter-menu" data-lr-menu="' + escapeHtml(key) + '" role="dialog">' +
       '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-lr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state().menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
-      '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partial ? ' is-partial' : '') + '" data-lr-select-all="' + escapeHtml(key) + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
+      '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partial ? ' is-partial' : '') + '" data-lr-select-all="' + escapeHtml(key) + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>' + (key === 'isFinalStatus' ? '全部' : '全选') + '</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
       '<div class="badge-advisor-options" role="listbox" aria-multiselectable="true">' +
         (options.length ? options.map(function (item) {
           var active = values.includes(item.value);
@@ -765,10 +786,10 @@
   }
 
   function secondaryKeys() {
-    var common = ['patroler', 'governor', 'advisor'];
+    var common = ['advisor', 'patroler', 'governor'];
     return currentView === 'customers'
       ? common.concat(['customerCrossStore', 'customerStoreCountRange', 'customerMultiLead', 'customerLeadCountRange', 'customerAudioCountRange', 'customerRecordCoverage', 'customerStoreRecordCoverage', 'customerStatus'])
-      : common.concat(['leadStatus', 'intentGrade', 'aiLeadValidity', 'date', 'leadIdQuery', 'validRecording', 'recordingCountQuery']);
+      : common.concat(['leadStatus', 'intentGrade', 'aiLeadValidity', 'isFinalStatus', 'date', 'leadIdQuery', 'validRecording', 'recordingCountQuery']);
   }
 
   function renderFilterActions() {
@@ -933,6 +954,7 @@
     }
     if (key === 'crossStore') return item.crossStore ? '是' : '否';
     if (key === 'multiLead') return item.multiLead ? '是' : '否';
+    if (key === 'isFinalStatus') return finalStatusValue(item.isFinalStatus) || '—';
     if (key === 'validRecording') return text(item.validRecording) === '是' ? '有录音' : '无录音';
     if (key === 'recordingCount' || key === 'aggregateAudioCount') return String(Number(item[key]) || 0) + (item.associationMissing ? '（已加载' + (key === 'recordingCount' ? item.loadedRecordingCount : item.aggregateLoadedAudioCount) + '，关联缺失）' : '');
     return text(item[key]) || '—';
@@ -1455,7 +1477,7 @@
       var selectKey = selectAll.dataset.lrSelectAll;
       var current = filteredOptions(selectKey).map(function (item) { return item.value; });
       var active = current.length && current.every(function (value) { return selected(selectKey).includes(value); });
-      setSelected(selectKey, active ? selected(selectKey).filter(function (value) { return !current.includes(value); }) : selected(selectKey).concat(current));
+      setSelected(selectKey, selectKey === 'isFinalStatus' ? [] : active ? selected(selectKey).filter(function (value) { return !current.includes(value); }) : selected(selectKey).concat(current));
       if (ORGANIZATION_KEYS.includes(selectKey)) pruneOrganizationSelections(state());
       state().page = 1;
       renderFilters();

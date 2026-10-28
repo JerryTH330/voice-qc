@@ -300,6 +300,7 @@
     if (!mount || !factoryPage) return;
     window.destroyFactoryDashboardPage?.();
     mount.innerHTML = FACTORY_DASHBOARD_HTML;
+    if (window.AIQCDashboard) return window.AIQCDashboard.mount({kind:'factory',root:factoryPage});
 
 
   const FACTORY_ALL_ORG_VALUE = '全部组织';
@@ -453,9 +454,9 @@
   const FACTORY_SCENE_FILTER_OPTIONS = [
     { value: SCENE_KEYS.all, label: '全部' },
     { value: SCENE_KEYS.firstFollow, label: '首触跟进' },
-    { value: SCENE_KEYS.inviteStore, label: '邀约进店' },
+    { value: SCENE_KEYS.inviteStore, label: '邀约到店' },
     { value: SCENE_KEYS.scheduleConfirm, label: '排程确认' },
-    { value: SCENE_KEYS.storeReception, label: '进店接待' },
+    { value: SCENE_KEYS.storeReception, label: '销售接待' },
     { value: SCENE_KEYS.testDrive, label: '试乘试驾' }
   ];
 

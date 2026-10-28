@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>工牌管理 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20261027-global-audit-fixes-v1" />
-    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261010-table-headbar-align-v1" />
-    <link rel="stylesheet" href="../fixed-action-column.css?v=20260817-v1" />
-    <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2" />
+    <link rel="stylesheet" href="./page.css?v=20261028-full-sync-v1" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261028-full-sync-v1" />
+    <link rel="stylesheet" href="../fixed-action-column.css?v=20261028-full-sync-v1" />
+    <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261028-full-sync-v1" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
   </head>
   <body>
@@ -524,13 +524,13 @@
     </div>
 
     <div class="drawer-backdrop" id="visitDrawer" hidden></div>
-    <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true">
+    <aside class="drawer detail-drawer" id="visitDetail" aria-hidden="true" inert>
       <div class="drawer-head"><div><span class="status success" id="drawerStatus">已匹配</span><h2>到访匹配详情</h2><p id="drawerBusinessId">BIZ-20260812-0136</p></div><button class="icon-btn close-drawer platform-close-icon" aria-label="关闭"></button></div>
       <div class="drawer-body" id="drawerBody"></div>
     </aside>
 
     <div class="drawer-backdrop" id="badgeRecordDrawerBackdrop" hidden></div>
-    <aside class="drawer detail-drawer badge-record-drawer" id="badgeRecordDrawer" role="dialog" aria-modal="true" aria-labelledby="badgeRecordDrawerTitle" aria-hidden="true">
+    <aside class="drawer detail-drawer badge-record-drawer" id="badgeRecordDrawer" role="dialog" aria-modal="true" aria-labelledby="badgeRecordDrawerTitle" aria-hidden="true" inert>
       <div class="drawer-head badge-record-drawer-head">
         <div class="badge-record-drawer-title-row">
           <div>
@@ -599,7 +599,7 @@
     </aside>
 
     <div class="drawer-backdrop badge-field-settings-backdrop" id="badgeFieldSettingsBackdrop" hidden></div>
-    <aside class="drawer detail-drawer badge-field-settings-drawer" id="badgeFieldSettingsDrawer" role="dialog" aria-modal="true" aria-labelledby="badgeFieldSettingsTitle" aria-hidden="true">
+    <aside class="drawer detail-drawer badge-field-settings-drawer" id="badgeFieldSettingsDrawer" role="dialog" aria-modal="true" aria-labelledby="badgeFieldSettingsTitle" aria-hidden="true" inert>
       <div class="drawer-head badge-field-settings-head">
         <div>
           <h2 id="badgeFieldSettingsTitle">字段设置</h2>
@@ -680,23 +680,27 @@
       </div>
     </aside>
 
-    <script src="../shared/list-header-actions.js?v=20261015-list-actions-v1"></script>
-    <script src="../shared/list-summary-counters.js?v=20261015-list-summary-counters-v1"></script>
-    <script src="../unified-navigation-shell.js?v=20261015-list-actions-v1"></script>
-    <script src="../date-filter-component-utils.js?v=20260901-optional-cancel-v1"></script>
-    <script src="../leads/organization-data.js?v=20260828-shared-org-v2"></script>
-    <script src="../shared/organization-directory.js?v=20260828-shared-org-v2"></script>
-    <script src="./organization-data.js?v=20260903-real-stores-v1"></script>
-    <script src="../shared/linked-demo-data.js?v=20261014-linked-demo-five-matching-statuses-v5"></script>
-    <script src="./visit-organization-filter.js?v=20261010-matching-org-v1"></script>
-    <script src="./visit-field-settings.js?v=20261014-visits-remove-recording-id-v2"></script>
-    <script src="./visit-import-demo.js?v=20261014-import-advisor-required-v8"></script>
-    <script src="./store-field-settings.js?v=20261015-store-fields-v1"></script>
-    <script src="./matching-field-settings.js?v=20261010-matching-fields-v1"></script>
-    <script src="./xlsx-export-utils.js?v=20260902-badge-list-actions-v1"></script>
-    <script src="../shared/field-settings-interactions.js?v=20260914-shared-field-settings-drag-v1"></script>
-    <script src="../shared/dimension-switcher.js?v=20261012-shared-dimension-v1"></script>
-    <script src="./page.js?v=20261027-global-audit-fixes-v1"></script>
-    <script src="../fixed-action-column.js?v=20260817-v1"></script>
+    <script src="../shared/list-header-actions.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/list-summary-counters.js?v=20261028-full-sync-v1"></script>
+    <script src="../unified-navigation-shell.js?v=20261028-full-sync-v1"></script>
+    <script src="../date-filter-component-utils.js?v=20261028-full-sync-v1"></script>
+    <script src="../leads/organization-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/organization-directory.js?v=20261028-full-sync-v1"></script>
+    <script src="./organization-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../session/real-recording-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../leads/real-lead-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/linked-demo-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/badge-history-data.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/unified-data.js?v=20261028-full-sync-v1"></script>
+    <script src="./visit-organization-filter.js?v=20261028-full-sync-v1"></script>
+    <script src="./visit-field-settings.js?v=20261028-full-sync-v1"></script>
+    <script src="./visit-import-demo.js?v=20261028-full-sync-v1"></script>
+    <script src="./store-field-settings.js?v=20261028-full-sync-v1"></script>
+    <script src="./matching-field-settings.js?v=20261028-full-sync-v1"></script>
+    <script src="./xlsx-export-utils.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/field-settings-interactions.js?v=20261028-full-sync-v1"></script>
+    <script src="../shared/dimension-switcher.js?v=20261028-full-sync-v1"></script>
+    <script src="./page.js?v=20261028-full-sync-v1"></script>
+    <script src="../fixed-action-column.js?v=20261028-full-sync-v1"></script>
   </body>
 </html>

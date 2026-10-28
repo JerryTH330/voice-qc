@@ -5,9 +5,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
-const releaseVersion = '20261022-dashboard-filter-release-v1';
-const analysisResultVersion = '20261027-global-audit-fixes-v1';
-const sessionFilterVersion = '20261027-session-advisor-phone-v1';
+const releaseVersion = '20261028-full-sync-v1';
+const analysisResultVersion = '20261028-full-sync-v1';
+const sessionFilterVersion = '20261028-full-sync-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -18,7 +18,7 @@ const factSources = [
   'shared/badge-history-data.js'
 ];
 
-for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard']) {
+for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'factory-dashboard']) {
   test(`${area}: released entry loads complete dashboard dependencies in order`, () => {
     const urls = [];
     const window = {};

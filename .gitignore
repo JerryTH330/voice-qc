@@ -8,9 +8,11 @@ script-library/__pycache__/
 .scratch/
 docs/concepts/
 docs/factory-dashboard-ui-change-summary.md
-tests/
+output/
+.playwright-cli/
+test-results/
+playwright-report/
 
 AGENTS.md
-CONTEXT.md
 
 docs/reference/接口文档0812(含定义).pdf

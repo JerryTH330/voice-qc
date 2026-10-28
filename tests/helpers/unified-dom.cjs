@@ -7,7 +7,7 @@ function setup(kind,role='dcc',options={}) {
   const dom=parseHTML(fs.readFileSync(path.join(root,file),'utf8'));
   const window=new Proxy(Object.create(null),{get:(target,key)=>Object.hasOwn(target,key)?target[key]:dom[key],set:(target,key,value)=>{target[key]=value;return true;}});
   Object.defineProperty(window.document,'defaultView',{value:window});
-  Object.defineProperty(window.HTMLElement.prototype,'tBodies',{configurable:true,get(){return this.querySelectorAll('tbody');}});
+  Object.defineProperty(window.HTMLElement.prototype,'tBodies',{configurable:true,get(){return [...this.children].filter(node=>node.tagName==='TBODY');}});
   nativeMatches ||= window.HTMLElement.prototype.matches;
   window.HTMLElement.prototype.matches=function(selector){return selector===':focus-visible'?false:nativeMatches.call(this,selector);};
   const ctx2d=new Proxy({},{get:(t,k)=>k==='measureText'?()=>({width:50}):()=>{}});

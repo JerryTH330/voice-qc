@@ -590,7 +590,7 @@
       var customerPhoneQuery = normalizeDigits(state.queries.customerPhone);
       if (audioIdQuery && !normalize(record.audioId).includes(audioIdQuery)) return false;
       if (leadQuery && !normalize(record.leadId).includes(leadQuery)) return false;
-      if (advisorPhoneQuery && !normalizeDigits(record.advisorPhone).includes(advisorPhoneQuery)) return false;
+      if (normalize(state.queries.advisorPhone) && (!advisorPhoneQuery || !normalizeDigits(record.advisorPhone).includes(advisorPhoneQuery))) return false;
       if (customerKeywordQuery) {
         var customerNameMatched = normalize(record.customerName).includes(customerKeywordQuery) || normalize(record.customerNameMasked).includes(customerKeywordQuery);
         var customerPhoneMatched = customerKeywordDigits && normalizeDigits(record.customerPhone).includes(customerKeywordDigits);
@@ -1307,8 +1307,9 @@
     if (emptyState) {
       emptyState.hidden = recordsForView.length > 0;
       var missingFocus = focusRecordingId !== null && !linkedRecording;
-      emptyState.querySelector('strong').textContent = missingFocus ? '未找到对应录音记录' : entryScopeError ? '未找到对应顾问范围' : '暂无符合条件的录音';
-      emptyState.querySelector('p').textContent = missingFocus ? '录音ID：' + (focusRecordingId || '未提供') + '，请核对录音ID或重置筛选。' : entryScopeError || '请调整筛选条件后重试';
+      var invalidPhoneQuery = normalize(state.queries.advisorPhone) && !normalizeDigits(state.queries.advisorPhone);
+      emptyState.querySelector('strong').textContent = missingFocus ? '未找到对应录音记录' : entryScopeError ? '未找到对应顾问范围' : invalidPhoneQuery ? '请输入有效的顾问手机号' : '暂无符合条件的录音';
+      emptyState.querySelector('p').textContent = missingFocus ? '录音ID：' + (focusRecordingId || '未提供') + '，请核对录音ID或重置筛选。' : entryScopeError || (invalidPhoneQuery ? '顾问手机号需包含数字，请修改后重试。' : '请调整筛选条件后重试');
     }
     table.closest('.session-list-table-wrap').classList.toggle('is-empty', !recordsForView.length);
     if (!recordsForView.length) {
@@ -2023,7 +2024,7 @@
         entryScopeError = '';
         clearEntryParams(['focusRecordingId', 'recordingScope', 'storeId', 'advisorId', 'startDate', 'endDate', 'scene', 'model']);
         filterKeys.forEach(function (key) { state.selections[key] = []; });
-        state.selections.status = ['已完成'];
+        state.selections.status = isColumnVisible('status') ? ['已完成'] : [];
         Object.keys(state.queries).forEach(function (key) { state.queries[key] = ''; });
         state.startDate = defaultStartDate;
         state.endDate = defaultEndDate;

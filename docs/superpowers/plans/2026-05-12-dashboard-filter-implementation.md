@@ -1,8 +1,10 @@
 # Dashboard Filter Implementation Plan
 
+> 历史方案：本文记录 2026-05-12 的实施计划。当前统一数据模式按共享事实筛选，不再拆分或按比例缩放演示 KPI。现行口径以[筛选规则](../../../筛选.md)第十五节和[2026-10-28 发布清单](../../releases/2026-10-28-unpublished-sync.md)为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add the new 数据来源筛选 to the store and factory dashboards, convert 业务场景 to constrained multi-select, and split the 云外呼 demo metrics so 首触跟进 / 邀约进店 / 排程确认 produce visibly different KPI output.
+**Goal:** Add the new 数据来源筛选 to the store and factory dashboards, convert 业务场景 to constrained multi-select, and split the 云外呼 demo metrics so 首触跟进 / 邀约到店 / 排程确认 produce visibly different KPI output.
 
 **Architecture:** Put the source/scene rules in one shared browser-safe utility file, test that utility with Node’s built-in test runner, then wire both dashboards to that shared state model. Keep the existing pages and rendering structure, but replace single-value scene decisions with normalized selection helpers plus a small demo-metric split layer.
 
@@ -177,9 +179,9 @@ Expected: FAIL with `Cannot find module '../dashboard-filter-utils.js'`.
   const SCENE_LABELS = {
     [SCENE_KEYS.all]: '全部',
     [SCENE_KEYS.firstFollow]: '首触跟进',
-    [SCENE_KEYS.inviteStore]: '邀约进店',
+    [SCENE_KEYS.inviteStore]: '邀约到店',
     [SCENE_KEYS.scheduleConfirm]: '排程确认',
-    [SCENE_KEYS.storeReception]: '进店接待',
+    [SCENE_KEYS.storeReception]: '销售接待',
     [SCENE_KEYS.testDrive]: '试乘试驾',
     [SCENE_KEYS.cloudMulti]: '云外呼'
   };
@@ -382,9 +384,9 @@ EOF
     <div class="gf-tabs" id="gf-scene">
       <button class="gf-tab active" data-scene="all">全部</button>
       <button class="gf-tab" data-scene="first_follow">首触跟进</button>
-      <button class="gf-tab" data-scene="invite_store">邀约进店</button>
+      <button class="gf-tab" data-scene="invite_store">邀约到店</button>
       <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
-      <button class="gf-tab" data-scene="store_reception">进店接待</button>
+      <button class="gf-tab" data-scene="store_reception">销售接待</button>
       <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
     </div>
   </div>
@@ -417,9 +419,9 @@ EOF
   <div class="gf-tabs" id="gf-scene">
     <button class="gf-tab active" data-scene="all">全部</button>
     <button class="gf-tab" data-scene="first_follow">首触跟进</button>
-    <button class="gf-tab" data-scene="invite_store">邀约进店</button>
+    <button class="gf-tab" data-scene="invite_store">邀约到店</button>
     <button class="gf-tab" data-scene="schedule_confirm">排程确认</button>
-    <button class="gf-tab" data-scene="store_reception">进店接待</button>
+    <button class="gf-tab" data-scene="store_reception">销售接待</button>
     <button class="gf-tab" data-scene="test_drive">试乘试驾</button>
   </div>
 </div>
@@ -667,12 +669,12 @@ Also update summary text and rate/count seeds to use `getEffectiveSceneKey()` in
 ```js
 const sceneKey = getEffectiveSceneKey();
 const sceneSummaryMap = {
-  all: '全店接待整体平稳，服务态度与进店接待表现良好，但试驾邀约与竞品应对仍是主要短板。',
+  all: '全店接待整体平稳，服务态度与销售接待表现良好，但试驾邀约与竞品应对仍是主要短板。',
   first_follow: '首触跟进的开场需求确认整体稳定，但早段利益点铺垫仍偏弱。',
-  invite_store: '邀约进店场景的到店推进更关键，建议强化明确时间与到店收益表达。',
+  invite_store: '邀约到店场景的到店推进更关键，建议强化明确时间与到店收益表达。',
   schedule_confirm: '排程确认更依赖时间承诺与到店前提醒，建议重点复盘确认节点。',
   cloud_multi: '云外呼多个环节表现存在波动，建议按首触、邀约、排程三个节点拆开复盘。',
-  store_reception: '进店接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
+  store_reception: '销售接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
   test_drive: '试乘试驾环节体验介绍更充分，但试驾前场景铺垫和试驾后下订推进存在断点。'
 };
 ```
@@ -938,7 +940,7 @@ if (sceneKey === 'first_follow') {
   volLabel = '首触跟进录音数';
 } else if (sceneKey === 'invite_store') {
   volData = d.invitation;
-  volLabel = '邀约进店录音数';
+  volLabel = '邀约到店录音数';
 } else if (sceneKey === 'schedule_confirm') {
   volData = d.invitation;
   volLabel = '排程确认录音数';
@@ -1003,8 +1005,8 @@ http://127.0.0.1:4173/store-dashboard/index.html
 
 Expected:
 - default = `数据来源: 全部` and `业务场景: 全部`
-- switching to `云外呼` auto-highlights `首触跟进 / 邀约进店 / 排程确认`
-- `进店接待 / 试乘试驾` become disabled
+- switching to `云外呼` auto-highlights `首触跟进 / 邀约到店 / 排程确认`
+- `销售接待 / 试乘试驾` become disabled
 - clicking `全部` clears the specific scene selection
 
 - [ ] **Step 3: Verify split 云外呼 demo output on the store dashboard**
@@ -1013,7 +1015,7 @@ Click these one by one under `云外呼`:
 
 ```text
 首触跟进
-邀约进店
+邀约到店
 排程确认
 ```
 
@@ -1032,7 +1034,7 @@ http://127.0.0.1:4173/factory-dashboard/index.html
 
 Expected:
 - default = `数据来源: 全部` and `业务场景: 全部`
-- switching to `工牌` auto-highlights `进店接待 / 试乘试驾`
+- switching to `工牌` auto-highlights `销售接待 / 试乘试驾`
 - cloud-only scenes become disabled
 - selecting both allowed badge scenes collapses back to `全部`
 
@@ -1042,7 +1044,7 @@ Click these one by one under `云外呼`:
 
 ```text
 首触跟进
-邀约进店
+邀约到店
 排程确认
 ```
 

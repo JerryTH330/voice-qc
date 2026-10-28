@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// 同步 page.js assetVersion 到所有 .test.js 硬编码 version。
+// 同步 page.js assetVersion 到所有 .test.js / .test.cjs 硬编码 version。
 // 用法：node scripts/sync-versions.js [--dry-run]
 //
 // 行为：
 // 1. 扫描 3 个 page.js 提取所有 version（const version / const assetVersion）
-// 2. 扫描 tests/*.test.js 中所有类似 version 的字符串（'20\d+...'）
+// 2. 扫描 tests/*.test.{js,cjs} 中所有类似 version 的字符串（'20\d+...'）
 // 3. 把不在 page.js 当前 version 集合里的，替换为 page.js 的 version（取第一个）
 //
 // 退出码：0=成功，1=找不到任何 page.js version
@@ -19,7 +19,7 @@ const dryRun = process.argv.includes('--dry-run');
 function findAllPageJsFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    if (['node_modules', 'output', 'test-results', 'playwright-report'].includes(entry.name) || entry.name.startsWith('.')) continue;
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       findAllPageJsFiles(p, results);
@@ -33,7 +33,7 @@ function findAllPageJsFiles(dir, results = []) {
 function findAllAssetFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    if (['node_modules', 'output', 'test-results', 'playwright-report'].includes(entry.name) || entry.name.startsWith('.')) continue;
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       findAllAssetFiles(p, results);
@@ -67,27 +67,19 @@ function extractPageJsVersions() {
 }
 
 function findTestVersions(text) {
-  // 匹配引号内**包含** 20\d{6,} 开头的 version 字符串
-  // 例如 'page.css?v=20260804-foo' 或 '20260805-bar'
-  const re = /(['"])((?:[^'"]{0,200}?)?(20\d{6,}[\w-]*))\1/g;
-  const out = new Set();
-  let m;
-  while ((m = re.exec(text))) {
-    out.add(m[3]);
-  }
-  return out;
+  // 仅识别资源 URL 或 Version 常量，保留业务 ID、时间戳和存储迁移版本。
+  const re = /(?:(?:const|let)\s+\w*[Vv]ersion\s*=\s*['"]|[?&]v=)(20\d{6}[\w-]*)/g;
+  return new Set([...text.matchAll(re)].map(match => match[1]));
 }
 
 function syncFile(file, targetVersion, allowedVersions) {
   const text = fs.readFileSync(file, 'utf8');
-  const re = /(['"])((?:[^'"]{0,200}?)?(20\d{6,}[\w-]*))\1/g;
+  const re = /((?:const|let)\s+\w*[Vv]ersion\s*=\s*['"]|[?&]v=)(20\d{6}[\w-]*)/g;
   let count = 0;
-  const updated = text.replace(re, (whole, quote, _full, v) => {
-    if (allowedVersions.has(v)) return whole;
-    // 替换：保留前缀，把 version 部分替换为目标
-    const before = _full.replace(new RegExp(`${v}$`), '');
+  const updated = text.replace(re, (whole, prefix, version) => {
+    if (allowedVersions.has(version)) return whole;
     count++;
-    return `${quote}${before}${targetVersion}${quote}`;
+    return prefix + targetVersion;
   });
   if (count === 0) return 0;
   if (!dryRun) {
@@ -107,7 +99,7 @@ console.log(`All allowed versions: ${[...allowedVersions].join(', ')}`);
 if (dryRun) console.log('(dry run — no files will be modified)');
 
 const testDir = path.join(root, 'tests');
-const testFiles = fs.readdirSync(testDir).filter((f) => f.endsWith('.test.js'));
+const testFiles = fs.readdirSync(testDir).filter((f) => /\.test\.(?:js|cjs)$/.test(f));
 
 let totalFiles = 0;
 let totalReplacements = 0;

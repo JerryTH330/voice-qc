@@ -1,8 +1,8 @@
 /* 门店看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20261027-global-audit-fixes-v1");
-@import url("../app-inline.css?v=20260811-figma-panels-v13");
-@import url("../shared/dimension-switcher.css?v=20261013-shared-dimension-white-v2");
-@import url("./organization-filter.css?v=20261019-dashboard-filter-standard-v1");
+@import url("../voice-qc-admin.css?v=20261028-full-sync-v1");
+@import url("../app-inline.css?v=20261028-full-sync-v1");
+@import url("../shared/dimension-switcher.css?v=20261028-full-sync-v1");
+@import url("./organization-filter.css?v=20261028-full-sync-v1");
 
 .store-dashboard-page .store-dashboard-empty {
   padding: 24px 16px;
@@ -2000,6 +2000,11 @@
   min-height: 322px;
 }
 
+.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .store-sop-standard-list.is-page-size-expanded .issue-rule-list {
+  max-height: 388px;
+  overflow-y: auto;
+}
+
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-row {
   position: relative;
   min-height: 68px;
@@ -2281,35 +2286,6 @@
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .dashboard-pagination-controls {
   gap: 12px;
   flex-wrap: nowrap;
-}
-
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-pagination-page-size {
-  position: relative;
-  display: inline-flex;
-  min-width: 116px;
-  min-height: 38px;
-  align-items: center;
-  padding: 0 37px 0 15px;
-  border: 1px solid rgba(207, 217, 232, 0.96);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
-  color: #617088;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-pagination-page-size::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 15px;
-  width: 7px;
-  height: 7px;
-  border-right: 1.5px solid #94a3b8;
-  border-bottom: 1.5px solid #94a3b8;
-  transform: translateY(-70%) rotate(45deg);
 }
 
 .store-dashboard-page :is(#detail-sop, #detail-sop-analysis) .issue-rule-pagination .page-group,
@@ -3417,6 +3393,29 @@ body .uat-review-recording-overlay .recording-library-more {
 
 .store-dashboard-page #main-panel-advisors #detail-sop-analysis .issue-rule-pagination {
   margin-top: 0;
+}
+
+.store-dashboard-page #store-issue-sop-analysis-root .dashboard-badge-pagination :is(.session-pagination-total, .session-page-jump-label, .session-page-jump-suffix) {
+  color: #68758a;
+  line-height: 20px;
+}
+
+.store-dashboard-page #store-issue-sop-analysis-root .dashboard-badge-pagination :is(.issue-rule-page-btn, .issue-rule-page-number) {
+  font-weight: 700;
+}
+
+.store-dashboard-page #store-issue-sop-analysis-root .dashboard-badge-pagination :is(.issue-rule-page-btn, .issue-rule-page-number:not(.active)) {
+  color: #68758a;
+}
+
+.store-dashboard-page #store-issue-sop-analysis-root .dashboard-badge-pagination .issue-rule-page-btn:disabled {
+  background: rgba(248, 250, 253, 0.88);
+}
+
+.store-dashboard-page #store-issue-sop-analysis-root .dashboard-badge-pagination .page-jump-select {
+  width: 54px;
+  min-width: 54px;
+  color: #68758a;
 }
 
 .store-dashboard-page #main-panel-advisors .issue-overview-wrapper .issue-insight-tab {

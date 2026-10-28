@@ -167,7 +167,16 @@
   margin: 0;
   pointer-events: none;
 }
-#pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger {
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) {
+  padding-inline: 10px;
+  gap: 6px;
+}
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) > span:first-child {
+  width: 2em;
+  white-space: normal;
+  line-height: 18px;
+}
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
   grid-template-rows: repeat(2, 18px);
@@ -175,22 +184,28 @@
   gap: 0 4px;
   padding-inline-end: 24px;
 }
-#pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong {
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong {
   grid-column: 2;
   line-height: 18px;
+  overflow: visible;
 }
-#pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong:first-child { grid-row: 1; }
-#pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong:nth-of-type(2) { grid-row: 2; }
-#pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger em { grid-area: 2 / 1; line-height: 18px; }
-#pageHost .sales-role-dashboard-page .dashboard-filter-card .sales-statistics-date-control .session-date-icon {
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong:first-child { grid-row: 1; }
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger strong:nth-of-type(2) { grid-row: 2; }
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger em { grid-area: 2 / 1; line-height: 18px; }
+:is(#factoryDashboardPage, #pageHost .store-dashboard-page, #pageHost .sales-role-dashboard-page) .dashboard-filter-card :is(.fo-date-control, .sd-statistics-date-control, .sales-statistics-date-control) .session-date-icon {
   position: absolute;
-  inset-inline-end: 14px;
+  inset-inline-end: 10px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
   margin: 0;
   pointer-events: none;
+}
+@media (min-width: 981px) and (max-width: 1239px) {
+  #pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) { padding-inline: 8px; gap: 4px; }
+  #pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-trigger { padding-inline-end: 0; }
+  #pageHost :is(.store-dashboard-page, .sales-role-dashboard-page) .dashboard-filter-card :is(.sd-statistics-date-control, .sales-statistics-date-control) .session-date-icon { display: none; }
 }
 :is(#factoryDashboardPage, .store-dashboard-page, .sales-role-dashboard-page) :is(.fo-date-panel, .sd-statistics-date-panel, .sales-statistics-date-panel) {
   position: absolute;

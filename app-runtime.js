@@ -534,14 +534,59 @@ function renderDashboardPageSizeControl(pageSize, options = [5, 10, 20, 50]) {
   `;
 }
 
-function renderUnifiedIssueRulePagination({ totalItems, currentPage, pageCount, pageSize }) {
+function bindDashboardPageSizeControl(root, onChange) {
+  const control = root?.querySelector('.dashboard-page-size-select');
+  const trigger = control?.querySelector('[data-dashboard-page-size-trigger]');
+  const options = control?.querySelector('.page-size-options');
+  if (!trigger || !options) return;
+
+  const close = () => {
+    options.classList.remove('open');
+    trigger.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('pointerdown', onOutsidePointerDown, true);
+    document.removeEventListener('keydown', onKeydown);
+  };
+  const onKeydown = (event) => {
+    if (event.key !== 'Escape' && event.key !== 'Tab') return;
+    close();
+    if (event.key === 'Escape') trigger.focus();
+  };
+  const onOutsidePointerDown = (event) => {
+    if (!control.contains(event.target)) close();
+  };
+
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (options.classList.contains('open')) {
+      close();
+      return;
+    }
+    options.classList.add('open');
+    trigger.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    document.addEventListener('pointerdown', onOutsidePointerDown, true);
+    document.addEventListener('keydown', onKeydown);
+  });
+  options.addEventListener('click', (event) => {
+    const option = event.target.closest('[data-dashboard-page-size]');
+    if (!option) return;
+    event.stopPropagation();
+    close();
+    const size = Number(option.dataset.dashboardPageSize);
+    if (!option.classList.contains('active')) onChange?.(size);
+    else trigger.focus();
+  });
+}
+
+function renderUnifiedIssueRulePagination({ totalItems, currentPage, pageCount, pageSize, pageSizeOptions }) {
   const compactPages = getCompactIssueRulePaginationPages(pageCount, currentPage);
   return `
-    <div class="issue-rule-footer issue-rule-pagination session-pagination">
+    <div class="issue-rule-footer issue-rule-pagination session-pagination dashboard-badge-pagination">
       <div class="dashboard-pagination">
         <span class="session-pagination-total">共 ${totalItems} 条</span>
         <div class="dashboard-pagination-controls">
-          <span class="issue-pagination-page-size">${pageSize} 条/页</span>
+          ${renderDashboardPageSizeControl(pageSize, pageSizeOptions)}
           <div class="page-group" aria-label="规则分页">
             <button type="button" class="issue-rule-page-btn page-arrow" data-unified-rule-page-action="prev" aria-label="上一页" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
             ${Array.from({ length: pageCount }, (_, index) => index + 1).map(page => `
@@ -562,7 +607,7 @@ function renderUnifiedIssueRulePagination({ totalItems, currentPage, pageCount, 
   `;
 }
 
-function bindUnifiedIssueRulePagination(root, { currentPage, pageCount, onPageChange }) {
+function bindUnifiedIssueRulePagination(root, { currentPage, pageCount, onPageChange, onPageSizeChange }) {
   if (!root) return;
   const changePage = (requestedPage) => {
     const parsedPage = Number(requestedPage);
@@ -591,6 +636,7 @@ function bindUnifiedIssueRulePagination(root, { currentPage, pageCount, onPageCh
     event.preventDefault();
     changePage(jumpInput.value);
   });
+  bindDashboardPageSizeControl(root, onPageSizeChange);
 }
 
 function initStoreDashboardPage() {
@@ -1153,7 +1199,7 @@ function initStoreDashboardPage() {
     url.searchParams.set('sessionStore', detail.store || getStoreDashboardScopeLabel());
     url.searchParams.set('sessionDate', formatStoreRecordingDate(detail.time));
     url.searchParams.set('sessionCustomer', detail.customer || `${detail.advisor || '客户'}相关录音`);
-    url.searchParams.set('sessionScene', detail.scene || '进店接待');
+    url.searchParams.set('sessionScene', detail.scene || '销售接待');
     return `${url.pathname}${url.search}${url.hash}`;
   };
 
@@ -1225,7 +1271,7 @@ function initStoreDashboardPage() {
     overlay.innerHTML = `
       <div class="rec-modal">
         <div class="rec-modal-head">
-          <button class="rec-modal-close" id="rec-close-btn">✕</button>
+          <button type="button" class="rec-modal-close platform-close-icon" id="rec-close-btn" aria-label="关闭录音详情"></button>
           <div class="rec-modal-head-main">
             <div class="rec-modal-title">${rec.advisor} → ${rec.customer} · ${rec.model}</div>
             <div class="rec-modal-meta">
@@ -1803,7 +1849,7 @@ function initStoreDashboardPage() {
       car_model: "广汽传祺 E9", advisor: "林涛", advisor_role: "销售顾问", status: "urgent",
       user_profile: ["男性", "增换购", "商务接待为主", "对价格极度敏感"],
       qa_score: 64, ai_issue: "录音命中红线：过度承诺提车时间，客户对报价有异议。",
-      last_scene: "进店接待", time: "昨天 16:20",
+      last_scene: "销售接待", time: "昨天 16:20",
       follow_up_time: "今天 16:00",
       follow_action: "先由店长统一合规报价口径，再安排林涛回电解释交付周期，避免继续放大承诺风险。",
       recommend_reason: "客户对报价和提车时间均有异议，上一通录音出现过度承诺风险，需要门店先收拢话术口径。",
@@ -1827,7 +1873,7 @@ function initStoreDashboardPage() {
       car_model: "广汽传祺 影豹", advisor: "李昱", advisor_role: "销售顾问", status: "normal",
       user_profile: ["女性", "90后", "注重外观", "首付预算不足"],
       qa_score: 90, ai_issue: "常规跟进中，无异常。",
-      last_scene: "到店接待", time: "今天 09:15",
+      last_scene: "销售接待", time: "今天 09:15",
       follow_up_time: "明天 11:00",
       follow_action: "补充金融方案测算后再做一次轻量触达，重点确认首付接受区间。",
       recommend_reason: "客户外观偏好明确，但首付预算仍有压力，适合用金融方案继续培育。",
@@ -1979,6 +2025,7 @@ function initStoreDashboardPage() {
     query: '',
     sort: 'rate-desc',
     page: 1,
+    pageSize: 5,
     selectedRuleId: null
   };
   const storeInsightRuleState = {
@@ -1986,6 +2033,7 @@ function initStoreDashboardPage() {
     query: '',
     sort: 'rate-desc',
     page: 1,
+    pageSize: 5,
     selectedRuleId: null
   };
   const STORE_SOP_SORT_OPTIONS = [
@@ -1994,7 +2042,7 @@ function initStoreDashboardPage() {
     { value: 'count-desc', label: '命中数量优先' },
     { value: 'sample-desc', label: '样本数量优先' }
   ];
-  const STORE_ISSUE_PAGE_SIZE = 5;
+  const STORE_ISSUE_PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
   const weaknessData = [
     { title: "深度需求挖掘", unhit_ratio: "85%", unhit_count: 42, advisor_count: 4,
@@ -2579,12 +2627,12 @@ function initStoreDashboardPage() {
 
     const sceneKey = getEffectiveSceneKey();
     const sceneSummaryMap = {
-      all: '全店接待整体平稳，服务态度与进店接待表现良好，但试驾邀约与竞品应对仍是主要短板。',
+      all: '全店接待整体平稳，服务态度与销售接待表现良好，但试驾邀约与竞品应对仍是主要短板。',
       first_follow: '首触跟进的开场需求确认整体稳定，但早段利益点铺垫仍偏弱。',
-      invite_store: '邀约进店场景的到店推进更关键，建议强化明确时间与到店收益表达。',
+      invite_store: '邀约到店场景的到店推进更关键，建议强化明确时间与到店收益表达。',
       schedule_confirm: '排程确认更依赖时间承诺与到店前提醒，建议重点复盘确认节点。',
       cloud_multi: '云外呼多个环节表现存在波动，建议按首触、邀约、排程三个节点拆开复盘。',
-      store_reception: '进店接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
+      store_reception: '销售接待过程中的礼貌开场和需求确认表现较好，但车型卖点承接与异议处理深度仍需加强。',
       test_drive: '试乘试驾环节体验介绍更充分，但试驾前场景铺垫和试驾后下订推进存在断点。'
     };
     const roleSummaryMap = {
@@ -3081,7 +3129,7 @@ function initStoreDashboardPage() {
         tone: 'blue',
         scenes: [
           createScene(SCENE_KEYS.firstFollow, '首触跟进', getInvitationSceneCount(cloudTotal, SCENE_KEYS.firstFollow)),
-          createScene(SCENE_KEYS.inviteStore, '邀约进店', getInvitationSceneCount(cloudTotal, SCENE_KEYS.inviteStore)),
+          createScene(SCENE_KEYS.inviteStore, '邀约到店', getInvitationSceneCount(cloudTotal, SCENE_KEYS.inviteStore)),
           createScene(SCENE_KEYS.scheduleConfirm, '排程确认', getInvitationSceneCount(cloudTotal, SCENE_KEYS.scheduleConfirm))
         ].filter((scene) => selected.has(scene.key))
       },
@@ -3091,7 +3139,7 @@ function initStoreDashboardPage() {
         value: receptionTotal + testDriveTotal,
         tone: 'green',
         scenes: [
-          createScene(SCENE_KEYS.storeReception, '进店接待', receptionTotal),
+          createScene(SCENE_KEYS.storeReception, '销售接待', receptionTotal),
           createScene(SCENE_KEYS.testDrive, '试乘试驾', testDriveTotal)
         ].filter((scene) => selected.has(scene.key))
       }
@@ -4925,11 +4973,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
   const renderStoreSopRuleList = (visibleRules, state = storeSopRuleState) => {
     const config = getStoreIssueRuleConfig(state.activeTab);
-    const totalPages = Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE));
+    const pageSize = state.pageSize;
+    const totalPages = Math.max(1, Math.ceil(visibleRules.length / pageSize));
     const currentPage = Math.max(1, Math.min(totalPages, state.page || 1));
     state.page = currentPage;
-    const offset = (currentPage - 1) * STORE_ISSUE_PAGE_SIZE;
-    const pagedRules = visibleRules.slice(offset, offset + STORE_ISSUE_PAGE_SIZE);
+    const offset = (currentPage - 1) * pageSize;
+    const pagedRules = visibleRules.slice(offset, offset + pageSize);
     const rows = pagedRules.map(rule => `
       <div class="issue-rule-row" data-store-sop-rule-id="${escapeHtml(rule.id)}">
         <span class="issue-rule-name">
@@ -4974,7 +5023,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           </div>
         </div>
       </div>
-      <div class="issue-rule-list-shell store-sop-standard-list">
+      <div class="issue-rule-list-shell store-sop-standard-list${pageSize > 5 ? ' is-page-size-expanded' : ''}">
         <div class="issue-rule-list-head">
           <span class="issue-rule-name-head">规则名称</span>
           <span>${config.metricLabel}</span><span>${config.countLabel}</span><span>操作</span>
@@ -4987,7 +5036,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         totalItems: visibleRules.length,
         currentPage,
         pageCount: totalPages,
-        pageSize: STORE_ISSUE_PAGE_SIZE,
+        pageSize,
+        pageSizeOptions: STORE_ISSUE_PAGE_SIZE_OPTIONS,
       })}
     `;
   };
@@ -5121,9 +5171,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
     const visibleRules = getVisibleStoreSopRules(state.activeTab, state);
     bindUnifiedIssueRulePagination(root, {
       currentPage: state.page,
-      pageCount: Math.max(1, Math.ceil(visibleRules.length / STORE_ISSUE_PAGE_SIZE)),
+      pageCount: Math.max(1, Math.ceil(visibleRules.length / state.pageSize)),
       onPageChange: (targetPage) => {
         state.page = targetPage;
+        renderStoreSopRuleSection(rootId, state);
+      },
+      onPageSizeChange: (size) => {
+        state.pageSize = size;
+        state.page = 1;
         renderStoreSopRuleSection(rootId, state);
       },
     });
@@ -6268,7 +6323,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:4px">线索详情 · ${client.id}</div>
             <div style="font-size:20px;font-weight:700">${client.customer_name}</div>
           </div>
-          <button onclick="document.getElementById('lead-detail-overlay').dispatchEvent(new Event('close'))" style="width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+          <button type="button" class="platform-close-icon" aria-label="关闭线索详情" onclick="document.getElementById('lead-detail-overlay').dispatchEvent(new Event('close'))" style="width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);cursor:pointer;display:flex;align-items:center;justify-content:center"></button>
         </div>
         <!-- body -->
         <div style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
@@ -7160,7 +7215,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         },
         {
           id: buildMockRecordingId(3),
-          scene: '南京建邺门店 / 到店接待',
+          scene: '南京建邺门店 / 销售接待',
           uploadTime: '2026-03-12 15:07',
           status: '失败',
           duration: '11:05',
@@ -7178,7 +7233,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '低',
           intentLevelClass: 'blue',
           carSeries: '埃安 Hyper HT',
-          stage: '到店接待'
+          stage: '销售接待'
         },
         {
           id: buildMockRecordingId(4),
@@ -7261,7 +7316,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildSessionRecords() {
         const generated = []
-        const stages = ['邀约', '试驾PDC', '到店接待', '试驾']
+        const stages = ['邀约', '试驾PDC', '销售接待', '试驾']
         const statuses = ['已完成', '失败']
         const intentLevels = [
           { label: '高', className: 'red' },
@@ -7347,7 +7402,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               intentLevel: ['高', '中', '低', '无'][index % 4],
               intentLevelClass: ['red', 'amber', 'blue', 'gray'][index % 4],
               carSeries: brandSeries[index % brandSeries.length],
-              stage: ['邀约', '试驾PDC', '到店接待', '试驾'][index % 4]
+              stage: ['邀约', '试驾PDC', '销售接待', '试驾'][index % 4]
             }
           })
         : sessionRecordTemplates
@@ -7363,7 +7418,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '是',
           sopScore: '45%',
           carSeries: '传祺 E9',
-          stage: '到店接待',
+          stage: '销售接待',
           lastContact: '2 小时前',
           owner: '李凯'
         },
@@ -7405,7 +7460,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '否',
           sopScore: '42%',
           carSeries: '埃安 Hyper HT',
-          stage: '到店接待',
+          stage: '销售接待',
           lastContact: '昨天 11:22',
           owner: '刘青'
         },
@@ -7429,7 +7484,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const aiLeadValidityValues = ['有效', '无效', '暂未分析']
       const leadIntentGradeValues = ['H', 'A', 'B', 'C']
       const leadSourceValues = ['400官网', '汽车之家', '懂车帝', '易车', '抖音直播', '老客户转介绍', '门店自然进店', '企微私域']
-      const leadQcSceneValues = ['邀约', '试驾PDC', '到店接待', '试驾']
+      const leadQcSceneValues = ['邀约', '试驾PDC', '销售接待', '试驾']
       const leadTagValues = ['价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动', '新能源关注', '置换需求', '首次购车']
       const leadSummaryTemplates = [
         '客户对传祺 E9 表现出较高兴趣，重点询问了空间和续航表现。客户提到周末会带家人到店试驾，希望提前了解金融方案。',
@@ -7490,6 +7545,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (
           stage.includes('邀约') ||
           stage.includes('到店') ||
+          stage === '销售接待' ||
           stage.includes('试驾') ||
           stage.includes('跟进') ||
           stage.includes('确认') ||
@@ -7584,7 +7640,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildLeadRecords() {
         const generated = []
-        const leadStages = ['邀约', '试驾PDC', '到店接待', '试驾']
+        const leadStages = ['邀约', '试驾PDC', '销售接待', '试驾']
         const leadCarSeries = ['传祺 E9', '埃安 Y Plus', '传祺 GS8', '埃安 Hyper HT', '传祺 M8', '传祺 ES9', '传祺向往 S7', '埃安 RT']
         const leadOwners = ['李凯', '周衡', '王诚', '刘青', '韩深', '陈璐', '顾明', '赵宁', '何川', '沈楠', '徐舟', '唐韵']
         const leadCustomerNames = ['王巍娴', '王慕瑶', '吴耀锋', '冯靖宇', '钱泺西', '林若彤', '郑昱辰', '蒋沐晴', '邵宇泽', '顾芮宁', '程嘉屹', '姚可欣']
@@ -7632,7 +7688,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             recordStartTime: '2026-03-11 15:20',
             lastContact: '2026-03-11 15:38',
             recordingCount: 7,
-            stage: '到店接待',
+            stage: '销售接待',
             owner: '周衡'
           },
           {
@@ -7883,7 +7939,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildLeadOrganizationDemoRecords(templates, dealers) {
         const advisors = dealers.flatMap((dealer) => dealer.advisors.map((advisor) => ({ dealer, advisor })))
-        const leadStages = ['邀约', '试驾PDC', '到店接待', '试驾']
+        const leadStages = ['邀约', '试驾PDC', '销售接待', '试驾']
 
         return advisors.map(({ dealer, advisor }, index) => {
           const template = templates[index % templates.length]
@@ -8138,7 +8194,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return activeKeys.every((key) => normalizedRecord[key].includes(activeQueries[key]))
       })
 
-      const sessionStageOptions = ['全部', '邀约', '试驾PDC', '到店接待', '试驾']
+      const sessionStageOptions = ['全部', '邀约', '试驾PDC', '销售接待', '试驾']
       const sessionStatusOptions = ['全部', '已完成', '失败']
       const sessionIntentLevelOptions = ['全部', '高', '中', '低', '无']
       const sessionSourceOptions = Array.isArray(sessionSearchUtils.SESSION_SOURCE_OPTIONS) && sessionSearchUtils.SESSION_SOURCE_OPTIONS.length
@@ -8202,7 +8258,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         { label: '大区维度', value: 'region' },
         { label: '省份维度', value: 'province' }
       ]
-      const leadsStageOptions = ['全部', '邀约', '试驾PDC', '到店接待', '试驾']
+      const leadsStageOptions = ['全部', '邀约', '试驾PDC', '销售接待', '试驾']
       const leadStatusOptions = ['全部', ...leadStatusValues]
       const leadIntentGradeOptions = ['全部', ...leadIntentGradeValues]
       const leadSearchTargetOptions = [
@@ -9153,24 +9209,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
-      let sessionToastTimer = null
-
       function showSessionToast(message) {
-        let toast = document.getElementById('sessionFeedbackToast')
-        if (!toast) {
-          toast = document.createElement('div')
-          toast.id = 'sessionFeedbackToast'
-          toast.className = 'session-feedback-toast'
-          toast.setAttribute('role', 'status')
-          toast.setAttribute('aria-live', 'polite')
-          document.body.appendChild(toast)
-        }
-
-        toast.textContent = message
-        toast.classList.remove('is-visible')
-        window.requestAnimationFrame(() => toast.classList.add('is-visible'))
-        window.clearTimeout(sessionToastTimer)
-        sessionToastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 2200)
+        window.PlatformToast.show(message, { kind: 'info', duration: 2200 })
       }
 
       function getSessionOrganizationSearchResults(keyword) {
@@ -9747,7 +9787,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return '云外呼'
         }
 
-        if (stage === '试驾' || stage === '到店接待') {
+        if (stage === '试驾' || stage === '销售接待') {
           return '工牌'
         }
 
@@ -11141,7 +11181,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function getLeadStageClass(stage) {
         if (stage === '邀约') return 'blue'
-        if (stage === '到店接待') return 'amber'
+        if (stage === '销售接待') return 'amber'
         return 'green'
       }
 
@@ -12806,7 +12846,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           { value: '', label: '全部场景' },
           { value: '邀约', label: '电话邀约' },
           { value: '试驾PDC', label: '试驾PDC' },
-          { value: '到店接待', label: '到店接待' },
+          { value: '销售接待', label: '销售接待' },
           { value: '试乘试驾', label: '试乘试驾' }
         ]
       }
@@ -13311,7 +13351,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const scenarioOptions = [
         { value: '邀约', label: '电话邀约' },
         { value: '试驾PDC', label: '试驾 PDC' },
-        { value: '到店接待', label: '到店接待' },
+        { value: '销售接待', label: '销售接待' },
         { value: '试乘试驾', label: '试乘试驾' }
       ]
 
@@ -15776,7 +15816,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             level: '高'
           },
           {
-            label: '到店接待',
+            label: '销售接待',
             meta: `${formatLeadDetailEvolutionDate(baseDate)}`,
             level: '中'
           },
@@ -17194,6 +17234,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           leadView: 'recommend',
           todoFilter: 'all',
           todoPage: 1,
+          todoPageSize: 3,
           trendRange: 7,
           sortColumn: 'stage',
           sortDirection: 'asc',
@@ -17209,6 +17250,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewRuleQuery: '',
           reviewRuleSort: 'rate-desc',
           sopReviewPage: 1,
+          sopReviewPageSize: 5,
           sopReviewRuleQuery: '',
           sopReviewRuleSort: 'rate-desc',
           reviewScenes: [],
@@ -18571,7 +18613,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         '出现问题，或是客户不满时，未及时表示歉意'
       ]
 
-      const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀约进店', '排程确认', '进店接待', '试乘试驾']
+      const SALES_REVIEW_QC_SCENES = ['首触跟进', '邀约到店', '排程确认', '销售接待', '试乘试驾']
       const SALES_REVIEW_PAGE_SIZE = 5
       const SALES_REVIEW_SCENE_PREVIEW_LIMIT = 99
       const getSalesReviewSceneTagLabel = (label) => Array.from(String(label ?? '').trim())[0] || ''
@@ -18996,7 +19038,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <h2 id="issue-recording-library-title">${escapeHtml(categoryLabel)} · ${escapeHtml(dialogTitle)}</h2>
                 <p>${escapeHtml(dialogSubtitle)}</p>
               </div>
-              <button type="button" class="recording-library-close" aria-label="关闭录音列表" onclick="closeSalesReviewRecordingLibrary()">×</button>
+              <button type="button" class="recording-library-close platform-close-icon" aria-label="关闭录音列表" onclick="closeSalesReviewRecordingLibrary()"></button>
             </div>
             <div class="uat-review-dialog-body">
               ${renderSalesReviewDialogFilters()}
@@ -19421,10 +19463,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         state.reviewRuleQuery = previousQuery
         state.reviewRuleSort = previousSort
 
-        const totalPages = Math.max(1, Math.ceil(visibleItems.length / SALES_REVIEW_PAGE_SIZE))
+        const pageSize = state.sopReviewPageSize || SALES_REVIEW_PAGE_SIZE
+        const totalPages = Math.max(1, Math.ceil(visibleItems.length / pageSize))
         state.sopReviewPage = Math.max(1, Math.min(totalPages, state.sopReviewPage || 1))
-        const offset = (state.sopReviewPage - 1) * SALES_REVIEW_PAGE_SIZE
-        const pageItems = visibleItems.slice(offset, offset + SALES_REVIEW_PAGE_SIZE)
+        const offset = (state.sopReviewPage - 1) * pageSize
+        const pageItems = visibleItems.slice(offset, offset + pageSize)
 
         const config = SALES_REVIEW_INSIGHT_CONFIG.sop
         const rows = pageItems.map((item, index) => `
@@ -19457,7 +19500,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             totalItems: visibleItems.length,
             currentPage: state.sopReviewPage,
             pageCount: totalPages,
-            pageSize: SALES_REVIEW_PAGE_SIZE,
+            pageSize,
+            pageSizeOptions: [5, 10, 20, 50],
           })}`
 
         autoCollapseSalesReviewSceneTags(list)
@@ -19472,6 +19516,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           pageCount: totalPages,
           onPageChange: (targetPage) => {
             state.sopReviewPage = targetPage
+            renderSalesSopReviewContent(role)
+          },
+          onPageSizeChange: (size) => {
+            state.sopReviewPageSize = size
+            state.sopReviewPage = 1
             renderSalesSopReviewContent(role)
           },
         })
@@ -19777,7 +19826,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return lead.qcScene
         }
 
-        return role === 'advisor' ? '进店接待' : '邀约'
+        return role === 'advisor' ? '销售接待' : '邀约'
       }
 
       function getLeadIntentLabel(intent) {
@@ -19816,7 +19865,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
       }
 
-      const SALES_TODO_PAGE_SIZE = 3
+      const SALES_TODO_PAGE_SIZE_OPTIONS = [3, 5, 10, 20, 50]
 
       function getSalesTodoPaginationItems(totalPages, currentPage) {
         if (totalPages <= 7) {
@@ -19910,7 +19959,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         pagination.style.display = ''
-        const totalPages = Math.max(1, Math.ceil(totalItems / SALES_TODO_PAGE_SIZE))
+        const pageSize = roleState.todoPageSize
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
         roleState.todoPage = Math.min(totalPages, Math.max(1, roleState.todoPage || 1))
         const items = getSalesTodoPaginationItems(totalPages, roleState.todoPage)
 
@@ -19918,9 +19968,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           <div class="dashboard-pagination">
             <span class="session-pagination-total">共 ${totalItems} 条</span>
             <div class="dashboard-pagination-controls">
-              <label class="page-select">
-                <span>3 条/页</span>
-              </label>
+              ${renderDashboardPageSizeControl(pageSize, SALES_TODO_PAGE_SIZE_OPTIONS)}
               <div class="page-group">
                 <button type="button" class="page-arrow" data-sales-todo-page-arrow="prev" ${roleState.todoPage === 1 ? 'disabled' : ''}>‹</button>
                 ${items
@@ -19944,6 +19992,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         `
 
         bindSalesTodoPaginationEvents(role, totalPages)
+        bindDashboardPageSizeControl(pagination, (size) => {
+          roleState.todoPageSize = size
+          roleState.todoPage = 1
+          rerenderSalesTodoByRole(role)
+        })
       }
 
       function renderDccFocus() {
@@ -20103,10 +20156,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const totalItems = leads.length
-        const totalPages = Math.max(1, Math.ceil(totalItems / SALES_TODO_PAGE_SIZE))
+        const pageSize = dccState.todoPageSize
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
         dccState.todoPage = Math.min(totalPages, Math.max(1, dccState.todoPage || 1))
-        const startIndex = (dccState.todoPage - 1) * SALES_TODO_PAGE_SIZE
-        const pagedLeads = leads.slice(startIndex, startIndex + SALES_TODO_PAGE_SIZE)
+        const startIndex = (dccState.todoPage - 1) * pageSize
+        const pagedLeads = leads.slice(startIndex, startIndex + pageSize)
 
         list.innerHTML = pagedLeads.map(buildDccLeadCard).join('')
 
@@ -20546,6 +20600,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           leadView: 'recommend',
           todoFilter: 'all',
           todoPage: 1,
+          todoPageSize: 3,
           trendRange: 7,
           sortColumn: 'stage',
           sortDirection: 'asc',
@@ -20561,6 +20616,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           reviewRuleQuery: '',
           reviewRuleSort: 'rate-desc',
           sopReviewPage: 1,
+          sopReviewPageSize: 5,
           sopReviewRuleQuery: '',
           sopReviewRuleSort: 'rate-desc',
           reviewScenes: [],
@@ -20662,7 +20718,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 15:18',
                 sessionCustomer: '赵女士',
-                sessionScene: '进店接待'
+                sessionScene: '销售接待'
               }
             },
             {
@@ -20734,7 +20790,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '赵女士',
             model: '传祺 ES9',
             stage: '已接待待试驾',
-            qcScene: '进店接待',
+            qcScene: '销售接待',
             appointmentOwner: 'DCC 张琳',
             receptionOwner: '李昱',
             followupOwner: '李昱',
@@ -20757,7 +20813,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '黄先生',
             model: '传祺 E9',
             stage: '今日预约待到店',
-            qcScene: '进店接待',
+            qcScene: '销售接待',
             appointmentOwner: 'DCC 张琳',
             receptionOwner: '李昱',
             followupOwner: '待接待后确认',
@@ -20803,7 +20859,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '孙女士',
             model: '传祺 M8 Pro',
             stage: '已到店待回访',
-            qcScene: '进店接待',
+            qcScene: '销售接待',
             appointmentOwner: 'DCC 苏楠',
             receptionOwner: '李昱',
             followupOwner: '待确认',
@@ -20838,7 +20894,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             action: '今日 11:00 前完成战败回访，明确记录是“价格超预算”、“竞品对比”还是“购车时机延后”，并设置 30 天二次激活任务。',
             actionHighlights: ['今日 11:00 前', '价格超预算', '竞品对比', '购车时机延后', '30 天二次激活任务'],
             tags: ['B级客户', '战败待回访', '需补原因'],
-            chainNote: '到店接待和试驾都已完成，当前只剩战败回访与原因归档。',
+            chainNote: '销售接待和试驾都已完成，当前只剩战败回访与原因归档。',
             updatedAt: '2026-03-22 21:30',
             followUpTime: '2026-03-23 11:00'
           }
@@ -21092,10 +21148,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const totalItems = leads.length
-        const totalPages = Math.max(1, Math.ceil(totalItems / SALES_TODO_PAGE_SIZE))
+        const pageSize = advisorState.todoPageSize
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
         advisorState.todoPage = Math.min(totalPages, Math.max(1, advisorState.todoPage || 1))
-        const startIndex = (advisorState.todoPage - 1) * SALES_TODO_PAGE_SIZE
-        const pagedLeads = leads.slice(startIndex, startIndex + SALES_TODO_PAGE_SIZE)
+        const startIndex = (advisorState.todoPage - 1) * pageSize
+        const pagedLeads = leads.slice(startIndex, startIndex + pageSize)
 
         list.innerHTML = pagedLeads.map(buildAdvisorLeadCard).join('')
 
@@ -21184,7 +21241,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             <div class="chain-owner-card">
               <div class="history-block-title">接待责任</div>
               <div class="history-block-text">${lead.receptionOwner}</div>
-              <div class="history-meta">负责到店接待、试驾安排与现场需求深挖。</div>
+              <div class="history-meta">负责销售接待、试驾安排与现场需求深挖。</div>
             </div>
             <div class="chain-owner-card">
               <div class="history-block-title">后续跟进</div>

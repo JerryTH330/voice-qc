@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
+const releaseVersion = '20261028-full-sync-v1';
 const areas = ['session', 'leads', 'store-dashboard', 'factory-dashboard', 'sales-dashboard'];
 
 function cacheVersion(url) {
@@ -42,7 +43,7 @@ for (const area of areas) {
   test(`${area}: actual bootstrap loads its required modules before runtime, with valid cache URLs`, () => {
     const {at, files, version} = bootstrap(area);
     const unified = files.includes('shared/unified-data.js');
-    if (area !== 'factory-dashboard') assert(unified, `${area} must load shared facts`);
+    assert(unified, `${area} must load shared facts`);
     if (unified) {
       assert(at('leads/organization-data.js') < at('shared/organization-directory.js'));
       assert(at('shared/organization-directory.js') < at('device-management/organization-data.js'));
@@ -78,7 +79,7 @@ for (const area of areas) {
 }
 
 test('entries in the shared dashboard release use consistent cache versions for the same modules', () => {
-  const entries = ['session', 'leads', 'store-dashboard', 'sales-dashboard'].map(bootstrap);
+  const entries = areas.map(bootstrap);
   for (const file of ['shared/linked-demo-data.js', 'shared/badge-history-data.js', 'shared/unified-data.js', 'shared/unified-dashboard.js', 'app-runtime.js']) {
     assert.equal(new Set(entries.map(entry => entry.version(file))).size, 1, `inconsistent cache versions: ${file}`);
   }
@@ -114,5 +115,5 @@ test('device entry preserves its original dependencies and versions its current 
     }
     assert(index('shared/unified-data.js') < index('device-management/page.js'));
   }
-  assert.equal(cacheVersion(urls[index('device-management/page.js')]), bootstrap('session').version('app-runtime.js'), 'device page must use the current fix version');
+  assert.equal(cacheVersion(urls[index('device-management/page.js')]), releaseVersion, 'device page must use the current fix version');
 });

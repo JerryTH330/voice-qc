@@ -1,6 +1,6 @@
 /* 销售看板 independent page styles. */
-@import url("../voice-qc-admin.css?v=20261027-global-audit-fixes-v1");
-@import url("../app-inline.css?v=20260811-figma-panels-v19");
+@import url("../voice-qc-admin.css?v=20261028-full-sync-v1");
+@import url("../app-inline.css?v=20261028-full-sync-v1");
 
 .sales-role-dashboard-page .hm-label--ellipsis {
   display: block;
@@ -1060,6 +1060,25 @@
   }
 }
 
+.sales-role-dashboard-page #sales-sop-review-list .dashboard-badge-pagination :is(.session-pagination-total, .session-page-jump-label, .session-page-jump-suffix) {
+  color: #68758a;
+  line-height: 20px;
+}
+
+.sales-role-dashboard-page #sales-sop-review-list .dashboard-badge-pagination :is(.issue-rule-page-btn, .issue-rule-page-number) {
+  font-weight: 700;
+}
+
+.sales-role-dashboard-page #sales-sop-review-list .dashboard-badge-pagination .issue-rule-page-btn:disabled {
+  background: rgba(248, 250, 253, 0.88);
+}
+
+.sales-role-dashboard-page #sales-sop-review-list .dashboard-badge-pagination .page-jump-select {
+  width: 54px;
+  min-width: 54px;
+  color: #68758a;
+}
+
 .sales-role-dashboard-page .review-insight-list .issue-rule-pagination .dashboard-pagination {
   width: 100%;
   min-height: 38px;
@@ -1359,6 +1378,7 @@ body .issue-recording-library-overlay .recording-library-filter-control {
 .sales-role-dashboard-page .sales-sop-review-list .issue-rule-list {
   min-height: 0;
   flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 .sales-role-dashboard-page .sales-sop-review-list :is(.issue-rule-rate, .issue-rule-count) {
@@ -2052,6 +2072,17 @@ body .sales-recording-library-overlay .recording-library-more {
 
 .sales-role-dashboard-page .sales-sop-review-list > .issue-rule-pagination {
   margin: 0;
+}
+
+@container (max-width: 640px) {
+  .sales-role-dashboard-page #sales-sop-review-list .issue-rule-pagination .dashboard-pagination-controls {
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+
+  .sales-role-dashboard-page #sales-sop-review-list .issue-rule-pagination :is(.page-group, .page-jump-group) {
+    gap: 4px;
+  }
 }
 
 /* SOP执行分析严格复用厂端看板规范，收口后续历史覆盖。 */
