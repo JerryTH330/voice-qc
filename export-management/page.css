@@ -1,9 +1,9 @@
 .main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .topbar { margin-bottom: 8px; }
-.export-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) max-content; gap: 12px; align-items: center; }
+.export-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(300px, 340px) max-content; gap: 12px; align-items: center; }
 .export-select [hidden], #exportDateMenu[hidden] { display: none; }
 .export-select .session-select-trigger { width: 100%; }
-.export-date-control { position: relative; }
+.export-date-control { position: relative; padding-inline: 10px; gap: 6px; }
 .export-date-control .session-date-trigger { min-width: 0; flex: 1; }
 .export-date-control .session-date-trigger strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #exportDateMenu { left: auto; right: 0; min-width: 340px; max-height: calc(100vh - 210px); overflow-y: auto; }

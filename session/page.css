@@ -267,23 +267,22 @@ body > .sr-intent-rule-tooltip[data-placement="top"]::before {
 }
 .sr-menu-group + .sr-menu-group { margin-top: 6px; border-top: 1px solid var(--line); }
 .sr-menu-group-label { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
-.session-real-root .sr-date-control { padding-inline: 10px; gap: 6px; }
-.session-real-root .sr-date-control > span:first-child { width: 3em; white-space: normal; line-height: 18px; }
+.session-real-root .sr-date-control { grid-column: span 2; max-width: 360px; padding-inline: 10px; gap: 6px; }
+.session-real-root .sr-date-control > span:first-child { white-space: nowrap; }
 .session-real-root .sr-date-control .session-date-trigger {
-  display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
-  grid-template-rows: repeat(2, 18px);
-  align-content: center;
-  gap: 0 4px;
-  padding: 0 24px 0 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
   overflow: visible;
 }
-.session-real-root .sr-date-control .session-date-trigger strong { grid-column: 2; line-height: 18px; }
-.session-real-root .sr-date-control .session-date-trigger strong:first-child { grid-row: 1; }
-.session-real-root .sr-date-control .session-date-trigger strong:nth-of-type(2) { grid-row: 2; }
-.session-real-root .sr-date-control .session-date-trigger em { grid-area: 2 / 1; line-height: 18px; }
-.session-real-root .sr-date-control .session-date-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); margin: 0; }
-.sr-date-control .session-date-trigger em { font-style: normal; }
+.session-real-root .sr-date-control .session-date-trigger strong { flex: 0 0 auto; }
+.session-real-root .sr-date-control .session-date-trigger em { flex: 0 0 auto; font-style: normal; }
+.session-real-root .sr-date-control .session-date-icon { position: static; transform: none; margin: 0 0 0 auto; }
+@media (max-width: 620px) {
+  .session-real-root .sr-date-control { grid-column: auto; max-width: none; }
+}
 .sr-scenario-group-select {
   width: 100%;
   min-height: 42px;

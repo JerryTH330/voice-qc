@@ -430,6 +430,11 @@
   overflow: visible;
   z-index: 4;
 }
+/* 日期范围整体跨列，标签和起止日期保持一行；窄屏只让控件整体换行。 */
+.badge-dynamic-filter-grid .badge-field-filter-date-time { grid-column: span 2; max-width: 360px; padding-inline: 10px; gap: 6px; }
+@media (max-width: 620px) {
+  .badge-dynamic-filter-grid .badge-field-filter-date-time { grid-column: auto; max-width: none; }
+}
 .badge-field-filter-date-time.is-open { z-index: 32; }
 .badge-field-filter-date-time .session-date-trigger {
   min-width: 0;
