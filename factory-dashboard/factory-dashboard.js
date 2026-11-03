@@ -700,9 +700,9 @@
     '质检合格率':    '合格录音占分析录音的比率（合格数 ÷ 分析录音数）',
     '风险录音数':    '含违规或风险话术的录音条数',
     '风险录音率':    '风险录音占分析录音的比率（风险数 ÷ 分析录音数）',
-    '邀约录音数':    '当期邀约场景下进入质检分析的录音条数',
-    '接待录音数':    '当期门店接待场景下进入质检分析的录音条数',
-    '试驾录音数':    '当期试乘试驾场景下进入质检分析的录音条数',
+    '邀约录音数':    '当期首触跟进、邀约到店及排程确认业务场景下进入质检分析的录音条数',
+    '接待录音数':    '当期销售接待业务场景下进入质检分析的录音条数',
+    '试驾录音数':    '当期试乘试驾业务场景下进入质检分析的录音条数',
     '云外呼录音数':  '当期云外呼来源下进入质检分析的录音总条数',
     '门店工牌录音数': '当期门店工牌来源下进入质检分析的录音总条数',
     '分析用户数':    '进入 SOP 分析样本池的去重客户数',
@@ -4086,10 +4086,10 @@
         ${previewLabels.map(label => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}</em>`).join('')}
       </span>
       ${hasMore ? `
-        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
+        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部业务场景">...</span>
       ` : ''}
       <span class="issue-rule-scene-popover" role="tooltip">
-        <strong>所属业务场景</strong>
+        <strong>业务场景</strong>
         <span class="issue-rule-scene-popover-tags">
           ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
         </span>
@@ -4161,7 +4161,7 @@
       '时间范围',
       '业务场景筛选',
       'SOP规则',
-      '所属业务场景',
+      '业务场景',
       '命中率',
       '命中数',
       '样本数'

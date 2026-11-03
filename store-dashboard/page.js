@@ -13,14 +13,14 @@ window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
     "../dashboard-filter-utils.js?v=20261028-full-sync-v1",
     "../date-filter-component-utils.js?v=20261028-full-sync-v1",
     "../store-date-control-utils.js?v=20261028-full-sync-v1",
-    "../shared/issue-rule-list.js?v=20261028-full-sync-v1",
+    "../shared/issue-rule-list.js?v=20261102-business-scenes-v1",
     "../device-management/visit-organization-filter.js?v=20261028-full-sync-v1",
     "../factory-dashboard/organization-filter.js?v=20261028-full-sync-v1",
     "./demo-data.js?v=20261028-full-sync-v1",
     "./organization-filter.js?v=20261028-full-sync-v1",
-    "./business-filters.js?v=20261028-full-sync-v1",
+    "./business-filters.js?v=20261102-scene-filter-style-v6",
     "../shared/unified-dashboard.js?v=20261028-full-sync-v1",
-    "../app-runtime.js?v=20261028-full-sync-v1"
+    "../app-runtime.js?v=20261102-scene-filter-style-v6"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

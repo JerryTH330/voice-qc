@@ -70,11 +70,11 @@
   }
 
   function getSessionSourceFromStage(stage) {
-    if (stage === '邀约' || stage === '试驾PDC') {
+    if (['首触跟进', '邀约到店', '排程确认', '邀约', '试驾PDC'].includes(stage)) {
       return '云外呼';
     }
 
-    if (stage === '试驾' || stage === '销售接待' || stage === '到店接待') {
+    if (['销售接待', '试乘试驾', '试驾', '到店接待'].includes(stage)) {
       return '工牌';
     }
 

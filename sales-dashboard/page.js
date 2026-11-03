@@ -15,13 +15,13 @@ window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
     "../shared/issue-rule-list.js",
     "../shared/dimension-switcher.js?v=20261028-full-sync-v1",
     "../device-management/visit-organization-filter.js?v=20261028-full-sync-v1",
-    "./business-scene-filter.js?v=20261028-full-sync-v1",
+    "./business-scene-filter.js?v=20261102-scene-filter-style-v6",
     "./source-tabs.js?v=20261028-full-sync-v1",
     "./organization-filter.js?v=20261028-full-sync-v1",
     "../store-dashboard/organization-filter.js?v=20261028-full-sync-v1",
-    "../store-dashboard/business-filters.js?v=20261028-full-sync-v1",
+    "../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6",
     "../shared/unified-dashboard.js?v=20261028-full-sync-v1",
-    "../app-runtime.js?v=20261028-full-sync-v1"
+    "../app-runtime.js?v=20261102-scene-filter-style-v6"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

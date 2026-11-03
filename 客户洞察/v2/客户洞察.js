@@ -6,7 +6,7 @@
 
   const STAGES = {
     online: {
-      kicker: "邀约场景 · 线索状态对比",
+      kicker: "云外呼业务场景 · 线索状态对比",
       title: "客群对比分析",
       desc: "按业务选择的真实线索状态分组，比较观察窗口内的邀约对话信号与销售动作。",
       rule: "以首条邀约类录音为 T0，按观察期结束时的线索状态分组；重叠客户在两组分别保留。",
@@ -27,7 +27,7 @@
       ]
     },
     offline: {
-      kicker: "门店场景 · 线索状态对比",
+      kicker: "工牌业务场景 · 线索状态对比",
       title: "客群对比分析",
       desc: "按业务选择的真实线索状态分组，比较成交前或统计截止日前的接待对话。",
       rule: "线下以首次真实到店为 T0；重叠客户在两组分别保留，各项占比仍使用各组客户作为分母。",
@@ -374,7 +374,7 @@
       offline: 1412,
       offlineValid: 1327,
       linked: 1302,
-      summary: "埃安品牌到店率本周升至 39.2%，但 AION V 仍低于品牌均值 2.2 个百分点。华东大区的价格预算顾虑影响范围最大；“完整解释价格构成”动作完成率低于品牌基准，建议优先进入门店场景验证。",
+      summary: "埃安品牌到店率本周升至 39.2%，但 AION V 仍低于品牌均值 2.2 个百分点。华东大区的价格预算顾虑影响范围最大；“完整解释价格构成”动作完成率低于品牌基准，建议优先进入工牌业务场景验证。",
       models: [
         { name: "AION V", series: "主力 SUV", invite: 1248, valid: 1182, arrival: 37.0, orders: 138, contribution: 30.3, scenes: ["购车紧迫性低", "到店时间不便", "价格或预算顾虑", "落地价超预算", "拒绝试驾"], competitor: "宋 PLUS", trend: -1.8, priority: 96 },
         { name: "AION Y Plus", series: "紧凑型 SUV", invite: 986, valid: 929, arrival: 42.6, orders: 152, contribution: 33.4, scenes: ["竞品比较未完成", "到店时间不便", "距离或交通不便", "贷款总成本压力", "已约试驾"], competitor: "银河 E5", trend: 3.1, priority: 82 },
@@ -382,8 +382,8 @@
         { name: "AION RT", series: "智能轿车", invite: 521, valid: 479, arrival: 43.2, orders: 79, contribution: 17.4, scenes: ["—", "到店时间不便", "距离或交通不便", "家庭决策未完成", "业务与对话口径不一致"], competitor: "小鹏 MONA", trend: 2.7, priority: 63 }
       ],
       attention: [
-        { stage: "online", topic: "resistance", label: "邀约场景", change: "+8.6%", title: "先查 AION V 的价格顾虑", detail: "483 名客户出现价格或预算顾虑，华东大区最集中", meta: "已连续上升 3 周", recommendation: "查看未到店客户原声，确认报价和预算引导哪里断了" },
-        { stage: "offline", topic: "action", label: "门店场景", change: "-7.4pp", title: "再统一价格构成说明", detail: "762 名客户需要说明价格，动作完成率仅 58.6%", meta: "已连续低于基准 2 期", recommendation: "优先复盘低完成门店，统一裸车、保险、金融和置换说明" },
+        { stage: "online", topic: "resistance", label: "云外呼业务场景", change: "+8.6%", title: "先查 AION V 的价格顾虑", detail: "483 名客户出现价格或预算顾虑，华东大区最集中", meta: "已连续上升 3 周", recommendation: "查看未到店客户原声，确认报价和预算引导哪里断了" },
+        { stage: "offline", topic: "action", label: "工牌业务场景", change: "-7.4pp", title: "再统一价格构成说明", detail: "762 名客户需要说明价格，动作完成率仅 58.6%", meta: "已连续低于基准 2 期", recommendation: "优先复盘低完成门店，统一裸车、保险、金融和置换说明" },
         { stage: "offline", topic: "competitor", label: "竞品对比", change: "+5.2%", title: "最后补齐宋 PLUS 对比口径", detail: "642 名客户提及宋 PLUS，战败组更集中", meta: "已连续上升 2 期", recommendation: "聚焦客户最常比较的价格与后排空间，整理对比话术" }
       ]
     },
@@ -403,8 +403,8 @@
         { name: "传祺 ES9", series: "新能源 SUV", invite: 512, valid: 474, arrival: 35.0, orders: 65, contribution: 14.8, scenes: ["—", "到店时间不便", "购车紧迫性低", "家庭决策未完成", "业务与对话口径不一致"], competitor: "理想 L6", trend: -2.4, priority: 88 }
       ],
       attention: [
-        { stage: "online", topic: "resistance", label: "邀约场景", change: "+6.1%", title: "先查 E9 的金融月供顾虑", detail: "356 名客户出现金融月供顾虑，华南大区最集中", meta: "已连续上升 2 周", recommendation: "查看未到店客户原声，确认月供解释和预算匹配哪里断了" },
-        { stage: "offline", topic: "action", label: "门店场景", change: "-5.8pp", title: "再补齐 GS8 置换评估", detail: "418 名客户存在置换机会，动作完成率仅 52.4%", meta: "已连续低于基准 2 期", recommendation: "优先复盘低完成门店，统一置换估值与补贴说明" },
+        { stage: "online", topic: "resistance", label: "云外呼业务场景", change: "+6.1%", title: "先查 E9 的金融月供顾虑", detail: "356 名客户出现金融月供顾虑，华南大区最集中", meta: "已连续上升 2 周", recommendation: "查看未到店客户原声，确认月供解释和预算匹配哪里断了" },
+        { stage: "offline", topic: "action", label: "工牌业务场景", change: "-5.8pp", title: "再补齐 GS8 置换评估", detail: "418 名客户存在置换机会，动作完成率仅 52.4%", meta: "已连续低于基准 2 期", recommendation: "优先复盘低完成门店，统一置换估值与补贴说明" },
         { stage: "offline", topic: "competitor", label: "竞品对比", change: "+4.7%", title: "最后补齐腾势 D9 对比口径", detail: "487 名客户提及腾势 D9，价格提及持续增加", meta: "已连续上升 2 期", recommendation: "聚焦金融方案与二排体验，整理可复用的对比话术" }
       ]
     }
@@ -583,11 +583,11 @@
     "继续邀约": { customers: 57, valid: 52 },
     "跟进中": { customers: 101, valid: 94 }
   };
-  const SCENE_VALUES = ["first_follow", "schedule_confirm", "invite_store", "sales_reception", "test_drive"];
+  const SCENE_VALUES = ["first_follow", "invite_store", "schedule_confirm", "store_reception", "test_drive"];
   const REGION_MODEL_PAGE_SIZE = 10;
   const STAGE_SCENES = {
     online: ["first_follow", "invite_store", "schedule_confirm"],
-    offline: ["sales_reception", "test_drive"]
+    offline: ["store_reception", "test_drive"]
   };
   const DATA_CUTOFF = new Date(2026, 6, 20);
   const state = {
@@ -720,10 +720,10 @@
   function updateSceneFilterSummary() {
     const count = state.scenes.size;
     $("#sceneFilterSummary").textContent = count === SCENE_VALUES.length
-      ? `全部业务场景（${SCENE_VALUES.length}）`
+      ? "全部"
       : count
-        ? `已选 ${count} 个场景`
-        : "未选择业务场景";
+        ? `${count}项`
+        : "0项";
     $$("[data-journey-scene]").forEach((chip) => {
       const selected = state.scenes.has(chip.dataset.journeyScene);
       chip.classList.toggle("is-selected", selected);
@@ -818,7 +818,7 @@
         : `已选 ${state.overviewStatuses.size} 个线索状态`);
     }
     if (includeScenes && state.stage !== "overview") {
-      parts.push(`已选 ${getSelectedStageSceneCount(state.stage)} 个相关场景`);
+      parts.push(`已选 ${getSelectedStageSceneCount(state.stage)} 个相关业务场景`);
     }
     return parts.join(" · ");
   }
@@ -1251,7 +1251,7 @@
     setOverviewAiGenerateLabel(hasOverviewScopeData()
       ? (hadResult ? "重新生成" : "生成 AI 综合判断")
       : "暂无可分析数据");
-    if (!state.scenes.size) $("#overviewAiSummaryMeta").textContent = "当前未选择业务场景，请先选择至少一个场景";
+    if (!state.scenes.size) $("#overviewAiSummaryMeta").textContent = "当前未选择业务场景，请先选择至少一个业务场景";
     else if (!state.overviewStatuses.size) $("#overviewAiSummaryMeta").textContent = "当前未选择线索状态，请先选择至少一个状态";
   }
 
@@ -1844,7 +1844,7 @@
     $("#comparisonTitle").textContent = isSingle ? `聚焦“${single.name}”客群的对话特征` : meta.title;
     $("#comparisonDesc").textContent = selectedSceneLabels.length
       ? `A/B 客群按“观测 ${state.windowDays} 天 + 用户选中的线索状态”定义 · ${getScopeLabel()} · 当前纳入：${selectedSceneLabels.join("、")}。`
-      : "当前阶段未选择业务场景，请在经营范围中至少选择一个场景。";
+      : "当前阶段未选择业务场景，请在经营范围中至少选择一个业务场景。";
     updateComparisonStatusFilterSummary();
 
     const a = groups.a;
@@ -2022,7 +2022,7 @@
     const rows = UNIFIED_ACTIONS[state.stage];
     $("#unifiedActionBody").innerHTML = rows.map((row, index) => `
       <tr>
-        <td class="candidate-name"><strong>${escapeHTML(row[0])}</strong><small>${state.stage === "online" ? "邀约场景" : "门店场景"}</small></td>
+        <td class="candidate-name"><strong>${escapeHTML(row[0])}</strong><small>${state.stage === "online" ? "云外呼业务场景" : "工牌业务场景"}</small></td>
         <td><span class="source-tag ${row[6]}">${escapeHTML(row[1])}</span></td>
         <td>${Math.round(Number(String(row[2]).replaceAll(",", "")) * getWindowScale()).toLocaleString("zh-CN")} 人</td>
         <td><span class="metric-strong">${escapeHTML(row[3])}</span></td>
@@ -2043,7 +2043,7 @@
       const stableClass = row[5] === "稳定" ? "stable" : "observe";
       return `
         <tr>
-          <td class="candidate-name"><strong>${escapeHTML(row[0])}</strong><small>${state.stage === "online" ? "邀约场景" : "门店场景"} · 新增识别</small></td>
+          <td class="candidate-name"><strong>${escapeHTML(row[0])}</strong><small>${state.stage === "online" ? "云外呼业务场景" : "工牌业务场景"} · 新增识别</small></td>
           <td>${escapeHTML(row[1])}</td>
           <td class="rate-pair">${state.mode === "single" ? `<span class="${state.singleGroup}">${row[state.singleGroup === "a" ? 2 : 3]}%</span>` : `<span class="a">${row[2]}%</span><i>/</i><span class="b">${row[3]}%</span>`}</td>
           <td><span class="lift-value">${escapeHTML(row[4])}</span></td>
@@ -2086,8 +2086,8 @@
     const isOnline = state.stage === "online";
     $("#groupModalKicker").textContent = isOnline ? "邀约客群对比" : "门店客群对比";
     $("#groupModalDescription").textContent = isOnline
-      ? `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较邀约场景中的对话信号与销售动作。`
-      : `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较门店场景中的对话信号、销售动作与结果差异。`;
+      ? `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较云外呼业务场景中的对话信号与销售动作。`
+      : `A/B 客群由观测 ${state.windowDays} 天和各组所选线索状态共同定义，比较工牌业务场景中的对话信号、销售动作与结果差异。`;
     $("#applyPreset").innerHTML = isOnline
       ? "已预约到店、已邀约到店、到店跟进中 <b>vs</b> 未跟进、战败已通过(未到店)"
       : "下订单 <b>vs</b> 战败";
@@ -2212,7 +2212,7 @@
         <article><strong>${impact.impactRate.toFixed(1)}%</strong><span>区域车型客户占比</span></article>
         <article><strong>${impact.recordings.toLocaleString("zh-CN")}</strong><span>相关录音</span></article>
       </div><p class="matrix-detail-note">当前范围共 ${impact.scopedCustomers.toLocaleString("zh-CN")} 名可分析客户；客户级去重，同一客户可命中多个标签。</p></section>
-      <section class="drawer-section"><h3>场景分布</h3><div class="matrix-scene-list">${scenes.map((scene) => `
+      <section class="drawer-section"><h3>业务场景分布</h3><div class="matrix-scene-list">${scenes.map((scene) => `
         <div class="matrix-scene-row"><span>${escapeHTML(scene.label)}</span><i><b style="width:${scene.share}%"></b></i><strong>${scene.share}%</strong><em>${scene.customers.toLocaleString("zh-CN")} 人</em></div>
       `).join("")}</div></section>
       <section class="drawer-section"><h3>近 6 周趋势</h3><div class="matrix-trend-summary"><strong class="${trend.change >= 0 ? "up" : "down"}">${trend.change >= 0 ? "+" : ""}${trend.change.toFixed(1)}pp</strong><span>相较 6 周前</span></div><div class="matrix-trend-chart">${trend.points.map((point) => `
@@ -2221,7 +2221,7 @@
       <section class="drawer-section"><h3>客户原声</h3><div class="matrix-voice-list">${voices.map((voice) => `
         <article><p class="evidence-line">${escapeHTML(voice.text)}</p><div class="evidence-meta"><span>${escapeHTML(voice.customer)} · ${escapeHTML(voice.location)}</span><span>${escapeHTML(voice.time)}</span></div></article>
       `).join("")}</div></section>
-      <section class="drawer-section glossary-warning"><h3>解读边界</h3><p>影响客户、场景分布和趋势用于定位复盘范围；差异只表示该标签在当前车型 × 区域组合中更集中，不直接代表因果。</p></section>
+      <section class="drawer-section glossary-warning"><h3>解读边界</h3><p>影响客户、业务场景分布和趋势用于定位复盘范围；差异只表示该标签在当前车型 × 区域组合中更集中，不直接代表因果。</p></section>
     `;
     $("#detailDrawer").hidden = false;
     document.body.style.overflow = "hidden";
@@ -2233,7 +2233,7 @@
     const groupName = voice[0] === "a" ? groups.a.name : groups.b.name;
     $("#drawerKicker").textContent = "匿名客户证据";
     $("#drawerTitle").textContent = voice[1];
-    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "邀约场景" : "门店场景"} · ${groupName}`;
+    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "云外呼业务场景" : "工牌业务场景"} · ${groupName}`;
     $("#drawerBody").innerHTML = `
       <section class="drawer-section"><h3>已识别客户信号</h3><div class="drawer-tags"><span>${escapeHTML(row.name)}</span><span>${escapeHTML(row.sub)}</span><span>${escapeHTML($("#modelFilter").value === "all" ? $("#brandFilter").value : $("#modelFilter").value)}</span><span>${groupName}</span></div></section>
       <section class="drawer-section"><h3>真实对话证据</h3><p class="evidence-line">${escapeHTML(voice[2])}</p><div class="evidence-meta"><span>${escapeHTML(getScopedVoiceLocation(voice[3]))}</span><span>${escapeHTML(voice[4])}</span></div></section>
@@ -2248,7 +2248,7 @@
     const evidence = DATA[state.stage].action.rows[Math.min(index, DATA[state.stage].action.rows.length - 1)].voices[0];
     $("#drawerKicker").textContent = "标准销售动作候选";
     $("#drawerTitle").textContent = row[0];
-    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "邀约场景" : "门店场景"} · ${row[6]}`;
+    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "云外呼业务场景" : "工牌业务场景"} · ${row[6]}`;
     $("#drawerBody").innerHTML = `
       <section class="drawer-section action-definition"><h3>候选动作定义</h3><dl><dt>能力来源</dt><dd>1.0 新增识别，未被现有 SOP 覆盖</dd><dt>客户信号</dt><dd>${escapeHTML(row[1])}</dd><dt>动作要求</dt><dd>${escapeHTML(row[0])}，并在对话中明确客户可确认的内容。</dd><dt>动作完成率</dt><dd>${state.mode === "single" ? `${getStageGroups(STAGES[state.stage])[state.singleGroup].name} ${row[state.singleGroup === "a" ? 2 : 3]}%` : `A 组 ${row[2]}% / B 组 ${row[3]}%`}</dd><dt>目标结果率</dt><dd>完成 / 未完成：${escapeHTML(row[4])}</dd><dt>适用范围</dt><dd>${escapeHTML(getScopeLabel(true))} · 当前筛选时间</dd><dt>稳定性</dt><dd>${escapeHTML(row[5])}，仅表达结果关联，不代表因果。</dd></dl></section>
       <section class="drawer-section"><h3>支撑证据</h3><p class="evidence-line">${escapeHTML(evidence[2])}</p><div class="evidence-meta"><span>${escapeHTML(getScopedVoiceLocation(evidence[3]))}</span><span>${escapeHTML(evidence[4])}</span></div></section>
@@ -2272,7 +2272,7 @@
     const evidence = evidenceRows[Math.min(index, evidenceRows.length - 1)].voices[0];
     $("#drawerKicker").textContent = row[1] === "已有 SOP" ? "已有 SOP 动作" : "1.0 新增识别动作";
     $("#drawerTitle").textContent = row[0];
-    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "邀约场景" : "门店场景"} · ${state.windowDays} 天结果观察期`;
+    $("#drawerSubtitle").textContent = `${state.stage === "online" ? "云外呼业务场景" : "工牌业务场景"} · ${state.windowDays} 天结果观察期`;
     $("#drawerBody").innerHTML = `
       <section class="drawer-section action-definition"><h3>动作口径</h3><dl><dt>来源</dt><dd>${escapeHTML(row[1])}</dd><dt>动作机会客户</dt><dd>${Math.round(Number(String(row[2]).replaceAll(",", "")) * getWindowScale()).toLocaleString("zh-CN")} 名</dd><dt>动作完成率</dt><dd>${escapeHTML(row[3])}</dd><dt>SOP 合格率</dt><dd>${row[4] === "—" ? "不适用，新增动作只判断完成" : escapeHTML(row[4])}</dd><dt>目标结果率</dt><dd>${escapeHTML(row[5])}，只表示关联，不代表因果</dd></dl></section>
       <section class="drawer-section"><h3>销售话术证据</h3><p class="evidence-line">${escapeHTML(evidence[2])}</p><div class="evidence-meta"><span>${escapeHTML(getScopedVoiceLocation(evidence[3]))}</span><span>${escapeHTML(evidence[4])}</span></div></section>
@@ -2326,7 +2326,7 @@
   }
 
   function openMetricGlossaryDrawer() {
-    const stageLabel = state.stage === "overview" ? "首页概览、邀约场景与门店场景通用" : state.stage === "online" ? "邀约场景" : "门店场景";
+    const stageLabel = state.stage === "overview" ? "首页概览、云外呼业务场景与工牌业务场景通用" : state.stage === "online" ? "云外呼业务场景" : "工牌业务场景";
     const resultLabel = state.stage === "overview"
       ? "当前选定线索状态"
       : `观察 ${state.windowDays} 天后的 A/B 组选定线索状态`;
@@ -2387,7 +2387,7 @@
     const hadResult = compareAiSummaryGenerated;
     compareAiSummaryGenerationId += 1;
     compareAiSummaryGenerated = false;
-    renderCompareRuleInsights();
+    if (state.stage !== "overview") renderCompareRuleInsights();
     $("#compareAiSummaryLoading").hidden = true;
     $("#aiResult").hidden = false;
     $("#compareAiExecutive").classList.add("is-pending");
@@ -2684,7 +2684,7 @@
     state.activeRow = 0;
     closeLayer("groupModal");
     renderStage();
-    showToast(`${state.stage === "online" ? "邀约" : "门店"}场景客群已配置；重叠客户将在两组中分别保留`, 'success');
+    showToast(`${state.stage === "online" ? "云外呼" : "工牌"}业务场景客群已配置；重叠客户将在两组中分别保留`, 'success');
   });
 
   $("#editGroupsButton").addEventListener("click", openGroupModal);

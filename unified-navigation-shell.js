@@ -4,6 +4,12 @@
   const toastStyle = document.createElement('link');
   toastStyle.rel = 'stylesheet'; toastStyle.href = new URL('shared/platform-toast.css?v=20261028-full-sync-v1', appRootUrl).href;
   document.head.appendChild(toastStyle);
+  const sceneStyle = document.createElement('link');
+  sceneStyle.rel = 'stylesheet'; sceneStyle.href = new URL('shared/business-scene-filter.css?v=20261102-scene-filter-style-v6', appRootUrl).href;
+  document.head.appendChild(sceneStyle);
+  const sceneScript = document.createElement('script');
+  sceneScript.src = new URL('shared/business-scene-filter.js?v=20261102-scene-filter-style-v6', appRootUrl).href;
+  document.head.appendChild(sceneScript);
   const toastIcons = {
     success: '<circle cx="10" cy="10" r="7.5"/><path d="m6.5 10 2.3 2.3 4.7-4.7"/>',
     error: '<circle cx="10" cy="10" r="7.5"/><path d="M10 6v4.5"/><circle cx="10" cy="13.5" r=".75" fill="currentColor" stroke="none"/>',
@@ -56,7 +62,7 @@
   };
   const exportScriptVersions = {
     'device-management/xlsx-export-utils.js': '20261028-full-sync-v1',
-    'shared/export-tasks.js': '20261028-full-sync-v1',
+    'shared/export-tasks.js': '20261102-business-scenes-v1',
     'shared/export-task-browser.js': '20261028-full-sync-v1'
   };
   window.__exportReady = Object.keys(exportScriptVersions).reduce((ready, path) => ready.then(() => new Promise((resolve, reject) => {

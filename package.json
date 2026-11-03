@@ -5,9 +5,10 @@
   "description": "AI 质检与客户洞察 HTML 原型及回归验证",
   "scripts": {
     "test": "node --test tests/*.test.cjs",
+    "test:monthly-pipeline": "python3 -B -m unittest discover -s tests -p 'test_monthly_pipeline.py' -v",
     "check:icons": "node scripts/check-dock-navigation-icon.js && node scripts/check-badge-event-icons.js",
     "check:versions": "node scripts/check-version-sync.js",
-    "validate": "npm run check:versions && npm run check:icons && node scripts/check-dock-store-search-ime.js && npm test"
+    "validate": "npm run check:versions && npm run check:icons && node scripts/check-dock-store-search-ime.js && npm test && npm run test:monthly-pipeline"
   },
   "engines": {
     "node": ">=22"

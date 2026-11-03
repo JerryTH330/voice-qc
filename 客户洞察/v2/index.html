@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="从品牌与车型总览进入邀约场景、门店场景分析，并回溯真实对话证据" />
+    <meta name="description" content="从品牌与车型总览进入云外呼业务场景、工牌业务场景分析，并回溯真实对话证据" />
     <title>客户洞察 · AI质检平台</title>
     <link rel="icon" href="../../assets/ds-logo.png" />
     <link rel="stylesheet" href="./客户洞察.css?v=20261028-full-sync-v1" />
@@ -65,22 +65,24 @@
               <label><span>品牌</span><select id="brandFilter"><option>埃安</option><option>传祺</option></select></label>
               <label><span>组织</span><select id="orgFilter"><option>全国</option><option>华东大区</option><option>华南大区</option></select></label>
               <label><span>目标车型</span><select id="modelFilter"><option value="all">全部车型</option><option>AION V</option><option>AION Y Plus</option><option>AION S Plus</option><option>AION RT</option></select></label>
-              <div class="scope-field scene-filter">
+              <div class="scope-field scene-filter business-scene-filter" data-business-scene-filter>
                 <span>业务场景</span>
-                <details id="sceneFilter">
-                  <summary id="sceneFilterSummary">全部业务场景（5）</summary>
-                  <div class="scene-filter-menu" role="group" aria-label="业务场景">
-                    <div class="scene-filter-group">
-                      <strong>邀约场景</strong>
-                      <label><input type="checkbox" value="first_follow" checked /><span>首触跟进</span></label>
-                      <label><input type="checkbox" value="invite_store" checked /><span>邀约到店</span></label>
-                      <label><input type="checkbox" value="schedule_confirm" checked /><span>排程确认</span></label>
+                <details id="sceneFilter" data-business-scene-picker>
+                  <summary id="sceneFilterSummary" class="business-scene-trigger" aria-label="业务场景筛选">全部</summary>
+                  <div class="scene-filter-menu business-scene-menu" data-business-scene-floating role="group" aria-label="业务场景">
+                    <label class="business-scene-search"><input type="search" data-business-scene-search placeholder="搜索业务场景" aria-label="搜索业务场景" autocomplete="off" spellcheck="false"></label>
+                    <div class="scene-filter-group business-scene-group">
+                      <strong>云外呼</strong>
+                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="first_follow" checked /><span>首触跟进</span></label>
+                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="invite_store" checked /><span>邀约到店</span></label>
+                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="schedule_confirm" checked /><span>排程确认</span></label>
                     </div>
-                    <div class="scene-filter-group">
-                      <strong>门店场景</strong>
-                      <label><input type="checkbox" value="sales_reception" checked /><span>门店接待</span></label>
-                      <label><input type="checkbox" value="test_drive" checked /><span>试乘试驾</span></label>
+                    <div class="scene-filter-group business-scene-group">
+                      <strong>工牌</strong>
+                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="store_reception" checked /><span>销售接待</span></label>
+                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="test_drive" checked /><span>试乘试驾</span></label>
                     </div>
+                    <div class="business-scene-empty" hidden>未找到匹配业务场景</div>
                   </div>
                 </details>
               </div>
@@ -310,7 +312,7 @@
           <section class="comparison-hero card" aria-labelledby="comparisonTitle">
             <div class="comparison-heading">
               <div>
-                <div class="comparison-title-row"><span class="section-kicker" id="stageKicker">邀约场景 · 线索状态对比</span><h2 id="comparisonTitle">客群对比分析</h2></div>
+                <div class="comparison-title-row"><span class="section-kicker" id="stageKicker">云外呼业务场景 · 线索状态对比</span><h2 id="comparisonTitle">客群对比分析</h2></div>
                 <p id="comparisonDesc">A/B 客群按“观测 7 天 + 用户选中的线索状态”定义，比较邀约对话信号与销售动作。</p>
               </div>
             </div>
@@ -465,13 +467,13 @@
 
     <div class="drawer-backdrop" id="detailDrawer" hidden>
       <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
-        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">邀约场景 · 最终未到店</p></div><button class="icon-button platform-close-icon" data-close="detailDrawer" type="button" aria-label="关闭"></button></header>
+        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">云外呼业务场景 · 最终未到店</p></div><button class="icon-button platform-close-icon" data-close="detailDrawer" type="button" aria-label="关闭"></button></header>
         <div class="drawer-body" id="drawerBody"></div>
       </aside>
     </div>
 
-    <script src="../../unified-navigation-shell.js?v=20261028-full-sync-v1"></script>
-    <script src="./客户洞察.js?v=20261028-full-sync-v1"></script>
+    <script src="../../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
+    <script src="./客户洞察.js?v=20261102-scene-filter-style-v6"></script>
     <script src="../../fixed-action-column.js?v=20261028-full-sync-v1"></script>
   </body>
 </html>

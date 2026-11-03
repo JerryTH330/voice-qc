@@ -189,9 +189,9 @@
       </span>
       ${hasMore ? `
         <details class="issue-rule-scene-more">
-          <summary aria-label="查看全部所属业务场景">...</summary>
+          <summary aria-label="查看全部业务场景">...</summary>
           <span class="issue-rule-scene-popover">
-            <strong>所属业务场景</strong>
+            <strong>业务场景</strong>
             <span class="issue-rule-scene-popover-tags">
               ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
             </span>

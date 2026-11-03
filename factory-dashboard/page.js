@@ -16,15 +16,15 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
     "../factory-multi-select-filter-utils.js",
     "./factory-hero-utils.js",
     "./issue-rule-analysis-utils.js",
-    "../shared/issue-rule-list.js",
+    "../shared/issue-rule-list.js?v=20261102-business-scenes-v1",
     "./organization-filter.js",
-    "./factory-dashboard.js",
+    "./factory-dashboard.js?v=20261102-business-scenes-v1",
     "../device-management/visit-organization-filter.js?v=20261028-full-sync-v1",
     "../store-dashboard/organization-filter.js?v=20261028-full-sync-v1",
-    "../store-dashboard/business-filters.js?v=20261028-full-sync-v1",
+    "../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6",
     "../shared/dimension-switcher.js?v=20261028-full-sync-v1",
     "../shared/unified-dashboard.js?v=20261028-full-sync-v1",
-    "../app-runtime.js?v=20261028-full-sync-v1"
+    "../app-runtime.js?v=20261102-scene-filter-style-v6"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

@@ -20,6 +20,7 @@
   }
   function detail(task) {
     const visibleFilters = task.filters || [];
+    const fieldLabel = label => ['质检场景', '适用场景', '所属业务场景'].includes(label) ? '业务场景' : label;
     return `<section class="export-file-summary" aria-label="任务信息">
       <div class="export-file-art"><img src="../assets/export-detail/excel.svg" width="72" height="72" alt=""><span>XLSX</span></div>
       <div class="export-file-copy"><h3>${escape(task.filename)}</h3><p>来源：<strong>${escape(ExportTasks.sources[task.source])}</strong></p>${status(task)}</div>
@@ -27,8 +28,8 @@
     </section>
     <div class="export-detail-content">
       <section class="export-detail-section export-detail-times" aria-label="任务时间"><h3>任务时间</h3><div class="export-detail-section-body"><dl class="export-timeline">${[['提交时间', task.createdAt, 'submitted'], ['完成时间', task.completedAt, 'completed'], ['失效时间', task.expiresAt, 'expiry']].map(([label, value, step]) => `<div class="export-timeline-step ${step}${value == null ? ' is-pending' : ''}"><dt>${label}</dt><dd>${date(value)}</dd></div>`).join('')}</dl></div></section>
-      <section class="export-detail-section export-detail-filters"><h3>提交时的筛选条件</h3><div class="export-detail-section-body">${visibleFilters.length ? `<dl>${visibleFilters.map(filter => `<div><dt>${escape(filter.label)}</dt><dd>${filterValue(filter)}</dd></div>`).join('')}</dl>` : `<p class="export-muted">${task.filters?.length ? '暂无其他筛选条件' : '未设置筛选条件，导出全部记录'}</p>`}</div></section>
-      <section class="export-detail-section"><h3>导出字段<span class="export-field-caption">（按导出顺序）</span></h3><div class="export-detail-section-body"><ol class="export-field-list">${task.columns.map((column, index) => `<li><span class="export-field-number" aria-hidden="true">${index + 1}</span><span>${escape(column.label)}</span></li>`).join('')}</ol></div></section>
+      <section class="export-detail-section export-detail-filters"><h3>提交时的筛选条件</h3><div class="export-detail-section-body">${visibleFilters.length ? `<dl>${visibleFilters.map(filter => `<div><dt>${escape(fieldLabel(filter.label))}</dt><dd>${filterValue(filter)}</dd></div>`).join('')}</dl>` : `<p class="export-muted">${task.filters?.length ? '暂无其他筛选条件' : '未设置筛选条件，导出全部记录'}</p>`}</div></section>
+      <section class="export-detail-section"><h3>导出字段<span class="export-field-caption">（按导出顺序）</span></h3><div class="export-detail-section-body"><ol class="export-field-list">${task.columns.map((column, index) => `<li><span class="export-field-number" aria-hidden="true">${index + 1}</span><span>${escape(fieldLabel(column.label))}</span></li>`).join('')}</ol></div></section>
     </div>`;
   }
   function renderDetail(task) {

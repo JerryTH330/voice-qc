@@ -67,7 +67,7 @@ test('all models selects available models and empty models has an honest placeho
   assert.match(h.host.querySelector('#feedbackModalTitle').textContent, /已更新/);
   h.c.selectTask(2);
   h.c.setCustomSelectValues('modelSelectOptions', ['M8'], 'modelSelectTrigger');
-  h.c.setCustomSelectValues('scenarioSelectOptions', ['邀约'], 'scenarioSelectTrigger');
+  h.c.setCustomSelectValues('scenarioSelectOptions', ['邀约到店'], 'scenarioSelectTrigger');
   h.c.addRuleItem('不同规则', '说明');
   h.c.enableTaskConfig();
   assert.match(h.host.querySelector('#feedbackModalTitle').textContent, /配置重复/);

@@ -13,6 +13,27 @@ function sourceFunction(file, name) {
   return source.slice(start, end + indent.length + 2);
 }
 
+test('changing insight scope in overview invalidates compare output without rendering an absent comparison stage', () => {
+  const {document} = parseHTML(fs.readFileSync(require.resolve('../客户洞察/v2/index.html'), 'utf8'));
+  let renders = 0;
+  const state = {stage: 'overview'};
+  const c = vm.createContext({
+    state, compareAiSummaryGenerated: true, compareAiSummaryGenerationId: 1,
+    $: selector => document.querySelector(selector), setCompareAiGenerateLabel() {},
+    renderCompareRuleInsights() {
+      assert.notEqual(state.stage, 'overview');
+      renders++;
+    }
+  });
+  vm.runInContext(sourceFunction('客户洞察/v2/客户洞察.js', 'invalidateCompareAiSummary'), c);
+  c.invalidateCompareAiSummary();
+  assert.equal(renders, 0);
+  assert.equal(c.compareAiSummaryGenerated, false);
+  assert.equal(c.compareAiSummaryGenerationId, 2);
+  for (const stage of ['online', 'offline']) { state.stage = stage; c.invalidateCompareAiSummary(); }
+  assert.equal(renders, 2);
+});
+
 test('visit route retains explicit missing and empty IDs without widening or keeping the prior record', () => {
   const record = {businessId: 'BIZ-known-123', date: '2026-10-28', startTime: '12:00:00'};
   const c = vm.createContext({
@@ -43,15 +64,17 @@ test('visit route retains explicit missing and empty IDs without widening or kee
 
 test('export detail renders every submitted filter, including analysis result, with escaped values', () => {
   const task = {filename: '录音.xlsx', source: 'session', status: 'completed', recordCount: 127,
-    createdAt: 1, completedAt: 2, expiresAt: 3, columns: [{label: '录音ID'}],
-    filters: [{label: '录音日期', value: '2026-10-22 至 2026-10-28'}, {label: '分析结果', value: '失败'}, {label: '顾问', value: '<script>bad</script>'}]};
+    createdAt: 1, completedAt: 2, expiresAt: 3, columns: [{label: '录音ID'}, {label: '质检场景'}],
+    filters: [{label: '录音日期', value: '2026-10-22 至 2026-10-28'}, {label: '分析结果', value: '失败'}, {label: '顾问', value: '<script>bad</script>'}, {label: '质检场景', value: '邀约到店'}]};
   const c = vm.createContext({ExportTasks: {sources: {session: '录音列表'}}, date: String,
     status: () => '已完成', escape: value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')});
   vm.runInContext(['filterValue', 'detail'].map(name => sourceFunction('export-management/page.js', name)).join('\n'), c);
   const html = c.detail(task);
   const {document} = parseHTML(`<main>${html}</main>`);
   const filters = [...document.querySelectorAll('.export-detail-filters dl > div')];
-  assert.deepEqual(filters.map(row => [row.querySelector('dt').textContent, row.querySelector('dd').textContent]), task.filters.map(filter => [filter.label, filter.value]));
+  assert.deepEqual(filters.map(row => [row.querySelector('dt').textContent, row.querySelector('dd').textContent]), task.filters.map(filter => [filter.label === '质检场景' ? '业务场景' : filter.label, filter.value]));
+  assert.match(document.querySelector('.export-field-list').textContent, /业务场景/);
+  assert.equal(task.columns[1].label, '质检场景', 'historical task metadata remains intact');
   assert.equal(document.querySelector('script'), null);
 });
 

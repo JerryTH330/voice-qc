@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import re
 from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Sequence
 
 
 SUCCESS_RESULTS = {'到店成功', '接待成功', '试驾成功'}
-SCENES = ('invite', 'reception', 'test_drive')
+SCENES = ('first_follow', 'invite_store', 'schedule_confirm', 'store_reception', 'test_drive')
 MAX_REPRESENTATIVE_SAMPLES = 4
 NEGATIVE_DIRECTION_MARKERS = ('不要', '不用', '先别', '观望', '线上')
 POSITIVE_DIRECTION_MARKERS = ('到店', '来店', '进店', '试驾', '邀约')
@@ -70,6 +72,25 @@ def build_monthly_prompt(prompt_builder, llm_input):
 def validate_monthly_output(schema_validator, llm_output):
     schema_validator(llm_output)
     return llm_output
+
+
+def _empty_scene_package():
+    return {'overview': {'top_tags': []}, 'problem_scenarios': [], 'topics': []}
+
+
+def _normalize_problem_training_fields(problem):
+    normalized = copy.deepcopy(problem)
+    normalized['linked_topic_ids'] = _prepare_linked_topic_ids(normalized)
+    defaults = {
+        'training_priority': '观察',
+        'problem_frequency_level': '未提供',
+        'recommended_response_goal': '',
+        'common_mistake': '',
+        'coach_focus': '',
+    }
+    for field, default in defaults.items():
+        normalized[field] = normalized.get(field) or default
+    return normalized
 
 
 def _normalize_training_fields(topic):
@@ -203,27 +224,19 @@ def _build_common_mistake(topic):
 
 def _build_result_evidence(topic):
     sample_count = int(topic.get('source_sample_count', len(topic.get('representative_samples', []) or [])) or 0)
-    source_months = list(topic.get('source_months', []) or [])
-    recent_3m_count = int(topic.get('recent_3m_count', len(list(dict.fromkeys(source_months)))) or 0)
-    last_month_samples = len([sample for sample in list(topic.get('representative_samples', []) or []) if sample.get('month') == topic.get('last_seen_month')])
-    if not last_month_samples:
-        last_month_samples = min(sample_count, max(1, sample_count // max(recent_3m_count or 1, 1))) if sample_count else 0
-
-    conversion_label = '到店' if topic.get('scene') == 'invite' else '下订'
-    converted_3m = min(sample_count, max(0, round(sample_count * 0.4)))
-    converted_1m = min(last_month_samples, max(0, round(last_month_samples * 0.45)))
+    conversion_label = '到店' if topic.get('scene') in SCENES[:3] else '下订'
     return {
         'last_3m': {
             'matched_sample_count': sample_count,
-            'converted_count': converted_3m,
+            'converted_count': None,
             'conversion_label': conversion_label,
         },
         'last_1m': {
-            'matched_sample_count': last_month_samples,
-            'converted_count': converted_1m,
+            'matched_sample_count': None,
+            'converted_count': None,
             'conversion_label': conversion_label,
         },
-        'note': '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。',
+        'note': '未提供业务转化结果及月度明细，缺失数量保留为空；代表样本不用于推算完整样本的转化数量。',
     }
 
 
@@ -241,7 +254,7 @@ def _get_scene_package(monthly_package):
         'overview' not in scene_payload and 'topics' not in scene_payload and 'problem_scenarios' not in scene_payload
     ):
         raise ValueError(
-            f'Monthly package must contain a payload for scene {selected_scene}: invite, reception, or test_drive'
+            f'Monthly package must contain a payload for scene {selected_scene}: {", ".join(SCENES)}'
         )
     return selected_scene, scene_payload
 
@@ -255,11 +268,11 @@ def build_monthly_package(month, scene, monthly_output):
             if isinstance(monthly_output, Mapping) and isinstance(monthly_output.get('overview'), Mapping):
                 scene_package['overview'] = copy.deepcopy(monthly_output.get('overview'))
             scene_package['problem_scenarios'] = [
-                _normalize_problem_training_fields(problem)
+                _normalize_problem_training_fields({**problem, 'scene': selected_scene})
                 for problem in list((monthly_output or {}).get('problem_scenarios', []))
             ]
             scene_package['topics'] = [
-                _normalize_training_fields(topic)
+                _normalize_training_fields({**topic, 'scene': selected_scene})
                 for topic in list((monthly_output or {}).get('topics', []))
             ]
         package[current_scene] = scene_package
@@ -562,13 +575,21 @@ def _rewrite_problem_links(problem, topic_id_mapping, existing_topics):
 
 def merge_global_pool(current_pool, monthly_package):
     selected_scene, monthly_scene = _get_scene_package(monthly_package)
+    monthly_month = (monthly_package or {}).get('month')
+    if not isinstance(monthly_month, str) or not re.fullmatch(r'\d{4}-(0[1-9]|1[0-2])', monthly_month):
+        raise ValueError('月包月份必须采用 YYYY-MM 格式')
+    fingerprint = hashlib.sha256(json.dumps(monthly_scene, sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()
     merged_pool = copy.deepcopy(current_pool or {})
     merged_pool.setdefault(selected_scene, _empty_scene_package())
     merged_pool[selected_scene].setdefault('overview', {'top_tags': []})
     merged_pool[selected_scene].setdefault('problem_scenarios', [])
     merged_pool[selected_scene].setdefault('topics', [])
+    merged_packages = merged_pool[selected_scene].setdefault('merged_monthly_packages', {})
+    if monthly_month in merged_packages:
+        if merged_packages[monthly_month] == fingerprint:
+            return merged_pool
+        raise ValueError(f'{selected_scene} 的 {monthly_month} 月包已合并且内容不同，请使用历史月包重建完整池')
 
-    monthly_month = (monthly_package or {}).get('month')
     monthly_topics = monthly_scene.get('topics', []) or []
     monthly_problem_scenarios = monthly_scene.get('problem_scenarios', []) or []
 
@@ -599,4 +620,5 @@ def merge_global_pool(current_pool, monthly_package):
         else:
             existing_problem_scenarios.append(_prepare_new_problem_scenario(selected_scene, rewritten_problem, monthly_month))
 
+    merged_packages[monthly_month] = fingerprint
     return merged_pool

@@ -378,7 +378,7 @@
     { key: 'qualifiedRate', label: '话术命中率', width: 14 },
     { key: 'intentLevel', label: 'AI意向等级', width: 14 },
     { key: 'carSeries', label: 'AI意向车系', width: 20 },
-    { key: 'scenario', label: '质检场景', width: 16 },
+    { key: 'scenario', label: '业务场景', width: 16 },
     { key: 'source', label: '数据来源', width: 14 },
     { key: 'sourceType', label: '录音来源类型', width: 16 },
     { key: 'leadId', label: '线索ID', width: 22 },
@@ -762,7 +762,7 @@
   function getFilterLabel(key) {
     var labels = {
       brand: '品牌',
-      scenario: '质检场景',
+      scenario: '业务场景',
       source: '数据来源',
       sourceType: '录音来源类型',
       intentLevel: 'AI意向等级',
@@ -845,7 +845,7 @@
           return group.length ? '<div class="sr-menu-group"><div class="sr-menu-group-label">' + escapeHtml(brand) + '</div>' + group.map(renderOption).join('') + '</div>' : '';
         }).join('') : options.map(renderOption).join('')) : '<div class="badge-advisor-empty">未找到匹配' + escapeHtml(getFilterLabel(key)) + '</div>';
     var placeholder = key === 'store' ? '输入店名或店代码' : key === 'advisor' ? '输入顾问姓名或ID' : key === 'customer' ? '输入客户名称、线索ID或手机号' : '搜索' + getFilterLabel(key);
-    return '<div class="session-menu-panel badge-advisor-menu" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
+    return '<div class="session-menu-panel badge-advisor-menu' + (key === 'scenario' ? ' business-scene-menu' : '') + '" data-sr-menu="' + escapeHtml(key) + '" role="dialog" aria-label="' + escapeHtml(getFilterLabel(key)) + '筛选">' +
       '<label class="badge-advisor-search"><span aria-hidden="true"></span><input type="search" data-sr-menu-search="' + escapeHtml(key) + '" value="' + escapeHtml(state.menuQueries[key] || '') + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="off"></label>' +
       '<button type="button" class="badge-advisor-select-all' + (allActive ? ' is-selected' : '') + (partiallyActive ? ' is-partial' : '') + '" data-sr-select-all="' + escapeHtml(key) + '" aria-pressed="' + allActive + '"' + (options.length ? '' : ' disabled') + '><span class="badge-advisor-option-check" aria-hidden="true">' + (allActive ? '✓' : '') + '</span><span>全选</span><strong>共 ' + options.length + ' 条数据</strong></button>' +
       '<div class="badge-advisor-options" data-sr-menu-options="' + escapeHtml(key) + '" role="listbox" aria-label="' + escapeHtml(getFilterLabel(key)) + '候选" aria-multiselectable="true">' + optionMarkup + '</div></div>';
@@ -855,9 +855,9 @@
     var open = state.openMenu === key;
     var label = getFilterLabel(key);
     var placeholder = selected(key).length === 0;
-    return '<div class="badge-field-filter badge-field-filter-select session-toolbar-menu' + (open ? ' is-open' : '') + '" data-sr-control="' + escapeHtml(key) + '">' +
+    return '<div class="badge-field-filter badge-field-filter-select session-toolbar-menu' + (key === 'scenario' ? ' business-scene-filter' : '') + (open ? ' is-open' : '') + '"' + (key === 'scenario' ? ' data-business-scene-filter' : '') + ' data-sr-control="' + escapeHtml(key) + '">' +
       '<span>' + escapeHtml(label) + '</span>' +
-      '<button type="button" class="session-select-trigger' + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
+      '<button type="button" class="session-select-trigger' + (key === 'scenario' ? ' business-scene-trigger' : '') + (open ? ' active' : '') + '" data-sr-trigger="' + escapeHtml(key) + '" aria-label="' + escapeHtml(label) + '筛选" aria-haspopup="listbox" aria-expanded="' + open + '">' +
         '<strong class="' + (placeholder ? 'is-placeholder' : '') + '">' + escapeHtml(getSelectionText(key)) + '</strong><i class="session-select-caret" aria-hidden="true"></i></button>' +
       (showFilterMenu(key) ? renderOptionMenu(key) : '') + '</div>';
   }

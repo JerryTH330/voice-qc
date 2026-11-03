@@ -64,7 +64,7 @@
           const examples = [
             { source: 'session', status: 'failed', minutesAgo: 18, recordCount: 780, filters: [{ label: '品牌', value: '传祺' }], error: '演示：文件生成失败。' },
             { source: 'leads', status: 'completed', minutesAgo: 75, recordCount: 236, filters: [{ label: '线索品牌', value: '埃安' }] },
-            { source: 'session', status: 'completed', minutesAgo: 210, recordCount: 428, filters: [{ label: '质检场景', value: '邀约到店' }] },
+            { source: 'session', status: 'completed', minutesAgo: 210, recordCount: 428, filters: [{ label: '业务场景', value: '邀约到店' }] },
             { source: 'customers', status: 'failed', minutesAgo: 1440, recordCount: 1680, filters: [{ label: '线索品牌', value: '传祺' }], error: '演示：导出服务繁忙。' },
             { source: 'badges', status: 'completed', minutesAgo: 2880, recordCount: 84, filters: [{ label: '工牌状态', value: '录音中' }] },
             { source: 'leads', status: 'expired', minutesAgo: 14400, recordCount: 52, filters: [] }
@@ -77,7 +77,7 @@
               source, status,
               minutesAgo: status === 'expired' ? (8 + index % 4) * 1440 : 35 + index * 317,
               recordCount: 36 + (index * 137) % 960,
-              filters: source === 'session' ? [{ label: '品牌', value: '传祺' }, { label: '质检场景', value: '邀约到店' }]
+              filters: source === 'session' ? [{ label: '品牌', value: '传祺' }, { label: '业务场景', value: '邀约到店' }]
                 : source === 'leads' ? [{ label: '线索品牌', value: '埃安' }, { label: '意向车系', value: 'AION Y' }]
                 : source === 'customers' ? [{ label: 'AI意向等级', value: '高' }]
                 : [{ label: '工牌状态', value: '录音中' }],
@@ -85,7 +85,7 @@
             });
           }
           const sampleColumns = {
-            session: [{ label: '录音ID' }, { label: '品牌' }, { label: '质检场景' }],
+            session: [{ label: '录音ID' }, { label: '品牌' }, { label: '业务场景' }],
             leads: [{ label: '线索ID' }, { label: '线索品牌' }, { label: '意向车系' }],
             customers: [{ label: '客户名称' }, { label: '录音数' }, { label: 'AI意向等级' }],
             badges: [{ label: '工牌编号' }, { label: '门店' }, { label: '工牌状态' }]

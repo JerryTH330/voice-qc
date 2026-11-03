@@ -13,6 +13,8 @@
     let openKey = '', query = '', composing = false, pinnedIds = [], destroyed = false;
     root.classList.add('sd-business-filters');
     keys.forEach(key => { slots[key].classList.add('sd-filter-control', 'badge-field-filter', 'badge-field-filter-select'); slots[key].classList.add('session-toolbar-menu'); });
+    slots.scene.classList.add('business-scene-filter');
+    slots.scene.dataset.businessSceneFilter = '';
 
     const options = key => (key === 'scene' ? sceneOptions : modelOptions()).filter(item => item.value !== 'all');
     const selection = key => [...(getSelection(key) || [])];
@@ -40,7 +42,7 @@
         const group = items.filter(item => (item.meta || '') === brand);
         return group.length ? `<div class="sd-filter-group">${brand ? `<div class="sd-filter-group-label">${escape(brand)}</div>` : ''}${group.map(item => optionMarkup(item, selected)).join('')}</div>` : '';
       }).join('') : items.map(item => optionMarkup(item, selected)).join('');
-      return `<div class="session-menu-panel sd-filter-menu badge-advisor-menu sd-business-menu" role="dialog" aria-label="${labels[key]}筛选">
+      return `<div class="session-menu-panel sd-filter-menu badge-advisor-menu sd-business-menu${key === 'scene' ? ' business-scene-menu' : ''}" role="dialog" aria-label="${labels[key]}筛选">
         <form class="sd-filter-search badge-advisor-search" role="search"><span aria-hidden="true"></span><input type="search" data-sdb-search aria-label="搜索${labels[key]}" placeholder="搜索${labels[key]}" value="${escape(query)}" autocomplete="off" spellcheck="false"></form>
         <button type="button" class="sd-filter-all badge-advisor-select-all${allSelected ? ' is-selected' : partial ? ' is-partial' : ''}" data-sdb-all ${items.length ? '' : 'disabled'} aria-pressed="${allSelected}"><span class="sd-filter-check badge-advisor-option-check" aria-hidden="true">${allSelected ? '✓' : ''}</span><span>全选</span><small>共 ${items.length} 条数据</small></button>
         <div class="sd-filter-options badge-advisor-options" id="sdb-options-${key}" role="listbox" aria-label="${labels[key]}候选" aria-multiselectable="true">${markup || '<p class="sd-filter-empty badge-advisor-empty">未找到匹配数据</p>'}</div>
@@ -68,7 +70,7 @@
       keys.forEach(key => {
         const selected = selection(key), text = display(key);
         slots[key].classList.toggle('is-open', key === openKey);
-        slots[key].innerHTML = `<span>${labels[key]}</span><button type="button" class="session-select-trigger${key === openKey ? ' active' : ''}" data-sdb-trigger="${key}" aria-label="${labels[key]}筛选" aria-haspopup="listbox" aria-controls="sdb-options-${key}" aria-expanded="${key === openKey}"><strong class="${selected.length ? '' : 'is-placeholder'}" title="${escape(text)}">${escape(text)}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${key === openKey ? menuMarkup(key) : ''}`;
+        slots[key].innerHTML = `<span>${labels[key]}</span><button type="button" class="session-select-trigger${key === 'scene' ? ' business-scene-trigger' : ''}${key === openKey ? ' active' : ''}" data-sdb-trigger="${key}" aria-label="${labels[key]}筛选" aria-haspopup="listbox" aria-controls="sdb-options-${key}" aria-expanded="${key === openKey}"><strong class="${selected.length ? '' : 'is-placeholder'}" title="${escape(text)}">${escape(text)}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${key === openKey ? menuMarkup(key) : ''}`;
       });
       const list = root.querySelector('.sd-filter-options');
       if (list) list.scrollTop = scrollTop;

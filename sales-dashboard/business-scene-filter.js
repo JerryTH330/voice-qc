@@ -13,6 +13,8 @@
     let openKey = '', query = '', composing = false, pinnedIds = [], destroyed = false;
     root.classList.add('so-business-filters');
     keys.forEach(key => { slots[key].classList.add('so-filter-control', 'badge-field-filter', 'badge-field-filter-select'); slots[key].classList.add('session-toolbar-menu'); });
+    slots.scene.classList.add('business-scene-filter');
+    slots.scene.dataset.businessSceneFilter = '';
 
     const options = key => sceneOptions.filter(item => item.value !== 'all');
     const selection = key => [...(getSelection(key) || [])];
@@ -36,7 +38,7 @@
       const allSelected = items.length > 0 && items.every(item => selected.has(item.value));
       const partial = !allSelected && items.some(item => selected.has(item.value));
       const markup = items.map(item => optionMarkup(item, selected)).join('');
-      return `<div class="session-menu-panel so-filter-menu badge-advisor-menu so-business-menu" role="dialog" aria-label="${labels[key]}筛选">
+      return `<div class="session-menu-panel so-filter-menu badge-advisor-menu so-business-menu business-scene-menu" role="dialog" aria-label="${labels[key]}筛选">
         <form class="so-filter-search badge-advisor-search" role="search"><span aria-hidden="true"></span><input type="search" data-ssb-search aria-label="搜索${labels[key]}" placeholder="搜索${labels[key]}" value="${escape(query)}" autocomplete="off" spellcheck="false"></form>
         <button type="button" class="so-filter-all badge-advisor-select-all${allSelected ? ' is-selected' : partial ? ' is-partial' : ''}" data-ssb-all ${items.length ? '' : 'disabled'} aria-pressed="${allSelected}"><span class="so-filter-check badge-advisor-option-check" aria-hidden="true">${allSelected ? '✓' : ''}</span><span>全选</span><small>共 ${items.length} 条数据</small></button>
         <div class="so-filter-options badge-advisor-options" id="ssb-options-${key}" role="listbox" aria-label="${labels[key]}候选" aria-multiselectable="true">${markup || '<p class="so-filter-empty badge-advisor-empty">未找到匹配数据</p>'}</div>
@@ -64,7 +66,7 @@
       keys.forEach(key => {
         const selected = selection(key), text = display(key);
         slots[key].classList.toggle('is-open', key === openKey);
-        slots[key].innerHTML = `<span>${labels[key]}</span><button type="button" class="session-select-trigger${key === openKey ? ' active' : ''}" data-ssb-trigger="${key}" aria-label="${labels[key]}筛选" aria-haspopup="listbox" aria-controls="ssb-options-${key}" aria-expanded="${key === openKey}"><strong class="${selected.length ? '' : 'is-placeholder'}" title="${escape(text)}">${escape(text)}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${key === openKey ? menuMarkup(key) : ''}`;
+        slots[key].innerHTML = `<span>${labels[key]}</span><button type="button" class="session-select-trigger${key === 'scene' ? ' business-scene-trigger' : ''}${key === openKey ? ' active' : ''}" data-ssb-trigger="${key}" aria-label="${labels[key]}筛选" aria-haspopup="listbox" aria-controls="ssb-options-${key}" aria-expanded="${key === openKey}"><strong class="${selected.length ? '' : 'is-placeholder'}" title="${escape(text)}">${escape(text)}</strong><i class="session-select-caret" aria-hidden="true"></i></button>${key === openKey ? menuMarkup(key) : ''}`;
       });
       const list = root.querySelector('.so-filter-options');
       if (list) list.scrollTop = scrollTop;

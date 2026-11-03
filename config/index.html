@@ -254,9 +254,9 @@
                     <button type="button" class="custom-select-trigger task-filter-trigger" id="taskFilterModelTrigger" onclick="toggleTaskFilterSelect('model')">全部车型</button>
                     <div class="custom-select-options task-filter-options" id="taskFilterModelOptions"></div>
                   </div>
-                  <div class="custom-select-container task-filter-menu">
-                    <button type="button" class="custom-select-trigger task-filter-trigger" id="taskFilterScenarioTrigger" onclick="toggleTaskFilterSelect('scenario')">全部场景</button>
-                    <div class="custom-select-options task-filter-options" id="taskFilterScenarioOptions"></div>
+                  <div class="custom-select-container task-filter-menu business-scene-filter" data-business-scene-filter>
+                    <button type="button" class="custom-select-trigger task-filter-trigger business-scene-trigger" id="taskFilterScenarioTrigger" aria-label="业务场景筛选" aria-haspopup="listbox" aria-expanded="false" onclick="toggleTaskFilterSelect('scenario')">全部业务场景</button>
+                    <div class="custom-select-options task-filter-options business-scene-menu" data-business-scene-floating id="taskFilterScenarioOptions" role="listbox" aria-label="业务场景候选"></div>
                   </div>
                 </div>
                 <div class="task-list" id="taskList"></div>
@@ -266,7 +266,7 @@
                 <div class="panel-header config-main-head">
                   <div class="panel-title">
                     <h3><span id="editorTitle">编辑任务</span><span id="editorDraftTag" class="draft-tag" style="display:none;">草稿</span></h3>
-                    <p>配置特定车型与场景下的质检规则与提示词。</p>
+                    <p>配置特定车型与业务场景下的质检规则与提示词。</p>
                   </div>
                   <div class="config-main-actions">
                     <button class="btn config-delete-btn" onclick="deleteCurrentTask()">删除任务</button>
@@ -291,10 +291,10 @@
                       <input type="text" id="taskNameInput" class="rule-input config-input" placeholder="请输入任务名称，如：埃安AION系列邀约质检">
                     </div>
                     <div class="form-group">
-                      <label class="form-label">适用场景 (Scenario)</label>
-                      <div class="custom-select-container" id="scenarioSelectContainer">
-                        <div class="custom-select-trigger" id="scenarioSelectTrigger" onclick="toggleCustomSelect('scenarioSelectOptions')">请选择场景...</div>
-                        <div class="custom-select-options" id="scenarioSelectOptions"></div>
+                      <label class="form-label" for="scenarioSelectTrigger">业务场景</label>
+                      <div class="custom-select-container business-scene-filter" data-business-scene-filter id="scenarioSelectContainer">
+                        <button type="button" class="custom-select-trigger business-scene-trigger" id="scenarioSelectTrigger" aria-label="业务场景选择" aria-haspopup="listbox" aria-expanded="false" onclick="toggleCustomSelect('scenarioSelectOptions')">请选择业务场景...</button>
+                        <div class="custom-select-options business-scene-menu" data-business-scene-floating id="scenarioSelectOptions" role="listbox" aria-label="业务场景选项"></div>
                       </div>
                     </div>
                     <div class="form-group">
@@ -423,8 +423,8 @@
           </div>
         </template>
 
-    <script src="../unified-navigation-shell.js?v=20261028-full-sync-v1"></script>
+    <script src="../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="./page.js?v=20261028-full-sync-v1"></script>
+    <script src="./page.js?v=20261102-scene-filter-style-v6"></script>
   </body>
 </html>

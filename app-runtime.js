@@ -1,5 +1,7 @@
 /* Shared runtime extracted from index.html for independent menu pages. */
 
+const BUSINESS_SCENES = Object.freeze(['首触跟进', '邀约到店', '排程确认', '销售接待', '试乘试驾']);
+
 const escapeInsightTop5Html = (value) => String(value ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -659,7 +661,7 @@ function initStoreDashboardPage() {
   const RECORDING_DB = {
     'R-0312': {
       advisor: '林涛', customer: '张先生', time: '3-25 15:20', duration: 1080,
-      scene: '门店接待-首次看车', qaScore: 64, model: '传祺 E9',
+      scene: '销售接待', qaScore: 64, model: '传祺 E9',
       highlights: [
         { at: 180, label: '竞品对比缺失', type: 'weakness' },
         { at: 540, label: '过度承诺交车', type: 'risk' },
@@ -682,7 +684,7 @@ function initStoreDashboardPage() {
     },
     'R-0308': {
       advisor: '张华', customer: '李女士', time: '3-25 11:05', duration: 720,
-      scene: '电话邀约', qaScore: 85, model: '传祺 GS8',
+      scene: '邀约到店', qaScore: 85, model: '传祺 GS8',
       highlights: [
         { at: 120, label: '需求确认充分', type: 'strength' },
         { at: 360, label: '竞品对比弱', type: 'weakness' }
@@ -719,7 +721,7 @@ function initStoreDashboardPage() {
     },
     'R-0314': {
       advisor: '林涛', customer: '钱女士', time: '3-25 16:20', duration: 840,
-      scene: '议价谈判', qaScore: 55, model: '传祺 E9',
+      scene: '销售接待', qaScore: 55, model: '传祺 E9',
       highlights: [
         { at: 300, label: '过度承诺交车', type: 'risk' },
         { at: 600, label: '过度承诺价格', type: 'risk' }
@@ -738,7 +740,7 @@ function initStoreDashboardPage() {
     },
     'R-0401': {
       advisor: '李昱', customer: '王先生', time: '3-25 10:30', duration: 1320,
-      scene: '门店接待-二次到店', qaScore: 95, model: '传祺 M8',
+      scene: '销售接待', qaScore: 95, model: '传祺 M8',
       highlights: [
         { at: 120, label: '深度需求挖掘', type: 'strength' },
         { at: 480, label: '竞品差异化对比', type: 'strength' },
@@ -758,7 +760,7 @@ function initStoreDashboardPage() {
     },
     'R-0313': {
       advisor: '李昱', customer: '吴先生', time: '3-25 16:10', duration: 900,
-      scene: '议价谈判', qaScore: 91, model: '传祺 M8',
+      scene: '销售接待', qaScore: 91, model: '传祺 M8',
       highlights: [
         { at: 240, label: '金融方案引导', type: 'strength' },
         { at: 600, label: '促单节奏好', type: 'strength' }
@@ -776,7 +778,7 @@ function initStoreDashboardPage() {
     },
     'R-0295': {
       advisor: '王萌', customer: '周先生', time: '3-24 16:40', duration: 660,
-      scene: '电话邀约', qaScore: 78, model: '传祺 E9',
+      scene: '邀约到店', qaScore: 78, model: '传祺 E9',
       highlights: [{ at: 120, label: '需求确认', type: 'strength' }, { at: 420, label: '邀约话术弱', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '周先生您好，我是传祺的王萌，之前您咨询过 E9 的信息。' },
@@ -790,7 +792,7 @@ function initStoreDashboardPage() {
     },
     'R-0289': {
       advisor: '赵强', customer: '陈先生', time: '3-24 10:15', duration: 900,
-      scene: '门店接待-首次到店', qaScore: 72, model: '传祺 GS8',
+      scene: '销售接待', qaScore: 72, model: '传祺 GS8',
       highlights: [{ at: 180, label: '竞品应对不足', type: 'weakness' }, { at: 540, label: '试驾邀约', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '陈先生您好，欢迎光临。我是赵强。' },
@@ -804,7 +806,7 @@ function initStoreDashboardPage() {
     },
     'R-0280': {
       advisor: '赵强', customer: '孙女士', time: '3-23 11:20', duration: 720,
-      scene: '门店接待-二次到店', qaScore: 80, model: '传祺 M8',
+      scene: '销售接待', qaScore: 80, model: '传祺 M8',
       highlights: [{ at: 240, label: '需求跟进好', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '孙女士，欢迎再次来到店里！上次您看的 M8 白色还有意向吗？' },
@@ -817,7 +819,7 @@ function initStoreDashboardPage() {
     },
     'R-0293': {
       advisor: '王萌', customer: '杨先生', time: '3-24 15:30', duration: 840,
-      scene: '门店接待-首次到店', qaScore: 82, model: '传祺 M8',
+      scene: '销售接待', qaScore: 82, model: '传祺 M8',
       highlights: [{ at: 120, label: '产品知识扎实', type: 'strength' }, { at: 480, label: '竞品对比到位', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '杨先生您好，我是王萌，听说您对我们的 M8 感兴趣？' },
@@ -831,7 +833,7 @@ function initStoreDashboardPage() {
     },
     'R-0306': {
       advisor: '林涛', customer: '吴女士', time: '3-25 10:45', duration: 600,
-      scene: '电话邀约', qaScore: 68, model: '传祺 M8',
+      scene: '邀约到店', qaScore: 68, model: '传祺 M8',
       highlights: [{ at: 180, label: '邀约急促', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '吴女士您好，我是林涛，之前您来看过 M8。' },
@@ -844,7 +846,7 @@ function initStoreDashboardPage() {
     },
     'R-0291': {
       advisor: '王萌', customer: '马女士', time: '3-24 14:20', duration: 780,
-      scene: '议价谈判', qaScore: 76, model: '传祺 E9',
+      scene: '销售接待', qaScore: 76, model: '传祺 E9',
       highlights: [{ at: 300, label: '价格解释清晰', type: 'strength' }, { at: 540, label: '促单时机差', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '马女士，上次看完之后考虑得怎么样了？' },
@@ -856,7 +858,7 @@ function initStoreDashboardPage() {
     },
     'R-0278': {
       advisor: '赵强', customer: '韩先生', time: '3-23 09:30', duration: 720,
-      scene: '门店接待-首次到店', qaScore: 70, model: '传祺 GS8',
+      scene: '销售接待', qaScore: 70, model: '传祺 GS8',
       highlights: [{ at: 360, label: '异议处理弱', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '韩先生您好，欢迎光临。' },
@@ -869,7 +871,7 @@ function initStoreDashboardPage() {
     },
     'R-0309': {
       advisor: '林涛', customer: '黄先生', time: '3-25 13:30', duration: 900,
-      scene: '门店接待-试驾后', qaScore: 62, model: '传祺 E9',
+      scene: '销售接待', qaScore: 62, model: '传祺 E9',
       highlights: [{ at: 120, label: '需求确认不足', type: 'weakness' }, { at: 540, label: '急于报价', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '黄先生，试驾感觉怎么样？' },
@@ -883,7 +885,7 @@ function initStoreDashboardPage() {
     },
     'R-0287': {
       advisor: '张华', customer: '朱先生', time: '3-24 09:50', duration: 660,
-      scene: '电话邀约', qaScore: 83, model: '传祺 E8',
+      scene: '邀约到店', qaScore: 83, model: '传祺 E8',
       highlights: [{ at: 180, label: '痛点挖掘好', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '朱先生您好，我是张华。上次您提到对 E8 比较感兴趣。' },
@@ -897,7 +899,7 @@ function initStoreDashboardPage() {
     },
     'R-0305': {
       advisor: '林涛', customer: '田先生', time: '3-25 09:20', duration: 540,
-      scene: '电话邀约', qaScore: 58, model: '传祺 GS8',
+      scene: '邀约到店', qaScore: 58, model: '传祺 GS8',
       highlights: [{ at: 120, label: '缺乏差异化', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '田先生您好，我是林涛，之前您来看过GS8。' },
@@ -910,7 +912,7 @@ function initStoreDashboardPage() {
     },
     'R-0292': {
       advisor: '赵强', customer: '沈先生', time: '3-24 15:10', duration: 780,
-      scene: '议价谈判', qaScore: 65, model: '传祺 M8',
+      scene: '销售接待', qaScore: 65, model: '传祺 M8',
       highlights: [{ at: 300, label: '过度承诺', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '沈先生，之前的方案您考虑得怎么样？' },
@@ -923,7 +925,7 @@ function initStoreDashboardPage() {
     },
     'R-0290': {
       advisor: '王萌', customer: '何女士', time: '3-24 11:30', duration: 840,
-      scene: '门店接待-首次到店', qaScore: 74, model: '传祺 E9',
+      scene: '销售接待', qaScore: 74, model: '传祺 E9',
       highlights: [{ at: 360, label: '优惠方案超授权', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '何女士您好，我是王萌。您今天想看哪款车？' },
@@ -936,7 +938,7 @@ function initStoreDashboardPage() {
     },
     'R-0311': {
       advisor: '林涛', customer: '袁先生', time: '3-25 14:50', duration: 660,
-      scene: '门店接待-首次到店', qaScore: 60, model: '传祺 GS8',
+      scene: '销售接待', qaScore: 60, model: '传祺 GS8',
       highlights: [{ at: 240, label: '贬低竞品', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '袁先生，看上我们哪款了？' },
@@ -948,7 +950,7 @@ function initStoreDashboardPage() {
     },
     'R-0282': {
       advisor: '赵强', customer: '丁先生', time: '3-23 16:00', duration: 720,
-      scene: '议价谈判', qaScore: 67, model: '传祺 M8',
+      scene: '销售接待', qaScore: 67, model: '传祺 M8',
       highlights: [{ at: 360, label: '强制加装', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '丁先生，这个价格真的已经很优惠了。' },
@@ -960,7 +962,7 @@ function initStoreDashboardPage() {
     },
     'R-0296': {
       advisor: '林涛', customer: '梁先生', time: '3-24 16:40', duration: 600,
-      scene: '议价谈判', qaScore: 56, model: '传祺 E9',
+      scene: '销售接待', qaScore: 56, model: '传祺 E9',
       highlights: [{ at: 180, label: '泄露客户信息', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '梁先生，您的报价我已经申请了。' },
@@ -972,7 +974,7 @@ function initStoreDashboardPage() {
     },
     'R-0281': {
       advisor: '张华', customer: '许先生', time: '3-23 14:20', duration: 780,
-      scene: '门店接待-首次到店', qaScore: 80, model: '传祺 M8',
+      scene: '销售接待', qaScore: 80, model: '传祺 M8',
       highlights: [{ at: 180, label: '场景化介绍好', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '许先生您好，我是张华。今天主要看什么车？' },
@@ -984,7 +986,7 @@ function initStoreDashboardPage() {
     },
     'R-0288': {
       advisor: '赵强', customer: '郭先生', time: '3-24 10:00', duration: 660,
-      scene: '门店接待-首次到店', qaScore: 73, model: '传祺 E9',
+      scene: '销售接待', qaScore: 73, model: '传祺 E9',
       highlights: [{ at: 300, label: '强制加装装饰', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '郭先生，这台 E9 您满意吗？' },
@@ -996,7 +998,7 @@ function initStoreDashboardPage() {
     },
     'R-0283': {
       advisor: '林涛', customer: '冯先生', time: '3-23 15:30', duration: 540,
-      scene: '电话邀约', qaScore: 55, model: '传祺 E9',
+      scene: '邀约到店', qaScore: 55, model: '传祺 E9',
       highlights: [{ at: 120, label: '出现问题，或是客户不满时，未及时表示歉意', type: 'risk' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '冯先生，上次的车您考虑得怎么样？' },
@@ -1008,7 +1010,7 @@ function initStoreDashboardPage() {
     },
     'R-0388': {
       advisor: '张华', customer: '于先生', time: '3-24 14:00', duration: 720,
-      scene: '门店接待-首次到店', qaScore: 84, model: '传祺 M8',
+      scene: '销售接待', qaScore: 84, model: '传祺 M8',
       highlights: [{ at: 180, label: '空间展示到位', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '于先生您好，今天来看 M8 吗？' },
@@ -1019,7 +1021,7 @@ function initStoreDashboardPage() {
     },
     'R-0403': {
       advisor: '王萌', customer: '彭先生', time: '3-25 11:20', duration: 600,
-      scene: '电话邀约', qaScore: 81, model: '传祺 M8',
+      scene: '邀约到店', qaScore: 81, model: '传祺 M8',
       highlights: [{ at: 120, label: '价值对比清晰', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '彭先生您好，我是王萌，之前您来看过 M8。' },
@@ -1030,7 +1032,7 @@ function initStoreDashboardPage() {
     },
     'R-0382': {
       advisor: '李昱', customer: '贺先生', time: '3-24 09:45', duration: 900,
-      scene: '门店接待-首次到店', qaScore: 90, model: '传祺 M8',
+      scene: '销售接待', qaScore: 90, model: '传祺 M8',
       highlights: [{ at: 240, label: '体验式销售', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '贺先生，您主要关注乘坐舒适度是吗？' },
@@ -1042,7 +1044,7 @@ function initStoreDashboardPage() {
     },
     'R-0410': {
       advisor: '林涛', customer: '邓先生', time: '3-25 15:00', duration: 720,
-      scene: '门店接待-二次到店', qaScore: 66, model: '传祺 M8',
+      scene: '销售接待', qaScore: 66, model: '传祺 M8',
       highlights: [{ at: 240, label: '油耗问题回避', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '邓先生，又来啦！上次看的 M8 决定了吗？' },
@@ -1054,7 +1056,7 @@ function initStoreDashboardPage() {
     },
     'R-0395': {
       advisor: '赵强', customer: '龚女士', time: '3-24 16:20', duration: 600,
-      scene: '电话邀约', qaScore: 71, model: '传祺 M8',
+      scene: '邀约到店', qaScore: 71, model: '传祺 M8',
       highlights: [{ at: 180, label: '油耗说明不清', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '龚女士您好，我是赵强。上次您提到关心油耗。' },
@@ -1066,7 +1068,7 @@ function initStoreDashboardPage() {
     },
     'R-0398': {
       advisor: '张华', customer: '任先生', time: '3-25 09:30', duration: 540,
-      scene: '门店接待-首次到店', qaScore: 79, model: '传祺 M8',
+      scene: '销售接待', qaScore: 79, model: '传祺 M8',
       highlights: [{ at: 120, label: '品牌故事好', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '任先生您好，欢迎来看我们的 M8。' },
@@ -1077,7 +1079,7 @@ function initStoreDashboardPage() {
     },
     'R-0385': {
       advisor: '王萌', customer: '卢先生', time: '3-24 11:10', duration: 600,
-      scene: '门店接待-首次到店', qaScore: 77, model: '传祺 M8',
+      scene: '销售接待', qaScore: 77, model: '传祺 M8',
       highlights: [{ at: 180, label: '保值率应对', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '卢先生，您之前提到保值率的顾虑。' },
@@ -1088,7 +1090,7 @@ function initStoreDashboardPage() {
     },
     'R-0408': {
       advisor: '李昱', customer: '叶先生', time: '3-25 14:20', duration: 660,
-      scene: '门店接待-首次到店', qaScore: 88, model: '传祺 E9',
+      scene: '销售接待', qaScore: 88, model: '传祺 E9',
       highlights: [{ at: 120, label: '政策算账到位', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '叶先生，您考虑新能源主要是因为什么呢？' },
@@ -1099,7 +1101,7 @@ function initStoreDashboardPage() {
     },
     'R-0392': {
       advisor: '张华', customer: '段先生', time: '3-24 15:40', duration: 720,
-      scene: '门店接待-首次到店', qaScore: 82, model: '传祺 E9',
+      scene: '销售接待', qaScore: 82, model: '传祺 E9',
       highlights: [{ at: 300, label: '商务场景展示', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '段先生，您主要是商务接待用途对吗？' },
@@ -1122,7 +1124,7 @@ function initStoreDashboardPage() {
     },
     'R-0404': {
       advisor: '赵强', customer: '范先生', time: '3-25 11:50', duration: 720,
-      scene: '门店接待-首次到店', qaScore: 75, model: '传祺 S7',
+      scene: '销售接待', qaScore: 75, model: '传祺 S7',
       highlights: [{ at: 300, label: '充电焦虑应对', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '范先生，您对 S7 有什么顾虑吗？' },
@@ -1134,7 +1136,7 @@ function initStoreDashboardPage() {
     },
     'R-0389': {
       advisor: '林涛', customer: '蒋先生', time: '3-24 13:30', duration: 660,
-      scene: '门店接待-首次到店', qaScore: 63, model: '传祺 S7',
+      scene: '销售接待', qaScore: 63, model: '传祺 S7',
       highlights: [{ at: 180, label: '续航解释不足', type: 'weakness' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '蒋先生您好，看 S7 是吗？' },
@@ -1146,7 +1148,7 @@ function initStoreDashboardPage() {
     },
     'R-0380': {
       advisor: '张华', customer: '汪先生', time: '3-23 16:00', duration: 600,
-      scene: '电话邀约', qaScore: 78, model: '传祺 S7',
+      scene: '邀约到店', qaScore: 78, model: '传祺 S7',
       highlights: [{ at: 120, label: '售后服务说明', type: 'strength' }],
       transcript: [
         { ts: '0:00', speaker: 'advisor', text: '汪先生您好，我是张华。上次您提到对售后有顾虑。' },
@@ -1837,7 +1839,7 @@ function initStoreDashboardPage() {
       car_model: "广汽传祺 M8", advisor: "李昱", advisor_role: "销售顾问", status: "urgent",
       user_profile: ["女性", "二胎家庭", "看重空间安全", "预算25万内"],
       qa_score: 92, ai_issue: "意向强烈，超 3 天未邀约复访，存在流失风险。",
-      last_scene: "首触邀约", time: "今天 10:30",
+      last_scene: "首触跟进", time: "今天 10:30",
       follow_up_time: "今天 17:30",
       follow_action: "17:30 做一次行程确认，同时补充客户通勤与补能场景，方便顾问接待时直接展开。",
       recommend_reason: "客户昨天已经确认今晚到店，需求信息基本齐全，当前主要看提醒和交接备注是否完整。",
@@ -1861,7 +1863,7 @@ function initStoreDashboardPage() {
       car_model: "广汽传祺 GS8", advisor: "张华", advisor_role: "邀约专员", status: "warn",
       user_profile: ["首购", "关注动力表现", "竞品对比汉兰达"],
       qa_score: 85, ai_issue: "未执行竞品优势拆解话术，可能被竞品截流。",
-      last_scene: "战败客户回访", time: "前天 14:00",
+      last_scene: "—", time: "前天 14:00",
       follow_up_time: "明天 10:00",
       follow_action: "回访前先补一版 GS8 与汉兰达对比话术卡，突出动力、智能配置和空间差异。",
       recommend_reason: "客户关注点集中在竞品对比，但录音里没有完成优势拆解，容易被竞品销售截流。",
@@ -2786,9 +2788,9 @@ function initStoreDashboardPage() {
     '质检合格率':    '合格录音占分析录音的比率（合格数 ÷ 分析录音数）',
     '风险录音数':    '含违规或风险话术的录音条数',
     '风险录音率':    '风险录音占分析录音的比率（风险数 ÷ 分析录音数）',
-    '邀约录音数':    '当期邀约场景下进入质检分析的录音条数',
-    '接待录音数':    '当期门店接待场景下进入质检分析的录音条数',
-    '试驾录音数':    '当期试乘试驾场景下进入质检分析的录音条数',
+    '邀约录音数':    '当期首触跟进、邀约到店及排程确认业务场景下进入质检分析的录音条数',
+    '接待录音数':    '当期销售接待业务场景下进入质检分析的录音条数',
+    '试驾录音数':    '当期试乘试驾业务场景下进入质检分析的录音条数',
     '云外呼录音数':  '当期云外呼来源下进入质检分析的录音总条数',
     '门店工牌录音数': '当期门店工牌来源下进入质检分析的录音总条数',
     'SOP单项命中率': '各 SOP 话术项的未命中率，数值越低代表执行越好'
@@ -3647,7 +3649,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                   </div>
                 </div>
               </div>
-              <div class="todo-time">最近场景 ${c.last_scene} · ${c.time}</div>
+              <div class="todo-time">最近业务场景 ${c.last_scene} · ${c.time}</div>
             </div>
           </div>
 
@@ -4874,10 +4876,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         ${previewLabels.map(label => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getIssueRuleSceneTagLabel(label))}</em>`).join('')}
       </span>
       ${hasMore ? `
-        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
+        <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部业务场景">...</span>
       ` : ''}
       <span class="issue-rule-scene-popover" role="tooltip">
-        <strong>所属业务场景</strong>
+        <strong>业务场景</strong>
         <span class="issue-rule-scene-popover-tags">
           ${labels.map(label => `<em>${escapeHtml(label)}</em>`).join('')}
         </span>
@@ -6691,9 +6693,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const scriptLibraryOptions = {
         page: ['话术速查', '月度训练重点'],
-        quickScene: ['全部', '邀约', '接待', '试驾'],
+        quickScene: ['全部', ...BUSINESS_SCENES],
         quickRecommendation: ['全部', '推荐', '慎用'],
-        monthlyScene: ['邀约', '接待', '试驾'],
+        monthlyScene: [...BUSINESS_SCENES],
         monthlyPriority: ['全部', '优先训练', '持续有效', '持续观察', '暂不推荐'],
         monthlyCoachingMode: ['全部', '晨会讲解', '班组复盘', '一对一辅导', '陪练'],
         monthlyMonth: ['2026-04', '2026-03', '2026-02']
@@ -6703,7 +6705,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         page: '话术速查',
         quickScene: '全部',
         quickRecommendation: '全部',
-        monthlyScene: '邀约',
+        monthlyScene: '邀约到店',
         monthlyPriority: '全部',
         monthlyCoachingMode: '全部',
         monthlyMonth: '2026-04',
@@ -6715,7 +6717,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       const scriptLibraryData = {
         globalPool: {
-          invite: {
+          first_follow: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+          invite_store: {
             overview: {
               topTags: ['邀约动作待收口', '客户顾虑待化解'],
               recommendedTopics: 2,
@@ -6746,7 +6749,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             topics: [
               {
                 id: 'invite-active-time-anchor',
-                scene: '邀约',
+                scene: '邀约到店',
                 topicName: '确认兴趣后立刻给时间锚点',
                 summary: '优秀邀约不是继续讲很多权益，而是在客户已出现兴趣信号时，快速给出明确到店时间选择，减少继续拖延。',
                 actionPattern: '兴趣确认 → 权益一句话 → 二选一时间',
@@ -6811,7 +6814,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               },
               {
                 id: 'invite-observing-scenario-confirm',
-                scene: '邀约',
+                scene: '邀约到店',
                 topicName: '先确认真实使用场景再回应顾虑',
                 summary: '优秀顾虑处理不是先争论参数，而是先问清真实通勤或家庭使用场景，再把回应落到客户能感知的生活半径。',
                 actionPattern: '场景追问 → 参数翻译 → 绑定到店体验',
@@ -6869,7 +6872,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               },
               {
                 id: 'invite-stale-benefit-stack',
-                scene: '邀约',
+                scene: '邀约到店',
                 topicName: '连续堆优惠促到店',
                 summary: '单纯连续堆权益虽然短期能吸引注意，但复用后容易变成只谈优惠的话术习惯，最近验证效果明显弱于动作收口类主题。',
                 actionPattern: '多权益堆叠 → 期待刺激',
@@ -6920,12 +6923,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               }
             ]
           },
-          reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+          schedule_confirm: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+          store_reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
           test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
         },
         monthlyPackages: {
           '2026-04': {
-            invite: {
+            first_follow: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            invite_store: {
               overview: {
                 topTags: ['邀约动作待收口', '客户顾虑待化解'],
                 recommendedTopics: 2,
@@ -6956,7 +6961,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               topics: [
                 {
                   id: 'monthly-2026-04-invite-window',
-                  scene: '邀约',
+                  scene: '邀约到店',
                   month: '2026-04',
                   topicName: '用到店窗口替代泛泛跟进',
                   summary: '4 月新增优秀样本里，表现最好的一类动作是直接围绕客户的空闲窗口和门店可安排资源完成邀约，而不是继续泛泛跟进。',
@@ -7012,7 +7017,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 },
                 {
                   id: 'monthly-2026-04-invite-budget',
-                  scene: '邀约',
+                  scene: '邀约到店',
                   month: '2026-04',
                   topicName: '预算顾虑先拆总价再拆到月供',
                   summary: '当客户在电话里提前暴露预算压力时，优秀样本倾向先拆总成本结构，再把讨论切到客户可接受的支付节奏。',
@@ -7061,11 +7066,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 }
               ]
             },
-            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            schedule_confirm: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            store_reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
             test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
           },
           '2026-03': {
-            invite: {
+            first_follow: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            invite_store: {
               overview: {
                 topTags: ['客户需求待确认'],
                 recommendedTopics: 1,
@@ -7086,7 +7093,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               topics: [
                 {
                   id: 'monthly-2026-03-invite-need',
-                  scene: '邀约',
+                  scene: '邀约到店',
                   month: '2026-03',
                   topicName: '先问家庭用车人群再定邀约切口',
                   summary: '3 月新增主题更强调先问使用人群，再决定后续邀约切口，适合高客单家庭场景。',
@@ -7135,12 +7142,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 }
               ]
             },
-            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            schedule_confirm: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            store_reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
             test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
           },
           '2026-02': {
-            invite: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
-            reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            first_follow: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            invite_store: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            schedule_confirm: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
+            store_reception: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] },
             test_drive: { overview: { topTags: [], recommendedTopics: 0, highValueTopics: 0 }, problemScenarios: [], topics: [] }
           }
         }
@@ -7167,7 +7177,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '高',
           intentLevelClass: 'red',
           carSeries: '传祺 E9',
-          stage: '试驾'
+          stage: '试乘试驾'
         },
         {
           id: buildMockRecordingId(1),
@@ -7189,7 +7199,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '高',
           intentLevelClass: 'red',
           carSeries: '埃安 Y Plus',
-          stage: '邀约'
+          stage: '邀约到店'
         },
         {
           id: buildMockRecordingId(2),
@@ -7211,7 +7221,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '中',
           intentLevelClass: 'amber',
           carSeries: '传祺 GS8',
-          stage: '试驾PDC'
+          stage: '排程确认'
         },
         {
           id: buildMockRecordingId(3),
@@ -7255,7 +7265,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '无',
           intentLevelClass: 'gray',
           carSeries: '传祺 M8',
-          stage: '试驾'
+          stage: '试乘试驾'
         }
       ]
 
@@ -7316,7 +7326,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildSessionRecords() {
         const generated = []
-        const stages = ['邀约', '试驾PDC', '销售接待', '试驾']
+        const stages = BUSINESS_SCENES
         const statuses = ['已完成', '失败']
         const intentLevels = [
           { label: '高', className: 'red' },
@@ -7402,7 +7412,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               intentLevel: ['高', '中', '低', '无'][index % 4],
               intentLevelClass: ['red', 'amber', 'blue', 'gray'][index % 4],
               carSeries: brandSeries[index % brandSeries.length],
-              stage: ['邀约', '试驾PDC', '销售接待', '试驾'][index % 4]
+              stage: BUSINESS_SCENES[index % BUSINESS_SCENES.length]
             }
           })
         : sessionRecordTemplates
@@ -7432,7 +7442,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '是',
           sopScore: '52%',
           carSeries: '埃安 Y Plus',
-          stage: '试驾',
+          stage: '试乘试驾',
           lastContact: '今天 09:40',
           owner: '周衡'
         },
@@ -7446,7 +7456,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '是',
           sopScore: '38%',
           carSeries: '传祺 GS8',
-          stage: '邀约',
+          stage: '邀约到店',
           lastContact: '昨天 16:48',
           owner: '王诚'
         },
@@ -7474,7 +7484,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '是',
           sopScore: '48%',
           carSeries: '传祺 M8',
-          stage: '试驾',
+          stage: '试乘试驾',
           lastContact: '03-10 18:05',
           owner: '韩深'
         }
@@ -7484,7 +7494,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const aiLeadValidityValues = ['有效', '无效', '暂未分析']
       const leadIntentGradeValues = ['H', 'A', 'B', 'C']
       const leadSourceValues = ['400官网', '汽车之家', '懂车帝', '易车', '抖音直播', '老客户转介绍', '门店自然进店', '企微私域']
-      const leadQcSceneValues = ['邀约', '试驾PDC', '销售接待', '试驾']
+      const leadQcSceneValues = BUSINESS_SCENES
       const leadTagValues = ['价格敏感', '家庭出行', '金融方案诉求', '关注静谧性', '周末试驾', '竞品对比', '决策待推动', '新能源关注', '置换需求', '首次购车']
       const leadSummaryTemplates = [
         '客户对传祺 E9 表现出较高兴趣，重点询问了空间和续航表现。客户提到周末会带家人到店试驾，希望提前了解金融方案。',
@@ -7640,7 +7650,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildLeadRecords() {
         const generated = []
-        const leadStages = ['邀约', '试驾PDC', '销售接待', '试驾']
+        const leadStages = BUSINESS_SCENES
         const leadCarSeries = ['传祺 E9', '埃安 Y Plus', '传祺 GS8', '埃安 Hyper HT', '传祺 M8', '传祺 ES9', '传祺向往 S7', '埃安 RT']
         const leadOwners = ['李凯', '周衡', '王诚', '刘青', '韩深', '陈璐', '顾明', '赵宁', '何川', '沈楠', '徐舟', '唐韵']
         const leadCustomerNames = ['王巍娴', '王慕瑶', '吴耀锋', '冯靖宇', '钱泺西', '林若彤', '郑昱辰', '蒋沐晴', '邵宇泽', '顾芮宁', '程嘉屹', '姚可欣']
@@ -7658,7 +7668,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           validRecording: '是',
           sopScore: '86%',
           carSeries: '传祺 M8',
-          stage: '试驾',
+          stage: '试乘试驾',
           owner: '李凯',
           intent: 'H',
           leadStatus: '跟进中',
@@ -7677,7 +7687,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             recordStartTime: '2026-03-12 18:40',
             lastContact: '2026-03-12 18:55',
             recordingCount: 8,
-            stage: '试驾',
+            stage: '试乘试驾',
             owner: '李凯'
           },
           {
@@ -7699,7 +7709,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             recordStartTime: '2026-03-10 16:10',
             lastContact: '2026-03-10 16:28',
             recordingCount: 6,
-            stage: '邀约',
+            stage: '邀约到店',
             owner: '陈璐'
           },
           {
@@ -7784,7 +7794,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             lastContact: '2026-03-16 10:18',
             recordingCount: 1,
             validRecording: '是',
-            stage: '邀约',
+            stage: '邀约到店',
             owner: '李凯'
           },
           {
@@ -7819,7 +7829,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             lastContact: '2026-03-15 13:00',
             recordingCount: 3,
             validRecording: '是',
-            stage: '试驾',
+            stage: '试乘试驾',
             owner: '李凯'
           },
           {
@@ -7939,7 +7949,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
       function buildLeadOrganizationDemoRecords(templates, dealers) {
         const advisors = dealers.flatMap((dealer) => dealer.advisors.map((advisor) => ({ dealer, advisor })))
-        const leadStages = ['邀约', '试驾PDC', '销售接待', '试驾']
+        const leadStages = BUSINESS_SCENES
 
         return advisors.map(({ dealer, advisor }, index) => {
           const template = templates[index % templates.length]
@@ -8194,7 +8204,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return activeKeys.every((key) => normalizedRecord[key].includes(activeQueries[key]))
       })
 
-      const sessionStageOptions = ['全部', '邀约', '试驾PDC', '销售接待', '试驾']
+      const sessionStageOptions = ['全部', ...BUSINESS_SCENES]
       const sessionStatusOptions = ['全部', '已完成', '失败']
       const sessionIntentLevelOptions = ['全部', '高', '中', '低', '无']
       const sessionSourceOptions = Array.isArray(sessionSearchUtils.SESSION_SOURCE_OPTIONS) && sessionSearchUtils.SESSION_SOURCE_OPTIONS.length
@@ -8258,7 +8268,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         { label: '大区维度', value: 'region' },
         { label: '省份维度', value: 'province' }
       ]
-      const leadsStageOptions = ['全部', '邀约', '试驾PDC', '销售接待', '试驾']
+      const leadsStageOptions = ['全部', ...BUSINESS_SCENES]
       const leadStatusOptions = ['全部', ...leadStatusValues]
       const leadIntentGradeOptions = ['全部', ...leadIntentGradeValues]
       const leadSearchTargetOptions = [
@@ -8490,21 +8500,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getScriptLibrarySceneKey(scene) {
-        if (scene === '邀约') {
-          return 'invite'
-        }
-        if (scene === '接待') {
-          return 'reception'
-        }
-        if (scene === '试驾') {
-          return 'test_drive'
-        }
-        return 'invite'
+        return {
+          '首触跟进': 'first_follow',
+          '邀约到店': 'invite_store',
+          '排程确认': 'schedule_confirm',
+          '销售接待': 'store_reception',
+          '试乘试驾': 'test_drive'
+        }[scene] || ''
       }
 
       function getScriptLibraryTopicsByScene(scene, source) {
         if (scene === '全部') {
-          return ['invite', 'reception', 'test_drive'].flatMap((key) => {
+          return BUSINESS_SCENES.map(getScriptLibrarySceneKey).flatMap((key) => {
             const sceneData = source[key]
             return Array.isArray(sceneData)
               ? sceneData
@@ -8588,13 +8595,27 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function renderScriptLibraryChipGroup(options, stateKey) {
+        if (stateKey === 'quickScene' || stateKey === 'monthlyScene') {
+          const selected = scriptLibraryState[stateKey]
+          return `<div class="business-scene-filter scriptlib-scene-filter" data-business-scene-filter>
+            <span>业务场景</span>
+            <details data-business-scene-picker>
+              <summary class="business-scene-trigger" aria-label="业务场景筛选" aria-haspopup="listbox">${escapeHtml(selected === '全部' ? '全部业务场景' : selected)}</summary>
+              <div class="business-scene-menu" data-business-scene-floating role="listbox" aria-label="业务场景候选">
+                <label class="business-scene-search"><input type="search" data-business-scene-search placeholder="搜索业务场景" aria-label="搜索业务场景" autocomplete="off" spellcheck="false"></label>
+                ${options.map(option => `<button type="button" class="business-scene-option${selected === option ? ' is-selected' : ''}" data-business-scene-option data-business-scene-single data-script-filter="${stateKey}" data-script-value="${escapeHtml(option)}" role="option" aria-selected="${selected === option}">${escapeHtml(option === '全部' ? '全部业务场景' : option)}</button>`).join('')}
+                <div class="business-scene-empty" hidden>未找到匹配业务场景</div>
+              </div>
+            </details>
+          </div>`
+        }
         return options
           .map((option) => `<button type="button" class="scriptlib-chip${scriptLibraryState[stateKey] === option ? ' active' : ''}" data-script-filter="${stateKey}" data-script-value="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
           .join('')
       }
 
       function getScriptLibraryEvidenceLabel(scene) {
-        return scene === '邀约' ? '到店' : '下订'
+        return BUSINESS_SCENES.slice(0, 3).includes(scene) ? '到店' : '下订'
       }
 
       function normalizeScriptLibrarySearchText(value) {
@@ -8635,7 +8656,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const windowData = evidence[windowKey] || {
           matchedSampleCount: 0,
           convertedCount: 0,
-          conversionLabel: getScriptLibraryEvidenceLabel(item ? item.scene : '邀约')
+          conversionLabel: getScriptLibraryEvidenceLabel(item ? item.scene : '邀约到店')
         }
         return {
           note: evidence.note || '结果证据：用于说明该行为覆盖到的最终结果，不代表单一行为带来的因果提升。',
@@ -8697,8 +8718,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               </div>
               <div class="scriptlib-filter-stack">
                 <div class="scriptlib-filter-row">
-                  <span class="scriptlib-filter-label">业务场景</span>
-                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.quickScene, 'quickScene')}</div>
+                  ${renderScriptLibraryChipGroup(scriptLibraryOptions.quickScene, 'quickScene')}
                 </div>
                 <div class="scriptlib-filter-row">
                   <span class="scriptlib-filter-label">是否推荐</span>
@@ -8739,7 +8759,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                         <button type="button" class="btn scriptlib-detail-trigger" data-script-select="${escapeHtml(item.id)}">查看详情</button>
                       </div>
                     </article>
-                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>暂无匹配话术</strong><span>换一个场景、问题或搜索词再试一次。</span></div>'}
+                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>暂无匹配话术</strong><span>换一个业务场景、问题或搜索词再试一次。</span></div>'}
                 </div>
               </section>
               <section class="card scriptlib-detail-card">
@@ -8824,8 +8844,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                   <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyMonth, 'monthlyMonth')}</div>
                 </div>
                 <div class="scriptlib-filter-row">
-                  <span class="scriptlib-filter-label">业务场景</span>
-                  <div class="scriptlib-chip-group">${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyScene, 'monthlyScene')}</div>
+                  ${renderScriptLibraryChipGroup(scriptLibraryOptions.monthlyScene, 'monthlyScene')}
                 </div>
                 <div class="scriptlib-filter-row">
                   <span class="scriptlib-filter-label">训练优先级</span>
@@ -8867,7 +8886,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                         <span class="mini-pill">样本 ${escapeHtml(String(item.sourceSampleCount || 0))}</span>
                       </div>
                     </article>
-                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>当前月份暂无训练主题</strong><span>可切换月份或场景继续查看。</span></div>'}
+                  `).join('') : '<div class="empty-state-card"><div class="empty-state-icon"></div><strong>当前月份暂无训练主题</strong><span>可切换月份或业务场景继续查看。</span></div>'}
                 </div>
               </section>
               <section class="card scriptlib-detail-card">
@@ -8964,6 +8983,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               scriptLibraryState.selectedId = null
             }
             renderScriptLibraryPage()
+            if (scriptFilter === 'quickScene' || scriptFilter === 'monthlyScene') {
+              pageHost.querySelector('[data-business-scene-picker] > summary')?.focus({ preventScroll: true })
+            }
           })
         })
 
@@ -9752,7 +9774,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           items.push(`组织: ${getSessionDisplayText('organization', sessionFilterState.organization)}`)
         }
         if (sessionFilterState.stage !== '全部') {
-          items.push(`质检场景: ${sessionFilterState.stage}`)
+          items.push(`业务场景: ${sessionFilterState.stage}`)
         }
         if (sessionFilterState.source !== '全部') {
           items.push(`数据来源: ${sessionFilterState.source}`)
@@ -9783,11 +9805,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return sessionSearchUtils.getSessionSourceFromStage(stage)
         }
 
-        if (stage === '邀约' || stage === '试驾PDC') {
+        if (BUSINESS_SCENES.slice(0, 3).includes(stage)) {
           return '云外呼'
         }
 
-        if (stage === '试驾' || stage === '销售接待') {
+        if (BUSINESS_SCENES.slice(3).includes(stage)) {
           return '工牌'
         }
 
@@ -9896,7 +9918,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         container.innerHTML = `
           <div class="session-filter-row session-filter-row-segment${sessionFilterState.collapsed ? ' is-collapsed' : ''}">
             ${renderSessionSegmentControl('brand', '品牌', sessionFilterState.brand, sessionBrandOptions, 'session-toolbar-control-brand')}
-            ${renderSessionSegmentControl('stage', '质检场景', sessionFilterState.stage, sessionStageOptions, 'session-toolbar-control-stage')}
+            ${renderSessionSegmentControl('stage', '业务场景', sessionFilterState.stage, sessionStageOptions, 'session-toolbar-control-stage')}
             ${renderSessionSegmentControl('source', '数据来源', sessionFilterState.source, sessionSourceOptions, 'session-toolbar-control-source')}
             ${renderSessionSegmentControl('intentLevel', 'AI意向等级', sessionFilterState.intentLevel, sessionIntentLevelOptions, 'session-toolbar-control-intent', renderSessionIntentLevelHelp())}
             ${sessionFilterState.collapsed ? renderSessionInlineActions() : ''}
@@ -9940,7 +9962,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (!records.length) {
           tbody.innerHTML = `
             <tr class="session-empty-row">
-              <td colspan="21">当前筛选条件下暂无录音，请调整组织、质检场景、数据来源、AI意向等级、车系、录音开始时间、录音状态或搜索条件后重试。</td>
+              <td colspan="21">当前筛选条件下暂无录音，请调整组织、业务场景、数据来源、AI意向等级、车系、录音开始时间、录音状态或搜索条件后重试。</td>
             </tr>
           `
           if (pagination) {
@@ -12755,9 +12777,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       let tasks = [
         {
           id: 1,
-          taskName: 'AION Y Plus 邀约质检',
+          taskName: 'AION Y Plus 邀约到店质检',
           model: ['AION Y Plus'],
-          scenario: ['邀约'],
+          scenario: ['邀约到店'],
           status: true,
           updatedAt: '2026-03-16 09:30',
           startTime: '2026-03-10 00:00',
@@ -12776,9 +12798,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         },
         {
           id: 2,
-          taskName: '传祺双车型试驾 PDC 质检',
+          taskName: '传祺双车型排程确认质检',
           model: ['M8', 'E9'],
-          scenario: ['试驾PDC'],
+          scenario: ['排程确认'],
           status: false,
           updatedAt: '2026-03-15 14:20',
           startTime: '-',
@@ -12843,11 +12865,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           { value: 'GS8', label: '传祺 GS8' }
         ],
         scenario: [
-          { value: '', label: '全部场景' },
-          { value: '邀约', label: '电话邀约' },
-          { value: '试驾PDC', label: '试驾PDC' },
-          { value: '销售接待', label: '销售接待' },
-          { value: '试乘试驾', label: '试乘试驾' }
+          { value: '', label: '全部业务场景' },
+          ...BUSINESS_SCENES.map(value => ({ value, label: value }))
         ]
       }
 
@@ -12869,7 +12888,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               return `
                 <button
                   type="button"
-                  class="custom-option task-filter-option${active}"
+                  class="custom-option task-filter-option${filterKey === 'scenario' ? ' business-scene-option' : ''}${active}"
+                  ${filterKey === 'scenario' ? `data-business-scene-option data-business-scene-single role="option" aria-selected="${option.value === selectedValue}"` : ''}
                   data-task-filter-key="${filterKey}"
                   data-task-filter-value="${escapeHtml(option.value)}"
                 >
@@ -13348,12 +13368,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         { value: 'S7', label: '传祺向往 S7' }
       ]
 
-      const scenarioOptions = [
-        { value: '邀约', label: '电话邀约' },
-        { value: '试驾PDC', label: '试驾 PDC' },
-        { value: '销售接待', label: '销售接待' },
-        { value: '试乘试驾', label: '试乘试驾' }
-      ]
+      const scenarioOptions = BUSINESS_SCENES.map(value => ({ value, label: value }))
 
       function normalizeTaskSelection(value) {
         if (Array.isArray(value)) {
@@ -13413,7 +13428,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 </div>
                 <div class="task-meta">
                   <span class="task-pill model">车型: ${modelStr || '未指定'}</span>
-                  <span class="task-pill scenario">场景: ${scenarioStr || '未指定'}</span>
+                  <span class="task-pill scenario">业务场景: ${scenarioStr || '未指定'}</span>
                 </div>
                 <div class="task-meta compact">
                   <span class="task-pill count">${task.rules.length} 项规则</span>
@@ -13494,8 +13509,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             }
 
             return `
-              <div class="custom-option" onclick="toggleCustomOption('${containerId}', '${option.value}', ${isSingleSelect})">
-                <input type="${isSingleSelect ? 'radio' : 'checkbox'}" value="${option.value}" ${isSingleSelect ? `name="${containerId}"` : ''}>
+              <div class="custom-option${containerId === 'scenarioSelectOptions' ? ' business-scene-option' : ''}" ${containerId === 'scenarioSelectOptions' ? 'data-business-scene-option role="option" tabindex="0" aria-selected="false"' : ''} onclick="toggleCustomOption('${containerId}', '${option.value}', ${isSingleSelect})">
+                <input type="${isSingleSelect ? 'radio' : 'checkbox'}" ${containerId === 'scenarioSelectOptions' ? 'tabindex="-1" aria-hidden="true"' : ''} value="${option.value}" ${isSingleSelect ? `name="${containerId}"` : ''}>
                 <span>${option.label}</span>
               </div>
             `
@@ -13520,7 +13535,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         ).map((input) => (input.nextElementSibling ? input.nextElementSibling.textContent : input.value))
 
         if (checkedValues.length === 0) {
-          trigger.textContent = triggerId.includes('model') ? '请选择车型...' : '请选择场景...'
+          trigger.textContent = triggerId.includes('model') ? '请选择车型...' : '请选择业务场景...'
           trigger.style.color = 'var(--muted)'
           syncCustomSelectState(containerId)
           return
@@ -13606,6 +13621,12 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const container = document.getElementById(containerId)
         if (!container) {
           return
+        }
+
+        if (containerId === 'scenarioSelectOptions') {
+          container.querySelectorAll('[data-business-scene-option]').forEach(option => {
+            option.setAttribute('aria-selected', String(option.querySelector('input').checked))
+          })
         }
 
         if (containerId === 'modelSelectOptions') {
@@ -13919,8 +13940,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (!currentScenarioValue) {
           openFeedbackModal({
-            title: '缺少适用场景',
-            message: '请先选择适用场景后再更新配置。'
+            title: '缺少业务场景',
+            message: '请先选择业务场景后再更新配置。'
           })
           return
         }
@@ -13964,7 +13985,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (isDuplicate) {
           openFeedbackModal({
             title: '配置重复',
-            message: '该场景与车型组合已存在，请调整后再更新配置。'
+            message: '该业务场景与车型组合已存在，请调整后再更新配置。'
           })
           return
         }
@@ -14023,7 +14044,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           title: '配置已更新',
           message:
             sameComboDraftCount > 0
-              ? `当前质检任务已更新为启用状态。\n另有 ${sameComboDraftCount} 条相同场景/车型组合的草稿已保留，未受影响。`
+              ? `当前质检任务已更新为启用状态。\n另有 ${sameComboDraftCount} 条相同业务场景/车型组合的草稿已保留，未受影响。`
               : '当前质检任务已更新为启用状态。'
         })
       }
@@ -14490,7 +14511,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             tone: storeDetail?.tone || '',
             advisorName: item.advisorName,
             time: formatDateTimeValue(new Date(baseTime - index * 60 * 60 * 1000)),
-            stage: item.stage || item.leadStatus,
+            stage: normalizeLeadDetailSceneLabel(item.qcScene || item.stage),
             intentLevel: item.aiIntentLevel || '中',
             intentLevelClass: item.aiIntentLevelClass || 'amber',
             summary: item.summary,
@@ -14505,7 +14526,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 id: buildMockRecordingId(2801),
                 store: '苏州园区门店',
                 time: '2026-03-11 17:20',
-                stage: '需求确认',
+                stage: '销售接待',
                 intentLevel: '中',
                 advisorName: '周倩',
                 summary: '客户补充了七座空间、儿童座椅与长途舒适性需求，希望对比不同配置。',
@@ -14516,7 +14537,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 id: buildMockRecordingId(2802),
                 store: '苏州园区门店',
                 time: '2026-03-11 16:20',
-                stage: '配置对比',
+                stage: '销售接待',
                 intentLevel: '中',
                 advisorName: '周倩',
                 summary: '客户重点对比了智驾、座椅舒适配置与车机功能。',
@@ -14527,7 +14548,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 id: buildMockRecordingId(2803),
                 store: '南京建邺门店',
                 time: '2026-03-10 15:40',
-                stage: '方案沟通',
+                stage: '销售接待',
                 intentLevel: '高',
                 advisorName: '吴晨',
                 summary: '客户询问金融免息、置换补贴与保险组合，对落地价较敏感。',
@@ -14538,7 +14559,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 id: buildMockRecordingId(2804),
                 store: '合肥滨湖门店',
                 time: '2026-03-09 14:15',
-                stage: '邀约试驾',
+                stage: '邀约到店',
                 intentLevel: '高',
                 advisorName: '许诺',
                 summary: '客户愿意周末携家人到店，希望体验二排静谧性与底盘舒适性。',
@@ -15743,24 +15764,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return [...new Set(values)]
       }
 
-      function normalizeLeadDetailSceneLabel(scene, role) {
-        if (['销售接待', '进店接待', '到店接待', '接待'].includes(scene)) {
-          return '销售接待'
+      function normalizeLeadDetailSceneLabel(scene) {
+        if (BUSINESS_SCENES.includes(scene)) return scene
+        const aliases = {
+          '门店接待': '销售接待', '进店接待': '销售接待', '到店接待': '销售接待', '接待': '销售接待',
+          '邀约进店': '邀约到店', '邀约': '邀约到店', '试驾邀约': '邀约到店', '电话邀约': '邀约到店',
+          '试驾前确认': '排程确认', '试驾PDC': '排程确认', '试驾 PDC': '排程确认', '试驾': '试乘试驾'
         }
-        if (scene === '邀约进店') {
-          return '邀约到店'
-        }
-        if (scene === '试驾前确认') {
-          return '试驾PDC'
-        }
-        if (scene === '试驾邀约' || scene === '电话邀约') {
-          return '邀约'
-        }
-        if (scene) {
-          return scene
-        }
-
-        return role === 'advisor' ? '销售接待' : '邀约'
+        return aliases[scene] || '—'
       }
 
       function getLeadDetailIntentLevelText(intent) {
@@ -15811,7 +15822,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         return [
           {
-            label: '邀约',
+            label: '邀约到店',
             meta: `${formatLeadDetailEvolutionDate(inviteDate)}`,
             level: '高'
           },
@@ -15821,7 +15832,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             level: '中'
           },
           {
-            label: '试驾',
+            label: '试乘试驾',
             meta: `${formatLeadDetailEvolutionDate(baseDate)}`,
             level: '高'
           }
@@ -15852,7 +15863,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           intentLevel: '中',
           models: ['N60'],
           intentText: lead.summary,
-          evidenceText: `来源 ${lead.source}；当前阶段为“${lead.stage}”；质检场景为“${sceneLabel}”；客户标签包括 ${tags.slice(0, 3).join('、')}；客户表示“再考虑一下”。`,
+          evidenceText: `来源 ${lead.source}；当前阶段为“${lead.stage}”；业务场景为“${sceneLabel}”；客户标签包括 ${tags.slice(0, 3).join('、')}；客户表示“再考虑一下”。`,
           evolutionSteps: buildLeadDetailEvolutionSteps(lead, role),
           isMultiNodeJourneyDemo: Boolean(lead.isMultiNodeJourneyDemo),
           actionText: lead.action,
@@ -16434,7 +16445,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const sessionId = node.dataset.sessionId || node.textContent.replace(/^录音ID:\s*/, '').trim()
           const sessionStore = node.dataset.sessionStore || payload?.store || pageHost.querySelector('#leadDetailStore')?.textContent.replace(/^门店[：:]\s*/, '') || '上海浦东门店'
           const sessionDate = node.dataset.sessionDate || '2026/03/13'
-          const sessionScene = node.dataset.sessionScene || '邀约'
+          const sessionScene = node.dataset.sessionScene || '—'
 
           node.setAttribute('href', getRouteUrl('session-detail', {
             sessionId,
@@ -17077,9 +17088,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       const SALES_METRIC_DEFS = {
         '接待数': '当期完成门店接待的客户数量',
         '试驾数': '当期完成试乘试驾的客户数量',
-        '邀约录音数': '当期邀约场景下进入质检分析的录音条数',
-        '接待录音数': '当期门店接待场景下进入质检分析的录音条数',
-        '试驾录音数': '当期试乘试驾场景下进入质检分析的录音条数',
+        '邀约录音数': '当期首触跟进、邀约到店及排程确认业务场景下进入质检分析的录音条数',
+        '接待录音数': '当期销售接待业务场景下进入质检分析的录音条数',
+        '试驾录音数': '当期试乘试驾业务场景下进入质检分析的录音条数',
         '话术命中率': '样本录音中关键话术被命中的比例',
         '平均时长': '有效录音的平均通话或面谈时长（分钟）',
         '风险录音': '含违规或风险话术的录音条数'
@@ -17352,7 +17363,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 16:40',
                 sessionCustomer: '郑女士',
-                sessionScene: '邀约'
+                sessionScene: '邀约到店'
               }
             },
             {
@@ -17364,7 +17375,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 10:18',
                 sessionCustomer: '钱先生',
-                sessionScene: '邀约'
+                sessionScene: '邀约到店'
               }
             }
           ],
@@ -17378,7 +17389,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 14:12',
                 sessionCustomer: '刘女士',
-                sessionScene: '邀约'
+                sessionScene: '邀约到店'
               }
             }
           ]
@@ -17430,7 +17441,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '刘女士',
             model: '传祺 E9',
             stage: '今日已到店',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '汽车之家',
             syncStatus: 'ok',
             syncLabel: '同步正常',
@@ -17451,7 +17462,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '韩先生',
             model: '传祺 M8',
             stage: '今日确认到店',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '抖音留资',
             syncStatus: 'ok',
             syncLabel: '同步正常',
@@ -17472,7 +17483,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '郑女士',
             model: '传祺 ES9',
             stage: '待首触达',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '官网留资',
             syncStatus: 'warn',
             syncLabel: '待回传',
@@ -17493,7 +17504,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '钱先生',
             model: '传祺 M6',
             stage: '首触超时',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '电话回呼',
             syncStatus: 'danger',
             syncLabel: '超时预警',
@@ -17514,7 +17525,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '周女士',
             model: '传祺 ES9',
             stage: '已邀约待到店',
-            qcScene: '试驾PDC',
+            qcScene: '排程确认',
             source: '官网留资',
             syncStatus: 'ok',
             syncLabel: '同步正常',
@@ -17535,7 +17546,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '林先生',
             model: '传祺 M8 宗师',
             stage: '跟进培育中',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '老客转介绍',
             syncStatus: 'ok',
             syncLabel: '同步正常',
@@ -17556,7 +17567,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '孙女士',
             model: '传祺 GS8',
             stage: '长期培育',
-            qcScene: '邀约',
+            qcScene: '邀约到店',
             source: '异业合作',
             syncStatus: 'ok',
             syncLabel: '同步正常',
@@ -18627,10 +18638,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ${previewLabels.map((label) => `<em tabindex="0" data-tag-label="${escapeHtml(label)}" aria-label="业务场景：${escapeHtml(label)}">${escapeHtml(getSalesReviewSceneTagLabel(label))}</em>`).join('')}
           </span>
           ${hasMore ? `
-            <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部所属业务场景">...</span>
+            <span class="issue-rule-scene-more" tabindex="0" aria-label="查看全部业务场景">...</span>
           ` : ''}
           <span class="issue-rule-scene-popover" role="tooltip">
-            <strong>所属业务场景</strong>
+            <strong>业务场景</strong>
             <span class="issue-rule-scene-popover-tags">
               ${labels.map((label) => `<em>${escapeHtml(label)}</em>`).join('')}
             </span>
@@ -19567,7 +19578,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           sessionStore: detailParams.sessionStore || '上海中心店',
           sessionDate: String(rawDate).replace(/-/g, '/'),
           sessionCustomer: detailParams.sessionCustomer || lead?.customer || '王先生',
-          sessionScene: detailParams.sessionScene || lead?.qcScene || '邀约'
+          sessionScene: detailParams.sessionScene || lead?.qcScene || '—'
         }
       }
 
@@ -20730,7 +20741,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 16:02',
                 sessionCustomer: '王先生',
-                sessionScene: '试驾'
+                sessionScene: '试乘试驾'
               }
             }
           ],
@@ -20744,7 +20755,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 sessionStore: '上海中心店',
                 sessionDate: '2026/03/22 11:46',
                 sessionCustomer: '陈先生',
-                sessionScene: '试驾'
+                sessionScene: '试乘试驾'
               }
             }
           ]
@@ -20767,7 +20778,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '王先生',
             model: '传祺 M8',
             stage: '试驾后报价中',
-            qcScene: '试驾',
+            qcScene: '试乘试驾',
             appointmentOwner: 'DCC 张琳',
             receptionOwner: '李昱',
             followupOwner: '李昱',
@@ -20836,7 +20847,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '陈先生',
             model: '传祺 M7',
             stage: '已下订',
-            qcScene: '试驾',
+            qcScene: '试乘试驾',
             appointmentOwner: 'DCC 张琳',
             receptionOwner: '陈涛',
             followupOwner: '李昱',
@@ -20882,7 +20893,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             customer: '吴女士',
             model: '传祺 M9',
             stage: '战败回访待确认',
-            qcScene: '试驾',
+            qcScene: '试乘试驾',
             appointmentOwner: 'DCC 苏楠',
             receptionOwner: '李昱',
             followupOwner: '李昱',

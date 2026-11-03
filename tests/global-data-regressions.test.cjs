@@ -52,7 +52,7 @@ test('advisor recording count opens and exports the full current scope, includin
   const target = list('session', '&' + [...url.searchParams].filter(([key]) => key !== 'route').map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&'));
   assert.deepEqual(new Set(await exportedIds(target, 'session')), new Set(expected.map(record => record.audioId)));
   const request = target.submitted.at(-1);
-  for (const label of ['顾问', '门店', '质检场景', '意向车系']) assert(request.filters.some(filter => filter.label === label), label);
+  for (const label of ['顾问', '门店', '业务场景', '意向车系']) assert(request.filters.some(filter => filter.label === label), label);
   target.click('[data-sr-reset]');
   assert(!target.window.location.search.includes('recordingScope'));
   assert((await exportedIds(target, 'session')).length > expected.length);
