@@ -118,6 +118,14 @@
   overscroll-behavior: contain;
 }
 .dashboard-filter-card .badge-advisor-option { font: inherit; }
+.factory-org-control-slot :is(
+  [data-sd-control="region"],
+  [data-sd-control="zone"],
+  [data-sd-control="province"],
+  [data-sd-control="city"]
+) .badge-advisor-option-copy small {
+  display: none;
+}
 .dashboard-filter-card :is(.fo-menu-group, .sd-filter-group, .so-filter-group) + :is(.fo-menu-group, .sd-filter-group, .so-filter-group) { margin-top: 6px; border-top: 1px solid var(--line); }
 .dashboard-filter-card :is(.fo-menu-group-label, .sd-filter-group-label, .so-filter-group-label) { padding: 8px 12px; color: #7d899c; font-size: 12px; font-weight: 500; }
 
