@@ -121,7 +121,7 @@
       sceneOptions:allowedScenes.map(label=>({value:label,label})),
       modelOptions:()=>data.modelOptions(subject?.store?[subject.store.brand]:model.applied.brand.map(id=>id.replace(/^brand:/,''))),
       getSelection:key=>state[key==='scene'?'scenes':'models'],onBeforeOpen:()=>{ui?.closeMenu();closeDate();},
-      onChange:(key,values)=>{state[key==='scene'?'scenes':'models']=values;state.page=1;render();}
+      onChange:(key,values)=>{state[key==='scene'?'scenes':'models']=values;state.page=1;state.rankExpanded=[];render();}
     });
     if(sales)sourceTabs=global.SalesSourceTabs.mount(root.querySelector('.role-page-switch'));
     function range(days) {
@@ -198,9 +198,11 @@
     }
     function renderFactoryRanking(result) {
       const selection=model.applied, geographic=selection.dimensionMode==='geography';
-      const levels=geographic?['省份','城市','门店']:['大区','战区','门店'];
-      const depth=selection.store.length || (geographic?selection.city:selection.zone).length ? 2 : (geographic?selection.province:selection.region).length ? 1 : 0;
-      const rows=data.ranking(result.recordings,selection.dimensionMode,depth);
+      const fields=model.dimensionKeys();
+      const levels=geographic?['品牌','省份','城市','门店']:['品牌','大区','战区','门店'];
+      const depth=fields.reduce((level,key,index)=>selection[key].length?index:level,0);
+      const organizations=model.directory.filter(model.matches);
+      const rows=data.ranking(result.recordings,selection.dimensionMode,depth,organizations);
       const expanded=new Set(state.rankExpanded || []),sortKey=state.rankSort || 'qualifiedRate';
       const sorted=list=>[...list].sort((a,b)=>{
         if(a[sortKey]===null)return b[sortKey]===null?a.id.localeCompare(b.id):1;
@@ -209,11 +211,12 @@
       });
       const colgroup='<colgroup><col style="width:8.31%"><col style="width:11.51%"><col style="width:15.76%"><col style="width:16.22%"><col style="width:16.07%"><col style="width:16.07%"><col style="width:16.06%"></colgroup>';
       const tableRows=(list,nesting=0)=>sorted(list).map((row,index)=>{
-        const open=expanded.has(row.id),children=row.children.length>0,indent=nesting===0?'':nesting===1?'-child':'-store';
-        return `<tr class="rank-row${children?' rank-expandable':''}${open?' is-open':''}" ${children?`data-unified-rank-toggle="${escape(row.id)}" aria-expanded="${open}"`:''} data-unified-rank-id="${escape(row.id)}" data-recording-count="${row.recordingCount}"><td><span class="factory-rank-index${indent?' factory-rank-index'+indent:''}">${children?`<button type="button" style="display:inline-flex;align-items:center;border:0;background:none;padding:0;color:inherit;cursor:pointer" data-unified-rank-toggle="${escape(row.id)}" aria-expanded="${open}" aria-label="${open?'收起':'展开'}${escape(row.name)}"><svg class="rank-expand-icon" style="transform:rotate(${open?90:0}deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>`:''}${nesting===0?`<span class="factory-rank-index-num">${index+1}</span>`:''}</span></td><td><span class="factory-rank-name${indent?' factory-rank-name'+indent:''}" title="${escape(row.brand)} · ${escape(row.parentName || row.name)}">${escape(row.name)}</span></td><td><span class="factory-rank-number">${row.invitation}</span></td><td><span class="factory-rank-number">${row.testDrive}</span></td><td><span class="factory-rank-number">${row.reception}</span></td><td><span class="factory-rank-rate">${number(row.hitRate,'%')}</span></td><td><span class="factory-rank-rate factory-rank-pass">${number(row.qualifiedRate,'%')}</span></td></tr>${children?`<tr class="rank-expand-panel${open?' is-open':''}" style="display:${open?'table-row':'none'}"><td colspan="7" style="padding:0"><table class="factory-qc-rank-table factory-qc-rank-nested${row.level==='zone'||row.level==='city'?' factory-qc-rank-store':''}">${colgroup}<tbody>${tableRows(row.children,nesting+1)}</tbody></table></td></tr>`:''}`;
+        const open=expanded.has(row.id),children=row.children.length>0,indent=nesting===0?'':row.level==='store'?'-store':'-child';
+        const title=[...new Set([row.brand,row.parentName,row.name].filter(Boolean))].join(' · ');
+        return `<tr class="rank-row${children?' rank-expandable':''}${open?' is-open':''}" ${children?`data-unified-rank-toggle="${escape(row.id)}" aria-expanded="${open}"`:''} data-unified-rank-id="${escape(row.id)}" data-recording-count="${row.recordingCount}"><td><span class="factory-rank-index${indent?' factory-rank-index'+indent:''}" style="padding-left:${nesting * 12}px">${children?`<button type="button" style="display:inline-flex;align-items:center;border:0;background:none;padding:0;color:inherit;cursor:pointer" data-unified-rank-toggle="${escape(row.id)}" aria-expanded="${open}" aria-label="${open?'收起':'展开'}${escape(row.name)}"><svg class="rank-expand-icon" style="transform:rotate(${open?90:0}deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>`:''}${nesting===0?`<span class="factory-rank-index-num">${index+1}</span>`:''}</span></td><td><span class="factory-rank-name${indent?' factory-rank-name'+indent:''}" title="${escape(title)}">${escape(row.name)}</span></td><td><span class="factory-rank-number">${row.invitation}</span></td><td><span class="factory-rank-number">${row.testDrive}</span></td><td><span class="factory-rank-number">${row.reception}</span></td><td><span class="factory-rank-rate">${number(row.hitRate,'%')}</span></td><td><span class="factory-rank-rate factory-rank-pass">${number(row.qualifiedRate,'%')}</span></td></tr>${children && open?`<tr class="rank-expand-panel${open?' is-open':''}" style="display:${open?'table-row':'none'}"><td colspan="7" style="padding:0"><table class="factory-qc-rank-table factory-qc-rank-nested${row.level==='zone'||row.level==='city'?' factory-qc-rank-store':''}">${colgroup}<tbody>${tableRows(row.children,nesting+1)}</tbody></table></td></tr>`:''}`;
       }).join('');
       const columns=[['invitation','邀约录音数'],['testDrive','试驾录音数'],['reception','接待录音数'],['hitRate','话术执行率'],['qualifiedRate','质检合格率']];
-      html('rank-table-wrap',`<table class="factory-qc-rank-table">${colgroup}<thead><tr><th class="rank-th">排行</th><th class="rank-th">${geographic?'地域':'组织'}名称</th>${columns.map(([key,label])=>`<th class="rank-th${key===sortKey?' active':''}" aria-sort="${key===sortKey?(state.rankDescending===false?'ascending':'descending'):'none'}"><button type="button" class="factory-rank-th-sort-content" style="border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer" data-unified-factory-sort="${key}">${label}<span class="factory-rank-sort-indicator${key===sortKey?(state.rankDescending===false?' is-asc':' is-desc'):''}" aria-hidden="true"></span></button></th>`).join('')}</tr></thead><tbody>${tableRows(rows)||'<tr><td colspan="7">当前筛选条件没有共同录音数据</td></tr>'}</tbody></table>`);
+      html('rank-table-wrap',`<table class="factory-qc-rank-table">${colgroup}<thead><tr><th class="rank-th">排行</th><th class="rank-th">${geographic?'地域':'组织'}名称</th>${columns.map(([key,label])=>`<th class="rank-th${key===sortKey?' active':''}" aria-sort="${key===sortKey?(state.rankDescending===false?'ascending':'descending'):'none'}"><button type="button" class="factory-rank-th-sort-content" style="border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer" data-unified-factory-sort="${key}">${label}<span class="factory-rank-sort-indicator${key===sortKey?(state.rankDescending===false?' is-asc':' is-desc'):''}" aria-hidden="true"></span></button></th>`).join('')}</tr></thead><tbody>${tableRows(rows)||'<tr><td colspan="7">当前筛选条件没有匹配的门店</td></tr>'}</tbody></table>`);
       text('rank-title','SOP执行排行');text('rank-sub',`支持下钻：${levels.slice(depth).join(' → ')}；按当前录音明细汇总，合格率按有评分的已完成录音加权计算。`);
       const ids=[];function collect(items){for(const row of items)if(row.children.length){ids.push(row.id);collect(row.children);}}collect(rows);
       const allOpen=ids.length>0&&ids.every(id=>expanded.has(id)),toggle=node('rank-expand-toggle');
@@ -316,8 +319,16 @@
       else if(d.unifiedDateValue){draft[activeField]=d.unifiedDateValue;if(draft.startDate>draft.endDate){if(activeField==='startDate')draft.endDate=draft.startDate;else draft.startDate=draft.endDate;}activeField=activeField==='startDate'?'endDate':'startDate';renderDate();}
       else if(d.unifiedDateShortcut){draft=range(Number(d.unifiedDateShortcut));viewDate=new Date(`${draft.startDate}T12:00:00`);renderDate();}
       else if(d.unifiedDateCancel!==undefined)closeDate();
-      else if(d.unifiedDateApply!==undefined){Object.assign(state,draft,{page:1,rankPage:1});dateOpen=false;render();}
-      else if(d.unifiedRankToggle){const expanded=new Set(state.rankExpanded||[]);if(expanded.has(d.unifiedRankToggle))expanded.delete(d.unifiedRankToggle);else expanded.add(d.unifiedRankToggle);state.rankExpanded=[...expanded];render();}
+      else if(d.unifiedDateApply!==undefined){Object.assign(state,draft,{page:1,rankPage:1,rankExpanded:[]});dateOpen=false;render();}
+      else if(d.unifiedRankToggle){
+        const expanded=new Set(state.rankExpanded||[]);
+        if(expanded.has(d.unifiedRankToggle)){
+          expanded.delete(d.unifiedRankToggle);
+          const panel=button.closest('.rank-row').nextElementSibling;
+          panel?.querySelectorAll('[data-unified-rank-id]').forEach(row=>expanded.delete(row.dataset.unifiedRankId));
+        }else expanded.add(d.unifiedRankToggle);
+        state.rankExpanded=[...expanded];render();
+      }
       else if(d.unifiedFactorySort){state.rankDescending=state.rankSort===d.unifiedFactorySort?!state.rankDescending:true;state.rankSort=d.unifiedFactorySort;render();}
       else if(d.unifiedExpand){const expanded=new Set(state.expandedLeads||[]);if(expanded.has(d.unifiedExpand))expanded.delete(d.unifiedExpand);else expanded.add(d.unifiedExpand);state.expandedLeads=[...expanded];render();}
       else if(d.unifiedComplete){const completed=new Set(state.completed);if(completed.has(d.unifiedComplete))completed.delete(d.unifiedComplete);else completed.add(d.unifiedComplete);state.completed=[...completed];try{global.localStorage?.setItem(completionKey,JSON.stringify(state.completed));}catch{global.PlatformToast?.show('处理状态暂存于当前会话，无法写入本地存储。');}render();}

@@ -9,14 +9,14 @@ window.__AI_QC_DEFAULT_ROUTE = 'leads';
     "../leads/real-lead-data.js?v=20261028-full-sync-v1",
     "../shared/linked-demo-data.js?v=20261028-full-sync-v1",
     "../shared/badge-history-data.js?v=20261028-full-sync-v1",
-    "../shared/unified-data.js?v=20261028-full-sync-v1",
+    "../shared/unified-data.js?v=20261105-factory-rank-hierarchy-v1",
     "../factory-multi-select-filter-utils.js?v=20261028-full-sync-v1",
     "../shared/issue-rule-list.js?v=20261102-business-scenes-v1",
     "../date-filter-component-utils.js?v=20261028-full-sync-v1",
     "../device-management/xlsx-export-utils.js?v=20261028-full-sync-v1",
     "../shared/field-settings-interactions.js?v=20261028-full-sync-v1",
-    "../shared/unified-dashboard.js?v=20261028-full-sync-v1",
-    "../app-runtime.js?v=20261102-scene-filter-style-v6",
+    "../shared/unified-dashboard.js?v=20261105-factory-rank-hierarchy-v1",
+    "../app-runtime.js?v=20261105-factory-rank-hierarchy-v1",
     "./leads-modern-runtime.js?v=20261028-full-sync-v1"
 ];
   const loadNext = (index) => {

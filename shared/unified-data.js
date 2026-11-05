@@ -377,21 +377,23 @@
       currentStoreTitle:`本门店评估 (${summary?.store || '—'})`,currentStoreStatus:`线索状态：${summary?.leadStatus || '—'}`,
       otherStoreStatus:'暂无其他门店关联',currentStoreBadge:summary?.store || '—',singleStoreName:summary?.store || '—',mergedProfile:message };
   }
-  function ranking(rows, dimension = 'organization', startLevel = 0) {
-    const levels = dimension === 'geography' ? ['province','city','store'] : ['region','zone','store'];
-    function group(input, depth) {
+  function ranking(rows, dimension = 'organization', startLevel = 0, organizations = []) {
+    const levels = dimension === 'geography' ? ['brand','province','city','store'] : ['brand','region','zone','store'];
+    function group(input, candidates, depth) {
       const field = levels[depth], groups = new Map();
-      for (const row of input) {
+      function entry(row) {
         const id = `${row.brandId}::${row[field + 'Id'] || 'unresolved:' + row.audioId}`;
-        if (!groups.has(id)) groups.set(id, []);
-        groups.get(id).push(row);
+        if (!groups.has(id)) groups.set(id, { id, node: row, records: [], organizations: [] });
+        return groups.get(id);
       }
-      return [...groups].map(([id, records]) => ({ id, level:field, name:records[0][field] || '关联缺失',
-        brand:records[0].brand, parentName:depth ? records[0][levels[depth-1]] : '',
+      for (const candidate of candidates) entry(candidate).organizations.push(candidate);
+      for (const record of input) entry(record).records.push(record);
+      return [...groups.values()].map(({ id, node, records, organizations }) => ({ id, level:field, name:node[field] || '关联缺失',
+        brand:node.brand, parentName:depth ? node[levels[depth-1]] : '',
         ...metrics(records), invitation:records.filter(r=>sceneNames.slice(0,3).includes(r.scenario)).length,
-        children:depth < levels.length-1 ? group(records,depth+1) : [] }));
+        children:depth < levels.length-1 ? group(records,organizations,depth+1) : [] }));
     }
-    return group(rows, startLevel);
+    return group(rows, organizations, startLevel);
   }
   function leadPayload(lead) {
     if (lead.linkedDemo) return linked.buildLeadPayload(lead);

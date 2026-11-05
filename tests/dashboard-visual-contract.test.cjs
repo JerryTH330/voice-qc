@@ -9,7 +9,8 @@ test('factory retains original metric layout, six slots, help and comparison mar
  assert.equal(root.querySelectorAll('.hm-layout-bottom .hm-value small').length,6);
  assert(root.querySelector('#sop-ai-summary .hint-text'));assert(root.querySelector('#sop-national-diff .sop-improve-value'));
  assert.equal(root.querySelectorAll('#chart-legend .legend-dot').length,3);
- h.click('[data-unified-rank-toggle]');assert(root.querySelector('.factory-rank-name-child'));assert(root.querySelector('.factory-rank-name-store'));
+ h.click('[data-unified-rank-toggle]');assert(root.querySelector('.factory-rank-name-child'));assert(!root.querySelector('.factory-rank-name-store'));
+ h.click('#rank-expand-toggle');assert(root.querySelector('.factory-rank-name-store'));
  h.controller.destroy();
 });
 for(const role of ['dcc','advisor'])test(`sales ${role} retains its own KPI, summary, date, chart and pagination components`,()=>{

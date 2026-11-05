@@ -55,7 +55,82 @@ test('factory retains organization and geography ranking hierarchy with conserve
   a.model.setDimension('geography');a.model.apply();a.render();assert.match(h.host.querySelector('#rank-sub').textContent,/省份.*城市.*门店/);
   check(h.window.AIQCData.ranking(a.result.recordings,'geography'));
   const r=a.result.recordings[0];a.model.set('city',[r.cityId]);a.model.apply();a.render();
-  assert(!h.host.querySelector('[data-unified-rank-toggle]'));assert.match(h.host.querySelector('#rank-sub').textContent,/门店/);
+  assert(h.host.querySelector('[data-unified-rank-toggle]'));assert.match(h.host.querySelector('#rank-sub').textContent,/城市.*门店/);
+  assert([...h.host.querySelectorAll('#rank-table-wrap > table > tbody > .rank-row .factory-rank-name')].every(node=>node.textContent===r.city));
+  a.destroy();
+});
+test('factory starts at brands or the deepest selected level and retains empty organizations', () => {
+  const h = setup('factory'), a = h.controller;
+  const rootRows = () => [...h.host.querySelectorAll('#rank-table-wrap > table > tbody > .rank-row')];
+  assert.deepEqual(rootRows().map(row => row.querySelector('.factory-rank-name').textContent).sort(), ['传祺', '埃安'].sort());
+  assert.equal(h.host.querySelectorAll('.rank-expand-panel').length, 0);
+  const record = a.result.recordings[0];
+  for (const mode of ['organization', 'geography']) {
+    a.model.reset();
+    a.model.setDimension(mode);
+    for (const key of a.model.dimensionKeys()) {
+      a.model.set(key, [record[key + 'Id']]);
+      a.model.apply();
+      a.render();
+      assert.equal(rootRows().length, 1, key);
+      assert.equal(rootRows()[0].querySelector('.factory-rank-name').textContent, record[key]);
+      assert.equal(rootRows()[0].hasAttribute('data-unified-rank-toggle'), key !== 'store');
+      assert.equal(h.host.querySelectorAll('.rank-expand-panel').length, 0);
+    }
+  }
+  a.model.reset();
+  const regions = a.model.options('region').slice(0, 2);
+  a.model.set('region', regions.map(option => option.value));
+  a.model.apply();
+  a.render();
+  assert.deepEqual(rootRows().map(row => row.querySelector('.factory-rank-name').textContent).sort(), Array.from(regions, option => option.label).sort());
+  const recordedStores = new Set(a.result.recordings.map(row => row.storeId));
+  const emptyStore = a.model.directory.find(row => !recordedStores.has(row.storeId) && a.model.matches(row));
+  assert(emptyStore);
+  a.model.set('store', [emptyStore.storeId]);
+  a.model.apply();
+  a.render();
+  assert.equal(rootRows().length, 1);
+  assert.equal(rootRows()[0].querySelector('.factory-rank-name').textContent, emptyStore.store);
+  assert.deepEqual([...rootRows()[0].querySelectorAll('td')].slice(2).map(node => node.textContent), ['0', '0', '0', '—', '—']);
+  assert(h.host.querySelector('#rank-expand-toggle').hidden);
+  a.destroy();
+});
+test('collapsing a factory parent clears expanded descendants and all-open still reaches stores', () => {
+  const h = setup('factory'), a = h.controller;
+  const root = h.host.querySelector('#rank-table-wrap > table > tbody > .rank-row');
+  const rootSelector = `[data-unified-rank-id="${root.dataset.unifiedRankId}"]`;
+  h.click(rootSelector + ' button');
+  const region = h.host.querySelector('.rank-expand-panel .rank-row');
+  const regionSelector = `[data-unified-rank-id="${region.dataset.unifiedRankId}"]`;
+  h.click(regionSelector + ' button');
+  const zone = h.host.querySelector('.rank-expand-panel .rank-expand-panel .rank-row');
+  h.click(`[data-unified-rank-id="${zone.dataset.unifiedRankId}"] button`);
+  assert.equal(a.state.rankExpanded.length, 3);
+  h.click(rootSelector + ' button');
+  assert.deepEqual(plain(a.state.rankExpanded), []);
+  h.click(rootSelector + ' button');
+  assert.equal(h.host.querySelectorAll('.rank-expand-panel').length, 1);
+  assert.equal(h.host.querySelector(regionSelector).getAttribute('aria-expanded'), 'false');
+  h.click('#rank-expand-toggle');
+  const stores = [...h.host.querySelectorAll('#rank-table-wrap .rank-row')].filter(row => !row.hasAttribute('data-unified-rank-toggle'));
+  assert.equal(stores.length, a.model.directory.length);
+  h.click('#rank-expand-toggle');
+  assert.deepEqual(plain(a.state.rankExpanded), []);
+  assert.equal(h.host.querySelectorAll('#rank-table-wrap .rank-row').length, 2);
+  a.destroy();
+});
+test('applying factory dates resets expansion while date drafts and sorting preserve it', () => {
+  const h = setup('factory'), a = h.controller;
+  h.click('[data-unified-rank-toggle]');
+  const expanded = plain(a.state.rankExpanded);
+  h.click('[data-unified-factory-sort="invitation"]');
+  assert.deepEqual(plain(a.state.rankExpanded), expanded);
+  h.click('[data-unified-date-trigger]');
+  h.click('[data-unified-date-shortcut="1"]');
+  assert.deepEqual(plain(a.state.rankExpanded), expanded);
+  h.click('[data-unified-date-apply]');
+  assert.deepEqual(plain(a.state.rankExpanded), []);
   a.destroy();
 });
 test('calendar boundaries, reversed dates and month end navigation remain valid',()=>{

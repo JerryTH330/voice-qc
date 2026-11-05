@@ -99,3 +99,30 @@ test('weighted hierarchy rates derive from scored recordings and stable organiza
  const sample=rows[0],a={...sample,qualifiedRate:'80%',status:'已完成'},b={...sample,qualifiedRate:'20%',status:'已完成'},failed={...sample,qualifiedRate:'99%',status:'失败'};
  const result=d.ranking([a,b,b,failed])[0];assert(Math.abs(result.qualifiedRate-100/3)<1e-10);assert.equal(result.hitRate,40);
 });
+test('ranking seeds zero-recording nodes from the scoped directory without adding facts', () => {
+ const d=setup(), {organizationRecord}=require('../device-management/visit-organization-filter.js');
+ const candidates=d.directory.map(organizationRecord), rows=d.query(d.defaultRange).recordings;
+ for(const mode of ['organization','geography']){
+   const tree=d.ranking(rows,mode,0,candidates);
+   assert.deepEqual(Array.from(tree,node=>node.name).sort(),['传祺','埃安'].sort());
+   assert(tree.every(node=>node.level==='brand'));
+   assert.equal(tree.reduce((sum,node)=>sum+node.recordingCount,0),rows.length);
+   const leaves=[];
+   function check(nodes){for(const node of nodes){
+     if(node.children.length){
+       assert.equal(node.recordingCount,node.children.reduce((sum,child)=>sum+child.recordingCount,0));
+       assert.equal(node.qualifiedCount,node.children.reduce((sum,child)=>sum+child.qualifiedCount,0));
+       check(node.children);
+     }else leaves.push(node);
+   }}
+   check(tree);
+   assert.equal(leaves.length,candidates.length);
+   assert(leaves.some(node=>node.recordingCount===0&&node.qualifiedRate===null&&node.hitRate===null));
+   const empty=d.ranking([],mode,0,candidates);
+   assert.equal(empty.length,2);
+   assert(empty.every(node=>node.recordingCount===0&&node.qualifiedRate===null&&node.hitRate===null));
+   const scope=candidates.filter(node=>node.brand==='传祺').slice(0,2);
+   const scoped=d.ranking([],mode,3,scope);
+   assert.deepEqual(Array.from(scoped,node=>node.name).sort(),Array.from(scope,node=>node.store).sort());
+ }
+});

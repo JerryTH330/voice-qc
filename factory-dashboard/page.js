@@ -10,7 +10,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
     "../leads/real-lead-data.js?v=20261028-full-sync-v1",
     "../shared/linked-demo-data.js?v=20261028-full-sync-v1",
     "../shared/badge-history-data.js?v=20261028-full-sync-v1",
-    "../shared/unified-data.js?v=20261028-full-sync-v1",
+    "../shared/unified-data.js?v=20261105-factory-rank-hierarchy-v1",
     "../dashboard-filter-utils.js",
     "../date-filter-component-utils.js",
     "../factory-multi-select-filter-utils.js",
@@ -23,8 +23,8 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
     "../store-dashboard/organization-filter.js?v=20261028-full-sync-v1",
     "../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6",
     "../shared/dimension-switcher.js?v=20261028-full-sync-v1",
-    "../shared/unified-dashboard.js?v=20261028-full-sync-v1",
-    "../app-runtime.js?v=20261102-scene-filter-style-v6"
+    "../shared/unified-dashboard.js?v=20261105-factory-rank-hierarchy-v1",
+    "../app-runtime.js?v=20261105-factory-rank-hierarchy-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

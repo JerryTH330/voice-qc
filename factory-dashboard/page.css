@@ -4,3 +4,10 @@
 @import url("./factory-dashboard.css?v=20261028-full-sync-v1");
 
 @import url("./organization-filter.css?v=20261028-full-sync-v1");
+
+.factory-dashboard-page .factory-rank-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
