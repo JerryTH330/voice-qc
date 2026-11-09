@@ -47,7 +47,7 @@ for (const view of ['session', 'leads', 'customers']) {
       } else {
         assert.deepEqual(h.submitted, []);
         assert.equal(h.dependenciesRequested(), 0, 'blocked exports must not start the async export flow');
-        assert.deepEqual(h.messages, [{message: '下载数据不能超过 3 万条，请缩小筛选范围后重试', kind: 'error'}]);
+        assert.deepEqual(h.messages, [{message: '受系统限制，单次下载最多支持 30,000 条数据', kind: 'error'}]);
       }
       assert.equal(h.button.disabled, false, 'the user can narrow the scope and retry');
     });

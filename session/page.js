@@ -16,7 +16,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     "../shared/field-settings-interactions.js?v=20261028-full-sync-v1",
     "../shared/unified-dashboard.js?v=20261105-factory-rank-hierarchy-v1",
     "../app-runtime.js?v=20261105-factory-rank-hierarchy-v1",
-    "./session-real-runtime.js?v=20261109-list-export-statistics-v1"
+    "./session-real-runtime.js?v=20261109-export-limit-copy-v2"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

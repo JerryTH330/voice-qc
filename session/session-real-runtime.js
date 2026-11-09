@@ -1664,7 +1664,7 @@
     var columns = visibleColumns();
     if (!items.length || !columns.length || (button && button.disabled)) return;
     if (items.length > 30000) {
-      showToast('下载数据不能超过 3 万条，请缩小筛选范围后重试', 'error');
+      showToast('受系统限制，单次下载最多支持 30,000 条数据', 'error');
       return;
     }
     var filters = Object.keys(state.selections).filter(function (key) { return selected(key).length; }).map(function (key) {

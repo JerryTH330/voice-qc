@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 const dashboardVersion = '20261105-factory-rank-hierarchy-v1';
-const listVersion = '20261109-list-export-statistics-v1';
+const listVersion = '20261109-export-limit-copy-v2';
 const dashboardPathVersion = '20261109-dashboard-path-labels-v1';
 const factSources = [
   'leads/organization-data.js',
