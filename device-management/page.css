@@ -1380,6 +1380,10 @@ body.device-badge-management-page .page-panel[data-page="management"].active { d
 .store-pagination { padding: 16px 20px 20px; border-top: 1px solid rgba(217, 226, 239, .72); }
 .store-pagination-layout { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .store-pagination-controls, .store-page-group, .store-page-jump { display: flex; align-items: center; }
+.store-pagination-total { flex: 0 0 auto; white-space: nowrap; }
+.store-pagination { font-variant-numeric: tabular-nums; }
+.store-pagination :is(button, input):focus-visible { outline: 2px solid #64748b; outline-offset: 3px; }
+.store-pagination .page-select:focus-within { border-color: #64748b; }
 .store-page-size select { min-width: 92px; height: 36px; cursor: pointer; }
 .store-page-jump input { appearance: textfield; }
 .store-page-jump input::-webkit-inner-spin-button, .store-page-jump input::-webkit-outer-spin-button { appearance: none; margin: 0; }

@@ -41,3 +41,50 @@ for(const kind of ['session','leads'])test(`${kind}: hiding a field updates tabl
  assert(![...head.querySelectorAll('th')].some(n=>n.textContent.trim()==='品牌'));
  assert(h.storage.get(kind==='session'?'aiqc-session-real-columns':'aiqc-leads-modern-columns-leads').includes('brand'));
 });
+
+for (const view of ['session', 'leads', 'customers']) test(`${view}: statistics time follows applied dates, reset and collapsed filters`, () => {
+ const h = list(view === 'session' ? 'session' : 'leads', view === 'customers' ? '&leadsView=customers' : '');
+ const ns = view === 'session' ? 'sr' : 'lr';
+ const dateTrigger = ns === 'sr' ? '[data-sr-trigger="date"]' : '[data-lr-date-trigger]';
+ const displayed = () => h.host.querySelector('.dimension-switcher__statistics-time').textContent;
+ const range = h.window.AIQCData.defaultRange;
+ const initial = `统计时间：${range.startDate.replace(/-/g, '/')} 至 ${range.endDate.replace(/-/g, '/')}`;
+ assert.equal(displayed(), initial);
+ const exportButton = h.host.querySelector(`[data-${ns}-export]`);
+ assert.equal(h.window.document.getElementById(exportButton.getAttribute('aria-describedby')).textContent, '下载数据条数限制在 3 万条');
+ h.click(`[data-${ns}-collapse]`);
+ h.click(dateTrigger);
+ h.click(`[data-${ns}-date-shortcut="last3"]`);
+ assert.equal(displayed(), initial, 'draft dates must not change the displayed effective range');
+ h.key('Escape');
+ h.flush();
+ assert.equal(displayed(), initial);
+ h.click(dateTrigger);
+ h.click(`[data-${ns}-date-shortcut="last3"]`);
+ h.click(`[data-${ns}-date-apply]`);
+ h.flush();
+ const dates = [...h.host.querySelector(dateTrigger).querySelectorAll('strong')].map(node => node.textContent);
+ assert.equal(displayed(), `统计时间：${dates.join(' 至 ')}`);
+ assert.notEqual(displayed(), initial);
+ h.click(`[data-${ns}-collapse]`);
+ h.flush();
+ assert.equal(displayed(), `统计时间：${dates.join(' 至 ')}`);
+ h.click(`[data-${ns}-dimension="geography"]`);
+ h.flush();
+ assert.equal(displayed(), `统计时间：${dates.join(' 至 ')}`);
+ assert.match(h.host.querySelector('.dimension-switcher__path').textContent, /地理路径/);
+ h.click(`[data-${ns}-reset]`);
+ h.flush();
+ assert.equal(displayed(), initial);
+});
+
+test('lead statistics time becomes unlimited when the date field is hidden', () => {
+ const h = list('leads');
+ h.click('[data-lr-settings]');
+ const field = h.window.document.querySelector('[data-lr-column-visible="leadDate"]');
+ field.checked = false;
+ field.dispatchEvent(new h.window.Event('change', {bubbles: true}));
+ h.click('[data-lr-settings-save]');
+ h.flush();
+ assert.equal(h.host.querySelector('.dimension-switcher__statistics-time').textContent, '统计时间：不限');
+});

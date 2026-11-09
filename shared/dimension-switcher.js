@@ -11,10 +11,11 @@
   }[char]));
   const windowFor = container => container.ownerDocument?.defaultView || host;
 
-  function render({ namespace, mode, label, path, panelId = '' }) {
+  function render({ namespace, mode, label, path, panelId = '', statisticsTime = '' }) {
     const geography = mode === 'geography';
     const steps = path || (geography ? ['品牌', '省份', '城市', '门店'] : ['品牌', '大区', '战区', '门店']);
     const pathMarkup = steps.map((text, index) => `${index ? '<i class="session-select-caret dimension-switcher__arrow" aria-hidden="true"></i>' : ''}<span class="dimension-switcher__step${index === 1 || index === 2 ? ' is-specific' : ''}">${escape(text)}</span>`).join('');
+    const pathSummary = `<div class="dimension-switcher__path"><img src="../assets/filter-path-icon.svg" alt="" aria-hidden="true"><span class="dimension-switcher__path-label">${geography ? '地理路径' : '组织路径'}：</span><strong title="${escape(steps.join(' / '))}">${pathMarkup}</strong></div>`;
     return `<div class="dimension-switcher" data-dimension-switcher data-dimension-namespace="${escape(namespace)}" data-dimension-mode="${geography ? 'geography' : 'organization'}">
       <div class="dimension-switcher__tabs" role="tablist" aria-label="${escape(label)}">
         <span class="dimension-switcher__indicator" aria-hidden="true"><span class="dimension-switcher__indicator-labels"><span>组织维度</span><span>地理维度</span></span></span>
@@ -23,7 +24,7 @@
           return `<button id="${escape(namespace)}-dimension-${value}" type="button" class="dimension-switcher__tab${active ? ' active' : ''}" data-dimension-option="${value}" data-${escape(namespace)}-dimension="${value}" role="tab" aria-selected="${active}"${panelId ? ` aria-controls="${escape(panelId)}"` : ''} tabindex="${active ? '0' : '-1'}">${text}</button>`;
         }).join('')}
       </div>
-      <div class="dimension-switcher__path"><img src="../assets/filter-path-icon.svg" alt="" aria-hidden="true"><span class="dimension-switcher__path-label">${geography ? '地理路径' : '组织路径'}：</span><strong title="${escape(steps.join(' / '))}">${pathMarkup}</strong></div>
+      ${statisticsTime ? `<div class="dimension-switcher__summary"><div class="dimension-switcher__statistics-time"><img src="../assets/device-record-profile/visit-date.svg" alt="" aria-hidden="true"><span>统计时间：</span><strong>${escape(statisticsTime)}</strong></div>${pathSummary}</div>` : pathSummary}
       <span class="dimension-switcher__feedback" data-dimension-feedback role="status" aria-live="polite" aria-atomic="true"></span>
     </div>`;
   }

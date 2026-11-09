@@ -6,7 +6,8 @@ const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 const dashboardVersion = '20261105-factory-rank-hierarchy-v1';
-const sessionFilterVersion = '20261102-scene-filter-style-v6';
+const listVersion = '20261109-list-export-statistics-v1';
+const dashboardPathVersion = '20261109-dashboard-path-labels-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -53,9 +54,9 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), dashboardVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), ['session', 'leads'].includes(area) ? listVersion : dashboardPathVersion);
     if (area === 'session') {
-      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), sessionFilterVersion);
+      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), listVersion);
     }
   });
 }

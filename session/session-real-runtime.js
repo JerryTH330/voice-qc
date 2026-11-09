@@ -961,7 +961,9 @@
   function renderDimensionSwitcher() {
     return global.DimensionSwitcher.render({
       namespace: 'sr', mode: state.dimensionMode,
-      label: '录音组织筛选维度', panelId: 'sessionDimensionFilters'
+      label: '录音组织筛选维度', panelId: 'sessionDimensionFilters',
+      statisticsTime: !state.startDate && !state.endDate ? '不限'
+        : formatSessionDateDisplay(state.startDate) + ' 至 ' + formatSessionDateDisplay(state.endDate)
     });
   }
 
@@ -1444,7 +1446,7 @@
           '<div class="table-headbar session-list-table-headbar sr-table-headbar">' +
             '<div class="panel-title"><h3>录音总览</h3></div>' +
             '<div class="badge-detail-table-head-tools"><div class="session-filter-summary"><span>当前匹配 <strong id="sessionRealCount">0</strong> 条录音</span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-completed" aria-hidden="true"></span><span>已完成 <strong id="sessionRealCompleted">0</strong> 条</span></span><span class="leads-stage-summary"><span class="leads-stage-summary-icon status-failed" aria-hidden="true"></span><span>失败 <strong id="sessionRealFailed">0</strong> 条</span></span></div>' +
-            '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-sr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-sr-export aria-describedby="sessionRealExportTooltip" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="sessionRealExportTooltip" role="tooltip">导出 Excel</span></div></div></div>' +
+            '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-sr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-sr-export aria-describedby="sessionRealExportTooltip" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="sessionRealExportTooltip" role="tooltip">下载数据条数限制在 3 万条</span></div></div></div>' +
           '</div>' +
           '<div class="table-wrap session-list-table-wrap"><table class="data-table session-data-table badge-data-table sr-real-table" id="sessionRealTable"><thead></thead><tbody></tbody></table><div class="badge-list-empty-state" id="sessionRealEmptyState" role="status" hidden><svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true"> <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" /> <path d="M53 27c0-5.5 4.5-10 10-10h54l18 18v61c0 5.5-4.5 10-10 10H63c-5.5 0-10-4.5-10-10V27Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" /> <path d="M117 17v18h18" fill="#E8F0FC" stroke="#CAD7EA" stroke-width="3" stroke-linejoin="round" /> <path d="M70 48h47M70 62h31M70 76h24" stroke="#B7C6DB" stroke-width="5" stroke-linecap="round" /> <circle cx="117" cy="83" r="21" fill="#EEF5FF" stroke="#5B8DEF" stroke-width="4" /> <path d="m132 98 15 15" stroke="#5B8DEF" stroke-width="6" stroke-linecap="round" /> <path d="M108 83h18" stroke="#8EAFE9" stroke-width="4" stroke-linecap="round" /> </svg><strong>暂无符合条件的录音</strong><p>请调整筛选条件后重试</p></div></div>' +
           '<div class="session-pagination" id="sessionRealPagination"></div>' +
@@ -1661,6 +1663,10 @@
     var button = document.querySelector('[data-sr-export]');
     var columns = visibleColumns();
     if (!items.length || !columns.length || (button && button.disabled)) return;
+    if (items.length > 30000) {
+      showToast('下载数据不能超过 3 万条，请缩小筛选范围后重试', 'error');
+      return;
+    }
     var filters = Object.keys(state.selections).filter(function (key) { return selected(key).length; }).map(function (key) {
       var options = currentValueOptions(key);
       return { label: getFilterLabel(key), value: selected(key).map(function (value) {

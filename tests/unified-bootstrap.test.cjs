@@ -68,7 +68,7 @@ for (const area of areas) {
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)]
       .map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(cacheVersion(entry), version('app-runtime.js'), 'page bootstrap and runtime must share the current fix version');
+    assert.equal(cacheVersion(entry), ['session', 'leads'].includes(area) ? '20261109-list-export-statistics-v1' : '20261109-dashboard-path-labels-v1', 'page bootstrap must use the current page release version');
     if ((area === 'factory-dashboard' && unified) || area === 'sales-dashboard') {
       const organizationCss = html.indexOf('../store-dashboard/organization-filter.css');
       const dashboardCss = html.indexOf('../shared/dashboard-filters.css');
@@ -115,5 +115,5 @@ test('device entry preserves its original dependencies and versions its current 
     }
     assert(index('shared/unified-data.js') < index('device-management/page.js'));
   }
-  assert.equal(cacheVersion(urls[index('device-management/page.js')]), releaseVersion, 'device page must use the current fix version');
+  assert.equal(cacheVersion(urls[index('device-management/page.js')]), '20261109-store-overview-v2', 'device page must use the current fix version');
 });

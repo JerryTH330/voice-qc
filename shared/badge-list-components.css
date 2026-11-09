@@ -561,6 +561,8 @@
   color: inherit;
   transition: color .16s ease;
 }
+.session-real-root .badge-detail-export-tooltip,
+.leads-modern-root .badge-detail-export-tooltip,
 .badge-field-settings-tooltip {
   position: absolute;
   top: calc(100% + 10px);
@@ -584,6 +586,10 @@
   transform: translateY(-3px);
   transition: opacity .16s ease 0s, transform .16s ease 0s, visibility 0s linear .16s;
 }
+.session-real-root .badge-detail-export-action:hover .badge-detail-export-tooltip,
+.session-real-root .badge-detail-export-action:focus-within .badge-detail-export-tooltip,
+.leads-modern-root .badge-detail-export-action:hover .badge-detail-export-tooltip,
+.leads-modern-root .badge-detail-export-action:focus-within .badge-detail-export-tooltip,
 .badge-field-settings-action:hover .badge-field-settings-tooltip,
 .badge-field-settings-action:focus-within .badge-field-settings-tooltip {
   opacity: 1;

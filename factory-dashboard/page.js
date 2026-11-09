@@ -20,7 +20,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
     "./organization-filter.js",
     "./factory-dashboard.js?v=20261102-business-scenes-v1",
     "../device-management/visit-organization-filter.js?v=20261028-full-sync-v1",
-    "../store-dashboard/organization-filter.js?v=20261028-full-sync-v1",
+    "../store-dashboard/organization-filter.js?v=20261109-dashboard-path-labels-v1",
     "../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6",
     "../shared/dimension-switcher.js?v=20261028-full-sync-v1",
     "../shared/unified-dashboard.js?v=20261105-factory-rank-hierarchy-v1",
@@ -32,7 +32,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'factory-dashboard';
     const scriptVersion = ['../dashboard-filter-utils.js', './factory-hero-utils.js', './factory-dashboard.js'].includes(scripts[index])
       ? '20261020-unified-data-v3'
       : scripts[index] === './issue-rule-analysis-utils.js' ? '20261019-factory-rule-org-scope-v1'
-      : scripts[index] === './organization-filter.js' ? '20261021-dashboard-no-advisor-v1' : assetVersion;
+      : scripts[index] === './organization-filter.js' ? '20261109-dashboard-path-labels-v1' : assetVersion;
     script.src = scripts[index].includes('?') ? scripts[index] : `${scripts[index]}?v=${scriptVersion}`;
     script.onload = () => loadNext(index + 1);
     script.onerror = () => { throw new Error('Failed to load ' + scripts[index]); };

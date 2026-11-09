@@ -89,7 +89,7 @@
       const keys = model.dimensionKeys();
       dimensionSlot.innerHTML = window.DimensionSwitcher.render({
         namespace: 'sd', mode: model.draft.dimensionMode, label: '门店看板筛选维度', panelId: 'storeDashboardDimensionFilters',
-        path: keys.map(key => model.draft[key].length ? model.display(key) : `全部${labels[key]}`)
+        path: keys.map(key => model.draft[key].length ? model.display(key) : labels[key])
       });
       primaryGrid.innerHTML = keys.map(controlMarkup).join('');
       personnel.innerHTML = personnelKeys.map(controlMarkup).join('');

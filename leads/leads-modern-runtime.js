@@ -781,7 +781,9 @@
     return global.DimensionSwitcher.render({
       namespace: 'lr', mode: viewState.dimensionMode,
       label: currentView === 'customers' ? '客户聚合组织筛选维度' : '线索组织筛选维度',
-      panelId: 'leadsDimensionFilters'
+      panelId: 'leadsDimensionFilters',
+      statisticsTime: !viewState.startDate && !viewState.endDate ? '不限'
+        : formatDateDisplay(viewState.startDate) + ' 至 ' + formatDateDisplay(viewState.endDate)
     });
   }
 
@@ -1106,7 +1108,7 @@
       headbar.appendChild(tools);
     }
     var canExport = total > 0 && visibleColumns(currentView).length > 0;
-    tools.innerHTML = '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-lr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-lr-export ' + (canExport ? '' : 'disabled') + '><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>';
+    tools.innerHTML = '<i class="badge-detail-table-divider" aria-hidden="true"></i><div class="badge-detail-table-actions"><button type="button" class="btn ghost badge-detail-table-action badge-detail-refresh-btn" data-lr-refresh aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><div class="badge-detail-export-action"><button type="button" class="btn primary badge-detail-table-action badge-detail-export-btn" data-lr-export aria-describedby="leadsExportTooltip" ' + (canExport ? '' : 'disabled') + '><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button><span class="badge-detail-export-tooltip" id="leadsExportTooltip" role="tooltip">下载数据条数限制在 3 万条</span></div></div>';
   }
 
   function renderTable() {
@@ -1335,6 +1337,10 @@
     var columns = visibleColumns(currentView);
     var button = document.querySelector('[data-lr-export]');
     if (!columns.length || !items.length || (button && button.disabled)) return;
+    if (items.length > 30000) {
+      showToast('下载数据不能超过 3 万条，请缩小筛选范围后重试', 'error');
+      return;
+    }
     var filters = Object.keys(state().selections).filter(function (key) { return selected(key).length; }).map(function (key) {
       var options = currentOptions(key);
       return { label: FILTER_LABELS[key] || key, value: selected(key).map(function (value) {

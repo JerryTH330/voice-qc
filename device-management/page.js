@@ -5978,20 +5978,41 @@ function renderStoreOverviewPagination(totalItems) {
   if (!container) return;
   const totalPages = Math.max(1, Math.ceil(totalItems / storeOverviewState.pageSize));
   storeOverviewState.page = Math.min(storeOverviewState.page, totalPages);
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const current = storeOverviewState.page;
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let page = 1; page <= totalPages; page += 1) pages.push(page);
+  } else {
+    pages.push(1);
+    if (current > 3) pages.push('left');
+    for (let page = Math.max(2, current - 1); page <= Math.min(totalPages - 1, current + 1); page += 1) pages.push(page);
+    if (current < totalPages - 2) pages.push('right');
+    pages.push(totalPages);
+  }
   container.innerHTML = `
     <div class="dashboard-pagination store-pagination-layout">
       <span class="session-pagination-total store-pagination-total">共 ${totalItems} 条</span>
       <div class="dashboard-pagination-controls store-pagination-controls">
-        <label class="page-select store-page-size"><select data-store-page-size aria-label="每页条数"><option value="10"${storeOverviewState.pageSize === 10 ? ' selected' : ''}>10 条/页</option><option value="20"${storeOverviewState.pageSize === 20 ? ' selected' : ''}>20 条/页</option><option value="50"${storeOverviewState.pageSize === 50 ? ' selected' : ''}>50 条/页</option></select></label>
+        <div class="custom-select-container page-select page-size-select">
+          <button type="button" class="custom-select-trigger page-size-trigger" data-store-page-size-trigger aria-label="每页条数，当前 ${storeOverviewState.pageSize} 条/页" aria-expanded="false" aria-controls="storePageSizeOptions"><span>${storeOverviewState.pageSize} 条/页</span></button>
+          <div class="custom-select-options page-size-options" id="storePageSizeOptions">${[10, 20, 50].map((size) => `<button type="button" class="custom-option page-size-option${size === storeOverviewState.pageSize ? ' active' : ''}" data-store-page-size="${size}" aria-pressed="${size === storeOverviewState.pageSize}"><span>${size} 条/页</span></button>`).join('')}</div>
+        </div>
         <div class="page-group store-page-group">
-          <button type="button" class="page-arrow" data-store-page-action="prev" ${storeOverviewState.page === 1 ? 'disabled' : ''}>‹</button>
-          ${pages.map((page) => `<button type="button" class="page-num${page === storeOverviewState.page ? ' active' : ''}" data-store-page="${page}">${page}</button>`).join('')}
-          <button type="button" class="page-arrow" data-store-page-action="next" ${storeOverviewState.page === totalPages ? 'disabled' : ''}>›</button>
+          <button type="button" class="page-arrow" data-store-page-action="prev" aria-label="上一页" ${current === 1 ? 'disabled' : ''}>‹</button>
+          ${pages.map((page) => typeof page === 'number' ? `<button type="button" class="page-num${page === current ? ' active' : ''}" data-store-page="${page}"${page === current ? ' aria-current="page"' : ''}>${page}</button>` : '<span class="page-ellipsis">…</span>').join('')}
+          <button type="button" class="page-arrow" data-store-page-action="next" aria-label="下一页" ${current === totalPages ? 'disabled' : ''}>›</button>
         </div>
         <div class="page-group page-jump-group store-page-jump"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input type="number" min="1" max="${totalPages}" value="${storeOverviewState.page}" data-store-page-jump aria-label="跳转页码" /></label><span class="session-page-jump-suffix">页</span></div>
       </div>
     </div>`;
+}
+
+function closeStorePageSizeMenu({ restoreFocus = false } = {}) {
+  const trigger = document.querySelector('[data-store-page-size-trigger]');
+  document.getElementById('storePageSizeOptions')?.classList.remove('open');
+  trigger?.classList.remove('is-open');
+  trigger?.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) trigger?.focus({ preventScroll: true });
 }
 
 const storeOverviewMetricFrames = new Map();
@@ -6095,12 +6116,6 @@ function renderStoreOverview() {
     ? `<button class="store-sort-button" type="button" data-store-sort="${field.key}">${field.label}<span class="store-sort-icon" data-store-sort-icon aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span></button>`
     : field.label}</th>`).join('') + '<th>操作</th>';
   head.closest('table').style.minWidth = `${Math.max(360, fields.length * 132 + 100)}px`;
-  const snapshotNote = document.getElementById('storeBindingSnapshotNote') || document.createElement('p');
-  if (window.AIQCData) {
-    snapshotNote.id = 'storeBindingSnapshotNote'; snapshotNote.className = 'muted-text';
-    snapshotNote.textContent = `绑定数据为 ${window.AIQCData.bindingSnapshotDate} 的载入快照；同步时间保留源值，其他日期暂无历史快照。`;
-    if (!snapshotNote.isConnected) tbody.closest('.table-card')?.prepend(snapshotNote);
-  }
   const records = getFilteredStoreRecords();
   const totalPages = Math.max(1, Math.ceil(records.length / storeOverviewState.pageSize));
   storeOverviewState.page = Math.min(storeOverviewState.page, totalPages);
@@ -6901,6 +6916,7 @@ document.addEventListener('keydown', function (event) {
 });
 
 document.addEventListener('click', function (event) {
+  if (!event.target.closest('#storeOverviewPagination .page-size-select')) closeStorePageSizeMenu();
   if (handleStoreFieldSettingsClick(event) || handleStoreFilterClick(event)) event.stopImmediatePropagation();
 });
 document.addEventListener('keydown', function (event) {
@@ -7679,6 +7695,24 @@ document.addEventListener('click', (event) => {
     return;
   }
 
+  const storePageSizeTrigger = event.target.closest('[data-store-page-size-trigger]');
+  if (storePageSizeTrigger) {
+    const open = storePageSizeTrigger.getAttribute('aria-expanded') !== 'true';
+    document.getElementById('storePageSizeOptions').classList.toggle('open', open);
+    storePageSizeTrigger.classList.toggle('is-open', open);
+    storePageSizeTrigger.setAttribute('aria-expanded', String(open));
+    return;
+  }
+
+  const storePageSize = event.target.closest('[data-store-page-size]');
+  if (storePageSize) {
+    storeOverviewState.pageSize = Number(storePageSize.dataset.storePageSize);
+    storeOverviewState.page = 1;
+    renderStoreOverview();
+    document.querySelector('[data-store-page-size-trigger]')?.focus({ preventScroll: true });
+    return;
+  }
+
   const storePage = event.target.closest('[data-store-page]');
   if (storePage) {
     storeOverviewState.page = Number(storePage.dataset.storePage);
@@ -7783,11 +7817,6 @@ document.addEventListener('change', (event) => {
     badgePaginationState.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
     renderBadgeDetail();
     return;
-  }
-  if (event.target.matches('[data-store-page-size]')) {
-    storeOverviewState.pageSize = Number(event.target.value);
-    storeOverviewState.page = 1;
-    renderStoreOverview();
   }
   if (event.target.matches('[data-store-page-jump]')) {
     const totalPages = Math.max(1, Math.ceil(getFilteredStoreRecords().length / storeOverviewState.pageSize));
@@ -7955,6 +7984,11 @@ document.addEventListener('focusin', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && document.querySelector('[data-store-page-size-trigger][aria-expanded="true"]')) {
+    event.preventDefault();
+    closeStorePageSizeMenu({ restoreFocus: true });
+    return;
+  }
   if (visitFieldSettingsDraft && event.key === 'Escape') {
     event.preventDefault();
     closeVisitFieldSettings();

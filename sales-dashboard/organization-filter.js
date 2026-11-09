@@ -72,7 +72,7 @@
       const keys = model.dimensionKeys();
       dimensionSlot.innerHTML = window.DimensionSwitcher.render({
         namespace: 'so', mode: model.draft.dimensionMode, label: '销售看板筛选维度', panelId: 'salesDashboardDimensionFilters',
-        path: keys.map(key => model.draft[key].length ? model.display(key) : `全部${labels[key]}`)
+        path: keys.map(key => model.draft[key].length ? model.display(key) : labels[key])
       });
       primaryGrid.innerHTML = keys.map(controlMarkup).join('');
       personnel.innerHTML = personnelKeys.map(controlMarkup).join('');

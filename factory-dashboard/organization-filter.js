@@ -125,7 +125,7 @@
       const keepExtra = extraInner && (!collapsed || collapseChanged);
       root.innerHTML = global.DimensionSwitcher.render({
         namespace: 'fo', mode: model.dimension, label: '厂端组织筛选维度', panelId: 'factoryDimensionFilters',
-        path: model.primary().map(key => model.selections[key].length ? model.display(key) : '全部' + labels[key])
+        path: model.primary().map(key => model.selections[key].length ? model.display(key) : labels[key])
       }) +
         `<div class="fo-primary"><div class="fo-grid badge-dynamic-filter-grid" id="factoryDimensionFilters">${model.primary().map(control).join('')}</div>${collapsed ? renderActions() : ''}</div>` +
         (keepExtra ? `<div class="fo-extra" data-fo-extra><div class="fo-extra-inner"><div class="fo-grid badge-dynamic-filter-grid fo-secondary">${extraInner}</div></div></div>` : '') +

@@ -1,7 +1,7 @@
 /* 门店看板 independent page styles. */
 @import url("../voice-qc-admin.css?v=20261028-full-sync-v1");
 @import url("../app-inline.css?v=20261028-full-sync-v1");
-@import url("../shared/dimension-switcher.css?v=20261028-full-sync-v1");
+@import url("../shared/dimension-switcher.css?v=20261109-dimension-text-dark-v3");
 @import url("./organization-filter.css?v=20261028-full-sync-v1");
 
 .store-dashboard-page .store-dashboard-empty {
