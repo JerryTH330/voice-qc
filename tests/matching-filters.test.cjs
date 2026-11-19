@@ -31,11 +31,11 @@ test('geography and personnel candidates stay independent of brand and organizat
   assert.equal(model.options('advisor').length, 3);
   model.setDimension('geography');
   model.set('province', [fixtureRecords[2].provinceId]);
-  assert.deepEqual(ids(model, 'city'), [fixtureRecords[2].cityId]);
+  assert.deepEqual(ids(model, 'city'), ['brand:传祺|province:江苏省|city:苏州市']);
   assert.deepEqual(ids(model, 'store'), []);
   model.apply();
   assert.equal(fixtureRecords.filter(model.matches).length, 0);
-  assert.deepEqual(model.draft.province, [fixtureRecords[2].provinceId]);
+  assert.deepEqual(model.draft.province, ['brand:传祺|province:江苏省']);
   assert.deepEqual(model.draft.brand, ['brand:埃安']);
 });
 
@@ -987,7 +987,7 @@ test('matching export uses applied geographic filters and saved column order, ig
   const records = [...new Map(state.visits.map((record) => [record.storeId, record])).values()].slice(0, 2);
   state.model.setDimension('geography');
   for (const key of ['brand', 'province', 'city', 'store', 'advisor']) {
-    state.model.draft[key] = [...new Set(records.map((record) => record[filters.fields[key].idKey]))];
+    state.model.draft[key] = [...new Set(records.map((record) => filters.selectionId(record, key)))];
   }
   state.model.apply();
   state.settings.order = ['rate', 'store', 'storeCode', 'action', ...state.settings.order.filter((key) => !['rate', 'store', 'storeCode', 'action'].includes(key))];
@@ -1006,7 +1006,7 @@ test('matching export uses applied geographic filters and saved column order, ig
   assert.equal(snapshot.get('筛选维度'), '地理维度');
   assert.equal(snapshot.get('到访日期'), '2026-08-11 至 2026-08-12');
   assert.equal(snapshot.get('品牌'), records[0].brand);
-  assert.equal(snapshot.get('省份'), [...new Set(records.map((record) => record.provinceId))].map((id) => records.find((record) => record.provinceId === id).province).join('、'));
+  assert.equal(snapshot.get('省份'), [...new Set(records.map((record) => `${record.province}（${record.brand}）`))].join('、'));
   assert.equal(snapshot.get('门店'), records.map((record) => record.store).join('、'));
   assert.equal(snapshot.get('顾问'), [...new Set(records.map((record) => record.advisorKey))].map((id) => records.find((record) => record.advisorKey === id).advisor).join('、'));
   assert.ok(!snapshot.has('大区') && !snapshot.has('战区'));

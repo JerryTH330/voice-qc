@@ -1,7 +1,7 @@
 (function (host, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else host.InsightDateRange = factory();
-})(typeof window === 'object' ? window : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('../../../date-filter-component-utils.js'));
+  else host.InsightDateRange = factory(host.__dateFilterComponentUtils);
+})(typeof window === 'object' ? window : this, function (dateUtils) {
   'use strict';
   const pad = n => String(n).padStart(2, '0');
   const iso = date => date.toISOString().slice(0, 10);
@@ -12,7 +12,11 @@
     const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
     return `${first.getUTCFullYear()}-${pad(first.getUTCMonth() + 1)}-${pad(Math.min(date, last))}`;
   }
-  const presets = [['month', '本月'], ['lastMonth', '上个月'], ['1m', '近1月'], ['3m', '近3月'], ['6m', '近半年']];
+  const presets = [
+    ...dateUtils.dateShortcuts.map(({ key, label }) => [key, label]),
+    ['month', '本月'], ['lastMonth', '上个月'], ['3m', '近3月']
+  ];
+  const localDateValue = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   function preset(key, latest) {
     if (key === 'month') return { start: latest.slice(0, 7) + '-01', end: latest };
     if (key === 'lastMonth') {
@@ -20,7 +24,9 @@
       return { start: addMonths(thisMonth, -1), end: day(thisMonth, -1) };
     }
     const months = { '6m': 6, '3m': 3, '1m': 1 }[key];
-    return months ? { start: addMonths(latest, -months), end: latest } : null;
+    if (months) return { start: addMonths(latest, -months), end: latest };
+    const range = dateUtils.getDateShortcutRange(key, new Date(latest + 'T12:00:00'));
+    return range ? { start: localDateValue(range.startDate), end: localDateValue(range.endDate) } : null;
   }
   const arrow = (direction, double) => `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="${direction < 0 ? 'M12 5 7 10l5 5' : 'M8 5l5 5-5 5'}${double ? direction < 0 ? ' M17 5l-5 5 5 5' : ' M3 5l5 5-5 5' : ''}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function create({ start, end, min, max }) {
@@ -40,11 +46,17 @@
       state.start = range.start; state.end = range.end; state.selectingEnd = false; state.hover = '';
       return range;
     }
-    function choosePreset(key) {
+    function availablePreset(key) {
       const range = preset(key, max);
-      if (!range) return null;
+      if (!range || range.end < min) return null;
       range.start = range.start < min ? min : range.start;
+      return range;
+    }
+    function choosePreset(key) {
+      const range = availablePreset(key);
+      if (!range) return null;
       state.start = range.start; state.end = range.end; state.selectingEnd = false; state.hover = '';
+      reveal(range.end);
       return range;
     }
     function hover(value) {
@@ -76,10 +88,23 @@
         }).join('')}</div>`).join('');
         return `<section class="ci-range-month" aria-label="${year}年${number}月"><header><div>${index === 0 ? nav(-12, '上一年', true) + nav(-1, '上个月', false) : ''}</div><strong aria-live="polite">${year} 年 ${number} 月</strong><div>${index === 1 ? nav(1, '下个月', false) + nav(12, '下一年', true) : ''}</div></header><div role="grid" aria-label="${year}年${number}月日期"><div class="ci-range-week ci-range-weekdays" role="row">${['日','一','二','三','四','五','六'].map(label => `<span role="columnheader">${label}</span>`).join('')}</div>${weeks}</div></section>`;
       }
-      return `<nav class="ci-range-shortcuts" aria-label="日期快捷筛选">${presets.map(([key,label]) => {
-        const range = preset(key, max), active = !state.selectingEnd && range.start === state.start && range.end === state.end;
-        return `<button type="button" data-range-preset="${key}" class="${active ? 'is-active' : ''}" aria-pressed="${active}">${label}</button>`;
-      }).join('')}</nav><div class="ci-range-content"><div class="ci-range-months">${monthPanel(0)}${monthPanel(1)}</div><footer><span role="status" aria-live="polite">${state.selectingEnd ? `${state.start} → 请选择结束日期` : `${state.start} — ${state.end}`}</span><button class="ci-text" type="button" id="cancelDate">取消</button></footer></div>`;
+      const shortcuts = presets.map(([key, label]) => {
+        const range = availablePreset(key);
+        const active = !!range && !state.selectingEnd && range.start === state.start && range.end === state.end;
+        return `<button type="button" data-range-preset="${key}" class="${active ? 'is-active' : ''}" aria-pressed="${active}" ${range ? '' : 'disabled'}>${label}</button>`;
+      }).join('');
+      const selection = state.selectingEnd ? `${state.start} → 请选择结束日期` : `${state.start} — ${state.end}`;
+      return `<nav class="ci-range-shortcuts" aria-label="日期快捷筛选">${shortcuts}</nav>
+        <div class="ci-range-content">
+          <div class="ci-range-months">${monthPanel(0)}${monthPanel(1)}</div>
+          <footer>
+            <span role="status" aria-live="polite">${selection}</span>
+            <div class="ci-range-actions">
+              <button class="ci-text" type="button" id="cancelDate">取消</button>
+              <button class="btn-primary session-date-action-btn" type="button" id="applyDate" ${state.end ? '' : 'disabled'}>应用日期</button>
+            </div>
+          </footer>
+        </div>`;
     }
     return { state, pick, preset: choosePreset, hover, navigate, canNavigate, reveal, render };
   }

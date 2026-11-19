@@ -54,6 +54,10 @@ for (const view of ['session', 'leads', 'customers']) test(`${view}: statistics 
  assert.equal(h.window.document.getElementById(exportButton.getAttribute('aria-describedby')).textContent, '下载数据条数限制在 3 万条');
  h.click(`[data-${ns}-collapse]`);
  h.click(dateTrigger);
+ assert.deepEqual(
+   [...h.host.querySelectorAll(`[data-${ns}-date-shortcut]`)].map(button=>button.textContent.trim()),
+   ['昨天','近三天','近七天','近一月','近半年']
+ );
  h.click(`[data-${ns}-date-shortcut="last3"]`);
  assert.equal(displayed(), initial, 'draft dates must not change the displayed effective range');
  h.key('Escape');

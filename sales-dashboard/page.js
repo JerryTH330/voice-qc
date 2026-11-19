@@ -11,17 +11,17 @@ window.__AI_QC_DEFAULT_ROUTE = 'sales-dashboard';
     "../shared/linked-demo-data.js?v=20261028-full-sync-v1",
     "../shared/badge-history-data.js?v=20261028-full-sync-v1",
     "../shared/unified-data.js?v=20261105-factory-rank-hierarchy-v1",
-    "../date-filter-component-utils.js",
+    "../date-filter-component-utils.js?v=20261113-date-shortcuts-v1",
     "../shared/issue-rule-list.js",
     "../shared/dimension-switcher.js?v=20261028-full-sync-v1",
-    "../device-management/visit-organization-filter.js?v=20261028-full-sync-v1",
+    "../device-management/visit-organization-filter.js?v=20261110-organization-brand-options-v1",
     "./business-scene-filter.js?v=20261102-scene-filter-style-v6",
     "./source-tabs.js?v=20261028-full-sync-v1",
     "./organization-filter.js?v=20261109-dashboard-path-labels-v1",
     "../store-dashboard/organization-filter.js?v=20261109-dashboard-path-labels-v1",
     "../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6",
-    "../shared/unified-dashboard.js?v=20261105-factory-rank-hierarchy-v1",
-    "../app-runtime.js?v=20261105-factory-rank-hierarchy-v1"
+    "../shared/unified-dashboard.js?v=20261113-date-shortcuts-v1",
+    "../app-runtime.js?v=20261113-date-shortcuts-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

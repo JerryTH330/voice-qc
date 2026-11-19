@@ -951,11 +951,9 @@
         : `已选择开始日期 ${state.draftStartDate}，请选择结束日期`
       : "请选择统计日期";
     $("#applyCustomerDate").disabled = !state.draftStartDate || !state.draftEndDate;
-    const selectedDays = state.draftStartDate && state.draftEndDate ? getDateRangeDays(state.draftStartDate, state.draftEndDate) : 0;
     $$("[data-date-preset]").forEach((button) => {
-      const presetDays = button.dataset.datePreset === "today" ? 1 : Number(button.dataset.datePreset);
-      const expectedStart = formatISODate(shiftDate(DATA_CUTOFF, -(presetDays - 1)));
-      button.classList.toggle("active", selectedDays === presetDays && state.draftStartDate === expectedStart && state.draftEndDate === formatISODate(DATA_CUTOFF));
+      const { startDate, endDate } = window.__dateFilterComponentUtils.getDateShortcutRange(button.dataset.datePreset, DATA_CUTOFF);
+      button.classList.toggle("active", state.draftStartDate === formatISODate(startDate) && state.draftEndDate === formatISODate(endDate));
     });
   }
 
@@ -2496,13 +2494,15 @@
     renderCustomerDatePicker();
   });
 
+  $(".customer-date-presets").innerHTML = window.__dateFilterComponentUtils.dateShortcuts.map(({ key, label }) =>
+    `<button data-date-preset="${key}" type="button">${label}</button>`
+  ).join("");
   $$("[data-date-preset]").forEach((button) => {
     button.addEventListener("click", () => {
-      const days = button.dataset.datePreset === "today" ? 1 : Number(button.dataset.datePreset);
-      state.draftStartDate = formatISODate(shiftDate(DATA_CUTOFF, -(days - 1)));
-      state.draftEndDate = formatISODate(DATA_CUTOFF);
-      const presetStart = parseISODate(state.draftStartDate);
-      state.calendarMonth = new Date(presetStart.getFullYear(), presetStart.getMonth(), 1);
+      const { startDate, endDate } = window.__dateFilterComponentUtils.getDateShortcutRange(button.dataset.datePreset, DATA_CUTOFF);
+      state.draftStartDate = formatISODate(startDate);
+      state.draftEndDate = formatISODate(endDate);
+      state.calendarMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
       renderCustomerDatePicker();
     });
   });

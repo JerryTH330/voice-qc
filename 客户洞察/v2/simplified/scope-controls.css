@@ -19,7 +19,7 @@
 .ci-cohort-heading { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 .ci-filter:has(.ci-template-help[open]) { z-index: 40; }
 
-/* Reference interaction: shortcut rail, two linked months, immediate range commit. */
+/* Shortcut rail and two linked months. */
 .ci-select .ci-range-panel { display: grid; grid-template-columns: 112px minmax(0,1fr); left: 0; right: auto; width: min(820px,calc(100vw - 48px)); min-width: 0 !important; max-width: calc(100vw - 48px); max-height: min(680px,calc(100dvh - 80px)); padding: 0; border-radius: 16px; overflow: auto; background: var(--card); box-shadow: 0 12px 40px rgba(15,23,42,.14); z-index: 80; font-variant-numeric: tabular-nums; }
 .ci-range-shortcuts { display: flex; flex-direction: column; gap: 4px; padding: 18px 10px; border-right: 1px solid var(--line); }
 .ci-range-shortcuts button { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font-size: 14px; text-align: left; cursor: pointer; white-space: nowrap; }
@@ -51,6 +51,9 @@
 .ci-range-cell > button:hover:not(:disabled) { box-shadow: 0 0 0 1px var(--blue); }
 .ci-range-content > footer { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 46px; padding: 8px 16px; border-top: 1px solid var(--line); background: var(--card); }
 .ci-range-content > footer > span { font-size: 12px; color: var(--muted); }
+.ci-range-actions { display: flex; align-items: center; gap: 12px; margin-inline-start: auto; }
+.ci-range-actions .btn-primary:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.ci-range-actions .btn-primary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
 @media (max-width:980px) {
   .ci-template-bar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; }

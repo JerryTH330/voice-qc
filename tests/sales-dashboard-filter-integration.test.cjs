@@ -22,12 +22,12 @@ function setup() {
   const controls = {}, listeners = {};
   const control = dataset => ({ dataset, addEventListener(type, fn) { this[type] = fn; } });
   for (const key of ['trigger', 'apply', 'cancel']) controls[`[data-sales-date-${key}]`] = [control({})];
-  controls['[data-sales-date-shortcut]'] = ['yesterday', 'last7', 'last15', 'last30'].map(key => control({ salesDateShortcut: key }));
+  controls['[data-sales-date-shortcut]'] = ['yesterday', 'last3', 'last7', 'last30', 'last6Months'].map(key => control({ salesDateShortcut: key }));
   const host = { innerHTML: '' };
   const document = { getElementById: id => id === 'salesRecommendDateControl' ? host : null,
     addEventListener(type, fn) { (listeners[type] ||= []).push(fn); }, querySelectorAll: () => [] };
   const context = vm.createContext({ document, window: { __dateFilterComponentUtils: dates }, pageHost: { querySelectorAll: selector => controls[selector] || [] } });
-  const names = ['createDefaultDccState', 'createDefaultAdvisorState', 'getSalesRoleState', 'salesRoleDateState', 'salesRecommendRangeOptions', 'salesRecommendDateShortcutOptions',
+  const names = ['createDefaultDccState', 'createDefaultAdvisorState', 'getSalesRoleState', 'salesRoleDateState',
     'shiftSalesRoleReferenceDate', 'getSalesRoleAnchorDate', 'getSalesRoleRangeValues', 'applySalesRoleRangeMode', 'syncSalesRoleDateView', 'getSalesRoleDateLimitRange',
     'clampSalesRoleDateValue', 'isSalesRoleDateSelectable', 'shiftSalesRoleDateView', 'applySalesRoleDateDraft', 'renderSalesRoleDateMenu', 'renderSalesRoleDateControl',
     'closeSalesRoleDatePicker', 'openSalesRoleDatePicker', 'applySalesRoleDateFilters', 'bindSalesRoleDateEvents'];
@@ -68,7 +68,7 @@ test('statistics date is always visible and keeps the original personal last7 de
 test('calendar shortcuts only alter drafts and Apply uses the existing custom-range path', () => {
   const h = setup(); h.open('dcc');
   assert.match(h.host.innerHTML, /统计日期范围/); assert.match(h.host.innerHTML, /应用日期/);
-  assert.equal((h.host.innerHTML.match(/data-sales-date-shortcut=/g) || []).length, 4);
+  assert.equal((h.host.innerHTML.match(/data-sales-date-shortcut=/g) || []).length, 5);
   h.click('[data-sales-date-shortcut]', 0);
   assert.equal(h.state.draftStartDate, '2026-03-22'); assert.equal(h.snapshot('dcc').recommendDateStart, '2026-03-17');
   assert.equal(h.snapshot('dcc').refreshCount, 0);

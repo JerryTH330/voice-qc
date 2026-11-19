@@ -70,7 +70,7 @@
     const subject=resolveSubject(kind,data,context);
     const people = kind==='factory'?data.advisors:data.advisors.filter(person=>sales?person.advisorKey===subject.advisor?.advisorKey:person.storeId===subject.storeId);
     const directory=subject?data.directory.filter(dealer=>dealer===subject.store):data.directory;
-    const model = global.VisitOrganizationFilter.createModel(directory,people,{mode:'matching'});
+    const model = global.VisitOrganizationFilter.createModel(directory,people,{mode:'matching',brandScopedProvinces:kind==='factory'});
     const saved = global.__unifiedDashboardStates ||= {};
     const stateKey = sales ? `sales-${role}` : kind;
     if(subject && saved[stateKey]?.subjectKey && saved[stateKey].subjectKey!==subject.key)delete saved[stateKey];
@@ -129,7 +129,7 @@
       return {startDate:dateValue(start),endDate:dateValue(end)};
     }
     function renderDate() {
-      const today=dateValue(new Date()),minimum=new Date();minimum.setMonth(minimum.getMonth()-6);const min=dateValue(minimum);
+      const now=new Date(),today=dateValue(now),min=dateValue(dateUtils.shiftCalendarMonths(now,-6));
       const cells=[];
       if(dateOpen) {
         const year=viewDate.getFullYear(),month=viewDate.getMonth(),first=new Date(year,month,1),offset=(first.getDay()+6)%7;
@@ -138,7 +138,7 @@
       }
       const menu=dateOpen?dateUtils.renderDateRangePanelMarkup({dataNamespace:'unified-date',title:'统计日期范围',rangeText:`${draft.startDate} 至 ${draft.endDate}`,panelClassName:`session-menu-panel session-menu-panel-date ${sales?'sales-statistics-date-panel':kind==='factory'?'fo-date-panel':'sd-statistics-date-panel'}`,monthLabel:`${viewDate.getFullYear()}年${viewDate.getMonth()+1}月`,activeField,startLabel:draft.startDate,endLabel:draft.endDate,cells,
         disablePrevMonth:dateValue(new Date(viewDate.getFullYear(),viewDate.getMonth(),1)).slice(0,7)<=min.slice(0,7),disableNextMonth:dateValue(viewDate).slice(0,7)>=today.slice(0,7),
-        shortcuts:[{key:'1',label:'昨日'},{key:'7',label:'近7天'},{key:'15',label:'近半月'},{key:'30',label:'近1月'}]}):'';
+        shortcuts:dateUtils.dateShortcuts}):'';
       const control='<span>统计日期</span>'+dateUtils.renderDateRangeControlMarkup({currentValue:'custom',isOpen:dateOpen,startLabel:state.startDate,endLabel:state.endDate,dataNamespace:'unified-date',rootClassName:sales?'sales-role-date-root':kind==='factory'?'fo-date-root':'sd-statistics-date-root',triggerClassName:`session-date-trigger${sales?' sales-role-date-trigger':''}`,menuHtml:menu});
       dateHost.innerHTML=sales?`<div class="so-filter-control badge-field-filter sales-statistics-date-control">${control}</div>`:control;
     }
@@ -317,7 +317,11 @@
       else if(d.unifiedDateField){activeField=d.unifiedDateField;renderDate();}
       else if(d.unifiedDateNav){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+Number(d.unifiedDateNav),1);renderDate();}
       else if(d.unifiedDateValue){draft[activeField]=d.unifiedDateValue;if(draft.startDate>draft.endDate){if(activeField==='startDate')draft.endDate=draft.startDate;else draft.startDate=draft.endDate;}activeField=activeField==='startDate'?'endDate':'startDate';renderDate();}
-      else if(d.unifiedDateShortcut){draft=range(Number(d.unifiedDateShortcut));viewDate=new Date(`${draft.startDate}T12:00:00`);renderDate();}
+      else if(d.unifiedDateShortcut){
+        const {startDate,endDate}=dateUtils.getDateShortcutRange(d.unifiedDateShortcut);
+        draft={startDate:dateValue(startDate),endDate:dateValue(endDate)};
+        viewDate=startDate;renderDate();
+      }
       else if(d.unifiedDateCancel!==undefined)closeDate();
       else if(d.unifiedDateApply!==undefined){Object.assign(state,draft,{page:1,rankPage:1,rankExpanded:[]});dateOpen=false;render();}
       else if(d.unifiedRankToggle){

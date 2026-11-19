@@ -2456,7 +2456,6 @@ function initStoreDashboardPage() {
     { key: "30", label: "近1月" },
     { key: "custom", label: "自定义" }
   ];
-  const storeTimeShortcutOptions = storeTimeRangeOptions.filter((option) => option.key !== "custom");
   const storeDateState = {
     open: false,
     activeField: "startDate",
@@ -4080,7 +4079,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           isToday: value === todayValue
         };
       }),
-      shortcuts: storeTimeShortcutOptions,
+      shortcuts: window.__dateFilterComponentUtils.dateShortcuts,
       summaryText: `已选择 ${getSessionDateRangeText(startDate, endDate)}`
     });
   };
@@ -4136,8 +4135,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
     host.querySelectorAll("[data-store-date-shortcut]").forEach((node) => {
       node.addEventListener("click", () => {
-        const { startDate, endDate } = getStoreRangeValues(node.dataset.storeDateShortcut);
-        storeDateState.draftStartDate = startDate;
+        const range = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.storeDateShortcut, new Date());
+        const endDate = formatSessionDateValue(range.endDate);
+        storeDateState.draftStartDate = formatSessionDateValue(range.startDate);
         storeDateState.draftEndDate = endDate;
         storeDateState.activeField = "endDate";
         syncStoreDateView(endDate);
@@ -9421,11 +9421,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 })
                 .join('')}
             </div>
-            <div class="session-date-shortcuts">
-              <button type="button" class="session-date-shortcut" data-session-date-shortcut="today">今天</button>
-              <button type="button" class="session-date-shortcut" data-session-date-shortcut="last3">近3天</button>
-              <button type="button" class="session-date-shortcut" data-session-date-shortcut="last7">近7天</button>
-            </div>
+            ${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('session-date')}
             <div class="session-cascader-footer session-date-footer">
               <span>${escapeHtml(`已选择 ${getSessionDateRangeText(startDate, endDate)}`)}</span>
               <div class="session-date-actions">
@@ -10350,23 +10346,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-session-date-shortcut]').forEach((node) => {
           node.addEventListener('click', () => {
-            const today = new Date()
-            const endValue = formatSessionDateValue(today)
-            let startValue = endValue
-
-            if (node.dataset.sessionDateShortcut === 'last3') {
-              const start = new Date(today)
-              start.setDate(start.getDate() - 2)
-              startValue = formatSessionDateValue(start)
-            }
-
-            if (node.dataset.sessionDateShortcut === 'last7') {
-              const start = new Date(today)
-              start.setDate(start.getDate() - 6)
-              startValue = formatSessionDateValue(start)
-            }
-
-            sessionMenuState.dateDraftStartDate = startValue
+            const { startDate, endDate: shortcutEndDate } = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.sessionDateShortcut)
+            const endValue = formatSessionDateValue(shortcutEndDate)
+            sessionMenuState.dateDraftStartDate = formatSessionDateValue(startDate)
             sessionMenuState.dateDraftEndDate = endValue
             sessionMenuState.activeDateField = 'endDate'
             syncSessionDateView(endValue)
@@ -10937,11 +10919,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 })
                 .join('')}
             </div>
-            <div class="session-date-shortcuts">
-              <button type="button" class="session-date-shortcut" data-leads-date-shortcut="today">今天</button>
-              <button type="button" class="session-date-shortcut" data-leads-date-shortcut="last3">近3天</button>
-              <button type="button" class="session-date-shortcut" data-leads-date-shortcut="last7">近7天</button>
-            </div>
+            ${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('leads-date')}
             <div class="session-cascader-footer session-date-footer">
               <span>${escapeHtml(`已选择 ${getSessionDateRangeText(startDate, endDate)}`)}</span>
               <div class="session-date-actions">
@@ -11013,13 +10991,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 })
                 .join('')}
             </div>
-            <div class="session-date-shortcuts">
-              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="yesterday">昨日</button>
-              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last7">近7天</button>
-              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last15">近半月</button>
-              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="last30">近1月</button>
-              <button type="button" class="session-date-shortcut" data-leads-customer-date-shortcut="custom">自定义</button>
-            </div>
+            ${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('leads-customer-date')}
             <div class="session-cascader-footer session-date-footer">
               <span>${escapeHtml(`已选择 ${getLeadCustomerDateRangeText(startDate, endDate)}`)}</span>
               <div class="session-date-actions">
@@ -11084,12 +11056,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return normalizedValue.includes(normalizedQuery)
       }
 
-      function shiftLeadCustomerReferenceDate(date, offsetDays) {
-        const nextDate = new Date(date)
-        nextDate.setDate(nextDate.getDate() + offsetDays)
-        return nextDate
-      }
-
       function getLeadCustomerDateAnchorDate(dateField = 'firstLeadIssuedAt') {
         const aggregatedRecords = buildLeadCustomerAggregateRecords(leadRecords)
         let latestDate = null
@@ -11102,28 +11068,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
 
         return latestDate || new Date()
-      }
-
-      function getLeadCustomerRangeValues(rangeMode, anchorDateValue = '') {
-        const anchorDate = parseSessionDateValue(anchorDateValue) || getLeadCustomerDateAnchorDate()
-        let startDate = anchorDate
-        let endDate = anchorDate
-
-        if (rangeMode === 'yesterday') {
-          startDate = shiftLeadCustomerReferenceDate(anchorDate, -1)
-          endDate = startDate
-        } else if (rangeMode === 'last7') {
-          startDate = shiftLeadCustomerReferenceDate(anchorDate, -6)
-        } else if (rangeMode === 'last15') {
-          startDate = shiftLeadCustomerReferenceDate(anchorDate, -14)
-        } else if (rangeMode === 'last30') {
-          startDate = shiftLeadCustomerReferenceDate(anchorDate, -29)
-        }
-
-        return {
-          startDate: formatSessionDateValue(startDate),
-          endDate: formatSessionDateValue(endDate)
-        }
       }
 
       function getLeadCustomerDateRangeText(startDate, endDate) {
@@ -12066,16 +12010,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-leads-date-shortcut]').forEach((node) => {
           node.addEventListener('click', () => {
-            const today = new Date()
-            const endValue = formatSessionDateValue(today)
-            let startValue = endValue
-            if (node.dataset.leadsDateShortcut === 'last3') {
-              const start = new Date(today); start.setDate(start.getDate() - 2); startValue = formatSessionDateValue(start)
-            }
-            if (node.dataset.leadsDateShortcut === 'last7') {
-              const start = new Date(today); start.setDate(start.getDate() - 6); startValue = formatSessionDateValue(start)
-            }
-            leadsMenuState.dateDraftStartDate = startValue
+            const { startDate, endDate: shortcutEndDate } = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.leadsDateShortcut)
+            const endValue = formatSessionDateValue(shortcutEndDate)
+            leadsMenuState.dateDraftStartDate = formatSessionDateValue(startDate)
             leadsMenuState.dateDraftEndDate = endValue
             leadsMenuState.activeDateField = 'endDate'
             const endDate = parseSessionDateValue(endValue)
@@ -12151,17 +12088,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-leads-customer-date-shortcut]').forEach((node) => {
           node.addEventListener('click', () => {
-            const shortcut = node.dataset.leadsCustomerDateShortcut
-            if (shortcut === 'custom') {
-              leadsMenuState.customerDateActiveField = 'startDate'
-              rerenderLeadsFilters()
-              return
-            }
-
             const { dateField } = getLeadsCustomerDateFilterConfig(leadsMenuState.openMenu)
-            const anchorDateValue = formatSessionDateValue(getLeadCustomerDateAnchorDate(dateField))
-            const { startDate, endDate } = getLeadCustomerRangeValues(shortcut, anchorDateValue)
-            leadsMenuState.customerDateDraftStartDate = startDate
+            const anchorDate = getLeadCustomerDateAnchorDate(dateField)
+            const range = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.leadsCustomerDateShortcut, anchorDate)
+            const endDate = formatSessionDateValue(range.endDate)
+            leadsMenuState.customerDateDraftStartDate = formatSessionDateValue(range.startDate)
             leadsMenuState.customerDateDraftEndDate = endDate
             leadsMenuState.customerDateActiveField = 'endDate'
             const endDateObject = parseSessionDateValue(endDate)
@@ -12839,14 +12770,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         viewYear: new Date().getFullYear(),
         viewMonth: new Date().getMonth() + 1
       }
-      const salesRecommendRangeOptions = [
-        { key: 'yesterday', label: '昨日' },
-        { key: 'last7', label: '近7天' },
-        { key: 'last15', label: '近半月' },
-        { key: 'last30', label: '近1月' },
-        { key: 'custom', label: '自定义' }
-      ]
-      const salesRecommendDateShortcutOptions = salesRecommendRangeOptions.filter((option) => option.key !== 'custom')
 
       const taskFilterOptions = {
         model: [
@@ -13113,11 +13036,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 })
                 .join('')}
             </div>
-            <div class="session-date-shortcuts">
-              <button type="button" class="session-date-shortcut" data-config-range-shortcut="today">今天</button>
-              <button type="button" class="session-date-shortcut" data-config-range-shortcut="last3">近3天</button>
-              <button type="button" class="session-date-shortcut" data-config-range-shortcut="last7">近7天</button>
-            </div>
+            ${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('config-range')}
             <div class="session-cascader-footer session-date-footer">
               <span>${escapeHtml(`已选择 ${getSessionDateRangeText(startDate, endDate)}`)}</span>
               <div class="session-date-actions">
@@ -13287,23 +13206,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-config-range-shortcut]').forEach((node) => {
           node.addEventListener('click', () => {
-            const today = new Date()
-            const endValue = formatSessionDateValue(today)
-            let startValue = endValue
-
-            if (node.dataset.configRangeShortcut === 'last3') {
-              const start = new Date(today)
-              start.setDate(start.getDate() - 2)
-              startValue = formatSessionDateValue(start)
-            }
-
-            if (node.dataset.configRangeShortcut === 'last7') {
-              const start = new Date(today)
-              start.setDate(start.getDate() - 6)
-              startValue = formatSessionDateValue(start)
-            }
-
-            configDatePickerState.rangeDraftStartDate = startValue
+            const { startDate, endDate: shortcutEndDate } = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.configRangeShortcut)
+            const endValue = formatSessionDateValue(shortcutEndDate)
+            configDatePickerState.rangeDraftStartDate = formatSessionDateValue(startDate)
             configDatePickerState.rangeDraftEndDate = endValue
             configDatePickerState.rangeActiveField = 'endDate'
             syncSessionDateView(endValue)
@@ -18065,7 +17970,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               isToday: value === todayValue
             }
           }),
-          shortcuts: salesRecommendDateShortcutOptions,
+          shortcuts: window.__dateFilterComponentUtils.dateShortcuts,
           summaryText: `已选择 ${getSessionDateRangeText(startDate, endDate)}`
         })
       }
@@ -18204,9 +18109,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         pageHost.querySelectorAll('[data-sales-date-shortcut]').forEach((node) => {
           node.addEventListener('click', () => {
-            const { startDate, endDate } = getSalesRoleRangeValues(node.dataset.salesDateShortcut, role)
-            salesRoleDateState.draftStartDate = startDate
-            salesRoleDateState.draftEndDate = endDate
+            const range = window.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.salesDateShortcut, getSalesRoleAnchorDate(role))
+            const endDate = formatSessionDateValue(range.endDate)
+            salesRoleDateState.draftStartDate = clampSalesRoleDateValue(formatSessionDateValue(range.startDate))
+            salesRoleDateState.draftEndDate = clampSalesRoleDateValue(endDate)
             salesRoleDateState.activeField = 'endDate'
             syncSalesRoleDateView(endDate)
             renderSalesRoleDateControl(role)

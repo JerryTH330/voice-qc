@@ -476,12 +476,6 @@
   let factoryTimeEndDate = '';
   let currentModel  = 'all';   // 车系显示范围
   let currentModels = [];
-  const factoryDateShortcutOptions = [
-    { key: '1', label: '昨日' },
-    { key: '7', label: '近7天' },
-    { key: '15', label: '近半月' },
-    { key: '30', label: '近1月' }
-  ];
   const factoryDateState = {
     open: false,
     activeField: 'startDate',
@@ -1030,7 +1024,7 @@
           isToday: value === todayValue
         };
       }),
-      shortcuts: factoryDateShortcutOptions,
+      shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
       summaryText: `已选择 ${getFactoryDateRangeText(startDate, endDate)}`
     });
   };
@@ -1084,8 +1078,9 @@
 
     host.querySelectorAll('[data-factory-date-shortcut]').forEach((node) => {
       node.addEventListener('click', () => {
-        const { startDate, endDate } = getFactoryRangeValues(node.dataset.factoryDateShortcut);
-        factoryDateState.draftStartDate = startDate;
+        const range = globalThis.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.factoryDateShortcut);
+        const endDate = formatFactoryDateValue(range.endDate);
+        factoryDateState.draftStartDate = formatFactoryDateValue(range.startDate);
         factoryDateState.draftEndDate = endDate;
         factoryDateState.activeField = 'endDate';
         syncFactoryDateView(endDate);

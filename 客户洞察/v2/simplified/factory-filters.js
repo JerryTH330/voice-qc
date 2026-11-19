@@ -5,8 +5,8 @@
   // Only translate their stable IDs into the insight demo's record fields.
   function mount({ root, businessRoot, M, getScope, onChange, onReset, onBeforeOpen }) {
     const dealers = M.organizationRecords().map(({ dealer }) => ({ ...dealer, dealerWid: `${dealer.brand}::${dealer.dealerCode}` }));
-    const model = host.VisitOrganizationFilter.createModel(dealers, [], { mode: 'matching' });
-    const fields = host.VisitOrganizationFilter.fields;
+    const { createModel, fields, selectionId } = host.VisitOrganizationFilter;
+    const model = createModel(dealers, [], { mode: 'matching' });
     let ui, business, scenes = [], models = [];
     const sceneOptions = Object.entries(M.sceneLabels).map(([value, label]) => ({ value, label }));
     const sceneValues = new Set(sceneOptions.map(option => option.value));
@@ -21,7 +21,7 @@
         if (key === 'advisor') continue;
         filters[key] = [...new Set(model.applied[key].map(id => {
           if (['store', 'patroler', 'governor'].includes(key)) return id;
-          return model.directory.find(row => row[field.idKey] === id)?.[field.nameKey];
+          return model.directory.find(row => selectionId(row, key) === id)?.[field.nameKey];
         }).filter(Boolean))];
       }
       filters.scene = scenes.slice();
@@ -42,7 +42,7 @@
         const field = fields[key];
         const ids = scope.nativeOrganization?.[key] || model.directory.filter(row => (filters[key] || []).includes(
           ['store', 'patroler', 'governor'].includes(key) ? row[field.idKey] : row[field.nameKey]
-        )).map(row => row[field.idKey]);
+        )).map(row => selectionId(row, key));
         model.set(key, ids);
       }
       model.apply();
@@ -77,7 +77,14 @@
       ui.render({ preserveScroll: true });
       business.render();
     }
-    return { sync, snapshot, model,
+    function summary() {
+      const selected = [...model.dimensionKeys(), 'patroler', 'governor']
+        .filter(key => model.applied[key].length)
+        .map(key => `${fields[key].label}：${model.display(key, model.applied)}`);
+      if (models.length) selected.push(`车系：${models.join('、')}`);
+      return selected.join(' · ') || '全部品牌 · 全部门店 · 全部车系';
+    }
+    return { sync, snapshot, summary, model,
       closeMenu() { ui.closeMenu(); business.closeMenu(); },
       destroy() { ui.destroy(); business.destroy(); }
     };

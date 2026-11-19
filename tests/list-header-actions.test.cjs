@@ -108,9 +108,12 @@ test('store exports include every filtered row in current order, preserve missin
 });
 
 test('store filter metadata uses applied selections and directory names, never uncommitted date drafts or internal IDs', () => {
-  const c=adapterContext({window:{VisitOrganizationFilter:require('../device-management/visit-organization-filter.js')},
-    storeOrganizationModel:{applied:{dimensionMode:'geography',brand:['B1'],province:[],city:[],region:[],zone:[],store:[],patroler:[],governor:[],advisor:['A1']},directory:[{brandId:'B1',brand:'埃安'}]},
-    storeOrganizationRecords:[{advisorKey:'A1',advisor:'陈佳'}]});
+  const filtersApi=require('../device-management/visit-organization-filter.js');
+  const dealer={brand:'埃安',dealerCode:'D1',dealerName:'门店乙',area:'大区甲',zone:'战区甲',province:'广东省',city:'广州市'};
+  const people=[{...filtersApi.organizationRecord(dealer),advisorKey:'A1',advisor:'陈佳'}];
+  const model=filtersApi.createModel([dealer],people);
+  model.setDimension('geography');model.set('brand',['brand:埃安']);model.set('advisor',['A1']);model.apply();
+  const c=adapterContext({window:{VisitOrganizationFilter:filtersApi},storeOrganizationModel:model,storeOrganizationRecords:people});
   vm.runInContext(fn('getStoreOverviewExportFilters'),c);
   const filters=plain(c.getStoreOverviewExportFilters());
   assert.ok(filters.some(item=>item.value==='地理维度')); assert.ok(filters.some(item=>item.value==='埃安'));

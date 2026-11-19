@@ -5,6 +5,31 @@
     module.exports = api;
   }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  const dateShortcuts = [
+    { key: 'yesterday', label: '昨天' },
+    { key: 'last3', label: '近三天', days: 3 },
+    { key: 'last7', label: '近七天', days: 7 },
+    { key: 'last30', label: '近一月', days: 30 },
+    { key: 'last6Months', label: '近半年', months: 6 }
+  ];
+
+  function shiftCalendarMonths(date, months) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + months;
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    return new Date(year, month, Math.min(date.getDate(), lastDay));
+  }
+
+  function getDateShortcutRange(key, anchorDate = new Date()) {
+    const shortcut = dateShortcuts.find(option => option.key === key);
+    if (!shortcut) return null;
+    const endDate = new Date(anchorDate);
+    if (key === 'yesterday') endDate.setDate(endDate.getDate() - 1);
+    const startDate = shortcut.months ? shiftCalendarMonths(endDate, -shortcut.months) : new Date(endDate);
+    if (shortcut.days) startDate.setDate(startDate.getDate() - shortcut.days + 1);
+    return { startDate, endDate };
+  }
+
   function escapeHtml(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -16,6 +41,12 @@
 
   function getDataAttrName(namespace, suffix) {
     return `data-${namespace}-${suffix}`;
+  }
+
+  function renderDateShortcutsMarkup(dataNamespace, shortcuts = dateShortcuts) {
+    return `<div class="session-date-shortcuts">${shortcuts.map(option =>
+      `<button type="button" class="session-date-shortcut" ${getDataAttrName(dataNamespace, 'shortcut')}="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>`
+    ).join('')}</div>`;
   }
 
   function renderDateRangeControlMarkup({
@@ -134,11 +165,7 @@
             `;
           }).join('')}
         </div>
-        <div class="session-date-shortcuts">
-          ${safeShortcuts.map((option) => `
-            <button type="button" class="session-date-shortcut" ${getDataAttrName(dataNamespace, 'shortcut')}="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>
-          `).join('')}
-        </div>
+        ${renderDateShortcutsMarkup(dataNamespace, safeShortcuts)}
         <div class="session-cascader-footer session-date-footer">
           <span>${escapeHtml(safeSummaryText)}</span>
           <div class="session-date-actions">
@@ -151,6 +178,10 @@
   }
 
   return {
+    dateShortcuts,
+    shiftCalendarMonths,
+    getDateShortcutRange,
+    renderDateShortcutsMarkup,
     renderDateRangeControlMarkup,
     renderDateRangePanelMarkup
   };

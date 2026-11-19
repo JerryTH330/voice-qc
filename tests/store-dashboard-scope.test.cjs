@@ -107,16 +107,16 @@ function setupDates() {
   const control = dataset => ({ dataset, listeners: {}, addEventListener(type, handler) { this.listeners[type] = handler; } });
   const controls = {
     '[data-store-date-trigger]': [control({})],
-    '[data-store-date-shortcut]': ['1', '7', '15', '30'].map(key => control({ storeDateShortcut: key })),
+    '[data-store-date-shortcut]': ['yesterday', 'last3', 'last7', 'last30', 'last6Months'].map(key => control({ storeDateShortcut: key })),
     '[data-store-date-apply]': [control({})],
     '[data-store-date-cancel]': [control({})]
   };
   const host = { innerHTML: '', classList: { toggle() {} }, addEventListener() {}, querySelectorAll: selector => controls[selector] || [], querySelector: () => null };
   const document = { getElementById: id => id === 'store-date-control' ? host : null, addEventListener: (type, handler) => { (listeners[type] ||= []).push(handler); } };
   const dates = require('../date-filter-component-utils.js');
-  const context = vm.createContext({ document, window: { innerWidth: 1303 }, renderSharedDateRangeControlMarkup: dates.renderDateRangeControlMarkup, renderSharedDateRangePanelMarkup: dates.renderDateRangePanelMarkup });
+  const context = vm.createContext({ document, window: { innerWidth: 1303, __dateFilterComponentUtils: dates }, renderSharedDateRangeControlMarkup: dates.renderDateRangeControlMarkup, renderSharedDateRangePanelMarkup: dates.renderDateRangePanelMarkup });
   const names = [
-    'currentTime', 'storeTimeStartDate', 'storeTimeEndDate', 'storeTimeRangeOptions', 'storeTimeShortcutOptions', 'storeDateState',
+    'currentTime', 'storeTimeStartDate', 'storeTimeEndDate', 'storeTimeRangeOptions', 'storeDateState',
     'shiftStoreReferenceDate', 'getStoreRangeValues', 'syncStoreTimeRangeFromQuickFilter', 'getStoreDateLimitRange', 'clampStoreDateValue', 'isStoreDateSelectable',
     'syncStoreDateView', 'shiftStoreDateView', 'applyStoreDateDraft', 'getStoreRangeInclusiveDays', 'getStoreTrendRangeKey', 'renderStoreDateControlMarkup', 'renderStoreDateMenu', 'bindStoreDateEvents',
     'renderStoreDateControl', 'closeStoreDatePicker', 'openStoreDatePicker', 'applyStoreDateFilters'
@@ -310,7 +310,7 @@ test('statistics date is always visible with yesterday applied and the four fact
   }
   h.open();
   const shortcuts = h.host.innerHTML.match(/data-store-date-shortcut=/g) || [];
-  assert.equal(shortcuts.length, 4);
+  assert.equal(shortcuts.length, 5);
   assert.equal(h.snapshot().closedOrganizationMenus, 1);
   assert.equal(h.snapshot().closedBusinessMenus, 1);
 });
@@ -318,7 +318,7 @@ test('statistics date is always visible with yesterday applied and the four fact
 test('date shortcuts and manual day choices stay in draft until Apply, with ordered inclusive ranges', () => {
   const h = setupDates();
   h.open();
-  h.click('[data-store-date-shortcut]', 1);
+  h.click('[data-store-date-shortcut]', 2);
   assert.equal(h.state.draftStartDate, '2026-10-10');
   assert.equal(h.state.draftEndDate, '2026-10-16');
   assert.equal(h.snapshot().start, '2026-10-15');

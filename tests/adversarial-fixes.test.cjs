@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const {parseHTML} = require(process.env.AIQC_DOM_MODULE || 'linkedom');
+const insightDateRange = require('../客户洞察/v2/simplified/date-range.js');
 
 function sourceFunction(file, name) {
   const source = fs.readFileSync(require.resolve('../' + file), 'utf8');
@@ -14,7 +15,15 @@ function sourceFunction(file, name) {
 }
 
 test('changing insight scope in overview invalidates compare output without rendering an absent comparison stage', () => {
-  const {document} = parseHTML(fs.readFileSync(require.resolve('../客户洞察/v2/index.html'), 'utf8'));
+  const {document} = parseHTML(`
+    <div id="compareAiSummaryLoading"></div>
+    <div id="aiResult"></div>
+    <div id="compareAiExecutive"></div>
+    <p id="aiExecutiveConclusion"></p>
+    <div id="compareAiEvidenceStats"></div>
+    <p id="compareAiSummaryStatus"></p>
+    <button id="generateAiButton"></button>
+  `);
   let renders = 0;
   const state = {stage: 'overview'};
   const c = vm.createContext({
@@ -32,6 +41,25 @@ test('changing insight scope in overview invalidates compare output without rend
   assert.equal(c.compareAiSummaryGenerationId, 2);
   for (const stage of ['online', 'offline']) { state.stage = stage; c.invalidateCompareAiSummary(); }
   assert.equal(renders, 2);
+});
+
+test('customer insight uses shared date shortcuts and keeps the calendar-month options', () => {
+  assert.deepEqual(insightDateRange.presets.map(([, label]) => label),
+    ['昨天', '近三天', '近七天', '近一月', '近半年', '本月', '上个月', '近3月']);
+  const {preset, create} = insightDateRange;
+  const latest = '2026-03-31';
+  assert.deepEqual(preset('yesterday', latest), {start: '2026-03-30', end: '2026-03-30'});
+  assert.deepEqual(preset('last30', latest), {start: '2026-03-02', end: latest});
+  assert.deepEqual(preset('lastMonth', latest), {start: '2026-02-01', end: '2026-02-28'});
+  assert.deepEqual(preset('last6Months', '2026-08-31'), {start: '2026-02-28', end: '2026-08-31'});
+  const draft = create({start: '2026-03-15', end: '2026-03-20', min: '2026-02-01', max: latest});
+  assert.deepEqual(draft.preset('last6Months'), {start: '2026-02-01', end: latest});
+  let {document} = parseHTML(draft.render());
+  assert.equal(document.querySelector('[data-range-preset="last6Months"]').getAttribute('aria-pressed'), 'true');
+  draft.pick('2026-03-20');
+  ({document} = parseHTML(draft.render()));
+  assert.equal(document.getElementById('applyDate').hasAttribute('disabled'), true);
+  assert.deepEqual(draft.pick('2026-03-15'), {start: '2026-03-15', end: '2026-03-20'});
 });
 
 test('visit route retains explicit missing and empty IDs without widening or keeping the prior record', () => {

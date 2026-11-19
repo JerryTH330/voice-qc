@@ -6,7 +6,14 @@ for(const kind of ['store','factory','sales'])test(`${kind}: calendar clicks sta
   const h=setup(kind),a=h.controller,initial=[a.state.startDate,a.state.endDate],total=a.result.recordings.length;
   if(kind==='sales'){const person=h.window.AIQCData.advisors.find(p=>p.advisorKey===a.model.applied.advisor[0]);assert.equal(h.host.querySelector('#profile-avatar').textContent,person.advisorName.slice(0,1));assert.equal(h.host.querySelector('[data-mode].active').dataset.mode,a.state.timeMode);}
   h.click('[data-unified-date-trigger]');
-  for(const selector of ['[data-unified-date-field="endDate"]','[data-unified-date-nav="-1"]','[data-unified-date-shortcut="1"]']){
+  assert.deepEqual(
+    [...h.host.querySelectorAll('[data-unified-date-shortcut]')].map(button=>button.textContent.trim()),
+    ['昨天','近三天','近七天','近一月','近半年']
+  );
+  h.click('[data-unified-date-shortcut="last6Months"]');
+  assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,'2026-04-20');
+  assert.equal(h.host.querySelector('[data-unified-date-field="endDate"] strong').textContent,'2026-10-20');
+  for(const selector of ['[data-unified-date-field="endDate"]','[data-unified-date-nav="-1"]','[data-unified-date-shortcut="yesterday"]']){
     h.click(selector);
     assert(h.host.querySelector('[data-unified-date-apply]'),`${selector} must leave calendar open`);
     assert.deepEqual([a.state.startDate,a.state.endDate],initial);
@@ -14,12 +21,12 @@ for(const kind of ['store','factory','sales'])test(`${kind}: calendar clicks sta
   }
   h.click('[data-unified-date-cancel]');h.click('[data-unified-date-trigger]');
   assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,initial[0]);
-  h.click('[data-unified-date-shortcut="1"]');h.key('Escape');h.click('[data-unified-date-trigger]');
+  h.click('[data-unified-date-shortcut="yesterday"]');h.key('Escape');h.click('[data-unified-date-trigger]');
   assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,initial[0]);
-  h.click('[data-unified-date-shortcut="1"]');h.click('[data-unified-date-apply]');
+  h.click('[data-unified-date-shortcut="yesterday"]');h.click('[data-unified-date-apply]');
   assert.equal(a.state.startDate,'2026-10-19');assert.equal(a.state.endDate,'2026-10-19');
   assert(a.result.recordings.every(r=>r.startTime.startsWith('2026-10-19')));
-  h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="30"]');
+  h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="last30"]');
   h.window.document.body.dispatchEvent(new h.window.Event('click',{bubbles:true}));
   assert(!h.host.querySelector('[data-unified-date-apply]'));assert.equal(a.state.startDate,'2026-10-19');
   a.destroy();
@@ -127,7 +134,7 @@ test('applying factory dates resets expansion while date drafts and sorting pres
   h.click('[data-unified-factory-sort="invitation"]');
   assert.deepEqual(plain(a.state.rankExpanded), expanded);
   h.click('[data-unified-date-trigger]');
-  h.click('[data-unified-date-shortcut="1"]');
+  h.click('[data-unified-date-shortcut="yesterday"]');
   assert.deepEqual(plain(a.state.rankExpanded), expanded);
   h.click('[data-unified-date-apply]');
   assert.deepEqual(plain(a.state.rankExpanded), []);
@@ -141,7 +148,7 @@ test('calendar boundaries, reversed dates and month end navigation remain valid'
   assert(!h.host.querySelector('[data-unified-date-value="2026-04-19"]'));
   h.click('[data-unified-date-value="2026-04-20"]');h.click('[data-unified-date-value="2026-04-20"]');h.click('[data-unified-date-apply]');
   assert.equal(a.state.startDate,'2026-04-20');assert.equal(a.state.endDate,'2026-04-20');
-  h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="7"]');
+  h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="last7"]');
   assert(h.host.querySelector('[data-unified-date-nav="1"]').disabled);assert(!h.host.querySelector('[data-unified-date-value="2026-10-21"]'));
   h.click('[data-unified-date-value="2026-10-20"]');h.click('[data-unified-date-value="2026-10-18"]');h.click('[data-unified-date-apply]');
   assert.equal(a.state.startDate,'2026-10-18');assert.equal(a.state.endDate,'2026-10-18');a.destroy();

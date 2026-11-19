@@ -5,9 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
-const dashboardVersion = '20261105-factory-rank-hierarchy-v1';
-const listVersion = '20261109-export-limit-copy-v2';
-const dashboardPathVersion = '20261109-dashboard-path-labels-v1';
+const factsVersion = '20261105-factory-rank-hierarchy-v1';
+const dateShortcutsVersion = '20261113-date-shortcuts-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -47,16 +46,21 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     assert(index('leads/organization-data.js') < index('shared/organization-directory.js'));
     assert(index('shared/organization-directory.js') < index('device-management/organization-data.js'));
     assert(index('shared/unified-data.js') < index('shared/unified-dashboard.js'));
+    assert(index('date-filter-component-utils.js') < index('shared/unified-dashboard.js'));
     assert(index('shared/unified-dashboard.js') < index('app-runtime.js'));
-    for (const file of ['shared/unified-data.js', 'shared/unified-dashboard.js', 'app-runtime.js']) {
-      assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), dashboardVersion, file);
+    for (const file of ['shared/unified-data.js', 'shared/unified-dashboard.js', 'date-filter-component-utils.js', 'app-runtime.js']) {
+      const expectedVersion = file === 'shared/unified-data.js' ? factsVersion : dateShortcutsVersion;
+      assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), expectedVersion, file);
     }
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), ['session', 'leads'].includes(area) ? listVersion : dashboardPathVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), dateShortcutsVersion);
+    if (area === 'factory-dashboard') {
+      assert.equal(new URL(urls[index('device-management/visit-organization-filter.js')], 'https://prototype.example/').searchParams.get('v'), '20261110-organization-brand-options-v1');
+    }
     if (area === 'session') {
-      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), listVersion);
+      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), dateShortcutsVersion);
     }
   });
 }

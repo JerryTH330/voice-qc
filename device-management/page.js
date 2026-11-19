@@ -647,11 +647,9 @@ function applyVisitDateDraft(field, value, menuState = visitDateMenuState) {
 }
 
 function applyVisitDateShortcut(key, menuState = visitDateMenuState) {
-  const today = new Date();
-  const start = new Date(today);
-  start.setDate(start.getDate() - ({ today: 0, last3: 2, last7: 6 }[key] || 0));
-  menuState.draftStartDate = formatStoreDateValue(start);
-  menuState.draftEndDate = formatStoreDateValue(today);
+  const { startDate, endDate } = globalThis.__dateFilterComponentUtils.getDateShortcutRange(key, new Date());
+  menuState.draftStartDate = formatStoreDateValue(startDate);
+  menuState.draftEndDate = formatStoreDateValue(endDate);
   menuState.activeField = 'endDate';
   syncVisitDateView(menuState.draftEndDate, menuState);
 }
@@ -682,7 +680,7 @@ function renderVisitDateMenu() {
     activeField: visitDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(),
-    shortcuts: [{ key: 'today', label: '今天' }, { key: 'last3', label: '近3天' }, { key: 'last7', label: '近7天' }],
+    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
     panelClassName: 'session-menu-panel session-menu-panel-date visit-filter-menu visit-time-panel',
     title: '到访日期范围',
     showCancel: false
@@ -1179,7 +1177,7 @@ function renderMatchingDateMenu() {
     activeField: matchingDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(matchingDateMenuState),
-    shortcuts: [{ key: 'today', label: '今天' }, { key: 'last3', label: '近3天' }, { key: 'last7', label: '近7天' }],
+    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
     panelClassName: 'session-menu-panel session-menu-panel-date matching-filter-menu matching-time-panel',
     title: '录音排查日期范围',
     showCancel: false
@@ -1681,8 +1679,7 @@ function getVisitExportFilters() {
     if (key === 'store' && visitStoreDrilldownState.active) return;
     if (!applied[key].length) return;
     const field = window.VisitOrganizationFilter.fields[key];
-    const records = key === 'advisor' ? visitRecords : visitOrganizationModel.directory;
-    const value = applied[key].map((id) => records.find((item) => String(item[field.idKey]) === id)?.[field.nameKey] || '—').join('、');
+    const value = visitOrganizationModel.display(key, applied);
     filters.push({ label: field.label, value });
   });
   Object.entries(visitEnumFields).forEach(([key, field]) => {
@@ -1835,8 +1832,7 @@ function getMatchingExportFilters() {
   [...dimensionKeys, 'patroler', 'governor', 'advisor'].forEach((key) => {
     if (!applied[key].length) return;
     const field = window.VisitOrganizationFilter.fields[key];
-    const records = key === 'advisor' ? visitRecords : matchingOrganizationModel.directory;
-    const value = applied[key].map((id) => records.find((item) => String(item[field.idKey]) === id)?.[field.nameKey] || '—').join('、');
+    const value = matchingOrganizationModel.display(key, applied);
     filters.push({ label: field.label, value });
   });
   if (matchingFilterState.startDate || matchingFilterState.endDate) {
@@ -4420,11 +4416,7 @@ function renderBadgeSyncDateTimeFilter(field) {
     startLabel: draftStartLabel,
     endLabel: draftEndLabel,
     cells: getBadgeDateCells(badgeMenuState.dateViewYear, badgeMenuState.dateViewMonth),
-    shortcuts: [
-      { key: 'today', label: '今天' },
-      { key: 'last3', label: '近3天' },
-      { key: 'last7', label: '近7天' }
-    ],
+    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
     summaryText: `已选择 ${draftRangeText}`,
     panelClassName: 'session-menu-panel session-menu-panel-date badge-sync-date-time-panel',
     title: '最新数据同步时间',
@@ -4693,6 +4685,7 @@ function getBadgeBindingStatus(record) {
 
 function getBadgeRecordFieldValue(record, key) {
   if (key === 'bindingStatus') return getBadgeBindingStatus(record);
+  if (['province', 'city'].includes(key)) return window.VisitOrganizationFilter.selectionId(record, key);
   const field = badgeFieldDefinitionMap[key];
   return String(record[field?.idKey || key] ?? '');
 }
@@ -4716,16 +4709,21 @@ function getBadgeFieldOptionLabel(fieldKey, value) {
   return source ? String(source[field.nameKey || fieldKey] ?? value) : String(value);
 }
 
+function getBadgeSelectionLabel(fieldKey, value) {
+  const label = getBadgeFieldOptionLabel(fieldKey, value);
+  if (!['region', 'zone', 'province', 'city'].includes(fieldKey)) return label;
+  const record = badgeOrganizationRecords.find(item => getBadgeRecordFieldValue(item, fieldKey) === String(value));
+  return record ? `${label}（${record.brand}）` : label;
+}
+
 function getBadgeFieldOptionMeta(fieldKey, record) {
   if (!record) return '';
-  if (fieldKey === 'region') return record.brand;
-  if (fieldKey === 'zone') return `${record.brand} · ${record.region}`;
+  if (['region', 'zone', 'province', 'city'].includes(fieldKey)) return record.brand;
   if (fieldKey === 'patroler' || fieldKey === 'governor') {
     const personnelId = String(record[badgeFieldDefinitionMap[fieldKey].idKey] || '');
     const code = personnelId.match(/\|(?:patroler|governor):code:([^|]+)/)?.[1] || '';
     return code ? `${record.brand} · ${code}` : record.brand;
   }
-  if (fieldKey === 'city') return record.province;
   if (fieldKey === 'store') return record.dealerCode;
   return '';
 }
@@ -4797,6 +4795,11 @@ function assignBadgeFilterState(nextFilters = badgeDefaultFilters) {
   Object.assign(badgeFilterState, nextFilters);
   [...badgeOrganizationFilterKeys, ...badgeStatusMultiSelectKeys].forEach((key) => {
     badgeFilterState[key] = getBadgeSelectedValuesFromValue(nextFilters[key]);
+    if (['province', 'city'].includes(key)) {
+      badgeFilterState[key] = [...new Set(badgeFilterState[key].flatMap(id => id.startsWith('province:')
+        ? getBadgeCandidateRecords(key).filter(record => record[`${key}Id`] === id).map(record => getBadgeRecordFieldValue(record, key))
+        : [id]))];
+    }
   });
   badgeFilterState.advisorIds = Array.isArray(nextFilters.advisorIds) ? nextFilters.advisorIds.map(String) : [];
 }
@@ -4918,7 +4921,7 @@ function getBadgeFieldSelectOptions(field) {
       optionsById.set(id, {
         value: id,
         label,
-        meta: ['city', 'store', 'patroler', 'governor'].includes(field.key) || nameCounts.get(label) > 1 ? getBadgeFieldOptionMeta(field.key, item) : '',
+        meta: ['region', 'zone', 'province', 'city', 'store', 'patroler', 'governor'].includes(field.key) || nameCounts.get(label) > 1 ? getBadgeFieldOptionMeta(field.key, item) : '',
         selected: selected.has(id)
       });
     });
@@ -4956,7 +4959,7 @@ function renderBadgeRangeFilter(field) {
   const someSelected = candidates.some((item) => selected.has(item.value));
   const label = selectedValues.length === 0
     ? `请选择${field.label}`
-    : selectedValues.map((value) => getBadgeFieldOptionLabel(field.key, value)).join('、');
+    : selectedValues.map((value) => getBadgeSelectionLabel(field.key, value)).join('、');
   return `<div class="badge-field-filter badge-field-filter-select session-toolbar-menu${open ? ' is-open' : ''}" data-badge-menu-root="${field.key}">
     <span>${field.label}</span>
     <button type="button" class="session-select-trigger${open ? ' active' : ''}" data-badge-field-select-trigger="${field.key}" aria-label="${field.label}筛选" aria-haspopup="listbox" aria-expanded="${open}" aria-controls="badgeRangeOptions-${field.key}">
@@ -5128,7 +5131,7 @@ async function exportBadgeDetailExcel() {
       const min = badgeFilterState[field.minKey], max = badgeFilterState[field.maxKey];
       if (min || max) value = `${min || '不限'} 至 ${max || '不限'}${field.unit || ''}`;
     } else {
-      value = getBadgeSelectedValuesFromValue(badgeFilterState[field.key]).map(item => getBadgeFieldOptionLabel(field.key, item)).join('、');
+      value = getBadgeSelectedValuesFromValue(badgeFilterState[field.key]).map(item => getBadgeSelectionLabel(field.key, item)).join('、');
     }
     if (value) filters.push({ label: field.label, value });
   });
@@ -5638,7 +5641,7 @@ function renderStoreDateMenu() {
     activeField: storeDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(storeDateMenuState),
-    shortcuts: [{ key: 'today', label: '今天' }, { key: 'last3', label: '近3天' }, { key: 'last7', label: '近7天' }],
+    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
     panelClassName: 'session-menu-panel session-menu-panel-date store-filter-menu store-time-panel',
     title: '工牌总览日期范围',
     showCancel: false
@@ -7584,10 +7587,9 @@ document.addEventListener('click', (event) => {
 
   const badgeSyncDateShortcut = event.target.closest('[data-badge-sync-date-shortcut]');
   if (badgeSyncDateShortcut) {
-    const endDate = parseStoreDateValue(storeTodayDateValue);
-    const startDate = new Date(endDate);
-    if (badgeSyncDateShortcut.dataset.badgeSyncDateShortcut === 'last3') startDate.setDate(startDate.getDate() - 2);
-    if (badgeSyncDateShortcut.dataset.badgeSyncDateShortcut === 'last7') startDate.setDate(startDate.getDate() - 6);
+    const { startDate, endDate } = globalThis.__dateFilterComponentUtils.getDateShortcutRange(
+      badgeSyncDateShortcut.dataset.badgeSyncDateShortcut, parseStoreDateValue(storeTodayDateValue)
+    );
     badgeMenuState.dateDraftStartDate = formatStoreDateValue(startDate);
     badgeMenuState.dateDraftEndDate = formatStoreDateValue(endDate);
     badgeMenuState.dateDraftStartTime = '00:00';
@@ -8149,8 +8151,7 @@ function getStoreOverviewExportFilters() {
     { label: '筛选维度', value: selected.dimensionMode === 'geography' ? '地理维度' : '组织维度' }];
   Object.entries(window.VisitOrganizationFilter.fields).forEach(([key, field]) => {
     if (!selected[key].length) return;
-    const records = key === 'advisor' ? storeOrganizationRecords : storeOrganizationModel.directory;
-    filters.push({ label: field.label, value: selected[key].map(id => records.find(item => String(item[field.idKey]) === id)?.[field.nameKey] || '—').join('、') });
+    filters.push({ label: field.label, value: storeOrganizationModel.display(key, selected) });
   });
   return filters;
 }

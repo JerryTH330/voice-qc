@@ -438,8 +438,17 @@
     });
   }
 
+  function organizationOptionValue(record, key) {
+    var brandId = 'brand:' + text(record.brand);
+    var region = text(record.area || record.region);
+    if (key === 'region') return brandId + '|region:' + region;
+    if (key === 'zone') return brandId + '|region:' + region + '|zone:' + text(record.zone);
+    if (key === 'province') return brandId + '|province:' + text(record.province);
+    return brandId + '|province:' + text(record.province) + '|city:' + text(record.city);
+  }
+
   function dealerFieldValue(dealer, key) {
-    if (key === 'region') return text(dealer.area);
+    if (['region', 'zone', 'province', 'city'].includes(key)) return organizationOptionValue(dealer, key);
     if (key === 'store') return dealerKey(dealer.brand, dealer.dealerCode);
     if (key === 'patroler') return text(dealer.patrolerId) || (dealer.patroler ? dealer.brand + '::patroler::' + dealer.patroler : '');
     if (key === 'governor') return text(dealer.governorId) || (dealer.governor ? dealer.brand + '::governor::' + dealer.governor : '');
@@ -447,6 +456,7 @@
   }
 
   function recordFieldValue(record, key) {
+    if (['region', 'zone', 'province', 'city'].includes(key)) return organizationOptionValue(record, key);
     if (key === 'store') return storeValue(record);
     if (key === 'advisor') return advisorValue(record);
     if (key === 'patroler' || key === 'governor') return staffValue(record, key);
@@ -494,7 +504,7 @@
       }));
     }
     return uniqueOptions(candidates.map(function (dealer) {
-      return option(dealerFieldValue(dealer, key), dealerFieldValue(dealer, key));
+      return option(dealerFieldValue(dealer, key), key === 'region' ? dealer.area : dealer[key], ['region', 'zone', 'province', 'city'].includes(key) ? dealer.brand : '');
     }));
   }
 
@@ -644,7 +654,7 @@
     var options = currentOptions(key);
     var labels = values.map(function (value) {
       var item = options.find(function (entry) { return entry.value === value; });
-      return item ? item.label : value;
+      return item ? item.label + (['region', 'zone', 'province', 'city'].includes(key) ? '（' + item.meta + '）' : '') : value;
     });
     if (labels.length <= 2) return labels.join('、');
     return labels[0] + '等 ' + labels.length + ' 项';
@@ -754,11 +764,7 @@
       summaryText: '已选择 ' + formatDateDisplay(viewState.dateDraftStart) + ' 至 ' + formatDateDisplay(viewState.dateDraftEnd),
       panelClassName: 'session-menu-panel session-menu-panel-date lr-date-panel',
       title: currentView === 'leads' ? '统计日期范围' : '线索日期范围',
-      shortcuts: [
-        { key: 'today', label: '今天' },
-        { key: 'last3', label: '近3天' },
-        { key: 'last7', label: '近7天' }
-      ],
+      shortcuts: global.__dateFilterComponentUtils.dateShortcuts,
       showCancel: false
     });
   }
@@ -1345,7 +1351,7 @@
       var options = currentOptions(key);
       return { label: FILTER_LABELS[key] || key, value: selected(key).map(function (value) {
         var item = options.find(function (option) { return option.value === value; });
-        return item ? item.label : value;
+        return item ? item.label + (['region', 'zone', 'province', 'city'].includes(key) ? '（' + item.meta + '）' : '') : value;
       }).join('、') };
     });
     filters.push({ label: currentView === 'customers' ? '线索日期' : '统计日期', value: state().startDate + ' 至 ' + state().endDate });
@@ -1533,15 +1539,12 @@
     }
     var dateShortcut = target.closest('[data-lr-date-shortcut]');
     if (dateShortcut) {
-      var today = new Date();
-      var start = new Date(today);
-      if (dateShortcut.dataset.lrDateShortcut === 'last3') start.setDate(start.getDate() - 2);
-      if (dateShortcut.dataset.lrDateShortcut === 'last7') start.setDate(start.getDate() - 6);
-      state().dateDraftStart = formatDateValue(start);
-      state().dateDraftEnd = formatDateValue(today);
+      var range = global.__dateFilterComponentUtils.getDateShortcutRange(dateShortcut.dataset.lrDateShortcut, new Date());
+      state().dateDraftStart = formatDateValue(range.startDate);
+      state().dateDraftEnd = formatDateValue(range.endDate);
       state().dateActiveField = 'endDate';
-      state().dateViewYear = today.getFullYear();
-      state().dateViewMonth = today.getMonth() + 1;
+      state().dateViewYear = range.endDate.getFullYear();
+      state().dateViewMonth = range.endDate.getMonth() + 1;
       renderFilters();
       return;
     }

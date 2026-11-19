@@ -46,7 +46,7 @@ function createHarness({ reducedMotion = true } = {}) {
   const context = vm.createContext({
     ...nodes, visitEventFilterControls: host,
     window: { matchMedia: () => ({ matches: reducedMotion }) },
-    document: { addEventListener(name, handler) { listeners[name] = handler; } },
+    document: { querySelector() { return null; }, addEventListener(name, handler) { listeners[name] = handler; } },
     visitEventDetailModal: modal, badgeUploadDetailModal: { hidden: true }, importModal: {},
     visitDetailTrigger: { isConnected: true, focus() { focused = 'visit-row-detail'; } },
     visitFieldSettingsDraft: null, visitMenuState: { openMenu: null },

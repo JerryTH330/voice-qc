@@ -1,7 +1,7 @@
 /* 质检配置 independent page bootstrap. */
 window.__AI_QC_DEFAULT_ROUTE = 'config';
 (function loadPageRuntime() {
-  const scripts = ["../shared/issue-rule-list.js?v=20261102-business-scenes-v1","../app-runtime.js?v=20261102-scene-filter-style-v6"];
+  const scripts = ["../date-filter-component-utils.js?v=20261113-date-shortcuts-v1", "../shared/issue-rule-list.js?v=20261102-business-scenes-v1","../app-runtime.js?v=20261113-date-shortcuts-v1"];
   const loadNext = (index) => {
     if (index >= scripts.length) return;
     const script = document.createElement('script');

@@ -42,6 +42,45 @@ test('multiple values form OR within fields and AND across fields using IDs', ()
   assert.equal(scoped(model).length, 0, 'same region label in another brand cannot match');
 });
 
+test('factory province choices keep same-name provinces separate by brand', () => {
+  const aion = { ...dealers[0], province: '安徽省', city: '合肥市' };
+  const gac = { ...dealers[2], province: '安徽省', city: '芜湖市' };
+  const visits = [visit(aion, '王五', 1), visit(gac, '李四', 2)];
+  const model = createModel([aion, gac], visits, { mode: 'matching', brandScopedProvinces: true });
+  model.setDimension('geography');
+
+  const provinces = model.options('province', { query: '安徽省' });
+  assert.equal(provinces.length, 2);
+  assert.ok(provinces.every(option => option.label === '安徽省'));
+  const aionProvince = provinces.find(option => option.meta === '埃安');
+  const gacProvince = provinces.find(option => option.meta === '传祺');
+  assert.notEqual(aionProvince.value, gacProvince.value);
+  assert.deepEqual(model.options('province', { query: '安徽省 传祺' }), [gacProvince]);
+
+  model.set('province', [aionProvince.value]);
+  model.apply();
+  assert.deepEqual(model.applied.brand, []);
+  assert.equal(model.display('province'), '安徽省（埃安）');
+  assert.deepEqual(model.options('city').map(option => option.label), ['合肥市']);
+  assert.deepEqual(model.options('store').map(option => option.value), ['A1']);
+  assert.deepEqual(visits.filter(model.matches), [visits[0]]);
+
+  model.set('province', [aionProvince.value, gacProvince.value]);
+  model.apply();
+  assert.deepEqual(visits.filter(model.matches), visits);
+  model.set('province', ['province:安徽省']);
+  assert.deepEqual(new Set(model.draft.province), new Set([aionProvince.value, gacProvince.value]));
+  model.set('city', [organizationRecord(aion).cityId]);
+  model.set('store', ['A1']);
+  model.set('brand', ['brand:传祺']);
+  model.apply();
+  assert.deepEqual(model.options('province'), [gacProvince]);
+  assert.deepEqual(model.applied.province, [gacProvince.value]);
+  assert.deepEqual(model.applied.city, []);
+  assert.deepEqual(model.applied.store, []);
+  assert.deepEqual(visits.filter(model.matches), [visits[1]]);
+});
+
 test('upstream changes remove conflicting descendants, stores, staff and advisors', () => {
   const model = create();
   const scope = organizationRecord(dealers[0]);

@@ -22,8 +22,8 @@ function listContext(kind, search = '') {
   const source = read(kind === 'session' ? 'session/session-real-runtime.js' : 'leads/leads-modern-runtime.js');
   const stop = kind === 'session' ? '  var lastRenderedOpenMenu' : '  var columnSettings';
   const functions = kind === 'session'
-    ? ['selected', 'matchesSelection', 'dealerMatches', 'matchesCarSeries', 'matchesLeadCarSeries', 'carSeriesOptionValue', 'recordMatches']
-    : ['normalizedQuery', 'selected', 'matchesValues', 'recordMatchesOrganization', 'recordFieldValue', 'staffValue', 'storeValue', 'filteredLeadRecords'];
+    ? ['selected', 'matchesSelection', 'dealerOrganizationValue', 'dealerMatches', 'matchesCarSeries', 'matchesLeadCarSeries', 'carSeriesOptionValue', 'recordMatches']
+    : ['normalizedQuery', 'selected', 'matchesValues', 'recordMatchesOrganization', 'recordFieldValue', 'organizationOptionValue', 'staffValue', 'storeValue', 'filteredLeadRecords'];
   const prefix = source.slice(0, source.indexOf(stop));
   const expose = kind === 'session' ? '({ records, state, matches: recordMatches })' : '({ records, states, filter: filteredLeadRecords, advisorValue })';
   vm.runInContext(prefix + '\n' + functions.map(name => fn(source, name)).join('\n') + `\n global.testList = ${expose};\n})(window);`, context);

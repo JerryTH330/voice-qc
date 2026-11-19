@@ -502,14 +502,22 @@
     return !values.length || values.includes(value);
   }
 
+  function dealerOrganizationValue(dealer, key) {
+    var brandId = 'brand:' + text(dealer.brand);
+    if (key === 'region') return brandId + '|region:' + text(dealer.area);
+    if (key === 'zone') return brandId + '|region:' + text(dealer.area) + '|zone:' + text(dealer.zone);
+    if (key === 'province') return brandId + '|province:' + text(dealer.province);
+    return brandId + '|province:' + text(dealer.province) + '|city:' + text(dealer.city);
+  }
+
   function dealerMatches(dealer, options) {
     var ignore = options && options.ignore;
     if ((!ignore || ignore !== 'brand') && !matchesSelection('brand', dealer.brand)) return false;
-    if ((!ignore || ignore !== 'province') && !matchesSelection('province', dealer.province)) return false;
-    if ((!ignore || ignore !== 'city') && !matchesSelection('city', dealer.city)) return false;
+    if ((!ignore || ignore !== 'province') && !matchesSelection('province', dealerOrganizationValue(dealer, 'province'))) return false;
+    if ((!ignore || ignore !== 'city') && !matchesSelection('city', dealerOrganizationValue(dealer, 'city'))) return false;
     if ((!ignore || ignore !== 'store') && !matchesSelection('store', dealer.brand + '::' + dealer.dealerCode)) return false;
-    if ((!ignore || ignore !== 'region') && !matchesSelection('region', dealer.area)) return false;
-    if ((!ignore || ignore !== 'zone') && !matchesSelection('zone', dealer.zone)) return false;
+    if ((!ignore || ignore !== 'region') && !matchesSelection('region', dealerOrganizationValue(dealer, 'region'))) return false;
+    if ((!ignore || ignore !== 'zone') && !matchesSelection('zone', dealerOrganizationValue(dealer, 'zone'))) return false;
     if ((!ignore || ignore !== 'patroler') && !matchesSelection('patroler', dealer.patrolerId || dealer.patroler || '')) return false;
     if ((!ignore || ignore !== 'governor') && !matchesSelection('governor', dealer.governorId || dealer.governor || '')) return false;
     return true;
@@ -530,12 +538,9 @@
     var dependencies = dealerCandidateDependencies[key] || [];
     return dependencies.every(function (dependency) {
       if (dependency === 'brand') return matchesSelection('brand', dealer.brand);
-      if (dependency === 'region') return matchesSelection('region', dealer.area);
-      if (dependency === 'province') return matchesSelection('province', dealer.province);
+      if (['region', 'zone', 'province', 'city'].includes(dependency)) return matchesSelection(dependency, dealerOrganizationValue(dealer, dependency));
       if (dependency === 'patroler') return matchesSelection('patroler', dealer.patrolerId || dealer.patroler || '');
       if (dependency === 'governor') return matchesSelection('governor', dealer.governorId || dealer.governor || '');
-      if (dependency === 'zone') return matchesSelection('zone', dealer.zone);
-      if (dependency === 'city') return matchesSelection('city', dealer.city);
       return true;
     });
   }
@@ -630,18 +635,14 @@
   function dealerOptionsFor(key) {
     var list = dealers.filter(function (dealer) { return dealerMatchesDependencies(dealer, key); });
     var options = [];
-    if (key === 'province') {
-      options = list.map(function (dealer) { return { value: dealer.province, label: dealer.province }; });
-    } else if (key === 'city') {
-      options = list.map(function (dealer) { return { value: dealer.city, label: dealer.city }; });
+    if (['region', 'zone', 'province', 'city'].includes(key)) {
+      options = list.map(function (dealer) {
+        return { value: dealerOrganizationValue(dealer, key), label: key === 'region' ? dealer.area : dealer[key], meta: dealer.brand };
+      });
     } else if (key === 'store') {
       options = list.map(function (dealer) {
         return { value: dealer.brand + '::' + dealer.dealerCode, label: dealer.dealerName, meta: dealer.dealerCode };
       });
-    } else if (key === 'region') {
-      options = list.map(function (dealer) { return { value: dealer.area, label: dealer.area }; });
-    } else if (key === 'zone') {
-      options = list.map(function (dealer) { return { value: dealer.zone, label: dealer.zone }; });
     } else if (key === 'patroler') {
       options = list.filter(function (dealer) { return dealer.patroler; }).map(function (dealer) {
         var code = getPersonnelCode(dealer.patrolerId);
@@ -799,7 +800,7 @@
     var options = currentValueOptions(key);
     var labels = values.map(function (value) {
       var option = options.find(function (item) { return item.value === value; });
-      return option ? option.label : value;
+      return option ? option.label + (['region', 'zone', 'province', 'city'].includes(key) ? '（' + option.meta + '）' : '') : value;
     });
     return labels.join('、');
   }
@@ -944,7 +945,7 @@
         var inRange = startDate && endDate && value >= startDate && value <= endDate;
         return '<button type="button" class="session-date-day' + (inRange ? ' in-range' : '') + (value === startDate ? ' is-start' : '') + (value === endDate ? ' is-end' : '') + (value === todayValue ? ' is-today' : '') + '" data-sr-date-value="' + value + '">' + date.getDate() + '</button>';
       }).join('') + '</div>' +
-      '<div class="session-date-shortcuts"><button type="button" class="session-date-shortcut" data-sr-date-shortcut="today">今天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last3">近3天</button><button type="button" class="session-date-shortcut" data-sr-date-shortcut="last7">近7天</button></div>' +
+      global.__dateFilterComponentUtils.renderDateShortcutsMarkup('sr-date') +
       '<div class="session-cascader-footer session-date-footer"><span>' + escapeHtml('已选择 ' + getSessionDateRangeText(startDate, endDate)) + '</span><div class="session-date-actions"><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sr-date-apply>应用日期</button></div></div>' +
     '</div>';
   }
@@ -1671,7 +1672,7 @@
       var options = currentValueOptions(key);
       return { label: getFilterLabel(key), value: selected(key).map(function (value) {
         var item = options.find(function (option) { return option.value === value; });
-        return item ? item.label : value;
+        return item ? item.label + (['region', 'zone', 'province', 'city'].includes(key) ? '（' + item.meta + '）' : '') : value;
       }).join('、') };
     });
     var queryLabels = { audioId: '录音ID', leadId: '线索ID', advisorPhone: '顾问手机号', customerKeyword: '客户关键词', customerName: '客户名称', customerPhone: '客户号码' };
@@ -1990,20 +1991,9 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
-        var today = new Date();
-        var endValue = formatSessionDateValue(today);
-        var startValue = endValue;
-        if (node.dataset.srDateShortcut === 'last3') {
-          var last3 = new Date(today);
-          last3.setDate(last3.getDate() - 2);
-          startValue = formatSessionDateValue(last3);
-        }
-        if (node.dataset.srDateShortcut === 'last7') {
-          var last7 = new Date(today);
-          last7.setDate(last7.getDate() - 6);
-          startValue = formatSessionDateValue(last7);
-        }
-        state.dateDraftStartDate = startValue;
+        var range = global.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.srDateShortcut, new Date());
+        var endValue = formatSessionDateValue(range.endDate);
+        state.dateDraftStartDate = formatSessionDateValue(range.startDate);
         state.dateDraftEndDate = endValue;
         state.activeDateField = 'endDate';
         syncSessionDateView(endValue);

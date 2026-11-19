@@ -43,7 +43,7 @@
   ];
   const isProfileOverview = () => workspace === 'customers' && customerView === 'overview' && !drillState;
   const drillScroll = new Map();
-  const drillRootLabel = () => F.summary(F.create(M, scope));
+  const drillRootLabel = () => factoryFilters?.summary() ?? F.summary(F.create(M, scope));
   let draft = { items: [], sales: '', operations: '', owner: '', reviewDate: '' };
   let draftSaveTimer;
   try {
@@ -67,7 +67,7 @@
     });
   }
   function scopeText(s = scope, includeGroups = compare, includeDrill = true) {
-    const filterScope = F.summary(F.create(M, s));
+    const filterScope = s === scope ? drillRootLabel() : F.summary(F.create(M, s));
     return `${includeGroups ? `${M.templates[s.template].label} vs ${M.templates[s.comparisonTemplate].label}` : M.templates[s.template].label} · ${filterScope}\n线索下发日期 ${s.start} 至 ${s.end} · ${M.ageLabel(s.minAgeDays)}\n数据截至 ${M.snapshotAt.replace('T', ' ')}\n语音证据场景：${s.scenes.map(k => M.sceneLabels[k]).join('、') || '未选择'}${includeDrill && drillState ? `\n分析项：${drillState.targetName}\n组织路径：${drillState.path.map(p => p.name).join(' / ') || drillRootLabel()}` : ''}`;
   }
   function renderTemplates() {
@@ -111,6 +111,7 @@
         root, businessRoot: $('insightBusinessFilters'), M, getScope: () => scope,
         onChange: patch => updateScope(patch), onReset: reset,
         onBeforeOpen: () => {
+          dateRange = null;
           document.querySelectorAll('.ci-select').forEach(control => {
             control.classList.remove('is-open');
             control.querySelector('.session-select-trigger')?.setAttribute('aria-expanded', 'false');
@@ -151,11 +152,12 @@
     $('dateTrigger').setAttribute('aria-expanded','true');
     document.querySelector('[data-select="dates"]')?.classList.add('is-open');
     renderDateRange();
-    document.querySelector('[data-range-preset]')?.focus({ preventScroll: true });
+    document.querySelector('[data-range-preset]:not(:disabled)')?.focus({ preventScroll: true });
   }
-  function commitDateRange(range) {
-    if (!range) return;
-    closeMenus(); updateScope(range); $('dateTrigger').focus({ preventScroll: true });
+  function commitDateRange() {
+    if (!dateRange?.state.end) return;
+    const { start, end } = dateRange.state;
+    closeMenus(); updateScope({ start, end }); $('dateTrigger').focus({ preventScroll: true });
   }
 
   function render() {
@@ -164,11 +166,7 @@
     $('filterError').hidden = !result.errors.length;
     $('filterError').textContent = result.errors.join(' ');
     renderTemplates(); renderCoverage();
-    const filterModel = F.create(M, scope);
-    const selectedScope = [...filterModel.primary(), 'patroler', 'governor', 'model'].filter(key => filterModel.selections[key].length).map(key => {
-      const labels = new Map(filterModel.options(key).map(option => [option.value, option.label]));
-      return `${filterModel.labels[key]}：${filterModel.selections[key].map(value => labels.get(value) || value).join('、')}`;
-    }).join(' · ') || '全部品牌 · 全部门店 · 全部车系';
+    const selectedScope = drillRootLabel();
     const scenes = scope.scenes.length === M.scenes[scope.stage].length ? '全部场景' : scope.scenes.map(key => M.sceneLabels[key]).join('、') || '未选择';
     $('activeScopeSummary').textContent = `${compare ? M.templates[scope.template].label + ' / ' + M.templates[scope.comparisonTemplate].label : M.templates[scope.template].label} · ${selectedScope} · 业务场景：${scenes} · 下发 ${scope.start} 至 ${scope.end}`;
     const emptyNote = $('emptyState').querySelector('p');
@@ -683,22 +681,31 @@
   });
   document.addEventListener('click', event => {
     const target = event.target;
-    const preset = target.closest('[data-range-preset]'); if (preset && dateRange) { commitDateRange(dateRange.preset(preset.dataset.rangePreset)); return; }
-    const monthNav = target.closest('[data-range-nav]'); if (monthNav && dateRange) { dateRange.navigate(Number(monthNav.dataset.rangeNav)); renderDateRange(); document.querySelector(`[data-range-nav="${monthNav.dataset.rangeNav}"]:not(:disabled)`)?.focus(); return; }
-    const calendarDay = target.closest('[data-range-day]'); if (calendarDay && dateRange) {
-      const range = dateRange.pick(calendarDay.dataset.rangeDay);
-      if (range) commitDateRange(range); else renderDateRange(calendarDay.dataset.rangeDay);
+    const preset = target.closest('[data-range-preset]:not(:disabled)');
+    if (preset && dateRange) {
+      const { rangePreset } = preset.dataset;
+      dateRange.preset(rangePreset);
+      renderDateRange();
+      $('dateMenu').querySelector(`[data-range-preset="${rangePreset}"]`)?.focus({ preventScroll: true });
       return;
     }
+    const monthNav = target.closest('[data-range-nav]'); if (monthNav && dateRange) { dateRange.navigate(Number(monthNav.dataset.rangeNav)); renderDateRange(); document.querySelector(`[data-range-nav="${monthNav.dataset.rangeNav}"]:not(:disabled)`)?.focus(); return; }
+    const calendarDay = target.closest('[data-range-day]:not(:disabled)'); if (calendarDay && dateRange) {
+      dateRange.pick(calendarDay.dataset.rangeDay);
+      renderDateRange(calendarDay.dataset.rangeDay);
+      return;
+    }
+    if (target.id === 'applyDate') { commitDateRange(); return; }
+    if (target.id === 'cancelDate') { closeMenus(); $('dateTrigger').focus(); return; }
     document.querySelectorAll('.ci-template-help[open]').forEach(help => { if (!help.contains(target)) help.open = false; });
     const templateButton = target.closest('[data-template]'); if (templateButton) { selectTemplate(templateButton.dataset.template); return; }
     const cohort = target.closest('[data-cohort-filter]'); if (cohort) { openCohort(cohort.dataset.cohortFilter); return; }
     const cohortTurn = target.closest('[data-cohort-page]'); if (cohortTurn) { cohortPage += Number(cohortTurn.dataset.cohortPage); openCohort(cohortFilter, true); return; }
-    // Shared factory filters own these controls.
-    if (target.closest('#insightScopeFilters') && !target.closest('#mainFilters')) return;
+    // Shared filters may replace the clicked control before the event reaches the document.
+    if (event.composedPath().includes($('insightScopeFilters'))) return;
     const option = target.closest('[role="option"][data-value]');
     if (option) { const control = option.closest('[data-select]'), id = control.dataset.select, value = option.dataset.value; closeMenus(); changeSelect(id, value); document.querySelector(`[data-select="${id}"] .session-select-trigger`)?.focus(); return; }
-    const trigger = target.closest('.session-select-trigger');
+    const trigger = target.closest('.ci-select .session-select-trigger');
     if (trigger) {
       const control = trigger.closest('.ci-select'), menu = control.querySelector('.session-menu-panel'), open = menu.hidden;
       if (control.dataset.select === 'dates') { if (open) openDateRange(); else { closeMenus(); trigger.focus(); } return; }
@@ -755,7 +762,6 @@
     const close = target.closest('[data-close]'); if (close) { closeDialog(close.dataset.close); return; }
     const page = target.closest('[data-evidence-page]'); if (page) { evidencePage += Number(page.dataset.evidencePage); renderDetail(); return; }
     const remove = target.closest('[data-remove-item]'); if (remove) { draft.items.splice(Number(remove.dataset.removeItem), 1); renderDraftItems(); saveDraft(); return; }
-    if (target.id === 'cancelDate') { closeMenus(); $('dateTrigger').focus(); return; }
     if (target.id === 'byRegion') { byRegion = !byRegion; drillState = null; render(); return; }
   });
   document.addEventListener('mouseover', event => {
