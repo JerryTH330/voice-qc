@@ -1,479 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="从品牌与车型总览进入云外呼业务场景、工牌业务场景分析，并回溯真实对话证据" />
-    <title>客户洞察 · AI质检平台</title>
-    <link rel="icon" href="../../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./客户洞察.css?v=20261028-full-sync-v1" />
-    <link rel="stylesheet" href="../../fixed-action-column.css?v=20261028-full-sync-v1" />
-    <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
-  </head>
-  <body>
-    <div class="page-shell">
-      <aside class="sidebar" aria-label="主导航">
-        <a class="brand" href="../../factory-dashboard/index.html" aria-label="返回 AI质检平台">
-          <span class="brand-mark"><img src="../../assets/ds-logo.png" alt="" /></span>
-          <span class="brand-copy"><strong>AI质检与客户洞察</strong></span>
-        </a>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>客户洞察 · AI质检平台</title>
+  <script>if(window.self!==window.top)document.documentElement.classList.add("embedded-prototype");</script>
+  <link rel="icon" href="../../assets/ds-logo.png">
+  <link rel="stylesheet" href="../../voice-qc-admin.css?v=20261028-full-sync-v1">
+  <link rel="stylesheet" href="../../shared/badge-list-components.css?v=20261028-date-field-width-v1">
+  <link rel="stylesheet" href="../../shared/dimension-switcher.css?v=20261109-dimension-text-dark-v3">
+  <link rel="stylesheet" href="../../shared/dashboard-filters.css?v=20261104-factory-filter-labels-v1">
+  <link rel="stylesheet" href="./simplified/page.css?v=20261118-copy-v1">
+  <link rel="stylesheet" href="./simplified/scope-controls.css?v=20261117-filter-fix-v12">
+</head>
+<body data-insight-entry="primary">
+  <div class="page-shell">
+    <aside class="sidebar"><a class="brand" href="../../factory-dashboard/index.html"><div class="brand-mark"><img src="../../assets/ds-logo.png" alt="DS logo"></div><div class="brand-copy"><strong>AI质检与客户洞察</strong></div></a><nav class="nav-scroll" data-unified-navigation aria-label="主导航"></nav></aside>
+    <main class="main">
+      <header class="topbar"><div><div class="ci-heading"><h1 class="page-title">客户洞察</h1><span class="ci-demo">演示数据</span></div><p class="page-desc">看客户需求与销售执行，核实证据，整理销售与运营策略。</p></div><div class="ci-tools"><button class="btn ghost" id="openReports" type="button">报告中心 <span id="reportCount">0</span></button><button class="btn ghost" id="openDraft" type="button">策略草稿 <span id="draftCount">0</span></button></div></header>
+      <section class="card badge-session-filter-card dashboard-filter-card ci-filter" aria-label="分析范围与口径">
 
-        <nav class="nav-scroll" data-unified-navigation aria-label="主导航"></nav>
-      </aside>
+        <div class="factory-org-control-slot" id="insightScopeFilters"></div>
+        <div id="insightBusinessFilters"><div data-store-business-control="scene"></div><div data-store-business-control="model"></div></div>
 
-      <main class="main">
-        <header class="topbar">
-          <div>
-            <h1 class="page-title">客户洞察</h1>
-            <p class="page-desc">按真实业务结果圈选客群，聚合结果发生前的录音，定位客户信号、阶段难点与销售动作差异。</p>
-          </div>
-          <div class="topbar-actions">
-            <span class="freshness"><i></i>数据更新至 07-20 23:59</span>
-            <button class="button secondary" id="metricGlossaryButton" type="button">指标口径</button>
-            <button class="button secondary" id="exportButton" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              导出当前视图
-            </button>
-          </div>
-        </header>
-
-        <section class="primary-mode-panel" aria-labelledby="primaryModeTitle">
-          <div class="primary-mode-heading">
-            <strong id="primaryModeTitle">核心分析模式</strong>
-            <span>选择后进入对应的客群分析视图</span>
-          </div>
-          <div class="page-mode-switch" role="tablist" aria-label="客户洞察模式">
-            <button class="active" data-page-mode="insight" role="tab" aria-selected="true" type="button">
-              <span class="page-mode-icon" aria-hidden="true">◎</span>
-              <span class="page-mode-copy"><strong>客群洞察模式</strong><small>洞察整体客群特征</small></span>
-            </button>
-            <button data-page-mode="compare" role="tab" aria-selected="false" type="button">
-              <span class="page-mode-icon" aria-hidden="true">⇄</span>
-              <span class="page-mode-copy"><strong>客群对比模式</strong><small>比较两组客群差异</small></span>
-            </button>
-          </div>
-        </section>
-
-        <div class="page-host">
-          <div class="compare-analysis-tabs" id="compareAnalysisTabs" role="tablist" aria-label="客群对比分析类型" hidden>
-            <button class="active" data-compare-stage="online" role="tab" aria-selected="true" type="button">邀约客群对比分析</button>
-            <button data-compare-stage="offline" role="tab" aria-selected="false" type="button">到店客群对比分析</button>
-          </div>
-
-          <section class="scope-panel" aria-label="经营范围筛选">
-            <div class="scope-fields" id="scopeFields">
-              <label><span>品牌</span><select id="brandFilter"><option>埃安</option><option>传祺</option></select></label>
-              <label><span>组织</span><select id="orgFilter"><option>全国</option><option>华东大区</option><option>华南大区</option></select></label>
-              <label><span>目标车型</span><select id="modelFilter"><option value="all">全部车型</option><option>AION V</option><option>AION Y Plus</option><option>AION S Plus</option><option>AION RT</option></select></label>
-              <div class="scope-field scene-filter business-scene-filter" data-business-scene-filter>
-                <span>业务场景</span>
-                <details id="sceneFilter" data-business-scene-picker>
-                  <summary id="sceneFilterSummary" class="business-scene-trigger" aria-label="业务场景筛选">全部</summary>
-                  <div class="scene-filter-menu business-scene-menu" data-business-scene-floating role="group" aria-label="业务场景">
-                    <label class="business-scene-search"><input type="search" data-business-scene-search placeholder="搜索业务场景" aria-label="搜索业务场景" autocomplete="off" spellcheck="false"></label>
-                    <div class="scene-filter-group business-scene-group">
-                      <strong>云外呼</strong>
-                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="first_follow" checked /><span>首触跟进</span></label>
-                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="invite_store" checked /><span>邀约到店</span></label>
-                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="schedule_confirm" checked /><span>排程确认</span></label>
-                    </div>
-                    <div class="scene-filter-group business-scene-group">
-                      <strong>工牌</strong>
-                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="store_reception" checked /><span>销售接待</span></label>
-                      <label class="business-scene-option" data-business-scene-option><input type="checkbox" value="test_drive" checked /><span>试乘试驾</span></label>
-                    </div>
-                    <div class="business-scene-empty" hidden>未找到匹配业务场景</div>
-                  </div>
-                </details>
-              </div>
-              <div class="scope-field scene-filter overview-status-filter" id="overviewStatusFilterField">
-                <span>线索状态</span>
-                <details id="overviewStatusFilter">
-                  <summary id="overviewStatusFilterSummary">全部线索状态（18）</summary>
-                  <div class="scene-filter-menu overview-status-filter-menu" role="group" aria-label="线索状态">
-                    <div class="overview-status-options" id="overviewStatusOptions"></div>
-                  </div>
-                </details>
-              </div>
-              <div class="scope-field comparison-status-filter" id="comparisonStatusFilterField" hidden>
-                <span>线索状态对比筛选</span>
-                <button class="customer-date-trigger comparison-status-trigger" id="editGroupsButton" type="button" aria-haspopup="dialog">
-                  <strong id="comparisonStatusFilterSummary">A组 3 项 vs B组 2 项</strong><span aria-hidden="true">⌄</span>
-                </button>
-              </div>
-              <div class="scope-field overview-date-field" id="overviewTimeControls">
-                <span>统计日期</span>
-                <div class="customer-date-picker" id="customerDatePicker">
-                  <button class="customer-date-trigger overview-date-trigger" id="customerDateTrigger" type="button" aria-haspopup="dialog" aria-expanded="false">
-                    <strong id="customerDateRangeLabel">2026-07-14 至 2026-07-20</strong><span aria-hidden="true">⌄</span>
-                  </button>
-                  <div class="customer-date-popover" id="customerDatePopover" role="dialog" aria-label="选择统计日期" hidden>
-                    <div class="customer-date-body">
-                      <div class="customer-date-presets" aria-label="快捷日期">
-                        <button data-date-preset="today" type="button">今天</button>
-                        <button data-date-preset="3" type="button">近3天</button>
-                        <button class="active" data-date-preset="7" type="button">近7天</button>
-                        <button data-date-preset="15" type="button">近半个月</button>
-                        <button data-date-preset="30" type="button">近一个月</button>
-                        <button data-date-preset="90" type="button">近三个月</button>
-                        <button data-date-preset="180" type="button">近半年</button>
-                      </div>
-                      <div class="customer-date-calendar">
-                        <div class="customer-calendar-months" id="customerCalendarMonths"></div>
-                        <footer class="customer-calendar-footer">
-                          <span id="customerCalendarSummary">已选择 2026-07-14 至 2026-07-20</span>
-                          <div><button class="button secondary compact" id="cancelCustomerDate" type="button">取消</button><button class="button primary compact" id="applyCustomerDate" type="button">应用日期</button></div>
-                        </footer>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="stage-time-controls" id="stageTimeControls" hidden>
-              <div class="stage-filter-field observation-period-field">
-                <span>观测周期</span>
-                <div class="observation-period-content">
-                  <div class="window-tabs" role="group" aria-label="选择观测周期">
-                    <button class="active" data-window="7" type="button">7 天</button><button data-window="15" type="button">15 天</button><button data-window="30" type="button">30 天</button>
-                  </div>
-                  <div class="observation-period-inline" aria-label="观测周期示意">
-                    <b>统计周期</b><i aria-hidden="true">→</i><b>继续观察 <strong id="observationDaysHint">7 天</strong></b><i aria-hidden="true">→</i><b id="observationResultHint">确认线索状态</b>
-                  </div>
-                </div>
-              </div>
-              <div class="stage-filter-field statistics-period-field">
-                <span>统计周期 <small id="latestSelectableDate">结束日期最晚可选 2026-07-13</small></span>
-                <div class="customer-date-picker stage-date-picker" id="stageDatePicker">
-                  <button class="customer-date-trigger stage-date-trigger" id="stageDateTrigger" type="button" aria-haspopup="dialog" aria-expanded="false">
-                    <strong id="stageDateRangeLabel">2026-06-14 至 2026-07-13</strong><span aria-hidden="true">⌄</span>
-                  </button>
-                  <div class="customer-date-popover stage-date-popover" id="stageDatePopover" role="dialog" aria-label="选择统计周期" hidden>
-                    <div class="customer-date-calendar">
-                      <div class="customer-calendar-months" id="stageCalendarMonths"></div>
-                      <footer class="customer-calendar-footer">
-                        <span id="stageCalendarSummary">已选择 2026-06-14 至 2026-07-13</span>
-                        <div><button class="button secondary compact" id="cancelStageDate" type="button">取消</button><button class="button primary compact" id="applyStageDate" type="button">应用日期</button></div>
-                      </footer>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-
-          <section class="overview-page" id="overviewPage" aria-label="品牌与车型总览">
-            <section class="overview-ai-summary card" id="overviewAiSummary" aria-labelledby="overviewAiSummaryTitle">
-              <div class="overview-ai-summary-head">
-                <div class="overview-ai-summary-identity">
-                  <span class="overview-ai-summary-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 2.8l1.35 4.15a5.7 5.7 0 0 0 3.7 3.7L21.2 12l-4.15 1.35a5.7 5.7 0 0 0-3.7 3.7L12 21.2l-1.35-4.15a5.7 5.7 0 0 0-3.7-3.7L2.8 12l4.15-1.35a5.7 5.7 0 0 0 3.7-3.7L12 2.8Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M18.5 3.5l.45 1.38a1.9 1.9 0 0 0 1.17 1.17l1.38.45-1.38.45a1.9 1.9 0 0 0-1.17 1.17L18.5 9.5l-.45-1.38a1.9 1.9 0 0 0-1.17-1.17L15.5 6.5l1.38-.45a1.9 1.9 0 0 0 1.17-1.17L18.5 3.5Z" fill="currentColor"/></svg>
-                  </span>
-                  <div>
-                    <div class="overview-ai-summary-title-line">
-                      <h2 id="overviewAiSummaryTitle">客户洞察</h2>
-                      <span class="overview-ai-summary-status" id="overviewAiSummaryStatus" hidden>已生成 · 刚刚</span>
-                    </div>
-                    <p id="overviewAiSummaryMeta">综合客户画像、区域画像矩阵与 3 类深度洞察，一次生成 5 条关键结论</p>
-                  </div>
-                </div>
-              </div>
-              <div class="overview-ai-summary-result" id="overviewAiSummaryResult">
-                <div class="overview-ai-executive is-pending" id="overviewAiExecutive">
-                  <div class="overview-ai-executive-toolbar">
-                    <button class="button primary compact overview-ai-generate" id="generateOverviewAiSummary" type="button">
-                      <span aria-hidden="true">✦</span>生成 AI 综合判断
-                    </button>
-                  </div>
-                  <div class="overview-ai-executive-content">
-                    <div class="overview-ai-summary-loading" id="overviewAiSummaryLoading" role="status" hidden>
-                      <span class="overview-ai-loading-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
-                      <div><strong>AI 正在进行跨模块归纳</strong><small>读取 5 类洞察，交叉核对指标、区域车型差异与客户原声…</small></div>
-                    </div>
-                    <p id="overviewAiExecutiveConclusion" hidden></p>
-                  </div>
-                </div>
-                <div class="overview-ai-insight-scroll">
-                  <div class="overview-ai-insight-grid" id="overviewAiInsightGrid"></div>
-                </div>
-              </div>
-            </section>
-
-            <section class="overview-main-grid">
-              <article class="model-matrix card" aria-labelledby="modelMatrixTitle">
-                <div class="panel-header overview-panel-head">
-                  <div class="panel-title"><h2 id="modelMatrixTitle">客户画像</h2><p id="modelMatrixDescription">查看当前标签下最常出现的客户反馈，默认展示前 10 项</p></div>
-                  <div class="insight-view-actions">
-                    <div class="insight-view-switch" role="tablist" aria-label="洞察视图">
-                      <button class="active" data-insight-view="distribution" type="button" role="tab" aria-selected="true">热门标签分布</button>
-                      <button data-insight-view="profile" type="button" role="tab" aria-selected="false">区域画像矩阵</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="matrix-category-tabs" role="tablist" aria-label="客户标签类别">
-                  <button class="active" data-matrix-category="resistance" type="button" role="tab" aria-selected="true">抗拒点</button>
-                  <button data-matrix-category="payment" type="button" role="tab" aria-selected="false">付款方式</button>
-                  <button data-matrix-category="decision" type="button" role="tab" aria-selected="false">决策阶段</button>
-                  <button data-matrix-category="intent_model" type="button" role="tab" aria-selected="false">意向车型</button>
-                  <button data-matrix-category="trade_in" type="button" role="tab" aria-selected="false">置换情况</button>
-                  <button data-matrix-category="timing" type="button" role="tab" aria-selected="false">购车时间</button>
-                  <button data-matrix-category="driver" type="button" role="tab" aria-selected="false">用车人</button>
-                  <button data-matrix-category="occupation" type="button" role="tab" aria-selected="false">客户职业</button>
-                  <button data-matrix-category="competitor" type="button" role="tab" aria-selected="false">对比竞品</button>
-                  <button data-matrix-category="test_drive" type="button" role="tab" aria-selected="false">试驾状态</button>
-                  <button data-matrix-category="scenario" type="button" role="tab" aria-selected="false">购车场景</button>
-                  <button data-matrix-category="need" type="button" role="tab" aria-selected="false">需求特征</button>
-                  <button data-matrix-category="budget" type="button" role="tab" aria-selected="false">预算区间</button>
-                </div>
-                <section class="hot-distribution" id="hotDistributionPanel" aria-labelledby="hotDistributionCategory">
-                  <div class="hot-distribution-head">
-                    <strong id="hotDistributionCategory">抗拒点</strong>
-                    <span id="hotDistributionScope">当前筛选范围 · 全国 · 埃安 · 全部车型</span>
-                  </div>
-                  <div class="hot-distribution-table-wrap">
-                    <table class="hot-distribution-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">排名</th>
-                          <th scope="col">热门问题</th>
-                          <th scope="col">提及客户</th>
-                          <th scope="col">客户占比</th>
-                          <th scope="col">较上期</th>
-                          <th scope="col">重点分布</th>
-                          <th scope="col">操作</th>
-                        </tr>
-                      </thead>
-                      <tbody id="hotDistributionBody"></tbody>
-                    </table>
-                  </div>
-                </section>
-                <div class="region-model-matrix-wrap" hidden>
-                  <div class="matrix-top-scroll" id="regionModelMatrixTopScroll" aria-label="横向滑动车型列" hidden>
-                    <span>左右拖动查看全部车型</span>
-                    <div class="matrix-scroll-track" id="regionModelMatrixScrollTrack">
-                      <button class="matrix-scroll-thumb" id="regionModelMatrixScrollThumb" type="button" aria-label="拖动横向滚动条"></button>
-                    </div>
-                  </div>
-                  <div class="region-model-matrix-scroll" id="regionModelMatrixScroll" tabindex="0" aria-label="区域与车型数据表，可左右拖动查看全部车型">
-                    <table class="region-model-matrix">
-                      <thead><tr id="regionModelMatrixHead"></tr></thead>
-                      <tbody id="regionModelMatrixBody"></tbody>
-                    </table>
-                  </div>
-                  <nav class="matrix-pagination" id="regionModelMatrixPagination" aria-label="区域分页"></nav>
-                </div>
-                <div class="matrix-heat-legend" hidden><span>与全国基准差异</span><em>低</em><i aria-hidden="true"></i><em>高</em></div>
-              </article>
-
-            </section>
-
-            <section class="deep-insight card" aria-labelledby="deepInsightTitle">
-              <div class="panel-header overview-panel-head deep-insight-head">
-                <div class="panel-title">
-                  <h2 id="deepInsightTitle">深度洞察</h2>
-                  <p id="deepInsightDescription">点击 TOP10 条目，查看对应情感分布和典型原声</p>
-                </div>
-                <div class="deep-insight-tabs" role="tablist" aria-label="深度洞察主题">
-                  <button class="active" data-deep-insight="product" type="button" role="tab" aria-selected="true">产品深度洞察</button>
-                  <button data-deep-insight="policy" type="button" role="tab" aria-selected="false">金融政策深度洞察</button>
-                  <button data-deep-insight="competitor" type="button" role="tab" aria-selected="false">竞品深度洞察</button>
-                </div>
-              </div>
-              <div class="deep-insight-scroll">
-                <div class="deep-insight-grid">
-                  <section class="deep-column deep-top-column" aria-labelledby="deepTopTitle">
-                    <div class="deep-column-head">
-                      <div><h3 id="deepTopTitle">TOP10</h3><p>按提及客户占比排序</p></div>
-                    </div>
-                    <div class="deep-top-list" id="deepTopList"></div>
-                  </section>
-                  <section class="deep-column deep-sentiment-column" aria-labelledby="deepSentimentTitle">
-                    <div class="deep-column-head">
-                      <div><h3 id="deepSentimentTitle">评价解构</h3><p id="deepSentimentTopic">当前选择</p></div>
-                    </div>
-                    <div id="deepSentimentContent"></div>
-                  </section>
-                  <section class="deep-column deep-voice-column" aria-labelledby="deepVoiceTitle">
-                    <div class="deep-column-head">
-                      <div><h3 id="deepVoiceTitle">评价证据</h3><p id="deepVoiceTopic">当前选择</p></div>
-                      <span class="deep-live-status"><i aria-hidden="true"></i>持续更新</span>
-                    </div>
-                    <div class="deep-voice-list" id="deepVoiceList" tabindex="0" aria-label="当前评价点的认可证据或顾虑证据"></div>
-                  </section>
-                </div>
-              </div>
-            </section>
-
-          </section>
-
-          <div class="stage-analysis" id="stageAnalysis" hidden>
-
-          <section class="comparison-hero card" aria-labelledby="comparisonTitle">
-            <div class="comparison-heading">
-              <div>
-                <div class="comparison-title-row"><span class="section-kicker" id="stageKicker">云外呼业务场景 · 线索状态对比</span><h2 id="comparisonTitle">客群对比分析</h2></div>
-                <p id="comparisonDesc">A/B 客群按“观测 7 天 + 用户选中的线索状态”定义，比较邀约对话信号与销售动作。</p>
-              </div>
-            </div>
-            <div class="cohort-rail" aria-label="客群对比概览">
-              <article class="cohort cohort-a">
-                <div class="cohort-label"><span>A</span><div><strong id="groupAName">已预约到店、已邀约到店、到店跟进中</strong><small id="groupAMeta">可分析客户 248 人</small></div></div>
-                <div class="cohort-value"><strong id="groupAValue">262</strong><span>可分析样本数</span><em id="groupARate">79.9%</em></div>
-                <div class="signal-track"><i id="trackA" style="width:79.9%"></i></div>
-              </article>
-              <div class="rail-core" aria-hidden="true"><span>VS</span><i></i></div>
-              <article class="cohort cohort-b">
-                <div class="cohort-label"><span>B</span><div><strong id="groupBName">未跟进、战败已通过(未到店)</strong><small id="groupBMeta">可分析客户 52 人</small></div></div>
-                <div class="cohort-value"><strong id="groupBValue">66</strong><span>可分析样本数</span><em id="groupBRate">20.1%</em></div>
-                <div class="signal-track"><i id="trackB" style="width:20.1%"></i></div>
-              </article>
-            </div>
-          </section>
-
-          <section class="insight-layout">
-            <article class="ai-brief overview-ai-summary compare-ai-summary card" aria-labelledby="aiTitle">
-              <div class="overview-ai-summary-head">
-                <div class="overview-ai-summary-identity">
-                  <span class="overview-ai-summary-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 2.8l1.35 4.15a5.7 5.7 0 0 0 3.7 3.7L21.2 12l-4.15 1.35a5.7 5.7 0 0 0-3.7 3.7L12 21.2l-1.35-4.15a5.7 5.7 0 0 0-3.7-3.7L2.8 12l4.15-1.35a5.7 5.7 0 0 0 3.7-3.7L12 2.8Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M18.5 3.5l.45 1.38a1.9 1.9 0 0 0 1.17 1.17l1.38.45-1.38.45a1.9 1.9 0 0 0-1.17 1.17L18.5 9.5l-.45-1.38a1.9 1.9 0 0 0-1.17-1.17L15.5 6.5l1.38-.45a1.9 1.9 0 0 0 1.17-1.17L18.5 3.5Z" fill="currentColor"/></svg>
-                  </span>
-                  <div>
-                    <div class="overview-ai-summary-title-line">
-                      <h2 id="aiTitle">A/B 对比洞察</h2>
-                      <span class="overview-ai-summary-status" id="compareAiSummaryStatus" hidden>已生成 · 刚刚</span>
-                    </div>
-                    <p id="aiDesc">基于客户画像、区域画像、产品、金融政策与竞品五个维度，对比两组客群的共同点与关键差异</p>
-                  </div>
-                </div>
-                <div class="overview-ai-summary-actions">
-                  <span class="brief-scope">1,145 名有效对话客户</span>
-                </div>
-              </div>
-              <div class="overview-ai-summary-result" id="aiResult">
-                <div class="overview-ai-executive is-pending" id="compareAiExecutive">
-                  <div class="overview-ai-executive-toolbar">
-                    <span class="overview-ai-result-kicker">AI 综合判断</span>
-                    <button class="button primary compact overview-ai-generate" id="generateAiButton" type="button"><span aria-hidden="true">✦</span>生成 AI 综合判断</button>
-                  </div>
-                  <div class="overview-ai-executive-content">
-                    <div class="overview-ai-summary-loading" id="compareAiSummaryLoading" role="status" hidden>
-                      <span class="overview-ai-loading-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
-                      <div><strong>AI 正在归纳两组客群差异</strong><small>交叉核对客户画像、区域画像、产品、金融政策、竞品与客户原声…</small></div>
-                    </div>
-                    <p id="aiExecutiveConclusion" hidden></p>
-                  </div>
-                  <div class="overview-ai-evidence-stats" id="compareAiEvidenceStats" aria-label="本次对比数据范围" hidden>
-                    <span><strong id="compareAiInsightCount">5</strong><small>类洞察</small></span>
-                    <span><strong id="compareAiCustomerCount">0</strong><small>名客户</small></span>
-                    <span><strong id="compareAiRecordingCount">0</strong><small>条录音证据</small></span>
-                    <em>基于当前筛选</em>
-                  </div>
-                </div>
-                <div class="overview-ai-insight-scroll">
-                  <div class="overview-ai-insight-grid compare-ai-insight-grid" id="aiSummaryList"></div>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <section class="topic-workspace card" aria-labelledby="workspaceTitle">
-            <div class="topic-nav">
-              <div><span class="section-kicker">五维对比</span><h2 id="workspaceTitle">五维对比明细</h2></div>
-              <div class="topic-tabs" role="tablist" aria-label="五维对比洞察">
-                <button class="active" data-topic="profile" role="tab" aria-selected="true" type="button">客户画像对比</button>
-                <button data-topic="region" role="tab" aria-selected="false" type="button">区域画像对比</button>
-                <button data-topic="product" role="tab" aria-selected="false" type="button">产品对比</button>
-                <button data-topic="policy" role="tab" aria-selected="false" type="button">金融政策对比</button>
-                <button data-topic="competitor" role="tab" aria-selected="false" type="button">竞品对比</button>
-              </div>
-            </div>
-
-            <div class="workspace-grid">
-              <div class="signal-panel">
-                <div class="signal-head">
-                  <div><h3 id="signalTitle">热门标签 A/B 分布</h3><p id="signalDesc">点击任一标签，差异解读和客户原声同步切换</p></div>
-                  <div class="legend"><span class="a"><i></i><b id="legendA">已预约到店、已邀约到店、到店跟进中</b></span><span class="b"><i></i><b id="legendB">未跟进、战败已通过(未到店)</b></span><em>A 向左、B 向右，共用中间基准线</em></div>
-                </div>
-                <div class="signal-list" id="signalList"></div>
-                <div class="signal-note"><span>i</span>差值为 A 组占比减 B 组占比；单项少于 5 名客户时不生成强结论。</div>
-              </div>
-
-              <aside class="difference-panel" aria-labelledby="differenceTitle">
-                <div class="difference-head"><span class="section-kicker">横向解读</span><h3 id="differenceTitle">关键差异解读</h3></div>
-                <div class="difference-insight-list" id="differenceInsightList"></div>
-              </aside>
-
-              <aside class="voice-panel">
-                <div class="voice-head">
-                  <div><span class="section-kicker">证据下钻</span><h3 id="voiceTitle">家庭出行</h3></div>
-                  <div class="voice-group-switch" role="group" aria-label="切换客群原声">
-                    <button class="active" data-voice-group="a" type="button">A 组证据</button>
-                    <button data-voice-group="b" type="button">B 组证据</button>
-                  </div>
-                </div>
-                <div class="voice-list" id="voiceList"></div>
-                <button class="text-button voice-view-all" id="viewAllVoices" type="button">查看全部证据</button>
-              </aside>
-            </div>
-            <div class="comparison-causality-note">说明：差异表示两组客群中的相关性差别，不直接代表因果关系。</div>
-          </section>
-
-          <section class="unified-action-section card" aria-labelledby="unifiedActionTitle">
-            <div class="panel-header">
-              <div class="panel-title"><div class="title-line"><h2 id="unifiedActionTitle">统一销售动作</h2><span class="capability-badge">已有 SOP ＋ 新增识别</span></div><p>同一动作优先复用 SOP 结果；已有 SOP 动作展示完成率与合格率，未覆盖动作只由新增模型识别。</p></div>
-              <button class="button secondary compact" id="openSopDetail" type="button">查看完整 SOP 详情</button>
-            </div>
-            <div class="candidate-table-wrap">
-              <table class="candidate-table unified-action-table">
-                <thead><tr><th>销售动作</th><th>来源</th><th><span class="metric-definition">动作机会客户<button class="metric-help-button" type="button" aria-label="查看动作机会客户定义">i</button><span class="metric-tooltip" role="tooltip"><strong>动作机会客户</strong><b>含义</b>当前场景下有必要执行该动作的客户。<br><b>计算</b>SOP 适用客户，或新增模型识别出动作触发条件的去重客户。</span></span></th><th><span class="metric-definition">动作完成率<button class="metric-help-button" type="button" aria-label="查看动作完成率定义">i</button><span class="metric-tooltip" role="tooltip"><strong>动作完成率</strong><b>分子</b>实际完成该动作的去重客户数。<br><b>分母</b>动作机会客户数。</span></span></th><th><span class="metric-definition">SOP 合格率<button class="metric-help-button" type="button" aria-label="查看 SOP 合格率定义">i</button><span class="metric-tooltip" role="tooltip"><strong>SOP 合格率</strong><b>分子</b>动作完成且满足 SOP 标准的客户数。<br><b>分母</b>该 SOP 适用客户数。新增识别动作不适用。</span></span></th><th><span class="metric-definition"><span id="unifiedResultRateLabel">目标结果率</span><button class="metric-help-button" type="button" aria-label="查看目标结果率定义">i</button><span class="metric-tooltip" role="tooltip"><strong>动作客户目标结果率</strong><b>分子</b>完成动作且进入目标结果的客户数。<br><b>分母</b>完成该动作的客户数。<br><b>提示</b>只表示关联，不代表动作直接造成结果。</span></span></th><th></th></tr></thead>
-                <tbody id="unifiedActionBody"></tbody>
-              </table>
-            </div>
-            <div class="association-note"><span>口径说明</span> 动作关联结果率只表示同时出现得更频繁，不代表该动作直接造成结果。</div>
-          </section>
-
-          <section class="action-section card" aria-labelledby="actionTitle">
-            <div class="panel-header">
-              <div class="panel-title"><div class="title-line"><h2 id="actionTitle">标准销售动作候选</h2><span class="candidate-count">仅限 SOP 未覆盖动作</span></div><p>已有 SOP 动作不再生成候选；新增识别动作经管理层确认后，仍需通过现有 SOP 管理流程。</p></div>
-              <div class="candidate-actions"><button class="button secondary compact" id="exportAdopted" type="button">导出已采纳动作</button><button class="button primary compact" id="generateCandidate" type="button">AI 生成候选</button></div>
-            </div>
-            <div class="candidate-table-wrap">
-              <table class="candidate-table">
-                <thead><tr><th>候选动作</th><th>客户触发信号</th><th><span class="metric-definition">动作完成率 A / B<button class="metric-help-button" type="button" aria-label="查看动作完成率 A/B 定义">i</button><span class="metric-tooltip" role="tooltip"><strong>动作完成率 A / B</strong>A、B 两组分别计算：完成动作客户数 ÷ 动作机会客户数。</span></span></th><th><span class="metric-definition"><span id="candidateResultRateLabel">目标结果率：完成 / 未完成</span><button class="metric-help-button" type="button" aria-label="查看完成与未完成结果率定义">i</button><span class="metric-tooltip metric-tooltip-right" role="tooltip"><strong>完成 / 未完成目标结果率</strong>分别计算完成动作和未完成动作客户进入当前目标结果的比例，用于观察关联差异，不代表因果。</span></span></th><th><span class="metric-definition">稳定性<button class="metric-help-button" type="button" aria-label="查看稳定性定义">i</button><span class="metric-tooltip metric-tooltip-right" role="tooltip"><strong>稳定性</strong>综合样本量、连续周期、不同组织方向是否一致及证据完整度判断。“继续观察”表示暂不足以形成稳定结论。</span></span></th><th><span class="metric-definition">管理状态<button class="metric-help-button" type="button" aria-label="查看管理状态定义">i</button><span class="metric-tooltip metric-tooltip-right" role="tooltip"><strong>管理状态</strong>待验证、已采纳或不采纳。已采纳仍不会自动写入正式 SOP。</span></span></th><th></th></tr></thead>
-                <tbody id="candidateBody"></tbody>
-              </table>
-            </div>
-            <div class="association-note"><span>关联 ≠ 因果</span> 候选动作仅说明与目标结果同时出现得更频繁，建议结合组织、车型和样本范围进一步验证。</div>
-          </section>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <div class="modal-backdrop" id="groupModal" hidden>
-      <section class="modal group-modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
-        <header><div><span class="section-kicker" id="groupModalKicker">客群对比</span><h2 id="groupModalTitle">选择 A/B 客群线索状态</h2><p id="groupModalDescription">分别选择两组线索结果，比较对应客群的对话信号、销售动作与结果差异。</p></div><button class="icon-button platform-close-icon" data-close="groupModal" type="button" aria-label="关闭"></button></header>
-        <div class="preset-row"><span>常用组合</span><button id="applyPreset" type="button">下订单 <b>vs</b> 战败</button></div>
-        <div class="group-editor">
-          <div class="group-box group-a"><div class="group-box-title"><span>A</span><div><strong>对比组 A</strong><small>至少选择 1 个状态</small></div></div><div class="status-grid" data-group="a"></div></div>
-          <div class="editor-vs">VS</div>
-          <div class="group-box group-b"><div class="group-box-title"><span>B</span><div><strong>对比组 B</strong><small>可与 A 组存在重叠状态</small></div></div><div class="status-grid" data-group="b"></div></div>
-        </div>
-        <div class="overlap-hint"><span>i</span>重叠客户在两组中分别保留，各组占比仍以本组客户为分母；下钻时展示不同线索旅程。</div>
-        <footer><span id="groupValidation">A、B 两组都至少选择 1 个状态</span><div><button class="button secondary" data-close="groupModal" type="button">取消</button><button class="button primary" id="startOfflineCompare" type="button" disabled>应用并开始对比</button></div></footer>
+        <div class="ci-cohort-controls" id="mainFilters"><div class="badge-field-filter badge-field-filter-select ci-select" data-select="dates"><span>线索下发时间</span><button class="session-select-trigger" id="dateTrigger" type="button" aria-label="线索下发时间" aria-haspopup="dialog" aria-expanded="false" aria-controls="dateMenu"><strong>2026-06-30 — 2026-07-19</strong><i class="session-select-caret" aria-hidden="true"></i></button><div class="session-menu-panel ci-range-panel" id="dateMenu" role="dialog" aria-label="选择线索下发时间" hidden></div></div><div id="analysisTemplates"><div class="badge-field-filter badge-field-filter-select ci-select" data-select="leadStatus"><span>线索状态</span><button class="session-select-trigger" type="button" aria-label="线索状态：未到店" aria-haspopup="listbox" aria-expanded="false" aria-controls="leadStatusMenu"><strong>未到店</strong><i class="session-select-caret" aria-hidden="true"></i></button><div class="session-menu-panel badge-field-select-menu" id="leadStatusMenu" role="listbox" aria-label="线索状态" hidden><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="arrived"><span>已到店</span></button><button class="session-menu-option active" type="button" role="option" aria-selected="true" data-value="not_arrived"><span>未到店</span></button><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="deposit"><span>已下订</span></button><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="lost"><span>已战败</span></button></div></div></div><div class="badge-field-filter badge-field-filter-select ci-select" data-select="minAgeDays"><span>下发时长</span><button class="session-select-trigger" type="button" aria-label="下发时长：已满 7 天" aria-haspopup="listbox" aria-expanded="false" aria-controls="minAgeDaysMenu"><strong>已满 7 天</strong><i class="session-select-caret" aria-hidden="true"></i></button><div class="session-menu-panel badge-field-select-menu" id="minAgeDaysMenu" role="listbox" aria-label="下发时长" hidden><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="0"><span>不限</span></button><button class="session-menu-option active" type="button" role="option" aria-selected="true" data-value="7"><span>已满 7 天</span></button><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="15"><span>已满 15 天</span></button><button class="session-menu-option" type="button" role="option" aria-selected="false" data-value="30"><span>已满 30 天</span></button></div></div><div class="ci-status-help"><p id="dispatchExplanation" class="ci-dispatch-explanation">线索下发时间距离分析当天已超过7天，且截至分析时仍未到店。</p><details class="ci-template-help"><summary><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5M10 6v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>口径说明</summary><div class="ci-template-help-panel"><strong>分析人群口径</strong><p id="templateDescription">在所选下发时间范围内，筛选下发时间距离分析当天已超过7天，且截至分析时仍未到店的线索。</p><small>超过N天未到店：分析时点减去线索下发时间，大于N×24小时，且截至分析时仍未到店；恰满N天、已到店及到店信息待确认的线索不纳入。N可选7、15、30。N天内已到店：首次到店发生在下发后N天内。已下订、已战败：按截至分析时已确认的业务事实筛选，不限制下发时长。</small></div></details></div></div>
+        <div id="filterError" class="ci-warning" role="alert" hidden></div>
       </section>
-    </div>
-
-    <div class="drawer-backdrop" id="detailDrawer" hidden>
-      <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
-        <header><div><span class="drawer-kicker" id="drawerKicker">匿名客户证据</span><h2 id="drawerTitle">客户 C-08427</h2><p id="drawerSubtitle">云外呼业务场景 · 最终未到店</p></div><button class="icon-button platform-close-icon" data-close="detailDrawer" type="button" aria-label="关闭"></button></header>
-        <div class="drawer-body" id="drawerBody"></div>
-      </aside>
-    </div>
-
-    <script src="../../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
-    <script src="./客户洞察.js?v=20261102-scene-filter-style-v6"></script>
-    <script src="../../fixed-action-column.js?v=20261028-full-sync-v1"></script>
-  </body>
+      <section class="card ci-summary-card" aria-label="当前筛选与数据概览">
+      <div class="ci-active-scope" aria-label="当前筛选条件"><div><strong>当前筛选</strong><span id="activeScopeSummary"></span></div></div>
+      <section class="ci-coverage-strip" aria-label="人群与录音概览"><div class="ci-coverage-inline" id="coverageSummary"><button type="button" class="ci-coverage-item" data-cohort-filter="all" aria-label="查看当前人群的672条线索" title="查看当前人群线索"><span>当前人群</span><strong>672</strong><small>条</small><svg class="ci-coverage-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="ci-coverage-item" data-cohort-filter="recorded" aria-label="查看已关联录音的553条线索" title="查看已关联录音线索"><span>已关联录音线索数</span><strong>553</strong><small>条</small><svg class="ci-coverage-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="ci-coverage-item" data-cohort-filter="no_recording" aria-label="查看无录音的119条线索" title="查看无录音线索"><span>无录音</span><strong>119</strong><small>条</small><svg class="ci-coverage-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="ci-coverage-rate"><span>可分析占比</span><strong id="coverageRate">73.8%</strong></div></section>
+      </section>
+      <section class="card ci-workspace badge-detail-table-card" aria-label="洞察分析">
+        <div class="ci-workspace-head"><div class="seg-tabs" role="tablist" aria-label="分析对象"><button class="seg-tab active" id="customerTab" data-workspace="customers" role="tab" aria-selected="true" aria-controls="analysisPanel" type="button">客户画像</button><button class="seg-tab" id="actionTab" data-workspace="actions" role="tab" aria-selected="false" aria-controls="analysisPanel" tabindex="-1" type="button">SOP分析</button></div><div class="ci-tools"><button class="btn ghost" id="toggleCompare" type="button" aria-expanded="false" aria-controls="comparePanel">客群对比分析</button></div></div>
+        <section id="comparePanel" class="ci-compare" aria-label="客群对比设置" hidden><div><strong>客群对比分析</strong><p>使用同一批下发线索和跟进时长对比；重叠线索从两组排除。</p></div><div class="ci-tools"><span id="groupSummary">A · 未到店 0 条 ｜ B · 已到店 0 条</span><button class="btn ghost" id="editGroups" type="button">调整状态</button><button class="ci-text" id="stopCompare" type="button">退出对比</button></div></section>
+        <div id="analysisPanel" role="tabpanel" aria-labelledby="customerTab">
+          <nav class="ci-drill-navigation" id="drillNavigation" aria-label="分析路径" hidden></nav>
+          <div class="ci-analysis-toolbar"><div><h2 id="analysisTitle">不到店 · 客户画像总览</h2><p id="analysisDescription">从购车计划、需求反馈到客户背景，同时查看全部维度；点击图中标签继续下钻。</p></div><div class="ci-tools" id="analysisControls"></div></div>
+          <div class="ci-context" id="analysisContext" aria-live="polite">当前人群672条 · 客户标签分析分母496条可分析线索 · 按线索ID去重</div>
+          <nav class="ci-profile-directory" id="profileDirectory" aria-label="全部画像维度"><div class="ci-profile-directory-row"><strong>购车计划</strong><div><button type="button" data-profile-dimension="intent_model" class="ci-dimension-link" >意向车型</button><button type="button" data-profile-dimension="budget" class="ci-dimension-link" >预算区间</button><button type="button" data-profile-dimension="timing" class="ci-dimension-link" >购车时间</button><button type="button" data-profile-dimension="payment" class="ci-dimension-link" >付款方式</button><button type="button" data-profile-dimension="trade_in" class="ci-dimension-link" >置换情况</button><button type="button" data-profile-dimension="decision" class="ci-dimension-link" >决策阶段</button></div></div><div class="ci-profile-directory-row"><strong>需求与反馈</strong><div><button type="button" data-profile-dimension="resistance" class="ci-dimension-link" >抗性点</button><button type="button" data-profile-dimension="need" class="ci-dimension-link" >需求特征</button><button type="button" data-profile-dimension="competitor" class="ci-dimension-link" >对比竞品</button><button type="button" data-profile-dimension="policy" class="ci-dimension-link" >金融政策</button><button type="button" data-profile-dimension="test_drive" class="ci-dimension-link" >试驾状态</button></div></div><div class="ci-profile-directory-row"><strong>产品提及</strong><div><button type="button" data-profile-dimension="product_positive" class="ci-dimension-link" >产品提及·正向</button><button type="button" data-profile-dimension="product_negative" class="ci-dimension-link" >产品提及·负向</button><button type="button" data-profile-dimension="product_neutral" class="ci-dimension-link" >产品提及·中性</button></div></div><div class="ci-profile-directory-row"><strong>客户背景</strong><div><button type="button" data-profile-dimension="driver" class="ci-dimension-link" >用车人</button><button type="button" data-profile-dimension="occupation" class="ci-dimension-link" >客户职业</button><button type="button" data-profile-dimension="scenario" class="ci-dimension-link" >购车场景</button></div></div></nav>
+          <section class="ci-profile-overview" id="profileOverview" aria-label="全部画像维度分析结果"><div class="ci-profile-legend"><span><i class="ci-series-a"></i>提及占比 · 分母 755 条可分析线索</span><small>点击标签下钻 · 点击“全部”展开维度明细</small></div><div class="ci-profile-grid"><article class="ci-profile-card" id="profile-card-intent_model" tabindex="-1" aria-label="意向车型分布"><header><div><h4>意向车型</h4></div><button type="button" class="ci-text" data-profile-detail="intent_model" aria-label="查看全部意向车型">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="意向车型提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="intent_model" data-profile-index="0" aria-label="下钻分析意向车型：AION RT，19.5%，147/755条"><span class="ci-profile-label">AION RT<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:19.5%"></i></span><strong>19.5%</strong><small>147/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="intent_model" data-profile-index="1" aria-label="下钻分析意向车型：AION V，16.0%，121/755条"><span class="ci-profile-label">AION V<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:16%"></i></span><strong>16.0%</strong><small>121/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="intent_model" data-profile-index="2" aria-label="下钻分析意向车型：AION Y Plus，15.8%，119/755条"><span class="ci-profile-label">AION Y Plus<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.8%"></i></span><strong>15.8%</strong><small>119/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="intent_model" data-profile-index="3" aria-label="下钻分析意向车型：AION S Plus，15.4%，116/755条"><span class="ci-profile-label">AION S Plus<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.4%"></i></span><strong>15.4%</strong><small>116/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="intent_model" data-profile-index="4" aria-label="下钻分析意向车型：AION UT，3.0%，23/755条"><span class="ci-profile-label">AION UT<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:3%"></i></span><strong>3.0%</strong><small>23/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-budget" tabindex="-1" aria-label="预算区间分布"><header><div><h4>预算区间</h4></div><button type="button" class="ci-text" data-profile-detail="budget" aria-label="查看全部预算区间">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="预算区间提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="budget" data-profile-index="0" aria-label="下钻分析预算区间：15-20万，15.1%，114/755条"><span class="ci-profile-label">15-20万<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.1%"></i></span><strong>15.1%</strong><small>114/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="budget" data-profile-index="1" aria-label="下钻分析预算区间：30万以上，14.6%，110/755条"><span class="ci-profile-label">30万以上<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.6%"></i></span><strong>14.6%</strong><small>110/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="budget" data-profile-index="2" aria-label="下钻分析预算区间：20-30万，14.3%，108/755条"><span class="ci-profile-label">20-30万<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.3%"></i></span><strong>14.3%</strong><small>108/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="budget" data-profile-index="3" aria-label="下钻分析预算区间：10-15万，14.0%，106/755条"><span class="ci-profile-label">10-15万<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14%"></i></span><strong>14.0%</strong><small>106/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="budget" data-profile-index="4" aria-label="下钻分析预算区间：10万以下，13.5%，102/755条"><span class="ci-profile-label">10万以下<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.5%"></i></span><strong>13.5%</strong><small>102/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-timing" tabindex="-1" aria-label="购车时间分布"><header><div><h4>购车时间</h4></div><button type="button" class="ci-text" data-profile-detail="timing" aria-label="查看全部购车时间">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="购车时间提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="timing" data-profile-index="0" aria-label="下钻分析购车时间：购车时间未定，15.0%，113/755条"><span class="ci-profile-label">购车时间未定<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15%"></i></span><strong>15.0%</strong><small>113/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="timing" data-profile-index="1" aria-label="下钻分析购车时间：本周，11.0%，83/755条"><span class="ci-profile-label">本周<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11%"></i></span><strong>11.0%</strong><small>83/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="timing" data-profile-index="2" aria-label="下钻分析购车时间：本月，10.1%，76/755条"><span class="ci-profile-label">本月<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:10.1%"></i></span><strong>10.1%</strong><small>76/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="timing" data-profile-index="3" aria-label="下钻分析购车时间：年前，10.1%，76/755条"><span class="ci-profile-label">年前<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:10.1%"></i></span><strong>10.1%</strong><small>76/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="timing" data-profile-index="4" aria-label="下钻分析购车时间：季度内，7.0%，53/755条"><span class="ci-profile-label">季度内<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7%"></i></span><strong>7.0%</strong><small>53/755</small></span></button></div><footer><span>展示前 5 / 7 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-payment" tabindex="-1" aria-label="付款方式分布"><header><div><h4>付款方式</h4></div><button type="button" class="ci-text" data-profile-detail="payment" aria-label="查看全部付款方式">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="付款方式提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="payment" data-profile-index="0" aria-label="下钻分析付款方式：首付敏感，21.7%，164/755条"><span class="ci-profile-label">首付敏感<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:21.7%"></i></span><strong>21.7%</strong><small>164/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="payment" data-profile-index="1" aria-label="下钻分析付款方式：分期意向，19.2%，145/755条"><span class="ci-profile-label">分期意向<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:19.2%"></i></span><strong>19.2%</strong><small>145/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="payment" data-profile-index="2" aria-label="下钻分析付款方式：利息敏感，15.2%，115/755条"><span class="ci-profile-label">利息敏感<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.2%"></i></span><strong>15.2%</strong><small>115/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="payment" data-profile-index="3" aria-label="下钻分析付款方式：全款意向，12.1%，91/755条"><span class="ci-profile-label">全款意向<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.1%"></i></span><strong>12.1%</strong><small>91/755</small></span></button></div><footer><span>展示前 4 / 4 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-trade_in" tabindex="-1" aria-label="置换情况分布"><header><div><h4>置换情况</h4></div><button type="button" class="ci-text" data-profile-detail="trade_in" aria-label="查看全部置换情况">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="置换情况提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="trade_in" data-profile-index="0" aria-label="下钻分析置换情况：旧车已处理，21.7%，164/755条"><span class="ci-profile-label">旧车已处理<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:21.7%"></i></span><strong>21.7%</strong><small>164/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="trade_in" data-profile-index="1" aria-label="下钻分析置换情况：无旧车，20.7%，156/755条"><span class="ci-profile-label">无旧车<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:20.7%"></i></span><strong>20.7%</strong><small>156/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="trade_in" data-profile-index="2" aria-label="下钻分析置换情况：咨询置换政策，14.2%，107/755条"><span class="ci-profile-label">咨询置换政策<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.2%"></i></span><strong>14.2%</strong><small>107/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="trade_in" data-profile-index="3" aria-label="下钻分析置换情况：有旧车待置换，12.1%，91/755条"><span class="ci-profile-label">有旧车待置换<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.1%"></i></span><strong>12.1%</strong><small>91/755</small></span></button></div><footer><span>展示前 4 / 4 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-decision" tabindex="-1" aria-label="决策阶段分布"><header><div><h4>决策阶段</h4></div><button type="button" class="ci-text" data-profile-detail="decision" aria-label="查看全部决策阶段">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="决策阶段提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="decision" data-profile-index="0" aria-label="下钻分析决策阶段：季度内决策，14.4%，109/755条"><span class="ci-profile-label">季度内决策<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.4%"></i></span><strong>14.4%</strong><small>109/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="decision" data-profile-index="1" aria-label="下钻分析决策阶段：下月决策，13.8%，104/755条"><span class="ci-profile-label">下月决策<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.8%"></i></span><strong>13.8%</strong><small>104/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="decision" data-profile-index="2" aria-label="下钻分析决策阶段：本周决策，13.5%，102/755条"><span class="ci-profile-label">本周决策<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.5%"></i></span><strong>13.5%</strong><small>102/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="decision" data-profile-index="3" aria-label="下钻分析决策阶段：本月决策，12.8%，97/755条"><span class="ci-profile-label">本月决策<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.8%"></i></span><strong>12.8%</strong><small>97/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="decision" data-profile-index="4" aria-label="下钻分析决策阶段：决策时间未定，12.5%，94/755条"><span class="ci-profile-label">决策时间未定<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.5%"></i></span><strong>12.5%</strong><small>94/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-resistance" tabindex="-1" aria-label="抗性点分布"><header><div><h4>抗性点</h4></div><button type="button" class="ci-text" data-profile-detail="resistance" aria-label="查看全部抗性点">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="抗性点提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="resistance" data-profile-index="0" aria-label="下钻分析抗性点：售后担忧，7.9%，60/755条"><span class="ci-profile-label">售后担忧<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.9%"></i></span><strong>7.9%</strong><small>60/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="resistance" data-profile-index="1" aria-label="下钻分析抗性点：续航担忧，7.7%，58/755条"><span class="ci-profile-label">续航担忧<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.7%"></i></span><strong>7.7%</strong><small>58/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="resistance" data-profile-index="2" aria-label="下钻分析抗性点：交付周期不满，7.2%，54/755条"><span class="ci-profile-label">交付周期不满<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.2%"></i></span><strong>7.2%</strong><small>54/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="resistance" data-profile-index="3" aria-label="下钻分析抗性点：价格敏感，6.8%，51/755条"><span class="ci-profile-label">价格敏感<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:6.8%"></i></span><strong>6.8%</strong><small>51/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="resistance" data-profile-index="4" aria-label="下钻分析抗性点：空间不满，6.4%，48/755条"><span class="ci-profile-label">空间不满<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:6.4%"></i></span><strong>6.4%</strong><small>48/755</small></span></button></div><footer><span>展示前 5 / 11 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-need" tabindex="-1" aria-label="需求特征分布"><header><div><h4>需求特征</h4></div><button type="button" class="ci-text" data-profile-detail="need" aria-label="查看全部需求特征">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="需求特征提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="need" data-profile-index="0" aria-label="下钻分析需求特征：空间大，5.8%，44/755条"><span class="ci-profile-label">空间大<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5.8%"></i></span><strong>5.8%</strong><small>44/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="need" data-profile-index="1" aria-label="下钻分析需求特征：省油/省电，5.8%，44/755条"><span class="ci-profile-label">省油/省电<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5.8%"></i></span><strong>5.8%</strong><small>44/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="need" data-profile-index="2" aria-label="下钻分析需求特征：外观好看，5.8%，44/755条"><span class="ci-profile-label">外观好看<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5.8%"></i></span><strong>5.8%</strong><small>44/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="need" data-profile-index="3" aria-label="下钻分析需求特征：性价比高，5.6%，42/755条"><span class="ci-profile-label">性价比高<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5.6%"></i></span><strong>5.6%</strong><small>42/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="need" data-profile-index="4" aria-label="下钻分析需求特征：安全配置，5.4%，41/755条"><span class="ci-profile-label">安全配置<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5.4%"></i></span><strong>5.4%</strong><small>41/755</small></span></button></div><footer><span>展示前 5 / 13 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-competitor" tabindex="-1" aria-label="对比竞品分布"><header><div><h4>对比竞品</h4></div><button type="button" class="ci-text" data-profile-detail="competitor" aria-label="查看全部对比竞品">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="对比竞品提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="competitor" data-profile-index="0" aria-label="下钻分析对比竞品：特斯拉，9.7%，73/755条"><span class="ci-profile-label">特斯拉<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:9.7%"></i></span><strong>9.7%</strong><small>73/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="competitor" data-profile-index="1" aria-label="下钻分析对比竞品：蔚来，9.0%，68/755条"><span class="ci-profile-label">蔚来<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:9%"></i></span><strong>9.0%</strong><small>68/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="competitor" data-profile-index="2" aria-label="下钻分析对比竞品：比亚迪，8.7%，66/755条"><span class="ci-profile-label">比亚迪<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:8.7%"></i></span><strong>8.7%</strong><small>66/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="competitor" data-profile-index="3" aria-label="下钻分析对比竞品：大众，8.6%，65/755条"><span class="ci-profile-label">大众<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:8.6%"></i></span><strong>8.6%</strong><small>65/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="competitor" data-profile-index="4" aria-label="下钻分析对比竞品：丰田，8.1%，61/755条"><span class="ci-profile-label">丰田<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:8.1%"></i></span><strong>8.1%</strong><small>61/755</small></span></button></div><footer><span>展示前 5 / 9 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-policy" tabindex="-1" aria-label="金融政策分布"><header><div><h4>金融政策</h4></div><button type="button" class="ci-text" data-profile-detail="policy" aria-label="查看全部金融政策">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="金融政策提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="policy" data-profile-index="0" aria-label="下钻分析金融政策：低首付方案，15.6%，118/755条"><span class="ci-profile-label">低首付方案<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.6%"></i></span><strong>15.6%</strong><small>118/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="policy" data-profile-index="1" aria-label="下钻分析金融政策：月供压力，15.4%，116/755条"><span class="ci-profile-label">月供压力<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.4%"></i></span><strong>15.4%</strong><small>116/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="policy" data-profile-index="2" aria-label="下钻分析金融政策：保险费用，13.4%，101/755条"><span class="ci-profile-label">保险费用<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.4%"></i></span><strong>13.4%</strong><small>101/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="policy" data-profile-index="3" aria-label="下钻分析金融政策：两年免息，13.4%，101/755条"><span class="ci-profile-label">两年免息<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.4%"></i></span><strong>13.4%</strong><small>101/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="policy" data-profile-index="4" aria-label="下钻分析金融政策：置换补贴，11.9%，90/755条"><span class="ci-profile-label">置换补贴<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11.9%"></i></span><strong>11.9%</strong><small>90/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-test_drive" tabindex="-1" aria-label="试驾状态分布"><header><div><h4>试驾状态</h4></div><button type="button" class="ci-text" data-profile-detail="test_drive" aria-label="查看全部试驾状态">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="试驾状态提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="test_drive" data-profile-index="0" aria-label="下钻分析试驾状态：未试驾，28.9%，218/755条"><span class="ci-profile-label">未试驾<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:28.9%"></i></span><strong>28.9%</strong><small>218/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="test_drive" data-profile-index="1" aria-label="下钻分析试驾状态：已约试驾，16.2%，122/755条"><span class="ci-profile-label">已约试驾<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:16.2%"></i></span><strong>16.2%</strong><small>122/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="test_drive" data-profile-index="2" aria-label="下钻分析试驾状态：已试驾，15.5%，117/755条"><span class="ci-profile-label">已试驾<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.5%"></i></span><strong>15.5%</strong><small>117/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="test_drive" data-profile-index="3" aria-label="下钻分析试驾状态：拒绝试驾，10.3%，78/755条"><span class="ci-profile-label">拒绝试驾<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:10.3%"></i></span><strong>10.3%</strong><small>78/755</small></span></button></div><footer><span>展示前 4 / 4 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card ci-product-card ci-product-positive" id="profile-card-product_positive" tabindex="-1" aria-label="产品提及·正向分布"><header><div><h4>产品提及·正向</h4></div><button type="button" class="ci-text" data-profile-detail="product_positive" aria-label="查看全部产品提及·正向">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="产品提及·正向提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="product_positive" data-profile-index="0" aria-label="下钻分析产品提及·正向：辅助驾驶，14.0%，106/755条"><span class="ci-profile-label">辅助驾驶<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14%"></i></span><strong>14.0%</strong><small>106/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_positive" data-profile-index="1" aria-label="下钻分析产品提及·正向：空间与乘坐体验，14.0%，106/755条"><span class="ci-profile-label">空间与乘坐体验<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14%"></i></span><strong>14.0%</strong><small>106/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_positive" data-profile-index="2" aria-label="下钻分析产品提及·正向：真实续航，14.0%，106/755条"><span class="ci-profile-label">真实续航<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14%"></i></span><strong>14.0%</strong><small>106/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_positive" data-profile-index="3" aria-label="下钻分析产品提及·正向：底盘舒适性，13.8%，104/755条"><span class="ci-profile-label">底盘舒适性<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.8%"></i></span><strong>13.8%</strong><small>104/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_positive" data-profile-index="4" aria-label="下钻分析产品提及·正向：智能座舱，13.4%，101/755条"><span class="ci-profile-label">智能座舱<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.4%"></i></span><strong>13.4%</strong><small>101/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card ci-product-card ci-product-negative" id="profile-card-product_negative" tabindex="-1" aria-label="产品提及·负向分布"><header><div><h4>产品提及·负向</h4></div><button type="button" class="ci-text" data-profile-detail="product_negative" aria-label="查看全部产品提及·负向">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="产品提及·负向提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="product_negative" data-profile-index="0" aria-label="下钻分析产品提及·负向：真实续航，15.5%，117/755条"><span class="ci-profile-label">真实续航<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.5%"></i></span><strong>15.5%</strong><small>117/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_negative" data-profile-index="1" aria-label="下钻分析产品提及·负向：辅助驾驶，14.7%，111/755条"><span class="ci-profile-label">辅助驾驶<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.7%"></i></span><strong>14.7%</strong><small>111/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_negative" data-profile-index="2" aria-label="下钻分析产品提及·负向：底盘舒适性，14.3%，108/755条"><span class="ci-profile-label">底盘舒适性<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.3%"></i></span><strong>14.3%</strong><small>108/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_negative" data-profile-index="3" aria-label="下钻分析产品提及·负向：空间与乘坐体验，14.2%，107/755条"><span class="ci-profile-label">空间与乘坐体验<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.2%"></i></span><strong>14.2%</strong><small>107/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_negative" data-profile-index="4" aria-label="下钻分析产品提及·负向：智能座舱，14.0%，106/755条"><span class="ci-profile-label">智能座舱<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14%"></i></span><strong>14.0%</strong><small>106/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card ci-product-card ci-product-neutral" id="profile-card-product_neutral" tabindex="-1" aria-label="产品提及·中性分布"><header><div><h4>产品提及·中性</h4></div><button type="button" class="ci-text" data-profile-detail="product_neutral" aria-label="查看全部产品提及·中性">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="产品提及·中性提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="product_neutral" data-profile-index="0" aria-label="下钻分析产品提及·中性：空间与乘坐体验，15.1%，114/755条"><span class="ci-profile-label">空间与乘坐体验<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.1%"></i></span><strong>15.1%</strong><small>114/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_neutral" data-profile-index="1" aria-label="下钻分析产品提及·中性：真实续航，14.8%，112/755条"><span class="ci-profile-label">真实续航<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.8%"></i></span><strong>14.8%</strong><small>112/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_neutral" data-profile-index="2" aria-label="下钻分析产品提及·中性：辅助驾驶，14.6%，110/755条"><span class="ci-profile-label">辅助驾驶<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.6%"></i></span><strong>14.6%</strong><small>110/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_neutral" data-profile-index="3" aria-label="下钻分析产品提及·中性：智能座舱，13.8%，104/755条"><span class="ci-profile-label">智能座舱<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.8%"></i></span><strong>13.8%</strong><small>104/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="product_neutral" data-profile-index="4" aria-label="下钻分析产品提及·中性：底盘舒适性，13.2%，100/755条"><span class="ci-profile-label">底盘舒适性<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.2%"></i></span><strong>13.2%</strong><small>100/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-driver" tabindex="-1" aria-label="用车人分布"><header><div><h4>用车人</h4></div><button type="button" class="ci-text" data-profile-detail="driver" aria-label="查看全部用车人">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="用车人提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="driver" data-profile-index="0" aria-label="下钻分析用车人：父母，12.7%，96/755条"><span class="ci-profile-label">父母<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.7%"></i></span><strong>12.7%</strong><small>96/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="driver" data-profile-index="1" aria-label="下钻分析用车人：其他人，11.5%，87/755条"><span class="ci-profile-label">其他人<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11.5%"></i></span><strong>11.5%</strong><small>87/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="driver" data-profile-index="2" aria-label="下钻分析用车人：公司，11.4%，86/755条"><span class="ci-profile-label">公司<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11.4%"></i></span><strong>11.4%</strong><small>86/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="driver" data-profile-index="3" aria-label="下钻分析用车人：子女，11.4%，86/755条"><span class="ci-profile-label">子女<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11.4%"></i></span><strong>11.4%</strong><small>86/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="driver" data-profile-index="4" aria-label="下钻分析用车人：爱人，11.3%，85/755条"><span class="ci-profile-label">爱人<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:11.3%"></i></span><strong>11.3%</strong><small>85/755</small></span></button></div><footer><span>展示前 5 / 6 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-occupation" tabindex="-1" aria-label="客户职业分布"><header><div><h4>客户职业</h4></div><button type="button" class="ci-text" data-profile-detail="occupation" aria-label="查看全部客户职业">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="客户职业提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="occupation" data-profile-index="0" aria-label="下钻分析客户职业：网约车司机，16.3%，123/755条"><span class="ci-profile-label">网约车司机<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:16.3%"></i></span><strong>16.3%</strong><small>123/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="occupation" data-profile-index="1" aria-label="下钻分析客户职业：个体户，15.9%，120/755条"><span class="ci-profile-label">个体户<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.9%"></i></span><strong>15.9%</strong><small>120/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="occupation" data-profile-index="2" aria-label="下钻分析客户职业：其他职业，15.4%，116/755条"><span class="ci-profile-label">其他职业<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:15.4%"></i></span><strong>15.4%</strong><small>116/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="occupation" data-profile-index="3" aria-label="下钻分析客户职业：上班族，12.8%，97/755条"><span class="ci-profile-label">上班族<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.8%"></i></span><strong>12.8%</strong><small>97/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="occupation" data-profile-index="4" aria-label="下钻分析客户职业：企业主，10.6%，80/755条"><span class="ci-profile-label">企业主<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:10.6%"></i></span><strong>10.6%</strong><small>80/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article><article class="ci-profile-card" id="profile-card-scenario" tabindex="-1" aria-label="购车场景分布"><header><div><h4>购车场景</h4></div><button type="button" class="ci-text" data-profile-detail="scenario" aria-label="查看全部购车场景">查看全部 ↗</button></header><div class="ci-profile-bars" role="group" aria-label="购车场景提及占比"><button type="button" class="ci-profile-bar-row" data-profile-drill="scenario" data-profile-index="0" aria-label="下钻分析购车场景：日常通勤，14.3%，108/755条"><span class="ci-profile-label">日常通勤<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:14.3%"></i></span><strong>14.3%</strong><small>108/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="scenario" data-profile-index="1" aria-label="下钻分析购车场景：商务用车，13.9%，105/755条"><span class="ci-profile-label">商务用车<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.9%"></i></span><strong>13.9%</strong><small>105/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="scenario" data-profile-index="2" aria-label="下钻分析购车场景：跑网约车，13.2%，100/755条"><span class="ci-profile-label">跑网约车<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13.2%"></i></span><strong>13.2%</strong><small>100/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="scenario" data-profile-index="3" aria-label="下钻分析购车场景：长途自驾，13.0%，98/755条"><span class="ci-profile-label">长途自驾<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:13%"></i></span><strong>13.0%</strong><small>98/755</small></span></button><button type="button" class="ci-profile-bar-row" data-profile-drill="scenario" data-profile-index="4" aria-label="下钻分析购车场景：家庭出行，12.5%，94/755条"><span class="ci-profile-label">家庭出行<span aria-hidden="true">↗</span></span><span class="ci-profile-lane"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:12.5%"></i></span><strong>12.5%</strong><small>94/755</small></span></button></div><footer><span>展示前 5 / 5 项</span><span>按提及量排序</span></footer></article></div></section>
+          <section class="ci-comparison-visual" id="compareVisual" aria-label="分析图表" hidden><div class="ci-chart-toolbar"><div class="ci-chart-legend" id="chartLegend"><span><i class="ci-series-a" aria-hidden="true"></i>不到店 · 提及占比</span><small>分母为各组织范围内可分析线索 · 点击条形图下钻</small></div><div class="ci-tools" id="actionSortControls"></div></div><div id="comparisonChart"><div class="ci-chart-axis-row"><span>客户标签</span><span class="ci-profile-detail-axis"><span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></span><span>提及 / 可分析</span></div><div role="group" aria-label="提及占比条形图"><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="0" aria-label="下钻分析售后担忧：8.9%，44/496条"><span class="ci-chart-name"><strong>售后担忧</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:8.9%"></i></span><strong>8.9%</strong></span><span class="ci-chart-difference"><strong>44/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="1" aria-label="下钻分析续航担忧：8.3%，41/496条"><span class="ci-chart-name"><strong>续航担忧</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:8.3%"></i></span><strong>8.3%</strong></span><span class="ci-chart-difference"><strong>41/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="2" aria-label="下钻分析交付周期不满：7.9%，39/496条"><span class="ci-chart-name"><strong>交付周期不满</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.9%"></i></span><strong>7.9%</strong></span><span class="ci-chart-difference"><strong>39/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="3" aria-label="下钻分析价格敏感：7.5%，37/496条"><span class="ci-chart-name"><strong>价格敏感</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.5%"></i></span><strong>7.5%</strong></span><span class="ci-chart-difference"><strong>37/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="4" aria-label="下钻分析空间不满：7.1%，35/496条"><span class="ci-chart-name"><strong>空间不满</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:7.1%"></i></span><strong>7.1%</strong></span><span class="ci-chart-difference"><strong>35/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="5" aria-label="下钻分析质量担忧：6.0%，30/496条"><span class="ci-chart-name"><strong>质量担忧</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:6%"></i></span><strong>6.0%</strong></span><span class="ci-chart-difference"><strong>30/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="6" aria-label="下钻分析对比犹豫：5.0%，25/496条"><span class="ci-chart-name"><strong>对比犹豫</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5%"></i></span><strong>5.0%</strong></span><span class="ci-chart-difference"><strong>25/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="7" aria-label="下钻分析配置不满：5.0%，25/496条"><span class="ci-chart-name"><strong>配置不满</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5%"></i></span><strong>5.0%</strong></span><span class="ci-chart-difference"><strong>25/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="8" aria-label="下钻分析品牌不信任：5.0%，25/496条"><span class="ci-chart-name"><strong>品牌不信任</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:5%"></i></span><strong>5.0%</strong></span><span class="ci-chart-difference"><strong>25/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="9" aria-label="下钻分析服务不满：4.8%，24/496条"><span class="ci-chart-name"><strong>服务不满</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:4.8%"></i></span><strong>4.8%</strong></span><span class="ci-chart-difference"><strong>24/496</strong><em>下钻分析 →</em></span></button><button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="10" aria-label="下钻分析金融方案不满：4.6%，23/496条"><span class="ci-chart-name"><strong>金融方案不满</strong><small>抗性点</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:4.6%"></i></span><strong>4.6%</strong></span><span class="ci-chart-difference"><strong>23/496</strong><em>下钻分析 →</em></span></button></div><p class="ci-chart-caption">统一使用0–100%刻度；提及线索按线索ID去重。同一线索可提及多个标签。</p></div></section>
+          <div class="badge-list-table-wrap ci-table-wrap" id="analysisTableWrap" hidden><table class="data-table badge-data-table ci-table"><thead id="analysisHead"><tr><th scope="col">客户标签</th><th scope="col">提及线索</th><th scope="col">提及占比</th><th scope="col">操作</th></tr></thead><tbody id="analysisRows"><tr><td><strong>售后担忧</strong><small>抗性点</small></td><td>44<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>8.9%</strong><span class="ci-bar" aria-hidden="true"><i style="width:8.9%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="0" aria-label="下钻分析售后担忧">下钻分析</button></td></tr><tr><td><strong>续航担忧</strong><small>抗性点</small></td><td>41<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>8.3%</strong><span class="ci-bar" aria-hidden="true"><i style="width:8.3%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="1" aria-label="下钻分析续航担忧">下钻分析</button></td></tr><tr><td><strong>交付周期不满</strong><small>抗性点</small></td><td>39<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>7.9%</strong><span class="ci-bar" aria-hidden="true"><i style="width:7.9%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="2" aria-label="下钻分析交付周期不满">下钻分析</button></td></tr><tr><td><strong>价格敏感</strong><small>抗性点</small></td><td>37<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>7.5%</strong><span class="ci-bar" aria-hidden="true"><i style="width:7.5%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="3" aria-label="下钻分析价格敏感">下钻分析</button></td></tr><tr><td><strong>空间不满</strong><small>抗性点</small></td><td>35<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>7.1%</strong><span class="ci-bar" aria-hidden="true"><i style="width:7.1%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="4" aria-label="下钻分析空间不满">下钻分析</button></td></tr><tr><td><strong>质量担忧</strong><small>抗性点</small></td><td>30<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>6.0%</strong><span class="ci-bar" aria-hidden="true"><i style="width:6%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="5" aria-label="下钻分析质量担忧">下钻分析</button></td></tr><tr><td><strong>对比犹豫</strong><small>抗性点</small></td><td>25<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>5.0%</strong><span class="ci-bar" aria-hidden="true"><i style="width:5%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="6" aria-label="下钻分析对比犹豫">下钻分析</button></td></tr><tr><td><strong>配置不满</strong><small>抗性点</small></td><td>25<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>5.0%</strong><span class="ci-bar" aria-hidden="true"><i style="width:5%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="7" aria-label="下钻分析配置不满">下钻分析</button></td></tr><tr><td><strong>品牌不信任</strong><small>抗性点</small></td><td>25<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>5.0%</strong><span class="ci-bar" aria-hidden="true"><i style="width:5%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="8" aria-label="下钻分析品牌不信任">下钻分析</button></td></tr><tr><td><strong>服务不满</strong><small>抗性点</small></td><td>24<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>4.8%</strong><span class="ci-bar" aria-hidden="true"><i style="width:4.8%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="9" aria-label="下钻分析服务不满">下钻分析</button></td></tr><tr><td><strong>金融方案不满</strong><small>抗性点</small></td><td>23<small>分母 496 条</small></td><td><span class="ci-bar-value"><strong>4.6%</strong><span class="ci-bar" aria-hidden="true"><i style="width:4.6%"></i></span></span></td><td><button class="ci-text" type="button" data-start-drill="10" aria-label="下钻分析金融方案不满">下钻分析</button></td></tr></tbody></table><div class="badge-list-empty-state" id="emptyState" hidden><strong>当前范围暂无可分析样本</strong><p>请调整日期、车型或更多筛选条件。</p><button class="btn ghost" id="emptyReset" type="button">恢复默认范围</button></div></div>
+          <div class="ci-drill-pagination" id="drillPagination" hidden></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="detailDialog" class="ci-dialog badge-field-settings-drawer" aria-labelledby="detailTitle"><header class="badge-field-settings-head"><div><h2 id="detailTitle">分析详情</h2><p id="detailSubtitle"></p></div><button class="icon-btn platform-close-icon" data-close="detailDialog" type="button" aria-label="关闭详情"></button></header><div class="badge-field-settings-body" id="detailBody"></div><footer class="badge-field-settings-footer"><span id="detailFooterNote">核实后可作为策略草稿的依据</span><button class="btn primary" id="addFinding" type="button">加入策略草稿</button></footer></dialog>
+  <dialog id="groupDialog" class="ci-modal" aria-labelledby="groupTitle"><header class="badge-field-settings-head"><div><h2 id="groupTitle">选择对比客群</h2><p>选择不同线索状态对比，保持相同的数据范围。</p></div><button class="icon-btn platform-close-icon" data-close="groupDialog" type="button" aria-label="关闭分组设置"></button></header><div class="ci-modal-body"><div class="ci-group-grid" id="groupOptions"></div><p id="groupError" class="ci-warning" role="alert" hidden></p></div><footer class="badge-field-settings-footer"><button class="btn ghost" data-close="groupDialog" type="button">取消</button><button class="btn primary" id="applyGroups" type="button">应用分组</button></footer></dialog>
+  <dialog id="draftDialog" class="ci-dialog badge-field-settings-drawer" aria-labelledby="draftTitle"><header class="badge-field-settings-head"><div><h2 id="draftTitle">策略草稿</h2><p>保留分析依据，分别整理销售策略与运营策略。</p></div><button class="icon-btn platform-close-icon" data-close="draftDialog" type="button" aria-label="关闭策略草稿"></button></header><div class="badge-field-settings-body"><div id="draftItems"></div><form id="draftForm" class="ci-draft-form"><label>销售策略<textarea id="salesText" rows="3" placeholder="针对哪些客户，调整什么讲解、材料或销售方式？"></textarea></label><label>运营策略<textarea id="operationsText" rows="3" placeholder="哪些门店或动作需要辅导，执行标准是什么？"></textarea></label><div class="ci-group-grid"><label>负责人<input id="draftOwner" placeholder="填写负责人"></label><label>计划复盘日期<input id="draftReviewDate" type="date"></label></div></form><p class="ci-note">草稿仅保存在当前浏览器。分析项保留加入时的范围与证据；修改当前筛选不会覆盖草稿依据。演示数据不作为正式策略依据。</p></div><footer class="badge-field-settings-footer"><span id="draftStatus" role="status">尚未保存</span><div><button class="btn ghost" id="saveDraft" type="button">保存草稿</button><button class="btn primary" id="downloadDraft" type="button">下载草稿</button></div></footer></dialog>
+  <div id="reportButtonParking" hidden><button class="btn ghost" id="generateReport" type="button">生成AI解读报告</button></div><dialog id="reportDialog" class="ci-dialog ci-report-dialog badge-field-settings-drawer" aria-labelledby="reportTitle"><header class="badge-field-settings-head"><div><h2 id="reportTitle">AI解读报告中心</h2><p>固定模板解读 · 提交时锁定范围 · 演示后台任务</p></div><button class="icon-btn platform-close-icon" data-close="reportDialog" type="button" aria-label="关闭报告中心"></button></header><div class="badge-field-settings-body" data-report-body></div><footer class="badge-field-settings-footer"><span>报告使用提交时的数据快照，不随当前筛选变化。</span><button class="btn ghost" data-close="reportDialog" type="button">关闭</button></footer></dialog>
+  <script src="../../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
+  <script src="./sales-strategy-model.js?v=20261118-analysis-time-v1"></script>
+  <script src="./simplified/demo-topics.js?v=20261117-product-sentiment-v1"></script>
+  <script src="./simplified/date-range.js?v=20261117-last-month-v1"></script>
+  <script src="../../device-management/organization-data.js?v=20261117-real-org-v1"></script>
+  <script src="./simplified/model.js?v=20261118-analysis-time-v1"></script>
+  <script src="../../shared/dimension-switcher.js?v=20261028-full-sync-v1"></script>
+  <script src="../../device-management/visit-organization-filter.js?v=20261028-full-sync-v1"></script>
+  <script src="../../store-dashboard/organization-filter.js?v=20261109-dashboard-path-labels-v1"></script>
+  <script src="../../store-dashboard/business-filters.js?v=20261102-scene-filter-style-v6"></script>
+  <script src="./simplified/factory-filters.js?v=20261116-cohort-v4"></script>
+  <script src="../../factory-dashboard/organization-filter.js?v=20261109-dashboard-path-labels-v1"></script>
+  <script src="./simplified/scope-filters.js?v=20261116-cohort-v4"></script>
+  <script src="./simplified/report-model.js?v=20261117-product-sentiment-v1"></script>
+  <script src="./simplified/reports.js?v=20261117-visit-30-v4"></script>
+  <script src="./simplified/card-image.js?v=20261117-full-card-export-v1"></script>
+  <script src="./simplified/page.js?v=20261118-analysis-time-v1"></script>
+</body>
 </html>
