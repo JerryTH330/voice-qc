@@ -525,6 +525,7 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   font-size: 13px;
   font-weight: 600;
   line-height: normal;
+  text-decoration: none;
 }
 
 .leads-detail-page:not(.customer-detail-page) .leads-detail-actions-side {
@@ -788,6 +789,12 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   min-height: 24px;
   padding: 1px 14px;
   line-height: normal;
+}
+
+.lead-recording-summary-header .intention-level.level-undetermined {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .lead-recording-summary-header .intention-model-row {
@@ -2636,7 +2643,6 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 #leadsDataTable.customer-aggregate-table {
   min-width: 3140px !important;
   width: 3140px !important;
-  table-layout: fixed !important;
   border-collapse: collapse !important;
 }
 
@@ -2664,42 +2670,31 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
 
 #leadsDataTable.customer-aggregate-table th[data-column-key="associationSummary"],
 #leadsDataTable.customer-aggregate-table td[data-column-key="associationSummary"] {
-  width: 380px !important;
   min-width: 380px !important;
-  max-width: 380px !important;
-  white-space: nowrap !important;
 }
 
 #leadsDataTable.customer-aggregate-table th:is(
   [data-column-key="recordCoverage"],
   [data-column-key="storeRecordCoverage"],
-  [data-column-key="leadStatus"],
-  [data-column-key="firstRecordingAt"],
-  [data-column-key="latestRecordingAt"]
+  [data-column-key="leadStatus"]
 ),
 #leadsDataTable.customer-aggregate-table td:is(
   [data-column-key="recordCoverage"],
   [data-column-key="storeRecordCoverage"],
-  [data-column-key="leadStatus"],
-  [data-column-key="firstRecordingAt"],
-  [data-column-key="latestRecordingAt"]
+  [data-column-key="leadStatus"]
 ) {
   width: 138px !important;
   min-width: 138px !important;
   max-width: 138px !important;
 }
 
-#leadsDataTable.customer-aggregate-table th:is(
+#leadsDataTable.customer-aggregate-table :is(th, td):is(
   [data-column-key="firstLeadIssuedAt"],
-  [data-column-key="latestLeadIssuedAt"]
-),
-#leadsDataTable.customer-aggregate-table td:is(
-  [data-column-key="firstLeadIssuedAt"],
-  [data-column-key="latestLeadIssuedAt"]
+  [data-column-key="latestLeadIssuedAt"],
+  [data-column-key="firstRecordingAt"],
+  [data-column-key="latestRecordingAt"]
 ) {
-  width: 166px !important;
   min-width: 166px !important;
-  max-width: 166px !important;
 }
 
 #leadsDataTable.customer-aggregate-table .ai-lead-validity-heading {
@@ -2867,10 +2862,7 @@ html:not(.ai-lead-tooltip-ready) .ai-lead-validity-heading:focus-within .ai-lead
   color: #94a3b8;
 }
 
-/* 关联概况列 — 保持单行，完整展示汇总信息 */
 .cv-association-summary-cell {
-  min-width: 380px;
-  white-space: nowrap;
   line-height: 1.5;
   color: #475569;
   font-size: 13px;

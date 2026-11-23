@@ -4,7 +4,7 @@
   const F = window.InsightScopeFilters;
   const D = window.InsightDateRange;
   let dateRange = null;
-  let factoryFilters, reportCenter, cohortPage = 1, cohortFilter = 'all';
+  let factoryFilters, reportCenter;
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pct = value => value === null ? '—' : value.toFixed(1) + '%';
@@ -27,9 +27,16 @@
   let orgTreePaths = [];
   const expandedProfiles = new Set();
   let result, rows = [], selected = null, evidencePage = 1, evidenceGroup = 'all', completion = 'all', reviewed = new Set(), groupDraft;
-  let drillState = null, drillView = null, activeResult, leadPage = 1, compareView = 'chart';
-  let customerView = 'overview', summaryExpanded = false, actionPage = 1, actionSort = 'asc';
-  const actionPageSize = 10;
+  let drillState = null, drillView = null, activeResult, compareView = 'chart';
+  let customerView = 'overview', summaryExpanded = false, actionSort = 'asc';
+  const twoColumnProfileGrid = window.matchMedia('(max-width: 1000px)');
+  const oneColumnProfileGrid = window.matchMedia('(max-width: 540px)');
+  const profileBatchSize = () => oneColumnProfileGrid.matches ? 2 : twoColumnProfileGrid.matches ? 4 : 6;
+  let summaryBatch = 0, summaryBatchSize = profileBatchSize();
+  let unmountProfileRotation, stopProfileSummaryMotion, unmountProfileDonuts;
+  const pageSizes = [10, 20, 50];
+  const actionPager = { page: 1, size: 10 }, leadPager = { page: 1, size: 10 }, orgPager = { page: 1, size: 10 };
+  let activePager = null;
   const sortedActions = () => rows.map((row, index) => ({ row, index })).sort((a, b) => {
     const left = a.row.completion, right = b.row.completion;
     if (left == null || right == null) return (left == null) - (right == null) || a.index - b.index;
@@ -55,16 +62,20 @@
     const current = options.find(o => o[0] === String(value));
     return `<div class="badge-field-filter badge-field-filter-select ci-select" data-select="${id}"><span>${esc(label)}</span><button class="session-select-trigger" type="button" aria-label="${esc(label)}：${esc(current?.[1] || value)}" aria-haspopup="listbox" aria-expanded="false" aria-controls="${id}Menu"><strong>${esc(current?.[1] || value)}</strong><i class="session-select-caret" aria-hidden="true"></i></button><div class="session-menu-panel badge-field-select-menu" id="${id}Menu" role="listbox" aria-label="${esc(label)}" hidden>${options.map(([key, name, group]) => `<button class="session-menu-option${key === String(value) ? ' active' : ''}" type="button" role="option" aria-selected="${key === String(value)}" data-value="${esc(key)}"><span>${esc(name)}</span>${group ? `<em>${esc(group)}</em>` : ''}</button>`).join('')}</div></div>`;
   }
-  function closeMenus() {
+  function closeAnalysisMenus() {
     dateRange = null;
-    factoryFilters?.closeMenu();
+    if ($('dateMenu')) { $('dateMenu').hidden = true; $('dateMenu').replaceChildren(); }
     document.querySelectorAll('.ci-select').forEach(control => {
       control.classList.remove('is-open');
-      const trigger = control.querySelector('.session-select-trigger');
+      const trigger = control.querySelector('.session-select-trigger, .session-date-trigger');
       trigger?.setAttribute('aria-expanded', 'false');
       const menu = control.querySelector('.session-menu-panel');
       if (menu) menu.hidden = true;
     });
+  }
+  function closeMenus() {
+    factoryFilters?.closeMenu();
+    closeAnalysisMenus();
   }
   function scopeText(s = scope, includeGroups = compare, includeDrill = true) {
     const filterScope = s === scope ? drillRootLabel() : F.summary(F.create(M, s));
@@ -73,7 +84,6 @@
   function renderTemplates() {
     $('analysisTemplates').innerHTML = select('leadStatus', '分析人群', scope.template, Object.entries(M.templates).map(([key, state]) => [key, state.label]));
     $('templateDescription').textContent = M.dispatchExplanation(scope);
-    $('dispatchExplanation').textContent = M.dispatchExplanation(scope);
   }
   function selectTemplate(value) {
     if (!Object.hasOwn(M.templates, value)) return;
@@ -81,43 +91,19 @@
     updateScope({ template: value, comparisonTemplate: M.templates[value].defaultReference });
     document.querySelector('[data-select="leadStatus"] .session-select-trigger')?.focus({ preventScroll: true });
   }
-  function renderCoverage() {
-    const c = result.coverage;
-    $('coverageSummary').innerHTML = [['all','当前人群',c.total],['recorded','已关联录音线索数',c.total - c.no_recording],['no_recording','无录音',c.no_recording]].map(([key,label,count]) => `<button type="button" class="ci-coverage-item" data-cohort-filter="${key}" aria-label="查看${label}的${num(count)}条线索" title="查看${key === 'recorded' ? '已关联录音线索' : label + '线索'}"><span>${label}</span><strong>${num(count)}</strong><small>条</small><svg class="ci-coverage-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`).join('');
-    $('coverageRate').textContent = c.total ? (c.ready * 100 / c.total).toFixed(1) + '%' : '—';
-  }
-  function openCohort(filter = 'all', preservePage = false) {
-    cohortFilter = filter; if (!preservePage) cohortPage = 1;
-    const records = result.records.filter(record => filter === 'all' || (filter === 'recorded' ? record.analysisState !== 'no_recording' : record.analysisState === filter));
-    const pages = Math.max(1, Math.ceil(records.length / 10)); cohortPage = Math.min(pages, Math.max(1, cohortPage));
-    selected = null; $('addFinding').hidden = true;
-    const labels = { all:'人群线索', recorded:'已关联录音线索', ready:'可分析线索', no_recording:'无录音线索', failed:'分析失败线索', no_scene:'无所选场景结果' };
-    const states = { ready:'可分析', no_recording:'无录音', failed:'分析失败', no_scene:'无所选场景结果' };
-    $('detailTitle').textContent = `${M.templates[scope.template].label} · ${labels[filter]}`;
-    $('detailSubtitle').textContent = `共 ${records.length} 条 · 线索下发日期 ${scope.start} 至 ${scope.end} · ${M.ageLabel(scope.minAgeDays)}`;
-    $('detailBody').innerHTML = `<section class="ci-section"><p class="ci-report-scope">${esc(scopeText())}</p><div class="ci-report-table"><table><thead><tr><th>线索ID / 门店</th><th>下发时间</th><th>周期内到店情况</th><th>当前业务状态</th><th>语音分析</th></tr></thead><tbody>${records.slice((cohortPage-1)*10,cohortPage*10).map(record=>`<tr><td>${esc(record.leadId)}<small>${esc(record.store)}</small></td><td>${record.issuedAt.slice(0,10)}<small>已满${record.ageDays}天</small></td><td>${scope.minAgeDays ? (M.inGroup({ ...scope, template: `arrived${scope.minAgeDays}` }, record, 'a') ? `${scope.minAgeDays}天内已到店` : `${scope.minAgeDays}天内未到店`) : '未设置观察周期'}${record.firstVisitAt ? `<small>首次到店 ${esc(record.firstVisitAt.slice(0,10))}</small>` : ''}</td><td>${esc(record.status)}</td><td>${states[record.analysisState]}</td></tr>`).join('') || '<tr><td colspan="5">当前无匹配线索</td></tr>'}</tbody></table></div><div class="ci-drill-pagination"><button class="btn ghost" type="button" data-cohort-page="-1" ${cohortPage===1?'disabled':''}>上一页</button><span>${cohortPage}/${pages}</span><button class="btn ghost" type="button" data-cohort-page="1" ${cohortPage===pages?'disabled':''}>下一页</button></div></section>`;
-    $('detailFooterNote').textContent = '业务人群与语音分析覆盖分开统计';
-    if (!$('detailDialog').open) openDialog('detailDialog');
-  }
   function renderFilters() {
-    const statusHelp = $('mainFilters').querySelector('.ci-status-help');
-    $('mainFilters').innerHTML = `<div class="badge-field-filter badge-field-filter-select ci-select" data-select="dates"><span>线索下发时间</span><button class="session-select-trigger" id="dateTrigger" type="button" aria-label="线索下发时间" aria-haspopup="dialog" aria-expanded="false" aria-controls="dateMenu"><strong>${scope.start} — ${scope.end}</strong><i class="session-select-caret" aria-hidden="true"></i></button><div class="session-menu-panel ci-range-panel" id="dateMenu" role="dialog" aria-label="选择线索下发时间" hidden></div></div>`
-      + `<div id="analysisTemplates">${select('leadStatus', '分析人群', scope.template, Object.entries(M.templates).map(([key, state]) => [key, state.label]))}</div>`
-;
-    if (statusHelp) $('mainFilters').appendChild(statusHelp);
+    const dateControl = window.__dateFilterComponentUtils.renderDateRangeControlMarkup({
+      currentValue: 'custom', startLabel: scope.start, endLabel: scope.end, dataNamespace: 'range',
+      rootClassName: 'fo-date-root', triggerLabel: '线索下发时间', triggerId: 'dateTrigger', menuId: 'dateMenu'
+    });
+    $('mainFilters').innerHTML = `<div class="badge-field-filter ci-select fo-date-control" data-select="dates"><span>线索下发时间</span>${dateControl}<div id="dateMenu" role="dialog" aria-label="选择线索下发时间" hidden></div></div>`
+      + `<div id="analysisTemplates">${select('leadStatus', '分析人群', scope.template, Object.entries(M.templates).map(([key, state]) => [key, state.label]))}</div>`;
     const root = $('insightScopeFilters');
     if (root?.ownerDocument) {
       if (!factoryFilters) factoryFilters = window.InsightFactoryFilters.mount({
-        root, businessRoot: $('insightBusinessFilters'), M, getScope: () => scope,
-        onChange: patch => updateScope(patch), onReset: reset,
-        onBeforeOpen: () => {
-          dateRange = null;
-          document.querySelectorAll('.ci-select').forEach(control => {
-            control.classList.remove('is-open');
-            control.querySelector('.session-select-trigger')?.setAttribute('aria-expanded', 'false');
-            const menu = control.querySelector('.session-menu-panel'); if (menu) menu.hidden = true;
-          });
-        }
+        root, businessRoot: $('insightBusinessFilters'),
+        pathAction: $('insightScopeHelp'), M, getScope: () => scope,
+        onChange: patch => updateScope(patch), onReset: reset, onBeforeOpen: closeAnalysisMenus
       });
       else factoryFilters.sync(scope);
     }
@@ -125,26 +111,20 @@
 
   function renderDateRange(focusDay) {
     if (!dateRange) return;
-    const panel = $('dateMenu'); panel.innerHTML = dateRange.render(); panel.hidden = false;
-    if (panel.getBoundingClientRect) {
-      panel.style.marginLeft = '0px';
-      panel.style.maxHeight = '';
-      panel.style.top = '';
-      const control = panel.closest('.ci-select');
-      if (control?.getBoundingClientRect) {
-        const bounds = control.getBoundingClientRect();
-        const below = window.innerHeight - bounds.bottom - 24, above = bounds.top - 24;
-        const opensAbove = below < 280 && above > below;
-        panel.style.maxHeight = Math.max(120, Math.min(680, opensAbove ? above : below)) + 'px';
-        panel.style.top = opensAbove ? -panel.getBoundingClientRect().height - 8 + 'px' : bounds.height + 8 + 'px';
-      }
-      const rect = panel.getBoundingClientRect();
-      panel.style.marginLeft = Math.min(0, window.innerWidth - 16 - rect.right) + 'px';
-    }
-    if (focusDay) {
-      panel.querySelectorAll('[data-range-day]').forEach(button => button.tabIndex = button.dataset.rangeDay === focusDay ? 0 : -1);
-      document.querySelector(`[data-range-day="${focusDay}"]:not(:disabled)`)?.focus({ preventScroll: true });
-    }
+    const host = $('dateMenu');
+    host.innerHTML = dateRange.render(focusDay);
+    host.hidden = false;
+    const panel = host.firstElementChild;
+    const control = host.closest('.ci-select');
+    const bounds = control.getBoundingClientRect();
+    const below = window.innerHeight - bounds.bottom - 16, above = bounds.top - 16;
+    const opensAbove = below < 280 && above > below;
+    panel.style.maxHeight = Math.max(120, opensAbove ? above : below) + 'px';
+    if (opensAbove) { panel.style.top = 'auto'; panel.style.bottom = 'calc(100% + 6px)'; }
+    const rect = panel.getBoundingClientRect();
+    const left = Math.max(12, Math.min(bounds.left, window.innerWidth - rect.width - 12));
+    panel.style.left = Math.round(left - bounds.left) + 'px';
+    if (focusDay) panel.querySelector(`[data-range-value="${focusDay}"]`)?.focus({ preventScroll: true });
   }
   function openDateRange() {
     closeMenus();
@@ -152,7 +132,7 @@
     $('dateTrigger').setAttribute('aria-expanded','true');
     document.querySelector('[data-select="dates"]')?.classList.add('is-open');
     renderDateRange();
-    document.querySelector('[data-range-preset]:not(:disabled)')?.focus({ preventScroll: true });
+    $('dateMenu').querySelector('[data-range-field="startDate"]').focus({ preventScroll: true });
   }
   function commitDateRange() {
     if (!dateRange?.state.end) return;
@@ -165,12 +145,9 @@
     scope = result.scope;
     $('filterError').hidden = !result.errors.length;
     $('filterError').textContent = result.errors.join(' ');
-    renderTemplates(); renderCoverage();
-    const selectedScope = drillRootLabel();
-    const scenes = scope.scenes.length === M.scenes[scope.stage].length ? '全部场景' : scope.scenes.map(key => M.sceneLabels[key]).join('、') || '未选择';
-    $('activeScopeSummary').textContent = `${compare ? M.templates[scope.template].label + ' / ' + M.templates[scope.comparisonTemplate].label : M.templates[scope.template].label} · ${selectedScope} · 业务场景：${scenes} · 下发 ${scope.start} 至 ${scope.end}`;
+    renderTemplates();
     const emptyNote = $('emptyState').querySelector('p');
-    if (emptyNote) emptyNote.textContent = result.records.length && !result.coverage.ready ? '当前人群有线索，但暂无所选场景的可分析结果。可查看人群明细或调整业务场景。' : '请调整线索下发日期、到店情况或范围。';
+    if (emptyNote) emptyNote.textContent = result.records.length && !result.coverage.ready ? '当前人群有线索，但暂无所选场景的可分析结果。请调整业务场景。' : '请调整线索下发日期、到店情况或范围。';
     document.querySelectorAll('[data-workspace]').forEach(button => {
       const active = button.dataset.workspace === workspace;
       button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1;
@@ -206,49 +183,159 @@
       ? [drillView ? drillView.levelLabel : '客户标签', ...(!drillView && byRegion ? ['区域'] : []), '提及线索', ...(compare ? ['A 组占比', 'B 组占比', '差异（A−B）'] : ['提及占比']), '操作']
       : [drillView ? drillView.levelLabel : 'SOP', '适用线索', ...(compare ? ['A / B 完成率'] : ['动作完成率']), 'SOP 合格率', ...(compare ? ['A 组结果率¹'] : []), '操作'];
     $('analysisHead').innerHTML = `<tr>${heads.map(h => `<th scope="col">${h}</th>`).join('')}</tr>`;
-    const pagedActions = workspace === 'actions' && !compare && !drillState;
-    const tableItems = pagedActions ? sortedActions().slice((actionPage - 1) * actionPageSize, actionPage * actionPageSize) : rows.map((row, index) => ({ row, index }));
+    const pagedActions = workspace === 'actions' && !drillState;
+    const tableItems = pagedActions && !compare ? pageItems(sortedActions(), actionPager) : rows.map((row, index) => ({ row, index }));
     $('analysisRows').innerHTML = tableItems.map(({row, index}) => {
       const details = `<button class="ci-text" type="button" data-start-drill="${index}" aria-label="下钻分析${esc(row.displayName || row.name)}">${workspace === 'actions' ? '下钻' : '下钻分析'}</button>`;
       if (workspace === 'customers') return `<tr><td><strong>${esc(row.displayName || row.name)}</strong><small>${esc(drillView ? drillState.targetName : row.sub)}</small></td>${!drillView && byRegion ? `<td>${esc(row.region)}</td>` : ''}<td>${num(row.count)}<small>分母 ${num(row.denominator)} 条</small></td>${compare ? `<td>${pct(row.aRate)}<small>${row.aCount}/${row.aTotal}</small></td><td>${pct(row.bRate)}<small>${row.bCount}/${row.bTotal}</small></td><td class="ci-blue">${row.delta === null ? '—' : `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp`}</td>` : `<td><span class="ci-bar-value"><strong>${pct(row.share)}</strong><span class="ci-bar" aria-hidden="true"><i style="width:${row.share || 0}%"></i></span></span></td>`}<td>${details}</td></tr>`;
       return `<tr><td><strong>${esc(row.displayName || row.name)}</strong></td><td>${num(row.count)}<small>完成 ${num(row.done)} / 未完成 ${num(row.missed)}</small></td><td>${compare ? `${pct(row.aRate)} / ${pct(row.bRate)}` : pct(row.completion)}</td><td>${pct(row.qualified)}</td>${compare ? `<td>${pct(row.resultDone)} / ${pct(row.resultMissed)}<small>完成 / 未完成动作</small></td>` : ''}<td>${details}</td></tr>`;
     }).join('');
-    if (drillView?.level === 'leads') renderLeads();
-    renderComparisonChart();
-    if (pagedActions && rows.length) {
-      const pages = Math.ceil(rows.length / actionPageSize);
-      actionPage = Math.min(actionPage, pages);
-      $('drillPagination').hidden = false;
-      $('drillPagination').innerHTML = `<span>共 ${num(rows.length)} 条 · 每页 ${actionPageSize} 条</span><div class="ci-tools"><button class="btn ghost" type="button" data-action-page="-1" ${actionPage === 1 ? 'disabled' : ''}>上一页</button><span>${actionPage} / ${pages}</span><button class="btn ghost" type="button" data-action-page="1" ${actionPage === pages ? 'disabled' : ''}>下一页</button></div>`;
-    }
+    const leaf = drillView?.level === 'leads';
+    const leads = leaf && drillState.organizationMode === 'all' ? activeResult.records : drillView?.leads;
+    if (leaf) renderLeads(leads);
+    renderComparisonChart(tableItems);
+    if (pagedActions && rows.length) renderPagination(actionPager, rows.length);
     renderOrganizationDrill();
     renderActionOrganizationDrill();
-    $('emptyState').hidden = drillState?.organizationMode && !compare ? true : drillView?.level === 'leads' ? drillView.leads.length > 0 : rows.length > 0 && result.records.length > 0;
+    $('emptyState').hidden = leaf ? leads.length > 0 : drillState?.organizationMode && !compare ? true : rows.length > 0 && result.records.length > 0;
     $('analysisRows').hidden = result.records.length === 0;
     if (isProfileOverview()) {
       $('analysisTableWrap').hidden = true;
       $('compareVisual').hidden = true;
     }
-    $('draftCount').textContent = draft.items.length;
+  }
+  function renderProfileDirectory() {
+    const directory = $('profileDirectory');
+    stopProfileSummaryMotion?.();
+    unmountProfileRotation?.();
+    $('reportButtonParking').appendChild($('generateReport'));
+    directory.innerHTML = renderProfileSummary();
+    directory.querySelector('.ci-summary-heading')?.appendChild($('generateReport'));
+    const rotation = directory.querySelector('[data-profile-rotation]');
+    unmountProfileRotation = rotation ? window.InsightProfileRotation.mount(rotation, {
+      index: summaryBatch,
+      onIndexChange: index => { summaryBatch = index; }
+    }) : null;
+  }
+  function toggleProfileSummary() {
+    const previous = $('profileSummaryCards');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const animateHeight = previous?.animate && !reducedMotion.matches;
+    const fromHeight = animateHeight ? previous.getBoundingClientRect().height : 0;
+    const closingGrid = animateHeight && summaryExpanded ? previous.firstElementChild : null;
+
+    summaryExpanded = !summaryExpanded;
+    renderProfileDirectory();
+    const button = $('profileDirectory').querySelector('[data-summary-expand]');
+    button?.focus({ preventScroll: true });
+    const cards = $('profileSummaryCards');
+    if (!cards || !button) return;
+
+    function keepToggleVisible() {
+      if (!summaryExpanded && document.activeElement === button) {
+        button.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+      }
+    }
+
+    const toHeight = animateHeight ? cards.getBoundingClientRect().height : fromHeight;
+    if (fromHeight === toHeight) {
+      keepToggleVisible();
+      return;
+    }
+
+    cards.classList.add('is-resizing');
+    if (closingGrid) {
+      // Keep the departing rows visible through the resize and outside keyboard navigation.
+      closingGrid.inert = true;
+      closingGrid.setAttribute('aria-hidden', 'true');
+      closingGrid.classList.add('ci-profile-closing-grid');
+      cards.appendChild(closingGrid);
+    }
+    const animation = cards.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], {
+      duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both'
+    });
+
+    function stop() {
+      reducedMotion.removeEventListener('change', finish);
+      animation.onfinish = null;
+      animation.cancel();
+      closingGrid?.remove();
+      cards.classList.remove('is-resizing');
+      stopProfileSummaryMotion = null;
+    }
+    function finish() {
+      stop();
+      keepToggleVisible();
+    }
+    stopProfileSummaryMotion = stop;
+    animation.onfinish = finish;
+    reducedMotion.addEventListener('change', finish);
+  }
+  function resizeProfileBatches() {
+    const size = profileBatchSize();
+    if (size === summaryBatchSize) return;
+    const directory = $('profileDirectory');
+    const active = document.activeElement;
+    const currentCards = Array.from(directory.querySelectorAll('[data-profile-batch][aria-hidden="false"] .ci-highlight-card'));
+    const activeOffset = currentCards.indexOf(active);
+    const first = summaryBatch * summaryBatchSize;
+    summaryBatch = Math.floor((first + Math.max(activeOffset, 0)) / size);
+    summaryBatchSize = size;
+    if (compare || summaryExpanded || !isProfileOverview()) return;
+    const controlAttribute = directory.contains(active) && ['data-profile-batch-step', 'data-summary-expand', 'id']
+      .find(name => active.hasAttribute(name));
+    const focusSelector = activeOffset >= 0
+      ? `[data-profile-batch][aria-hidden="false"] [data-profile-dimension="${active.dataset.profileDimension}"]`
+      : controlAttribute && `[${controlAttribute}="${active.getAttribute(controlAttribute)}"]`;
+    renderProfileDirectory();
+    if (focusSelector) directory.querySelector(focusSelector)?.focus({ preventScroll: true });
   }
   function renderProfileOverview() {
     const directory = $('profileDirectory'), board = $('profileOverview');
+    unmountProfileDonuts?.();
+    unmountProfileDonuts = null;
     directory.hidden = !isProfileOverview();
     board.hidden = !isProfileOverview();
     document.querySelector('.ci-analysis-toolbar').hidden = isProfileOverview();
-    if (workspace !== 'customers') return;
-    if (!isProfileOverview()) return;
-    $('reportButtonParking').appendChild($('generateReport'));
-    directory.innerHTML = renderProfileSummary();
-    const overviewScope = document.createElement('p');
-    overviewScope.className = 'ci-overview-scope';
-    overviewScope.textContent = $('analysisTitle').textContent;
-    directory.querySelector('.ci-summary-heading h3')?.after(overviewScope);
-    directory.querySelector('.ci-summary-heading')?.appendChild($('generateReport'));
+    if (!isProfileOverview()) {
+      stopProfileSummaryMotion?.();
+      unmountProfileRotation?.();
+      unmountProfileRotation = null;
+      return;
+    }
+    renderProfileDirectory();
     const legend = compare ? `<span><i class="ci-series-a"></i>A · ${esc(M.templates[scope.template].label)} · ${num(result.a.filter(r => r.analysisReady).length)} 条可分析</span><span><i class="ci-series-b"></i>B · ${esc(M.templates[scope.comparisonTemplate].label)} · ${num(result.b.filter(r => r.analysisReady).length)} 条可分析</span>` : `<span><i class="ci-series-a"></i>提及占比 · 分母 ${num(result.coverage.ready)} 条可分析线索</span>`;
+    const views = [['chart', '图表'], ['list', '列表']];
+    board.innerHTML = `<div class="ci-profile-view-toolbar dimension-switcher">
+      <div class="ci-profile-toolbar-heading"><h3>画像明细</h3><div class="ci-profile-legend">${compare ? legend : ''}</div></div>
+      <div class="dimension-switcher__tabs" role="tablist" aria-label="画像展示方式">
+        <span class="dimension-switcher__indicator" aria-hidden="true"><span class="dimension-switcher__indicator-labels">${views.map(([, label]) => `<span>${label}</span>`).join('')}</span></span>
+        ${views.map(([value, label]) => `<button id="profile-view-${value}" type="button" class="dimension-switcher__tab" role="tab" data-profile-view="${value}" aria-controls="profileViewPanel">${label}</button>`).join('')}
+      </div>
+    </div><div class="ci-profile-grid" id="profileViewPanel" role="tabpanel"></div>`;
+    renderProfileView();
+  }
+  function renderProfileView() {
+    const board = $('profileOverview'), panel = $('profileViewPanel');
+    unmountProfileDonuts?.();
     board.classList.toggle('ci-profile-list-view', profileView === 'list');
     board.classList.toggle('ci-profile-has-expanded', expandedProfiles.size > 0);
-    board.innerHTML = `<div class="ci-profile-view-toolbar"><div class="ci-profile-toolbar-heading"><h3>画像明细</h3><div class="ci-profile-legend">${compare ? legend : ''}</div></div><div class="seg-tabs" aria-label="画像展示方式"><button type="button" class="seg-tab ${profileView === 'chart' ? 'active' : ''}" data-profile-view="chart" aria-pressed="${profileView === 'chart'}">图表</button><button type="button" class="seg-tab ${profileView === 'list' ? 'active' : ''}" data-profile-view="list" aria-pressed="${profileView === 'list'}">列表</button></div></div>` + `<div class="ci-profile-grid">${profileGroups.flatMap(group => group.keys).filter(key => M.topics[scope.stage][key]).map(key => profileCard(key)).join('')}</div>`;
+    board.querySelectorAll('[data-profile-view]').forEach(tab => {
+      const selected = tab.dataset.profileView === profileView;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      if (selected) panel.setAttribute('aria-labelledby', tab.id);
+    });
+    panel.innerHTML = profileGroups.flatMap(group => group.keys).filter(key => M.topics[scope.stage][key]).map(profileCard).join('');
+    unmountProfileDonuts = window.InsightProfileDonut.mount(panel);
+  }
+  function selectProfileView(tab, withMotion) {
+    if (tab.dataset.profileView !== profileView) {
+      tab.closest('.ci-profile-view-toolbar').classList.toggle('animate-selection', withMotion);
+      profileView = tab.dataset.profileView;
+      renderProfileView();
+    }
+    tab.focus({ preventScroll: true });
   }
   function renderProfileSummary() {
     const keys = profileGroups.flatMap(group => group.keys.filter(key => M.topics[scope.stage][key]));
@@ -272,13 +359,51 @@
     }
     const meaningful = name => name && !/^(未知|未提及|未识别|无法识别|无法判断|不详|暂无|无数据)$/.test(name.trim());
     const ranked = keys.map(key => ({ key, row: M.distribution(result, key).filter(row => meaningful(row.name)).sort((a, b) => (b.count ?? -1) - (a.count ?? -1))[0] })).sort((a, b) => (b.row?.count ?? -1) - (a.row?.count ?? -1));
-    const shown = summaryExpanded ? ranked : ranked.slice(0, 5);
-    return `<div class="ci-summary-heading"><div><h3>客户画像概览</h3></div></div><div class="ci-highlight-grid">${shown.map(({ key, row }) => {
+    const cards = ranked.map(({ key, row }) => {
       const identified = result.records.filter(record => record.analysisReady && (record.annotations[key] || []).some(a => meaningful(a.name))).length;
       const total = result.records.length;
       const label = esc(M.topics[scope.stage][key].label);
-      return `<button type="button" class="ci-highlight-card" data-profile-dimension="${key}" aria-label="${label}，${row ? `${esc(row.name)}，${pct(row.share)}，${num(row.count)} / ${num(identified)}` : '暂无数据'}，识别覆盖 ${num(identified)} / ${num(total)}，查看画像明细"><span class="ci-highlight-head"><span class="ci-highlight-title"><i class="ci-diff-icon">${dimensionIcon(M.topics[scope.stage][key].label)}</i>${label}</span></span><strong class="ci-highlight-name">${row ? esc(row.name) : '暂无数据'}</strong><span class="ci-highlight-metric"><b>${row ? pct(row.share) : '—'}</b>${row ? `<small>${num(row.count)} / ${num(identified)}</small>` : ''}</span></button>`;
-    }).join('')}</div>${ranked.length > 5 ? `<button class="ci-diff-expand" type="button" data-summary-expand aria-expanded="${summaryExpanded}">${summaryExpanded ? '收起' : `查看更多（${ranked.length}项）`} <span aria-hidden="true">${summaryExpanded ? '↑' : '↓'}</span></button>` : ''}`;
+      const detail = row ? `${esc(row.name)}，${pct(row.share)}，${num(row.count)} / ${num(identified)}` : '暂无数据';
+      return `<button type="button" class="ci-highlight-card" data-profile-dimension="${key}" aria-label="${label}，${detail}，识别覆盖 ${num(identified)} / ${num(total)}，查看画像明细">
+        <img class="ci-highlight-icon" src="./simplified/profile-icons/${key}.png?v=20261123-insight-profile-icons-v2" width="48" height="48" alt="">
+        <span class="ci-highlight-body">
+          <span class="ci-highlight-title">${label}</span>
+          <span class="ci-highlight-metric">
+            <strong>${row ? pct(row.share) : '—'}</strong>
+            <span class="ci-highlight-name">${row ? esc(row.name) : '暂无数据'}</span>
+            ${row ? `<small>${num(row.count)} / ${num(identified)}</small>` : ''}
+          </span>
+        </span>
+      </button>`;
+    });
+    const heading = '<div class="ci-summary-heading"><div><h3>客户画像概览</h3></div></div>';
+    const hasMore = cards.length > summaryBatchSize;
+    const expandButton = hasMore ? `<button class="session-toggle-text-btn" type="button" data-summary-expand aria-expanded="${summaryExpanded}" aria-controls="profileSummaryCards">
+      <span>${summaryExpanded ? '收起' : '展开'}</span>
+      <svg class="session-toggle-text-btn-icon${summaryExpanded ? '' : ' is-collapsed'}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>` : '';
+    if (summaryExpanded || !hasMore) {
+      return `${heading}<div class="ci-profile-summary-cards" id="profileSummaryCards"><div class="ci-highlight-grid">${cards.join('')}</div></div>${hasMore ? `<div class="ci-profile-rotation-footer">${expandButton}</div>` : ''}`;
+    }
+    const batchCount = Math.ceil(cards.length / summaryBatchSize);
+    summaryBatch = Math.min(summaryBatch, batchCount - 1);
+    const batches = [];
+    for (let start = 0; start < cards.length; start += summaryBatchSize) {
+      const inactive = batches.length !== summaryBatch;
+      batches.push(`<div class="ci-highlight-grid" data-profile-batch aria-hidden="${inactive}"${inactive ? ' inert' : ''}>${cards.slice(start, start + summaryBatchSize).join('')}</div>`);
+    }
+    return `${heading}<div role="group" aria-label="画像卡片轮播" data-profile-rotation>
+      <div class="ci-profile-summary-cards" id="profileSummaryCards"><div class="ci-profile-batches" data-profile-batch-window>${batches.join('')}</div></div>
+      <div class="ci-profile-rotation-footer">
+        <div class="ci-profile-rotation-controls">
+          <button class="ci-profile-rotation-button" type="button" data-profile-batch-step="-1" aria-label="上一批画像">‹</button>
+          <span class="ci-profile-batch-status" data-profile-batch-status>${summaryBatch + 1} / ${batchCount}</span>
+          <button class="ci-profile-rotation-button" type="button" data-profile-batch-step="1" aria-label="下一批画像">›</button>
+        </div>
+        <span class="ci-profile-batch-announcement" data-profile-batch-announcement role="status"></span>
+        ${expandButton}
+      </div>
+    </div>`;
   }
   function butterfly(label, aRate, bRate, aCount, aTotal, bCount, bTotal, upper = 100) {
     const bar = (value, series) => `<span class="ci-butterfly-track ci-butterfly-${series}" aria-hidden="true"><i class="ci-series-${series}" style="width:${Number.isFinite(value) ? Math.max(0, Math.min(100, value / upper * 100)) : 0}%"></i></span>`;
@@ -287,16 +412,52 @@
   function profilePieCard(key, items) {
     const expanded = expandedProfiles.has(key);
     const colors = ['#426fd1','#6d91df','#8bbce0','#60a9a1','#94c7b1','#e2b969','#d99278','#a18cc8','#c294b4','#95a5ba','#7390ab','#c9aa84','#9bb6a8'];
-    const pie = (field, group) => {
-      const total = items.reduce((sum, row) => sum + (row[field] || 0), 0);
-      let position = 0;
-      const stops = (expanded ? items : items.slice(0, 5)).map((row, index) => { const start = position; position += total ? (row[field] || 0) / total * 100 : 0; return `${colors[index % colors.length]} ${start}% ${position}%`; });
-      if (!expanded && items.length > 5 && position < 100) stops.push(`#dce3ed ${position}% 100%`);
-      return `<div class="ci-pie-group"><span class="ci-pie-chart${total ? '' : ' is-empty'}" role="img" aria-label="${esc(group)}：${total ? '按标签提及次数构成' : '暂无数据'}" style="${total ? `background:conic-gradient(${stops.join(',')})` : ''}"></span>${compare ? `<strong>${group}</strong>` : ''}</div>`;
-    };
+    const { label, sentiment } = M.topics[scope.stage][key];
     const ranked = items.map((row, index) => ({ row, index }));
     if (compare) ranked.sort((a, b) => (Number.isFinite(b.row.aRate) ? b.row.aRate : -1) - (Number.isFinite(a.row.aRate) ? a.row.aRate : -1) || a.index - b.index);
-    return `<article class="ci-profile-card ci-pie-card${M.topics[scope.stage][key].sentiment ? ' ci-product-card ci-product-' + M.topics[scope.stage][key].sentiment : ''}" id="profile-card-${key}" tabindex="-1" aria-label="${esc(M.topics[scope.stage][key].label)}分布"><header><h4>${esc(M.topics[scope.stage][key].label)}</h4><button type="button" class="ci-text ci-profile-download" data-profile-download="${key}" aria-label="下载${esc(M.topics[scope.stage][key].label)}图片">下载图片</button>${!compare ? `<button type="button" class="ci-text ci-org-entry" data-org-entry="${key}">按组织分析 →</button>` : ''}${compare && items.length > 5 ? `<button type="button" class="ci-text" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '收起 ↑' : '查看更多 ↓'}</button>` : ''}</header><div class="ci-pie-layout"><div class="ci-pie-visual">${compare ? pie('aCount', 'A组') + pie('bCount', 'B组') : pie('count', '当前人群')}</div><div class="ci-pie-list">${(expandedProfiles.has(key) ? ranked : ranked.slice(0, 5)).map(({row, index}) => `<button type="button" class="ci-pie-item" data-profile-drill="${key}" data-profile-index="${index}"><i style="background:${colors[index % colors.length]}"></i><span>${esc(row.name)}</span><strong>${compare ? `A ${pct(row.aRate)}（${num(row.aCount)}/${num(row.aTotal)}）<br>B ${pct(row.bRate)}（${num(row.bCount)}/${num(row.bTotal)}）` : `${pct(row.share)}（${num(row.count)}/${num(row.denominator)}）`}</strong>${compare ? `<small>差异 ${Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp` : '—'}</small>` : ''}</button>`).join('') || '<p class="ci-note">暂无可分析数据</p>'}${items.length > 5 && !compare ? `<button type="button" class="ci-pie-other" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '<span class="ci-pie-other-action">收起 ↑</span>' : '<i></i><span>其他</span><span class="ci-pie-other-action">查看更多 ↓</span>'}</button>` : ''}</div></div></article>`;
+    const visible = expanded ? ranked : ranked.slice(0, 5);
+    const slices = visible.map(({ row, index }) => ({
+      name: row.name, value: row.count, color: colors[index % colors.length], share: pct(row.share)
+    }));
+    const showChart = !compare && profileView === 'chart';
+    let donut = '';
+    if (showChart) {
+      const sampleCount = items[0]?.denominator ?? 0;
+      const rest = ranked.slice(visible.length);
+      if (rest.length) {
+        const value = rest.reduce((sum, { row }) => sum + row.count, 0);
+        slices.push({ name: '其他', value, color: '#dce3ed', share: pct(M.rate(value, sampleCount)) });
+      }
+      const samples = num(sampleCount);
+      donut = `<div class="ci-pie-visual">
+        <div class="ci-profile-donut" role="img" aria-label="按标签提及次数构成，有效线索 ${samples} 条">
+          <div class="ci-profile-donut-plot" data-profile-donut="${esc(JSON.stringify(slices))}" aria-hidden="true"></div>
+          <div class="ci-profile-donut-center" aria-hidden="true"><strong>${samples}</strong><span>有效线索</span></div>
+        </div>
+      </div>`;
+    }
+    const rows = visible.map(({ row, index }, slot) => {
+      const { color, share } = slices[slot];
+      const metrics = compare
+        ? `A ${pct(row.aRate)}（${num(row.aCount)}/${num(row.aTotal)}）<br>B ${pct(row.bRate)}（${num(row.bCount)}/${num(row.bTotal)}）`
+        : `${share}（${num(row.count)}/${num(row.denominator)}）`;
+      const delta = Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp` : '—';
+      return `<button type="button" class="ci-pie-item" data-profile-drill="${key}" data-profile-index="${index}">
+        <i style="background:${color}"></i><span>${esc(row.name)}</span><strong>${metrics}</strong>
+        ${compare ? `<small>差异 ${delta}</small>` : ''}
+      </button>`;
+    }).join('');
+    return `<article class="ci-profile-card ci-pie-card${sentiment ? ' ci-product-card ci-product-' + sentiment : ''}" id="profile-card-${key}" tabindex="-1" aria-label="${esc(label)}分布">
+      <header><h4>${esc(label)}</h4>
+        <button type="button" class="ci-text ci-profile-download" data-profile-download="${key}" aria-label="下载${esc(label)}图片">下载图片</button>
+        ${!compare ? `<button type="button" class="ci-text ci-org-entry" data-org-entry="${key}">按组织分析 →</button>` : ''}
+        ${compare && items.length > 5 ? `<button type="button" class="ci-text" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '收起 ↑' : '查看更多 ↓'}</button>` : ''}
+      </header>
+      <div class="ci-pie-layout">${donut}<div class="ci-pie-list">
+        ${rows || '<p class="ci-note">暂无可分析数据</p>'}
+        ${items.length > 5 && !compare ? `<button type="button" class="ci-pie-other" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '<span class="ci-pie-other-action">收起 ↑</span>' : '<i></i><span>其他</span><span class="ci-pie-other-action">查看更多 ↓</span>'}</button>` : ''}
+      </div></div>
+    </article>`;
   }
   function profileCard(key) {
     const items = M.distribution(result, key);
@@ -342,6 +503,7 @@
     try {
       if (document.fonts?.ready) await document.fonts.ready;
       document.body.appendChild(mount);
+      window.InsightProfileDonut.renderSnapshot(card);
       const blob = await window.InsightCardImage.toBlob(card, { pixelRatio: 2 });
       const url = URL.createObjectURL(blob), link = document.createElement('a');
       try {
@@ -359,7 +521,7 @@
   }
   function openProfileDetail(key) {
     if (!M.topics[scope.stage][key]) return;
-    dimension = key; customerView = 'detail'; byRegion = false; drillState = null; drillScroll.clear(); leadPage = 1; compareView = 'chart'; render();
+    dimension = key; customerView = 'detail'; byRegion = false; drillState = null; drillScroll.clear(); leadPager.page = 1; orgPager.page = 1; compareView = 'chart'; render();
     $('analysisTitle').tabIndex = -1; $('analysisTitle').focus({ preventScroll: true });
     $('analysisTitle').scrollIntoView?.({ block: 'start' });
   }
@@ -369,6 +531,7 @@
   }
   function renderDrillNavigation() {
     $('drillNavigation').hidden = !drillState;
+    activePager = null;
     $('drillPagination').hidden = true;
     if (!drillState) { $('drillNavigation').innerHTML = ''; return; }
     const baseLabel = workspace === 'customers' ? '客户画像' : 'SOP分析';
@@ -376,10 +539,15 @@
     $('drillNavigation').innerHTML = `<div class="ci-breadcrumbs">${crumbs.join('<span aria-hidden="true">/</span>')}</div><div class="ci-tools"><button class="ci-text" data-drill-back="${drillState.path.length ? drillState.path.length-1 : -1}" type="button">← 返回上级</button>${workspace === 'actions' || drillState.organizationMode === 'all' ? '' : `<button class="btn ghost" id="scopeEvidence" type="button" ${drillView?.summary?.records.length ? '' : 'disabled'}>查看当前证据</button>`}</div>`;
   }
   function positionKey() { return drillState ? JSON.stringify([drillState.kind, drillState.dimension, drillState.targetId, drillState.path.map(p=>p.id)]) : 'root:' + workspace; }
-  function rememberPosition() { const main = document.querySelector('.main'); drillScroll.set(positionKey(), { scrollTop: main?.scrollTop || 0, leadPage }); }
+  function rememberPosition() {
+    drillScroll.set(positionKey(), { scrollTop: document.querySelector('.main').scrollTop,
+      leadPage: leadPager.page, leadSize: leadPager.size, orgPage: orgPager.page, orgSize: orgPager.size });
+  }
   function restorePosition() {
     const saved = drillScroll.get(positionKey()), main = document.querySelector('.main');
-    leadPage = saved?.leadPage || 1; render();
+    leadPager.page = saved?.leadSize === leadPager.size ? saved.leadPage : 1;
+    orgPager.page = saved?.orgSize === orgPager.size ? saved.orgPage : 1;
+    render();
     $('analysisTitle').tabIndex = -1; $('analysisTitle').focus({ preventScroll: true });
     if (main && saved) main.scrollTop = saved.scrollTop;
     else $('analysisTitle').scrollIntoView?.({ block: 'start' });
@@ -397,42 +565,79 @@
       const record = result.records.find(r => r.region === chosenRegion);
       if (record && scope.organizationDimension !== 'geography') drillState.path.push({ level:'region', id:record.regionId, name:record.region });
     }
-    leadPage = 1; restorePosition();
+    restorePosition();
   }
   function drillBack(depth) {
     if (!drillState) return; rememberPosition();
     if (depth < 0) drillState = null; else drillState.path = drillState.path.slice(0, depth);
     restorePosition();
   }
-  function renderLeads() {
-    const total = drillView.leads.length, pages = Math.max(1, Math.ceil(total/10));
-    leadPage = Math.min(pages, Math.max(1, leadPage));
-    $('analysisHead').innerHTML = `<tr><th>线索 ID</th><th>车型 / 场景</th><th>当前状态</th><th>下发日期 / 时长</th>${workspace === 'customers' ? '<th>操作</th>' : ''}</tr>`;
-    $('analysisRows').innerHTML = drillView.leads.slice((leadPage-1)*10,leadPage*10).map(record => `<tr><td><strong>${esc(record.leadId)}</strong><small>${esc(record.advisor)}</small></td><td>${esc(record.model)}<small>${esc(M.sceneLabels[record.scene])}</small></td><td>${esc(record.status)}${compare ? `<small>${M.inGroup(scope, record, 'a')?'A':'B'} 组</small>` : ''}</td><td>${record.issuedAt.slice(0,10)}<small>已满${record.ageDays}天</small></td>${workspace === 'customers' ? `<td><button class="ci-text" data-lead-evidence="${esc(record.id)}" type="button">查看证据</button></td>` : ''}</tr>`).join('');
-    $('drillPagination').hidden = total === 0;
-    $('drillPagination').innerHTML = `<span>共 ${num(total)} 条 · 每页 10 条</span><div class="ci-tools"><button class="btn ghost" type="button" data-lead-page="-1" ${leadPage===1?'disabled':''}>上一页</button><span>${leadPage}/${pages}</span><button class="btn ghost" type="button" data-lead-page="1" ${leadPage===pages?'disabled':''}>下一页</button></div>`;
+  function pageItems(items, pager) {
+    const pages = Math.max(1, Math.ceil(items.length / pager.size));
+    pager.page = Math.min(pages, Math.max(1, pager.page));
+    return items.slice((pager.page - 1) * pager.size, pager.page * pager.size);
   }
-  function renderActionChart() {
+  function renderPagination(pager, total) {
+    activePager = pager;
+    const root = $('drillPagination');
+    root.hidden = !total;
+    if (!total) return;
+    const pages = Math.ceil(total / pager.size);
+    const current = pager.page;
+    const numbers = pages <= 7 ? Array.from({ length: pages }, (_, i) => i + 1)
+      : [...new Set([1, current - 1, current, current + 1, pages])].filter(n => n >= 1 && n <= pages).sort((a, b) => a - b);
+    $('analysisPageTotal').textContent = `共 ${num(total)} 条`;
+    $('analysisPageSize').textContent = `${pager.size} 条/页`;
+    $('analysisSizeMenu').innerHTML = pageSizes.map(size =>
+      `<button type="button" class="page-size-option${size === pager.size ? ' active' : ''}" role="option" aria-selected="${size === pager.size}" data-value="${size}"><span>${size} 条/页</span></button>`
+    ).join('');
+    const markup = numbers.map((n, index) => {
+      const gap = index > 0 && n - numbers[index - 1] > 1 ? '<span class="page-ellipsis" aria-hidden="true">…</span>' : '';
+      return gap + `<button type="button" class="page-num${n === current ? ' active' : ''}" data-analysis-page="${n}" aria-label="第 ${n} 页"${n === current ? ' aria-current="page"' : ''}>${n}</button>`;
+    }).join('');
+    $('analysisPageNumbers').innerHTML = markup;
+    root.querySelector('[data-page-step="-1"]').disabled = current === 1;
+    root.querySelector('[data-page-step="1"]').disabled = current === pages;
+    $('analysisPageJump').max = pages;
+    $('analysisPageJump').value = current;
+  }
+  function goToPage(value, focusSelector) {
+    if (!activePager) return;
+    const jump = $('analysisPageJump');
+    const page = Number(value);
+    if (String(value).trim() === '' || !Number.isFinite(page)) { jump.value = activePager.page; return; }
+    const next = Math.max(1, Math.min(Number(jump.max), Math.trunc(page)));
+    if (next !== activePager.page) { activePager.page = next; render(); }
+    jump.value = next;
+    if (focusSelector) {
+      const root = $('drillPagination');
+      (root.querySelector(focusSelector) || root.querySelector('[aria-current="page"]'))?.focus({ preventScroll: true });
+    }
+  }
+  function renderLeads(records) {
+    const showEvidence = workspace === 'customers' && drillState.organizationMode !== 'all';
+    $('analysisHead').innerHTML = `<tr><th scope="col">线索 ID</th><th scope="col">车型 / 场景</th><th scope="col">当前状态</th><th scope="col">下发日期 / 时长</th>${showEvidence ? '<th scope="col">操作</th>' : ''}</tr>`;
+    $('analysisRows').innerHTML = pageItems(records, leadPager).map(record => `<tr><td><strong>${esc(record.leadId)}</strong><small>${esc(record.advisor)}</small></td><td>${esc(record.model)}<small>${esc(M.sceneLabels[record.scene])}</small></td><td>${esc(record.status)}${compare ? `<small>${M.inGroup(scope, record, 'a')?'A':'B'} 组</small>` : ''}</td><td>${record.issuedAt.slice(0,10)}<small>已满${record.ageDays}天</small></td>${showEvidence ? `<td><button class="ci-text" data-lead-evidence="${esc(record.id)}" type="button">查看证据</button></td>` : ''}</tr>`).join('');
+    renderPagination(leadPager, records.length);
+  }
+  function renderActionChart(sorted) {
     $('chartLegend').innerHTML = '';
-    const sorted = sortedActions().slice((actionPage - 1) * actionPageSize, actionPage * actionPageSize);
     $('comparisonChart').innerHTML = `<div class="ci-action-chart ci-action-simple ci-action-reference" role="group" aria-label="SOP执行率条形图"><div class="ci-action-reference-head"><span>SOP项目</span><span>执行率</span><span>已执行 / 适用</span><span>操作</span></div>${sorted.map(({row,index}) => {
       const name = row.displayName || row.name;
       const available = row.count > 0;
       return `<button class="ci-action-row" type="button" data-start-drill="${index}" aria-label="${esc(name)}，执行率${pct(row.completion)}，${num(row.done)} / ${num(row.count)}，按组织下钻"><span class="ci-action-name">${esc(name)}</span><span class="ci-action-reference-rate"><strong>${pct(row.completion)}</strong><span class="ci-action-track${available ? '' : ' is-empty'}" aria-hidden="true"><i class="ci-action-done" style="width:${row.completion || 0}%"></i></span></span><span class="ci-action-reference-count">${available ? `${num(row.done)} / ${num(row.count)}` : '暂无数据'}</span><span class="ci-action-reference-link">下钻 <b aria-hidden="true">›</b></span></button>`;
     }).join('')}</div>`;
   }
-  function renderComparisonChart() {
+  function renderComparisonChart(tableItems) {
     const visible = rows.length > 0 && drillView?.level !== 'leads';
-    $('analysisTableWrap').classList.toggle('ci-action-reference-table', workspace === 'actions' && !compare && !drillState);
     $('compareVisual').classList.toggle('ci-action-reference-visual', workspace === 'actions' && !compare && !drillState);
-    $('drillPagination').classList.toggle('ci-action-reference-pagination', workspace === 'actions' && !compare && !drillState);
     $('compareVisual').hidden = !visible;
     $('comparisonChart').hidden = false;
     $('analysisTableWrap').hidden = visible;
     $('actionSortControls').innerHTML = workspace === 'actions' && !compare && !drillState
       ? `<span class="ci-note">执行率排序</span><button class="btn ${actionSort === 'desc' ? 'primary' : 'ghost'}" type="button" data-action-sort="desc" aria-pressed="${actionSort === 'desc'}">从高到低</button><button class="btn ${actionSort === 'asc' ? 'primary' : 'ghost'}" type="button" data-action-sort="asc" aria-pressed="${actionSort === 'asc'}">从低到高</button>` : '';
     if (!visible) { $('comparisonChart').innerHTML = ''; return; }
-    if (!compare && workspace === 'actions') { renderActionChart(); return; }
+    if (!compare && workspace === 'actions') { renderActionChart(tableItems); return; }
     if (!compare) {
       $('chartLegend').innerHTML = `<span><i class="ci-series-a" aria-hidden="true"></i>${esc(M.templates[scope.template].label)} · 提及占比</span><small>分母为各组织范围内可分析线索 · 点击条形图下钻</small>`;
       $('comparisonChart').innerHTML = `<div class="ci-chart-axis-row"><span>${drillView ? drillView.levelLabel : '客户标签'}</span><span class="ci-profile-detail-axis"><span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></span><span>提及 / 可分析</span></div><div role="group" aria-label="提及占比条形图">${rows.map((row,index) => `<button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="${index}" aria-label="下钻分析${esc(row.displayName || row.name)}：${pct(row.share)}，${row.count}/${row.denominator}条"><span class="ci-chart-name"><strong>${esc(row.displayName || row.name)}</strong><small>${esc(row.region || row.sub || drillState?.targetName || '')}</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:${row.share || 0}%"></i></span><strong>${pct(row.share)}</strong></span><span class="ci-chart-difference"><strong>${num(row.count)}/${num(row.denominator)}</strong><em>下钻分析 →</em></span></button>`).join('')}</div><p class="ci-chart-caption">统一使用0–100%刻度；提及线索按线索ID去重。同一线索可提及多个标签。</p>`;
@@ -440,7 +645,8 @@
     }
     $('chartLegend').innerHTML = `<span><i class="ci-series-a" aria-hidden="true"></i>A · ${esc(M.templates[scope.template].label)} · ${num(activeResult.a.filter(r=>r.analysisReady).length)}条可分析</span><span><i class="ci-series-b" aria-hidden="true"></i>B · ${esc(M.templates[scope.comparisonTemplate].label)} · ${num(activeResult.b.filter(r=>r.analysisReady).length)}条可分析</span><small>${workspace==='customers'?'提及占比':'动作完成率'} · 每项保留自身分母</small>`;
     const chart = M.comparisonChart(rows);
-    $('comparisonChart').innerHTML = `<div role="group" aria-label="A、B 组蝴蝶对比图">${chart.rows.map(item => {
+    const chartRows = workspace === 'actions' && !drillState ? pageItems(chart.rows, actionPager) : chart.rows;
+    $('comparisonChart').innerHTML = `<div role="group" aria-label="A、B 组蝴蝶对比图">${chartRows.map(item => {
       const row = item.row, label = row.displayName || row.name;
       const delta = item.delta === null ? '—' : `${item.delta > 0 ? '+' : ''}${item.delta.toFixed(1)} pp`;
       return `<button class="ci-butterfly-row" type="button" data-start-drill="${item.index}" aria-label="下钻分析${esc(label)}：A ${pct(row.aRate)}，B ${pct(row.bRate)}，差异 ${delta}">${butterfly(label, row.aRate, row.bRate, row.aCount, row.aTotal, row.bCount, row.bTotal, chart.upper)}<span class="ci-butterfly-delta">差异 ${delta} · 下钻分析 →</span></button>`;
@@ -452,7 +658,7 @@
     const enabled = !!(drillState?.organizationMode && !compare && workspace === 'customers');
     host.hidden = !enabled;
     if (!enabled) return;
-    $('compareVisual').hidden = true; $('analysisTableWrap').hidden = true;
+    $('compareVisual').hidden = true; $('analysisTableWrap').hidden = drillView.level !== 'leads';
     const all = drillState.organizationMode === 'all', label = M.topics[scope.stage][dimension].label;
     $('analysisTitle').textContent = all ? `${label} · 按组织分析` : `${label}：${drillState.targetName} · 组织分布`;
     $('analysisDescription').textContent = drillView.level === 'leads' ? '已到组织末级，可查看当前范围内的线索。' : `查看下一级${drillView.levelLabel}，点击组织继续下钻。`;
@@ -472,7 +678,7 @@
     let body = '';
     if (drillView.level === 'leads') {
       const records = all ? activeResult.records : (drillView.summary?.records || []);
-      body = `<div class="ci-org-end"><strong>已到组织末级</strong><p>当前${all?'组织':'画像值'}共 ${num(records.length)} 条线索</p>${records.map(r=>`<div>${esc(r.leadId)} ${all?'':`<button class="ci-text" data-lead-evidence="${esc(r.id)}">查看证据</button>`}</div>`).join('')}</div>`;
+      body = `<p class="ci-note">已到组织末级，当前${all ? '组织' : '画像值'}共 ${num(records.length)} 条线索。</p>`;
     } else if (all && orgView === 'cards') {
       body = `<div class="ci-org-grid">${groups.map(g=>`<article class="ci-org-card"><header><div><strong>${esc(g.child.name)}</strong><small>提及${esc(label)} ${num(g.denominator)} / ${num(g.sub.records.length)} 条</small></div><button class="ci-text" data-org-next="${g.index}">查看下一级 →</button></header><div>${(expandedOrgs.has(String(g.index)) ? g.values : g.values.slice(0,5)).map(v=>`<button class="ci-org-value" data-org-next="${g.index}" data-tag-name="${esc(v.name)}"><span>${esc(v.name)}</span><strong>${pct(v.share)}</strong><small>${num(v.count)}/${num(v.denominator)}</small><span>›</span></button>`).join('') || '<p class="ci-note">暂无画像数据</p>'}</div>${g.values.length>5?`<button class="ci-text ci-org-expand" data-org-expand="${g.index}">${expandedOrgs.has(String(g.index))?'收起':'展开全部'} ${g.values.length} 项</button>`:''}</article>`).join('')}</div>`;
     } else {
@@ -495,7 +701,8 @@
           return {child,nextPath,values,denominator,count,den,value:den ? count / den * 100 : null};
         });
         if (!all) siblings.sort((a,b) => (b.value ?? -1) - (a.value ?? -1));
-        return siblings.map(item => {
+        const visible = depth ? siblings : organizationPage(siblings);
+        return visible.map(item => {
           const pathKey = JSON.stringify(item.nextPath), index = orgTreePaths.push(item.nextPath) - 1;
           const next = M.drill(result, drillState, item.nextPath);
           const expandable = next.level !== 'leads' && next.children.length > 0;
@@ -507,10 +714,15 @@
         }).join('');
       };
       const heading = all ? names.map(n=>`<th scope="col">${esc(n)}</th>`).join('') : `<th scope="col">${orgMetric==='local'?'组织内画像占比':'上级线索来源占比'}</th><th scope="col">画像值线索数 / 分母线索数</th>`;
-      body = `<div class="ci-org-table-wrap"><table class="ci-org-table"><thead><tr><th scope="col">组织</th>${heading}</tr></thead><tbody>${renderLevel(drillState.path,0)}</tbody></table></div>`;
+      body = `<div class="ci-org-table-wrap"><table class="data-table badge-data-table ci-org-table"><thead><tr><th scope="col">组织</th>${heading}</tr></thead><tbody>${renderLevel(drillState.path,0)}</tbody></table></div>`;
     }
     if (drillView.level !== 'leads' && !groups.length) body = '<div class="ci-org-end">当前范围暂无下级组织数据</div>';
     host.innerHTML = `<div class="ci-org-toolbar"><div><strong>${all?`各${esc(drillView.levelLabel)}画像分布`:`${esc(drillState.targetName)} · ${num(totalTag)} 条`}</strong><small>${all?'点击画像值，追踪该值在下一级组织的分布':orgMetric==='local'?`分母为本组织提及${esc(label)}的线索数`:`分母为直接上级组织提及该画像值的线索数`}</small></div><div class="ci-org-controls">${!all?'<button class="ci-text" data-org-mode="all">查看完整画像</button>':''}${drillView.level!=='leads'?tabs:''}<details class="ci-org-help"><summary aria-label="查看统计口径说明" title="统计口径说明">?</summary><div class="ci-org-help-panel"><strong>统计口径</strong><p><b>组织内画像占比</b>：本组织提及该画像值的去重线索数 ÷ 本组织提及该画像维度的去重线索数。用于比较画像值在各组织的普遍程度。</p><p><b>上级线索来源占比</b>：本组织提及该画像值的去重线索数 ÷ 直接上级组织提及该画像值的去重线索数。用于查看上级命中的线索来自哪些下级组织；展开后每层以上一级为分母。</p><p><b>画像值线索数 / 分母线索数</b>：依次对应当前占比的分子与分母。分母为 0 时显示“—”。同一线索按线索 ID 去重。</p></div></details></div></div>${body}`;
+  }
+  function organizationPage(items) {
+    const visible = pageItems(items, orgPager);
+    if (items.length > pageSizes[0]) renderPagination(orgPager, items.length);
+    return visible;
   }
   function renderActionOrganizationDrill() {
     const host = $('organizationDrill');
@@ -525,7 +737,8 @@
     const renderLevel = (path, depth) => {
       const parent = M.drill(result, drillState, path);
       const ordered = [...parent.children].sort((a,b) => (a.summary?.completion ?? Infinity) - (b.summary?.completion ?? Infinity) || a.name.localeCompare(b.name,'zh-CN'));
-      return ordered.map(child => {
+      const visible = depth ? ordered : organizationPage(ordered);
+      return visible.map(child => {
         const nextPath = [...path, {level:child.level, id:child.id, name:child.name}];
         const index = orgTreePaths.push(nextPath) - 1;
         const next = M.drill(result, drillState, nextPath);
@@ -538,7 +751,7 @@
       }).join('');
     };
     const body = renderLevel(drillState.path,0);
-    host.innerHTML = `<div class="ci-org-toolbar"><div><strong>各组织 SOP 分析</strong><small>按同级完成率从低到高排序 · 完成率及合格率均以适用线索数为分母</small></div></div>${body ? `<div class="ci-org-table-wrap"><table class="ci-org-table ci-sop-tree"><thead><tr><th scope="col">组织</th><th scope="col">适用线索</th><th scope="col">已完成</th><th scope="col">未完成</th><th scope="col">完成率</th><th scope="col">合格率</th><th scope="col">操作</th></tr></thead><tbody>${body}</tbody></table></div>` : '<div class="ci-org-end">当前范围暂无下级组织数据</div>'}`;
+    host.innerHTML = `<div class="ci-org-toolbar"><div><strong>各组织 SOP 分析</strong><small>按同级完成率从低到高排序 · 完成率及合格率均以适用线索数为分母</small></div></div>${body ? `<div class="ci-org-table-wrap"><table class="data-table badge-data-table ci-org-table ci-sop-tree"><thead><tr><th scope="col">组织</th><th scope="col">适用线索</th><th scope="col">已完成</th><th scope="col">未完成</th><th scope="col">完成率</th><th scope="col">合格率</th><th scope="col">操作</th></tr></thead><tbody>${body}</tbody></table></div>` : '<div class="ci-org-end">当前范围暂无下级组织数据</div>'}`;
   }
   function openScopeEvidence(leadId) {
     if (!drillView?.summary) return;
@@ -552,10 +765,11 @@
   }
   function updateScope(patch) {
     scope = { ...scope, ...patch };
-    actionPage = 1;
+    summaryBatch = 0;
+    actionPager.page = 1;
     byRegion = false;
     expandedOrgTree.clear();
-    drillState = null; drillView = null; leadPage = 1; drillScroll.clear();
+    drillState = null; drillView = null; leadPager.page = 1; orgPager.page = 1; drillScroll.clear();
     selected = null;
     renderFilters(); render();
   }
@@ -628,13 +842,15 @@
   function renderDraftItems() {
     $('draftItems').innerHTML = draft.items.length ? draft.items.map((item, index) => `<article class="ci-draft-item"><header><strong>${esc(item.name)}</strong><button class="ci-text" type="button" data-remove-item="${index}">移除</button></header><p>${esc(item.kind)} · ${esc(item.stats)}</p>${item.reference ? `<p>动作定义中的参考执行要求：${esc(item.reference)}</p>` : ''}<details><summary>查看加入时的范围与 ${item.evidence.length} 条复核证据</summary><p>${esc(item.scopeText)}</p>${item.evidence.map(e => `<blockquote>${esc(e.text)}<br>线索 ${esc(e.id)} · ${esc(e.store)} · ${esc(e.advisor)}</blockquote>`).join('')}</details></article>`).join('') : '<div class="ci-empty-draft">尚未添加分析依据<br>从客户标签或SOP详情中复核证据后添加。</div>';
     $('downloadDraft').disabled = !draft.items.length;
-    $('draftCount').textContent = draft.items.length;
   }
   function openDraft() {
     renderDraftItems(); $('salesText').value = draft.sales; $('operationsText').value = draft.operations; $('draftOwner').value = draft.owner; $('draftReviewDate').value = draft.reviewDate;
     openDialog('draftDialog');
   }
   function changeSelect(id, value) {
+    if (id === 'analysisPageSize' && activePager && pageSizes.includes(Number(value))) {
+      activePager.size = Number(value); activePager.page = 1; render(); return;
+    }
     if (id === 'leadStatus') { selectTemplate(value); return; }
     if (id === 'dimension') { openProfileDetail(value); return; }
     if (id === 'evidenceGroup' || id === 'completion') { if (id === 'evidenceGroup') evidenceGroup = value; else completion = value; evidencePage = 1; renderDetail(); return; }
@@ -681,41 +897,42 @@
   });
   document.addEventListener('click', event => {
     const target = event.target;
-    const preset = target.closest('[data-range-preset]:not(:disabled)');
-    if (preset && dateRange) {
-      const { rangePreset } = preset.dataset;
-      dateRange.preset(rangePreset);
+    const dateButton = target.closest('#dateMenu button');
+    if (dateRange && dateButton) {
+      const { rangeShortcut, rangeNav, rangeField, rangeValue, rangeApply, rangeCancel } = dateButton.dataset;
+      if (rangeApply) { commitDateRange(); return; }
+      if (rangeCancel) { closeMenus(); $('dateTrigger').focus(); return; }
+      if (rangeValue) { dateRange.pick(rangeValue); renderDateRange(rangeValue); return; }
+      if (rangeShortcut) dateRange.preset(rangeShortcut);
+      if (rangeField) dateRange.selectField(rangeField);
+      if (rangeNav) dateRange.navigate(Number(rangeNav));
       renderDateRange();
-      $('dateMenu').querySelector(`[data-range-preset="${rangePreset}"]`)?.focus({ preventScroll: true });
+      const selector = rangeNav ? `[data-range-nav="${rangeNav}"]:not(:disabled)`
+        : rangeField ? `[data-range-field="${rangeField}"]` : `[data-range-shortcut="${rangeShortcut}"]`;
+      ($('dateMenu').querySelector(selector) || $('dateMenu').querySelector('.session-date-tab.active')).focus({ preventScroll: true });
       return;
     }
-    const monthNav = target.closest('[data-range-nav]'); if (monthNav && dateRange) { dateRange.navigate(Number(monthNav.dataset.rangeNav)); renderDateRange(); document.querySelector(`[data-range-nav="${monthNav.dataset.rangeNav}"]:not(:disabled)`)?.focus(); return; }
-    const calendarDay = target.closest('[data-range-day]:not(:disabled)'); if (calendarDay && dateRange) {
-      dateRange.pick(calendarDay.dataset.rangeDay);
-      renderDateRange(calendarDay.dataset.rangeDay);
-      return;
-    }
-    if (target.id === 'applyDate') { commitDateRange(); return; }
-    if (target.id === 'cancelDate') { closeMenus(); $('dateTrigger').focus(); return; }
     document.querySelectorAll('.ci-template-help[open]').forEach(help => { if (!help.contains(target)) help.open = false; });
     const templateButton = target.closest('[data-template]'); if (templateButton) { selectTemplate(templateButton.dataset.template); return; }
-    const cohort = target.closest('[data-cohort-filter]'); if (cohort) { openCohort(cohort.dataset.cohortFilter); return; }
-    const cohortTurn = target.closest('[data-cohort-page]'); if (cohortTurn) { cohortPage += Number(cohortTurn.dataset.cohortPage); openCohort(cohortFilter, true); return; }
     // Shared filters may replace the clicked control before the event reaches the document.
-    if (event.composedPath().includes($('insightScopeFilters'))) return;
+    const eventPath = event.composedPath();
+    if (eventPath.includes($('insightScopeFilters')) && !eventPath.includes($('mainFilters'))) return;
     const option = target.closest('[role="option"][data-value]');
     if (option) { const control = option.closest('[data-select]'), id = control.dataset.select, value = option.dataset.value; closeMenus(); changeSelect(id, value); document.querySelector(`[data-select="${id}"] .session-select-trigger`)?.focus(); return; }
+    if (target.closest('#dateTrigger')) {
+      if (dateRange) { closeMenus(); $('dateTrigger').focus(); } else openDateRange();
+      return;
+    }
     const trigger = target.closest('.ci-select .session-select-trigger');
     if (trigger) {
       const control = trigger.closest('.ci-select'), menu = control.querySelector('.session-menu-panel'), open = menu.hidden;
-      if (control.dataset.select === 'dates') { if (open) openDateRange(); else { closeMenus(); trigger.focus(); } return; }
       closeMenus(); menu.hidden = !open; control.classList.toggle('is-open', open); trigger.setAttribute('aria-expanded', String(open)); return;
     }
     if (!target.closest('.ci-select')) closeMenus();
     if (target.closest('[data-profile-home]')) { showProfileOverview(); return; }
-    if (target.closest('[data-summary-expand]')) { summaryExpanded = !summaryExpanded; renderProfileOverview(); document.querySelector('[data-summary-expand]')?.focus({ preventScroll: true }); return; }
+    if (target.closest('[data-summary-expand]')) { toggleProfileSummary(); return; }
     const profileViewButton = target.closest('[data-profile-view]');
-    if (profileViewButton) { profileView = profileViewButton.dataset.profileView; renderProfileOverview(); return; }
+    if (profileViewButton) { selectProfileView(profileViewButton, event.detail > 0); return; }
     const profileLink = target.closest('[data-profile-dimension]');
     if (profileLink) {
       const key = profileLink.dataset.profileDimension;
@@ -730,33 +947,35 @@
       const key = profileExpand.dataset.profileExpand, board = $('profileOverview');
       if (!expandedProfiles.size) board.style.setProperty('--profile-base-height', `${profileExpand.closest('.ci-profile-card').getBoundingClientRect().height}px`);
       if (expandedProfiles.has(key)) expandedProfiles.delete(key); else expandedProfiles.add(key);
-      renderProfileOverview();
+      renderProfileView();
       if (!expandedProfiles.size) board.style.removeProperty('--profile-base-height');
       board.querySelector(`[data-profile-expand="${key}"]`)?.focus({ preventScroll: true });
       return;
     }
     const profileDetail = target.closest('[data-profile-detail]'); if (profileDetail) { openProfileDetail(profileDetail.dataset.profileDetail); return; }
     const orgEntry = target.closest('[data-org-entry]');
-    if (orgEntry) { dimension = orgEntry.dataset.orgEntry; customerView = 'detail'; drillState = { kind:'customers', dimension, targetName:M.topics[scope.stage][dimension].label, path:[], organizationMode:'all' }; orgView='cards'; expandedOrgs.clear(); expandedOrgTree.clear(); render(); $('analysisTitle').scrollIntoView?.({block:'start'}); return; }
+    if (orgEntry) { orgPager.page = 1; leadPager.page = 1; dimension = orgEntry.dataset.orgEntry; customerView = 'detail'; drillState = { kind:'customers', dimension, targetName:M.topics[scope.stage][dimension].label, path:[], organizationMode:'all' }; orgView='cards'; expandedOrgs.clear(); expandedOrgTree.clear(); render(); $('analysisTitle').scrollIntoView?.({block:'start'}); return; }
     const orgToggle = target.closest('[data-org-view]'); if (orgToggle) { orgView=orgToggle.dataset.orgView; render(); return; }
     const metricToggle = target.closest('[data-org-metric]'); if (metricToggle) { orgMetric=metricToggle.dataset.orgMetric; render(); return; }
     const orgExpand = target.closest('[data-org-expand]'); if (orgExpand) { const id=orgExpand.dataset.orgExpand; expandedOrgs.has(id) ? expandedOrgs.delete(id) : expandedOrgs.add(id); render(); return; }
     const treeToggle = target.closest('[data-tree-toggle]'); if (treeToggle) { const path=orgTreePaths[Number(treeToggle.dataset.treeToggle)]; if (!path) return; const key=JSON.stringify(path); expandedOrgTree.has(key) ? expandedOrgTree.delete(key) : expandedOrgTree.add(key); render(); return; }
-    const treeTag = target.closest('[data-tree-tag]'); if (treeTag) { const path=orgTreePaths[Number(treeTag.dataset.treeTag)]; if (!path) return; drillState.organizationMode='tag'; drillState.targetName=treeTag.dataset.tagName; drillState.targetId=treeTag.dataset.tagName; drillState.path=path.slice(); expandedOrgTree.clear(); orgMetric='local'; render(); return; }
-    const orgNext = target.closest('[data-org-next]'); if (orgNext) { const child=drillView.children[Number(orgNext.dataset.orgNext)]; if (!child) return; if (orgNext.dataset.tagName) { drillState.organizationMode='tag'; drillState.targetName=orgNext.dataset.tagName; drillState.targetId=orgNext.dataset.tagName; orgMetric='local'; } drillState.path.push({level:child.level,id:child.id,name:child.name}); expandedOrgs.clear(); render(); return; }
+    const treeTag = target.closest('[data-tree-tag]'); if (treeTag) { const path=orgTreePaths[Number(treeTag.dataset.treeTag)]; if (!path) return; rememberPosition(); orgPager.page = 1; leadPager.page = 1; drillState.organizationMode='tag'; drillState.targetName=treeTag.dataset.tagName; drillState.targetId=treeTag.dataset.tagName; drillState.path=path.slice(); expandedOrgTree.clear(); orgMetric='local'; render(); return; }
+    const orgNext = target.closest('[data-org-next]'); if (orgNext) { const child=drillView.children[Number(orgNext.dataset.orgNext)]; if (!child) return; rememberPosition(); orgPager.page = 1; leadPager.page = 1; if (orgNext.dataset.tagName) { drillState.organizationMode='tag'; drillState.targetName=orgNext.dataset.tagName; drillState.targetId=orgNext.dataset.tagName; orgMetric='local'; } drillState.path.push({level:child.level,id:child.id,name:child.name}); expandedOrgs.clear(); render(); return; }
     const orgMode = target.closest('[data-org-mode]'); if (orgMode) { drillState.organizationMode=orgMode.dataset.orgMode; if (drillState.organizationMode==='all') drillState.targetName=M.topics[scope.stage][dimension].label; render(); return; }
     const profileDrill = target.closest('[data-profile-drill]');
     if (profileDrill) { openProfileDetail(profileDrill.dataset.profileDrill); startDrill(Number(profileDrill.dataset.profileIndex)); return; }
     const sortButton = target.closest('[data-action-sort]');
     if (sortButton && ['asc', 'desc'].includes(sortButton.dataset.actionSort)) {
-      actionSort = sortButton.dataset.actionSort; actionPage = 1; render();
+      actionSort = sortButton.dataset.actionSort; actionPager.page = 1; render();
       document.querySelector(`[data-action-sort="${actionSort}"]`)?.focus({ preventScroll: true }); return;
     }
-    const actionTurn = target.closest('[data-action-page]'); if (actionTurn) { actionPage += Number(actionTurn.dataset.actionPage); render(); document.querySelector(`[data-action-page="${actionTurn.dataset.actionPage}"]:not(:disabled)`)?.focus({ preventScroll: true }); return; }
+    const pageNumber = target.closest('[data-analysis-page]');
+    if (pageNumber) { goToPage(pageNumber.dataset.analysisPage, '[aria-current="page"]'); return; }
+    const step = target.closest('[data-page-step]');
+    if (step && activePager) { goToPage(activePager.page + Number(step.dataset.pageStep), `[data-page-step="${step.dataset.pageStep}"]:not(:disabled)`); return; }
     const downward = target.closest('[data-start-drill]'); if (downward) { startDrill(Number(downward.dataset.startDrill)); return; }
     const upward = target.closest('[data-drill-back]'); if (upward) { drillBack(Number(upward.dataset.drillBack)); return; }
     const leadEvidence = target.closest('[data-lead-evidence]'); if (leadEvidence) { openScopeEvidence(leadEvidence.dataset.leadEvidence); return; }
-    const leadTurn = target.closest('[data-lead-page]'); if (leadTurn) { leadPage += Number(leadTurn.dataset.leadPage); render(); return; }
     if (target.closest('#scopeEvidence')) { openScopeEvidence(); return; }
     const detail = target.closest('[data-detail]'); if (detail) { openDetail(Number(detail.dataset.detail)); return; }
     const close = target.closest('[data-close]'); if (close) { closeDialog(close.dataset.close); return; }
@@ -765,22 +984,23 @@
     if (target.id === 'byRegion') { byRegion = !byRegion; drillState = null; render(); return; }
   });
   document.addEventListener('mouseover', event => {
-    const date = event.target.closest('[data-range-day]:not(:disabled)');
-    if (date && dateRange?.hover(date.dataset.rangeDay)) renderDateRange();
+    const date = event.target.closest('[data-range-value]');
+    if (date && dateRange?.hover(date.dataset.rangeValue)) {
+      $('dateMenu').querySelectorAll('[data-range-value]').forEach(button =>
+        button.classList.toggle('in-range', dateRange.inRange(button.dataset.rangeValue)));
+    }
   });
   document.addEventListener('keydown', event => {
-    const coverageHelp = event.target.closest('.ci-coverage-explanation[open]');
-    if (event.key === 'Escape' && coverageHelp) { coverageHelp.open = false; coverageHelp.querySelector('summary').focus(); event.preventDefault(); return; }
     if (event.key === 'Escape' && dateRange) { closeMenus(); $('dateTrigger').focus(); event.preventDefault(); event.stopPropagation(); return; }
     if (event.key === 'Escape' && event.target.closest('.ci-template-help[open]')) { event.target.closest('.ci-template-help').open = false; event.preventDefault(); return; }
-    const dayButton = event.target.closest('[data-range-day]');
+    const dayButton = event.target.closest('[data-range-value]');
     if (dayButton && dateRange && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(event.key)) {
       event.preventDefault();
-      const current = dayButton.dataset.rangeDay;
+      const current = dayButton.dataset.rangeValue;
       let next;
       if (event.key === 'PageUp' || event.key === 'PageDown') next = D.addMonths(current,event.key === 'PageUp' ? -1 : 1);
       else {
-        const weekday = new Date(current+'T00:00:00Z').getUTCDay();
+        const weekday = (new Date(current+'T00:00:00Z').getUTCDay() + 6) % 7;
         const offset = {ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-weekday,End:6-weekday}[event.key];
         next = D.day(current,offset);
       }
@@ -791,8 +1011,15 @@
       event.preventDefault(); const keys = Object.keys(M.templates), index = keys.indexOf(scope.template);
       selectTemplate(keys[event.key === 'Home' ? 0 : event.key === 'End' ? keys.length-1 : (index+(event.key === 'ArrowLeft' ? -1 : 1)+keys.length)%keys.length]); return;
     }
+    const viewTab = event.target.closest('[data-profile-view]');
+    if (viewTab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      const next = { Home: 'chart', End: 'list' }[event.key] ?? (viewTab.dataset.profileView === 'chart' ? 'list' : 'chart');
+      selectProfileView($(`profile-view-${next}`), false);
+      return;
+    }
     const control = event.target.closest('.ci-select');
-    if (event.key === 'Escape' && control && !control.querySelector('.session-menu-panel').hidden) { closeMenus(); control.querySelector('.session-select-trigger').focus(); event.preventDefault(); event.stopPropagation(); return; }
+    if (event.key === 'Escape' && control?.classList.contains('is-open')) { closeMenus(); control.querySelector('.session-select-trigger').focus(); event.preventDefault(); event.stopPropagation(); return; }
     if (control && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
       const menu = control.querySelector('[role="listbox"]'); if (!menu) return;
       event.preventDefault(); menu.hidden = false; control.classList.add('is-open'); control.querySelector('.session-select-trigger').setAttribute('aria-expanded', 'true');
@@ -805,17 +1032,24 @@
     if (input.matches('[data-review]')) { if (input.checked) reviewed.add(input.dataset.review); else reviewed.delete(input.dataset.review); updateReviewState(); }
     if (input.matches('[data-reference]')) groupDraft = input.value;
   });
+  document.querySelector('main.main').append($('tpl-customer-insight').content);
   document.querySelectorAll('[data-workspace]').forEach(button => {
-    button.addEventListener('click', () => { workspace = button.dataset.workspace; drillState = null; drillScroll.clear(); leadPage = 1; render(); });
+    button.addEventListener('click', () => { workspace = button.dataset.workspace; drillState = null; drillScroll.clear(); leadPager.page = 1; orgPager.page = 1; render(); });
     button.addEventListener('keydown', event => { if (['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); const other = workspace === 'customers' ? $('actionTab') : $('customerTab'); other.click(); other.focus(); } });
   });
   function reset() {
-    closeMenus(); scope = { ...M.defaults(), filters: {}, organizationDimension: 'organization' };
+    closeMenus(); actionPager.page = 1; scope = { ...M.defaults(), filters: {}, organizationDimension: 'organization' };
+    summaryBatch = 0;
     compare = false; dimension = 'resistance'; byRegion = false; customerView = 'overview';
-    drillState = null; drillView = null; drillScroll.clear(); leadPage = 1; compareView = 'chart';
+    drillState = null; drillView = null; drillScroll.clear(); leadPager.page = 1; orgPager.page = 1; compareView = 'chart';
     renderFilters(); render();
   }
+  $('analysisPageJump').addEventListener('change', event => goToPage(event.target.value));
+  $('analysisPageJump').addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); goToPage(event.target.value, '#analysisPageJump'); }
+  });
   $('emptyReset').onclick = reset;
+  $('insightScopeHelp').addEventListener('toggle', event => { if (event.currentTarget.open) closeMenus(); });
   $('toggleCompare').onclick = openGroups;
   $('stopCompare').onclick = () => { summaryExpanded = false; compare = false; renderFilters(); render(); };
   $('editGroups').onclick = openGroups;
@@ -823,19 +1057,23 @@
     if (!Object.hasOwn(M.templates, groupDraft) || groupDraft === scope.template) { $('groupError').hidden = false; $('groupError').textContent = '请选择不同的对比客群。'; return; }
     closeDialog('groupDialog'); summaryExpanded = false; compare = true; compareView = 'chart'; profileView = 'chart'; updateScope({ comparisonTemplate: groupDraft });
   };
-  $('detailDialog').addEventListener('close', () => { $('addFinding').hidden = false; selected = null; });
+  $('detailDialog').addEventListener('close', () => { selected = null; });
   $('addFinding').onclick = () => {
     if (!selected || !reviewed.size) return;
     const key = JSON.stringify([workspace, dimension, selected.id, scopeText()]);
-    if (draft.items.some(item => item.key === key)) { notify('该分析项已在草稿中，可在策略草稿中查看。'); return; }
-    if (draft.items.length >= 30) { notify('草稿最多保留 30 项，请先整理已有依据。'); return; }
-    const evidence = selected.records.filter(r => reviewed.has(r.id)).map(r => ({ id: r.id, text: evidenceText(r), store: r.store, advisor: r.advisor, issuedAt: r.issuedAt, ageDays: r.ageDays, statusAsOf: M.snapshotAt }));
-    draft.items.push({ key, name: selected.name, kind: workspace === 'customers' ? '客户画像依据' : 'SOP依据', reference: workspace === 'actions' ? selected.training : '', stats: findingStats(selected), scopeText: scopeText(), scope: { ...structuredClone(scope), drill: drillState ? structuredClone(drillState) : null }, compare, evidence, addedAt: new Date().toISOString() });
-    try { localStorage.setItem(storageKey, JSON.stringify(draft)); notify('已加入策略草稿，可继续分析或打开草稿填写建议。', 'success'); }
-    catch { notify('已加入本次草稿，浏览器保存失败，请下载留存。', 'error'); }
-    $('draftCount').textContent = draft.items.length; closeDialog('detailDialog');
+    if (draft.items.some(item => item.key === key)) {
+      notify('该分析项已在草稿中。');
+    } else if (draft.items.length >= 30) {
+      notify('草稿最多保留 30 项，请先整理已有依据。');
+    } else {
+      const evidence = selected.records.filter(r => reviewed.has(r.id)).map(r => ({ id: r.id, text: evidenceText(r), store: r.store, advisor: r.advisor, issuedAt: r.issuedAt, ageDays: r.ageDays, statusAsOf: M.snapshotAt }));
+      draft.items.push({ key, name: selected.name, kind: workspace === 'customers' ? '客户画像依据' : 'SOP依据', reference: workspace === 'actions' ? selected.training : '', stats: findingStats(selected), scopeText: scopeText(), scope: { ...structuredClone(scope), drill: drillState ? structuredClone(drillState) : null }, compare, evidence, addedAt: new Date().toISOString() });
+      try { localStorage.setItem(storageKey, JSON.stringify(draft)); notify('已加入策略草稿。', 'success'); }
+      catch { notify('已加入本次草稿，浏览器保存失败，请下载留存。', 'error'); }
+    }
+    closeDialog('detailDialog');
+    openDraft();
   };
-  $('openDraft').onclick = openDraft;
   $('saveDraft').onclick = () => { if (saveDraft()) notify('草稿已保存到当前浏览器。', 'success'); };
   $('draftForm').addEventListener('submit', event => event.preventDefault());
   $('draftForm').addEventListener('input', () => { draft.sales = $('salesText').value; draft.operations = $('operationsText').value; draft.owner = $('draftOwner').value; draft.reviewDate = $('draftReviewDate').value; $('draftStatus').textContent = '有未保存修改'; clearTimeout(draftSaveTimer); draftSaveTimer = setTimeout(saveDraft, 350); });
@@ -851,11 +1089,12 @@
     dialog.addEventListener('close', () => { document.querySelector('.main').inert = false; document.querySelector('.sidebar').inert = false; });
     dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeDialog(dialog.id); });
   });
+  twoColumnProfileGrid.addEventListener('change', resizeProfileBatches);
+  oneColumnProfileGrid.addEventListener('change', resizeProfileBatches);
   renderFilters(); render();
   if ($('reportDialog')?.ownerDocument) {
     reportCenter = window.InsightReports.mount({ root: $('reportDialog'), notify,
       getSnapshot: () => !result.errors.length && result.records.length ? window.InsightReportModel.snapshot(result, scopeText(scope, compare, false)) : null });
     $('generateReport').onclick = () => reportCenter.submit();
-    $('openReports').onclick = () => reportCenter.open();
   }
 })();

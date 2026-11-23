@@ -15967,29 +15967,34 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return '中'
         }
 
-        const getLevelTone = (level) => {
-          if (level === '高') return 'red'
-          if (level === '低') return 'blue'
-          return 'amber'
+        const getMarkerClass = (level) => {
+          const marker = 'lead-detail-hero-step-marker'
+          if (level === '无法判断') return marker
+          if (level === '高') return `${marker} tone-red`
+          if (level === '低') return `${marker} tone-blue`
+          return `${marker} tone-amber`
         }
 
         return (steps || []).map((step, index, list) => `
           <div class="lead-detail-hero-step${index < list.length - 1 ? ' is-complete' : ''}${index === list.length - 1 ? ' is-current' : ''}"${step.entryKey ? ` data-lead-journey-target="${escapeHtml(step.entryKey)}"` : ''}>
             ${index < list.length - 1 ? '<div class="lead-detail-hero-step-connector" aria-hidden="true"></div>' : ''}
-            <div class="lead-detail-hero-step-marker tone-${getLevelTone(getLevelText(step))}">${escapeHtml(getLevelText(step))}</div>
+            <div class="${getMarkerClass(getLevelText(step))}">${escapeHtml(getLevelText(step))}</div>
             <div class="lead-detail-hero-step-label"${step.entryKey ? '' : ' tabindex="0"'} title="${escapeHtml(step.label || '-')}" aria-label="${escapeHtml(step.label || '-')}">${escapeHtml(step.label || '-')}</div>
             <div class="lead-detail-hero-step-meta">${escapeHtml(step.meta || '')}</div>
           </div>
         `).join('')
       }
 
-      function renderLeadDetailJourneyEntries(payload) {
+      function renderLeadDetailJourneyEntries(payload, returnView) {
         if (window.AIQCData && !payload?.linkedDemo) {
           const timeline = pageHost.querySelector('.lead-journey-scroll')
           if (timeline) timeline.innerHTML = '<div class="empty-state-card">关联缺失：当前数据未提供该线索的录音旅程。</div>'
           return
         }
-        if (payload?.linkedDemo) { window.AIQCLinkedDemo.renderLeadJourney(payload, pageHost); return }
+        if (payload?.linkedDemo) {
+          window.AIQCLinkedDemo.renderLeadJourney(payload, pageHost, returnView)
+          return
+        }
         if (!payload?.isMultiNodeJourneyDemo) return
 
         const timeline = pageHost.querySelector('.lead-journey-scroll')
@@ -16259,6 +16264,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       function getLeadDetailIntentLevelClass(level) {
+        if (level === '无法判断') {
+          return 'level-undetermined'
+        }
         if (level === '高') {
           return 'level-high'
         }
@@ -16300,7 +16308,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
-      function applyLeadDetailPayload(payload) {
+      function applyLeadDetailPayload(payload, returnView) {
         if (!payload) {
           return
         }
@@ -16327,7 +16335,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         setText('#leadDetailHeroTitle', maskLeadDetailCustomerName(payload.customer))
         setHtml('#leadDetailHeroTags', renderLeadDetailHeroTags(payload.heroTags))
         setHtml('#leadDetailHeroEvolutionSteps', renderLeadDetailEvolutionSteps(payload.evolutionSteps))
-        renderLeadDetailJourneyEntries(payload)
+        renderLeadDetailJourneyEntries(payload, returnView)
         setText('#leadDetailIntentLevel', `AI意向级别：${payload.intentLevel}`)
         const intentLevelNode = pageHost.querySelector('#leadDetailIntentLevel')
         if (intentLevelNode) {
@@ -16390,7 +16398,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         if (selectedLead) {
           leadPayload = buildLeadDetailPayload(selectedLead, leadSelection.source)
-          applyLeadDetailPayload(leadPayload)
+          applyLeadDetailPayload(leadPayload, leadSelection.returnView)
           bindLeadDetailEvolutionUI()
           bindLeadJourneyNodeNavigation()
           syncLeadDetailModelRow(leadPayload.models, true)
@@ -21879,12 +21887,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             if (
               node.dataset.route === 'leads' &&
               window.__LEADS_MODERN_RUNTIME_INSTALLED__ &&
-              !document.getElementById('leadsFilterControls')
+              !pageHost.querySelector('#leadsFilterControls')
             ) {
               const returnUrl = new URL(window.location.href)
               const returnView = node.dataset.leadsViewTarget === 'customers' ? 'customers' : 'leads'
               returnUrl.searchParams.set('route', 'leads')
               returnUrl.searchParams.set('leadsView', returnView)
+              if (returnView === 'customers') returnUrl.searchParams.delete('focusLeadId')
               ;['leadId', 'leadSource', 'leadReturnView'].forEach((key) => returnUrl.searchParams.delete(key))
               returnUrl.hash = 'leads'
               window.location.href = returnUrl.toString()

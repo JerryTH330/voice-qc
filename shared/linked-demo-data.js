@@ -263,12 +263,14 @@
       publicProfile: { groups: [[{ label: `${lead.province} ${lead.city}`, tone: 'green', icon: '../assets/lead-tag-public-location-v2.svg' },
         { label: lead.carSeries, tone: 'blue', icon: '../assets/lead-tag-public-car-status.svg' }]] } };
   }
-  function renderLeadJourney(payload, host) {
+  function renderLeadJourney(payload, host, returnView) {
     const timeline = host.querySelector('.lead-journey-scroll');
     if (!timeline) return;
     const visit = byVisit.get(payload.businessId);
-    const back = host.querySelector('.lead-detail-back-button');
-    if (back) back.outerHTML = `<a class="btn lead-detail-back-button" href="${escape(listUrl('lead', payload.leadId))}">返回线索列表</a>`;
+    if (returnView !== 'leads' && returnView !== 'customers') {
+      const back = host.querySelector('.lead-detail-back-button');
+      if (back) back.outerHTML = `<a class="btn lead-detail-back-button" href="${escape(listUrl('lead', payload.leadId))}">返回线索列表</a>`;
+    }
     timeline.innerHTML = `<div class="journey-axis-track" aria-hidden="true">
       </div>${payload.evolutionSteps.map(entry => `<div class="journey-item" data-lead-journey-entry="${escape(entry.entryKey)}">
       <div class="journey-header">
@@ -299,7 +301,8 @@
       <div class="journey-section-content">${escape(payload.actionText)}</div>
       </div>
       <div class="journey-section">
-      <div class="journey-section-label">关联记录</div>
+      <div class="journey-section-label">
+      <img class="journey-section-icon" src="../assets/navigation/leads.svg" alt="" />关联记录</div>
       <div class="journey-section-content">
       <a class="text-btn" href="${escape(listUrl('visit', visit.businessId))}">到访 ${escape(visit.businessId)}</a>${visit.badgeSn ? ` · <a class="text-btn" href="${escape(badgeUrl(visit.badgeSn, visit.date))}">工牌 ${escape(visit.badgeSn)}</a>` : ''}<p>匹配状态：${escape(entry.status)}</p>
       </div>

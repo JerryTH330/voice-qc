@@ -3,7 +3,7 @@
 
   // Use the exact organization and business components mounted by shared/unified-dashboard.js.
   // Only translate their stable IDs into the insight demo's record fields.
-  function mount({ root, businessRoot, M, getScope, onChange, onReset, onBeforeOpen }) {
+  function mount({ root, businessRoot, pathAction, M, getScope, onChange, onReset, onBeforeOpen }) {
     const dealers = M.organizationRecords().map(({ dealer }) => ({ ...dealer, dealerWid: `${dealer.brand}::${dealer.dealerCode}` }));
     const { createModel, fields, selectionId } = host.VisitOrganizationFilter;
     const model = createModel(dealers, [], { mode: 'matching' });
@@ -60,7 +60,7 @@
       });
     }
     restore(getScope());
-    ui = host.StoreDashboardOrganizationFilter.mount({ root, model, businessFilters: businessRoot,
+    ui = host.StoreDashboardOrganizationFilter.mount({ root, model, businessFilters: businessRoot, pathAction,
       onBeforeChange: () => { business?.closeMenu(); onBeforeOpen(); },
       onReset: () => { scenes = []; models = []; onReset(); },
       onChange: event => {

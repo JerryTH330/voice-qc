@@ -5,7 +5,7 @@
   const personnelKeys = ['patroler', 'governor'];
   const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
-  function mount({ root, model, businessFilters, fixedSubject = false, onChange = () => {}, onReset = () => {}, onBeforeChange = () => {} }) {
+  function mount({ root, model, businessFilters, pathAction, fixedSubject = false, onChange = () => {}, onReset = () => {}, onBeforeChange = () => {} }) {
     const document = root.ownerDocument;
     const window = document.defaultView || global;
     if (model.draft.advisor.length || model.applied.advisor.length) {
@@ -75,7 +75,8 @@
     function render({ preserveScroll = false } = {}) {
       if (destroyed) return;
       const scrollTop = preserveScroll ? root.querySelector('.sd-filter-options')?.scrollTop || 0 : 0;
-      const activeBusinessNode = businessFilters?.contains(document.activeElement) ? document.activeElement : null;
+      const activeElement = document.activeElement;
+      const retainFocus = businessFilters?.contains(activeElement) || pathAction?.contains(activeElement);
       if (fixedSubject) {
         actions.innerHTML = '<button type="button" class="btn session-reset-btn" data-sd-reset>重置</button>';
         primary.classList.add('dashboard-fixed-filter-row');
@@ -83,7 +84,7 @@
         const options = root.querySelector('.sd-filter-options');
         if (options) options.scrollTop = scrollTop;
         positionMenu();
-        if (activeBusinessNode && document.activeElement !== activeBusinessNode) activeBusinessNode.focus({ preventScroll: true });
+        if (retainFocus && document.activeElement !== activeElement) activeElement.focus({ preventScroll: true });
         return;
       }
       const keys = model.dimensionKeys();
@@ -91,6 +92,13 @@
         namespace: 'sd', mode: model.draft.dimensionMode, label: '门店看板筛选维度', panelId: 'storeDashboardDimensionFilters',
         path: keys.map(key => model.draft[key].length ? model.display(key) : labels[key])
       });
+      const path = pathAction && dimensionSlot.querySelector('.dimension-switcher__path');
+      if (path) {
+        const summary = document.createElement('div');
+        summary.className = 'dimension-switcher__summary';
+        path.before(summary);
+        summary.append(pathAction, path);
+      }
       primaryGrid.innerHTML = keys.map(controlMarkup).join('');
       personnel.innerHTML = personnelKeys.map(controlMarkup).join('');
       actions.innerHTML = `<div><button type="button" class="btn session-reset-btn" data-sd-reset>重置</button><button type="button" class="session-toggle-text-btn" data-sd-collapse aria-expanded="${!collapsed}" aria-controls="storeDashboardExtraFilters"><span>${collapsed ? '展开' : '收起'}</span><svg class="session-toggle-text-btn-icon${collapsed ? ' is-collapsed' : ''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>`;
@@ -102,7 +110,7 @@
       const options = root.querySelector('.sd-filter-options');
       if (options) options.scrollTop = scrollTop;
       positionMenu();
-      if (activeBusinessNode && document.activeElement !== activeBusinessNode) activeBusinessNode.focus({ preventScroll: true });
+      if (retainFocus && document.activeElement !== activeElement) activeElement.focus({ preventScroll: true });
     }
 
     function settleExtra() {
@@ -264,7 +272,7 @@
     }
     function outside(event) {
       const path = event.composedPath();
-      if (openKey && (!path.includes(root) || path.includes(businessFilters))) closeMenu();
+      if (openKey && (!path.includes(root) || path.includes(businessFilters) || path.includes(pathAction))) closeMenu();
     }
     function viewportChange() { positionMenu(); }
 

@@ -7,7 +7,7 @@ window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
     "../device-management/organization-data.js?v=20261028-full-sync-v1",
     "../session/real-recording-data.js?v=20261028-full-sync-v1",
     "../leads/real-lead-data.js?v=20261028-full-sync-v1",
-    "../shared/linked-demo-data.js?v=20261028-full-sync-v1",
+    "../shared/linked-demo-data.js?v=20261123-lead-list-return-v1",
     "../shared/badge-history-data.js?v=20261028-full-sync-v1",
     "../shared/unified-data.js?v=20261105-factory-rank-hierarchy-v1",
     "../dashboard-filter-utils.js?v=20261028-full-sync-v1",
@@ -19,8 +19,8 @@ window.__AI_QC_DEFAULT_ROUTE = 'dashboard';
     "./demo-data.js?v=20261028-full-sync-v1",
     "./organization-filter.js?v=20261109-dashboard-path-labels-v1",
     "./business-filters.js?v=20261102-scene-filter-style-v6",
-    "../shared/unified-dashboard.js?v=20261113-date-shortcuts-v1",
-    "../app-runtime.js?v=20261113-date-shortcuts-v1"
+    "../shared/unified-dashboard.js?v=20261123-store-advisor-rank-v1",
+    "../app-runtime.js?v=20261123-lead-list-return-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

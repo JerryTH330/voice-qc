@@ -36,6 +36,18 @@ for (const kind of ['session', 'leads']) test(`${kind}: missing focused ID stays
   assert((await exportedIds(h, kind)).length > 0);
 });
 
+test('visit and test drive statuses are blue in both lead table views', () => {
+  const h = list('leads');
+  for (const view of ['leads', 'customers']) {
+    h.click(`[data-lr-view="${view}"]`);
+    const statuses = [...h.host.querySelectorAll('#leadsTableBody td[data-column-key="leadStatus"] .status-inline')];
+    for (const value of ['已到店', '已试驾']) {
+      const matches = statuses.filter(status => status.textContent.trim() === value);
+      assert(matches.length && matches.every(status => status.classList.contains('blue')), `${view}: ${value}`);
+    }
+  }
+});
+
 test('advisor recording count opens and exports the full current scope, including scene and model restrictions', async () => {
   const h = setup('store'), a = h.controller;
   const person = a.result.advisors.find(item => item.recordingCount > 1);

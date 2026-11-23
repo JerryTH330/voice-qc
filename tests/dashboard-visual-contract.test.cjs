@@ -1,6 +1,17 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {setup}=require('./helpers/unified-dom.cjs');
 const labels=(root,selector)=>[...root.querySelectorAll(selector)].map(n=>n.textContent.trim());
+test('store completed-recording KPI uses the same image layout as its neighbors', () => {
+ const {host, controller}=setup('store');
+ try {
+  const cards=[...host.querySelectorAll('#hero-kpi-grid .hm-layout-bottom .single-metric')];
+  const completed=cards.find(card=>card.querySelector('.hm-label').textContent==='已完成录音');
+  assert(completed?.querySelector('.hm-label-row > img.hm-label-icon-image'));
+  assert.equal(cards.filter(card=>card.querySelector('img.hm-label-icon-image')).length,6);
+ } finally {
+  controller.destroy();
+ }
+});
 test('factory retains original metric layout, six slots, help and comparison markup',()=>{
  const h=setup('factory'),root=h.host,hero=root.querySelector('#hero-kpi-grid');
  assert(hero.classList.contains('factory-hero-metrics-layout'));
@@ -20,6 +31,11 @@ for(const role of ['dcc','advisor'])test(`sales ${role} retains its own KPI, sum
  assert.equal(hero.querySelectorAll('.hm-body').length,expected.length);assert.equal(hero.querySelectorAll('.hm-metric-icon').length,expected.length);
  assert.equal(hero.querySelectorAll('.hm-help').length,expected.length);
  assert.equal(hero.querySelectorAll('.hm-item-summary').length,role==='advisor'?2:0);
+  if (role === 'dcc') {
+    assert.deepEqual(labels(hero, '.hm-value'), ['0条', '—', '—', '—']);
+    assert.deepEqual(labels(hero, '.hm-value small'), ['条']);
+    assert.equal(hero.querySelectorAll('.hm-trend').length, 0);
+  }
  assert.equal(root.querySelectorAll('#execution-focus-metrics .execution-metric').length,4);
  assert(root.querySelector('.sales-statistics-date-control .sales-role-date-root .sales-role-date-trigger'));
  assert.equal(root.querySelectorAll('#trend-legend .legend-dot').length,3);

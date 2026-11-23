@@ -52,18 +52,19 @@
 }
 
 :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom {
+  --dashboard-metric-icon-size: 48px;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
 :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-item.single-metric {
-  padding: 12px 30px 12px 58px;
+  padding: 12px 30px 12px calc(var(--dashboard-metric-icon-size) + 22px);
 }
 
-:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-label-icon-image {
+:is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-label-icon-image {
   left: 12px;
-  width: 36px;
-  height: 36px;
+  width: var(--dashboard-metric-icon-size);
+  height: var(--dashboard-metric-icon-size);
 }
 
 :is(#factoryDashboardPage, .store-dashboard-page) .store-hero-metrics .hm-layout-bottom .hm-label {

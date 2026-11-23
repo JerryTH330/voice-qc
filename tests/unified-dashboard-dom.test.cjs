@@ -50,6 +50,41 @@ test('malformed completion storage never crashes or overwrites saved data',()=>{
     assert.equal(h.storage.get('store-handled-leads'),value);h.controller.destroy();
   }
 });
+test('store advisor rank follows the sort across pages and hides arrows on one page', t => {
+  const { controller, host, window, click } = setup('store', '', { search: '?storeId=G216-ZJA0400&route=dashboard' });
+  t.after(() => controller.destroy());
+  const table = host.querySelector('#advisor-list');
+  const footer = host.querySelector('#advisorPagination');
+  const recordingSort = '[data-unified-sort="recordingCount"]';
+  const ranks = () => [...table.querySelectorAll('tbody tr td:first-child')].map(cell => Number(cell.textContent));
+  const recordings = () => Number(table.querySelector('tbody tr .advisor-recording-link').textContent);
+  assert.equal(table.querySelector('th').textContent, '排行');
+  assert.equal(table.querySelector(recordingSort).parentElement.getAttribute('aria-sort'), 'descending');
+  assert.deepEqual(ranks(), [1]);
+  assert.equal(footer.textContent.trim(), '共 1 名顾问');
+  assert.equal(footer.querySelector('button'), null);
+  assert.equal(table.querySelector('.dashboard-pagination'), null);
+
+  const query = window.AIQCData.query;
+  const [advisor] = controller.result.advisors;
+  const advisors = Array.from({ length: 51 }, (_, index) => ({
+    ...advisor, advisorId: `advisor-${index + 1}`, recordingCount: index + 1
+  }));
+  window.AIQCData.query = scope => ({ ...query(scope), advisors });
+  controller.render();
+  assert.equal(recordings(), 51);
+  assert.equal(ranks().at(-1), 50);
+  click('#advisorPagination [aria-label="下一页"]');
+  assert.deepEqual(ranks(), [51]);
+  assert.equal(recordings(), 1);
+  assert(footer.querySelector('[aria-label="下一页"]').disabled);
+  assert.equal(footer.querySelector('.dashboard-pagination-controls span').textContent, '2 / 2');
+  click('#advisorPagination [aria-label="上一页"]');
+  click(recordingSort);
+  assert.equal(table.querySelector(recordingSort).parentElement.getAttribute('aria-sort'), 'ascending');
+  assert.equal(recordings(), 1);
+  assert.equal(ranks()[0], 1);
+});
 test('factory retains organization and geography ranking hierarchy with conserved child totals',()=>{
   const h=setup('factory'),a=h.controller;
   assert.equal(h.host.querySelector('#rank-title').textContent,'SOP执行排行');

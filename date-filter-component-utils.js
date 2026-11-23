@@ -45,7 +45,7 @@
 
   function renderDateShortcutsMarkup(dataNamespace, shortcuts = dateShortcuts) {
     return `<div class="session-date-shortcuts">${shortcuts.map(option =>
-      `<button type="button" class="session-date-shortcut" ${getDataAttrName(dataNamespace, 'shortcut')}="${escapeHtml(option.key)}">${escapeHtml(option.label)}</button>`
+      `<button type="button" class="session-date-shortcut" ${getDataAttrName(dataNamespace, 'shortcut')}="${escapeHtml(option.key)}"${option.disabled ? ' disabled' : ''}${typeof option.active === 'boolean' ? ` aria-pressed="${option.active}"` : ''}>${escapeHtml(option.label)}</button>`
     ).join('')}</div>`;
   }
 
@@ -59,6 +59,8 @@
     rootClassName = 'store-date-root',
     triggerClassName = 'session-date-trigger',
     triggerLabel = '日期范围筛选',
+    triggerId = '',
+    menuId = '',
     menuHtml = ''
   }) {
     if (currentValue !== customValue) {
@@ -70,6 +72,8 @@
         <button
           type="button"
           class="${escapeHtml(triggerClassName)}${isOpen ? ' active' : ''}"
+          ${triggerId ? `id="${escapeHtml(triggerId)}"` : ''}
+          ${menuId ? `aria-controls="${escapeHtml(menuId)}"` : ''}
           ${getDataAttrName(dataNamespace, 'trigger')}="true"
           aria-label="${escapeHtml(triggerLabel)}"
           aria-haspopup="dialog"
@@ -104,7 +108,8 @@
     endFieldLabel = '结束日期',
     cancelLabel = '取消',
     showCancel = true,
-    applyLabel = '应用日期'
+    applyLabel = '应用日期',
+    applyDisabled = false
   }) {
     const safeSummaryText = summaryText || `已选择 ${rangeText}`;
     const safeCells = Array.isArray(cells) ? cells : [];
@@ -159,6 +164,8 @@
                 type="button"
                 class="${classNames.join(' ')}"
                 ${cell.isDisabled ? 'disabled' : `${getDataAttrName(dataNamespace, 'value')}="${escapeHtml(cell.value)}"`}
+                ${cell.label ? `aria-label="${escapeHtml(cell.label)}"` : ''}
+                ${cell.tabIndex === undefined ? '' : `tabindex="${cell.tabIndex === 0 ? 0 : -1}"`}
               >
                 ${escapeHtml(cell.day)}
               </button>
@@ -170,7 +177,7 @@
           <span>${escapeHtml(safeSummaryText)}</span>
           <div class="session-date-actions">
             ${showCancel ? `<button type="button" class="btn session-date-action-btn" ${getDataAttrName(dataNamespace, 'cancel')}="true">${escapeHtml(cancelLabel)}</button>` : ''}
-            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" ${getDataAttrName(dataNamespace, 'apply')}="true">${escapeHtml(applyLabel)}</button>
+            <button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" ${getDataAttrName(dataNamespace, 'apply')}="true"${applyDisabled ? ' disabled' : ''}>${escapeHtml(applyLabel)}</button>
           </div>
         </div>
       </div>

@@ -7,10 +7,17 @@
   const dateValue = date => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
   const detailUrl = (kind,id) => `../${kind === 'lead' ? 'leads' : 'session'}/index.html?${new URLSearchParams(kind === 'lead' ? {route:'leads-detail',leadSource:'leads',leadId:id} : {route:'session-detail',sessionId:id})}`;
   const listUrl = (kind,id) => `../${kind === 'lead' ? 'leads' : 'session'}/index.html?${new URLSearchParams(kind === 'lead' ? {route:'leads',focusLeadId:id} : {route:'session',focusRecordingId:id})}`;
-  const metricIcons = {'平均时长':'metric-duration','平均话术命中率':'metric-hit-rate','质检合格数':'metric-pass-count','质检合格率':'metric-pass-rate','风险录音':'metric-risk-count'};
+  const metricIcons = {
+    '已完成录音': '../assets/sales-role-metrics/metric-reception-recording.png',
+    '平均时长': '../assets/store-core-metrics/metric-duration.png',
+    '平均话术命中率': '../assets/store-core-metrics/metric-hit-rate.png',
+    '质检合格数': '../assets/store-core-metrics/metric-pass-count.png',
+    '质检合格率': '../assets/store-core-metrics/metric-pass-rate.png',
+    '风险录音': '../assets/store-core-metrics/metric-risk-count.png'
+  };
   function metricMarkup(label,value,unit='') {
     const icon=metricIcons[label];
-    return `<div class="hm-item single-metric"><div class="hm-label-row">${icon?`<img class="hm-label-icon hm-label-icon-image" src="../assets/store-core-metrics/${icon}.png" alt="">`:'<span class="hm-label-icon tone-blue" aria-hidden="true"><span class="hm-label-icon-core"></span><span class="hm-label-icon-dot"></span></span>'}<div class="hm-label">${escape(label)}</div></div><div class="hm-val-row"><span class="hm-value">${number(value)}</span><span class="hm-unit">${escape(unit)}</span></div></div>`;
+    return `<div class="hm-item single-metric"><div class="hm-label-row">${icon?`<img class="hm-label-icon hm-label-icon-image" src="${icon}" alt="">`:'<span class="hm-label-icon tone-blue" aria-hidden="true"><span class="hm-label-icon-core"></span><span class="hm-label-icon-dot"></span></span>'}<div class="hm-label">${escape(label)}</div></div><div class="hm-val-row"><span class="hm-value">${number(value)}</span><span class="hm-unit">${escape(unit)}</span></div></div>`;
   }
   const metricDescriptions = {
     '平均时长':'当前筛选录音的平均时长，单位为分钟。',
@@ -227,16 +234,50 @@
       if(sales)return;
       if(kind==='factory'){renderFactoryRanking(result);return;}
       const records=[...result.advisors].sort((a,b)=>((a[state.sort]??-1)-(b[state.sort]??-1))*(state.descending?-1:1));
-      const target=kind==='factory'?'rank-table-wrap':'advisor-list';
-      const pages=Math.max(1,Math.ceil(records.length/50));state.rankPage=Math.min(state.rankPage||1,pages);
-      const ranked=records.slice((state.rankPage-1)*50,state.rankPage*50);
+      const pageSize=50;
+      const pages=Math.max(1,Math.ceil(records.length/pageSize));
+      state.rankPage=Math.min(state.rankPage||1,pages);
+      const start=(state.rankPage-1)*pageSize;
+      const ranked=records.slice(start,start+pageSize);
       const recordingsUrl=advisor=>{
         const params=new URLSearchParams({route:'session',recordingScope:'advisor',storeId:advisor.storeId,advisorId:advisor.advisorId,startDate:state.startDate,endDate:state.endDate});
         state.scenes.forEach(scene=>params.append('scene',scene));
         state.models.forEach(model=>params.append('model',model));
         return `../session/index.html?${params}`;
       };
-      html(target,`<table class="advisor-table data-table"><thead><tr><th>顾问</th><th>门店</th>${[['recordingCount','录音数'],['completedCount','已完成'],['hitRate','平均话术命中率'],['qualifiedRate','合格率']].map(([key,label])=>`<th><button class="text-btn" data-unified-sort="${key}">${label}${state.sort===key?(state.descending?' ↓':' ↑'):''}</button></th>`).join('')}</tr></thead><tbody>${ranked.map(a=>`<tr><td>${escape(a.name)}<span class="cell-sub">${escape(a.advisorId)}</span></td><td>${escape(a.store)}</td><td><a href="${escape(recordingsUrl(a))}">${a.recordingCount}</a></td><td>${a.completedCount}</td><td>${number(a.hitRate,'%')}</td><td>${number(a.qualifiedRate,'%')}</td></tr>`).join('')||'<tr><td colspan="6">当前范围暂无录音</td></tr>'}</tbody></table><div class="dashboard-pagination session-pagination"><span>共 ${records.length} 名顾问</span><div class="dashboard-pagination-controls"><button class="page-arrow" data-unified-rank-page="${state.rankPage-1}" ${state.rankPage===1?'disabled':''}>‹</button><span>${state.rankPage} / ${pages}</span><button class="page-arrow" data-unified-rank-page="${state.rankPage+1}" ${state.rankPage===pages?'disabled':''}>›</button></div></div>`);
+      const columns=[['recordingCount','录音数'],['completedCount','已完成'],['hitRate','平均话术命中率'],['qualifiedRate','合格率']];
+      const sortableHeads=columns.map(([key,label])=>{
+        const active=state.sort===key;
+        const order=active?(state.descending?'descending':'ascending'):'none';
+        const direction=state.descending?'is-desc':'is-asc';
+        return `<th scope="col" aria-sort="${order}">
+          <button type="button" class="advisor-th-sort-content advisor-sort-button" data-unified-sort="${key}">
+            ${label}${active?`<span class="advisor-sort-indicator ${direction}" aria-hidden="true"></span>`:''}
+          </button>
+        </th>`;
+      }).join('');
+      const rows=ranked.map((advisor,index)=>`<tr>
+        <td><span class="advisor-metric-number">${start+index+1}</span></td>
+        <td><span class="cell-main">${escape(advisor.name)}</span><span class="cell-sub">${escape(advisor.advisorId)}</span></td>
+        <td class="advisor-store-name">${escape(advisor.store)}</td>
+        <td><a class="advisor-recording-link" href="${escape(recordingsUrl(advisor))}">${advisor.recordingCount}</a></td>
+        <td><span class="advisor-metric-number">${advisor.completedCount}</span></td>
+        <td><span class="advisor-metric-rate">${number(advisor.hitRate,'%')}</span></td>
+        <td><span class="advisor-metric-rate">${number(advisor.qualifiedRate,'%')}</span></td>
+      </tr>`).join('');
+      html('advisor-list',`<table class="advisor-table data-table unified-advisor-table">
+        <colgroup><col style="width:8.5%"><col style="width:21.5%"><col style="width:15%"><col style="width:11.5%"><col style="width:11.5%"><col style="width:20.5%"><col style="width:11.5%"></colgroup>
+        <thead><tr><th scope="col">排行</th><th scope="col">顾问</th><th scope="col">门店</th>${sortableHeads}</tr></thead>
+        <tbody>${rows||'<tr><td colspan="7">当前范围暂无录音</td></tr>'}</tbody>
+      </table>`);
+      html('advisorPagination',`<div class="dashboard-pagination unified-advisor-pagination">
+        <span class="session-pagination-total">共 ${records.length} 名顾问</span>
+        ${pages>1?`<div class="dashboard-pagination-controls">
+          <button type="button" class="page-arrow" aria-label="上一页" data-unified-rank-page="${state.rankPage-1}" ${state.rankPage===1?'disabled':''}>‹</button>
+          <span>${state.rankPage} / ${pages}</span>
+          <button type="button" class="page-arrow" aria-label="下一页" data-unified-rank-page="${state.rankPage+1}" ${state.rankPage===pages?'disabled':''}>›</button>
+        </div>`:''}
+      </div>`);
       text('rank-title','顾问录音质检排行');text('rank-sub','按同一范围的录音明细统计；点击录音数查看该顾问在当前筛选范围内的全部录音。');
     }
     function missingRuleToolbar(factory=false,sortOnly=false) {
@@ -276,7 +317,19 @@
         ]:[
           ['接待数',result.visits.filter(visit=>visit.scene==='销售接待').length,'条','metric-reception-count'],['试驾数',result.visits.filter(visit=>visit.scene==='试乘试驾').length,'条','metric-test-drive-count'],['接待录音数',m.reception,'条','metric-reception-recording'],['试驾录音数',m.testDrive,'条','metric-test-drive-recording'],['话术命中率',m.hitRate,'%','metric-hit-rate'],['平均时长',m.averageMinutes,'min','metric-duration'],['风险录音',null,'条','metric-risk-count']
         ];
-        html('hero-metrics',metricList.map(([label,value,unit,icon],index)=>`<div class="hm-item${role==='advisor'&&index<2?' hm-item-summary':''}">${presentation.salesMetricIcon({iconUrl:`../assets/sales-role-metrics/${icon}.png`})}<div class="hm-body"><div class="hm-label hm-label--ellipsis" title="${label}">${label}</div><div class="hm-val-row"><span class="hm-value">${number(value)}<small>${unit}</small></span><span class="hm-trend">环比 —</span></div></div>${presentation.salesMetricHelp(label,metricDescriptions[label])}</div>${role==='advisor'&&index===1?'<div class="hm-sep hm-sep-divider" aria-hidden="true"></div>':''}`).join(''));
+        const isBadge = role === 'advisor';
+        const trend = isBadge ? '<span class="hm-trend">环比 —</span>' : '';
+        html('hero-metrics', metricList.map(([label, value, unit, icon], index) => {
+          const unitMarkup = isBadge || value != null ? `<small>${unit}</small>` : '';
+          return `<div class="hm-item${isBadge && index < 2 ? ' hm-item-summary' : ''}">
+            ${presentation.salesMetricIcon({iconUrl:`../assets/sales-role-metrics/${icon}.png`})}
+            <div class="hm-body">
+              <div class="hm-label hm-label--ellipsis" title="${label}">${label}</div>
+              <div class="hm-val-row"><span class="hm-value">${number(value)}${unitMarkup}</span>${trend}</div>
+            </div>
+            ${presentation.salesMetricHelp(label, metricDescriptions[label])}
+          </div>${isBadge && index === 1 ? '<div class="hm-sep hm-sep-divider" aria-hidden="true"></div>' : ''}`;
+        }).join(''));
       } else {
         const metrics=kind==='factory'?[
           ['平均时长',m.averageMinutes,'min'],['话术执行率',m.hitRate,'%'],['质检合格数',m.qualifiedCount,'条'],['质检合格率',m.qualifiedRate,'%'],['风险录音数',null,'条'],['风险录音率',null,'%']
@@ -338,7 +391,12 @@
       else if(d.unifiedComplete){const completed=new Set(state.completed);if(completed.has(d.unifiedComplete))completed.delete(d.unifiedComplete);else completed.add(d.unifiedComplete);state.completed=[...completed];try{global.localStorage?.setItem(completionKey,JSON.stringify(state.completed));}catch{global.PlatformToast?.show('处理状态暂存于当前会话，无法写入本地存储。');}render();}
       else if(d.unifiedPage){state.page=Number(d.unifiedPage);render();}
       else if(d.unifiedRankPage){state.rankPage=Number(d.unifiedRankPage);render();}
-      else if(d.unifiedSort){state.descending=state.sort===d.unifiedSort?!state.descending:true;state.sort=d.unifiedSort;render();}
+      else if(d.unifiedSort){
+        state.descending=state.sort===d.unifiedSort?!state.descending:true;
+        state.sort=d.unifiedSort;
+        render();
+        node('advisor-list')?.querySelector(`[data-unified-sort="${state.sort}"]`)?.focus({preventScroll:true});
+      }
       else if(d.filter){state.intent=d.filter;state.page=1;root.querySelectorAll('[data-filter]').forEach(n=>{n.classList.toggle('active',n.dataset.filter===d.filter);n.setAttribute('aria-pressed',String(n.dataset.filter===d.filter));});render();}
       else if(d.range){Object.assign(state,range(Number(d.range)),{page:1});root.querySelectorAll('[data-range]').forEach(n=>n.classList.toggle('active',n===button));render();}
       else if(d.mode){state.timeMode=d.mode;root.querySelectorAll('[data-mode]').forEach(n=>n.classList.toggle('active',n===button));render();}

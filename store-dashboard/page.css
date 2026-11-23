@@ -1244,6 +1244,45 @@
   visibility: hidden;
 }
 
+.store-dashboard-page #main-panel-advisors .unified-advisor-table {
+  table-layout: fixed;
+}
+
+.store-dashboard-page #main-panel-advisors .unified-advisor-table :is(.cell-sub, .advisor-store-name) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.store-dashboard-page #main-panel-advisors .advisor-sort-button {
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.store-dashboard-page #main-panel-advisors .advisor-sort-button .advisor-sort-indicator {
+  visibility: visible;
+}
+
+.store-dashboard-page #main-panel-advisors .advisor-recording-link {
+  color: var(--blue);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.store-dashboard-page #main-panel-advisors .advisor-recording-link:hover {
+  text-decoration: underline;
+}
+
+.store-dashboard-page #main-panel-advisors :is(.advisor-sort-button, .advisor-recording-link):focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .store-dashboard-page #main-panel-advisors .advisor-pagination {
   margin-top: 0;
   padding: 21px 20px 20px;
@@ -1619,6 +1658,10 @@
 
 .store-dashboard-page #main-panel-advisors .advisor-pagination {
   padding: 20px 0 0;
+}
+
+.store-dashboard-page #main-panel-advisors .advisor-pagination:has(.unified-advisor-pagination) {
+  padding-top: 12px;
 }
 
 .store-dashboard-page #main-panel-advisors .issue-overview-wrapper {

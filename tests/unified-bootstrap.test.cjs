@@ -68,7 +68,7 @@ for (const area of areas) {
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)]
       .map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(cacheVersion(entry), '20261113-date-shortcuts-v1', 'page bootstrap must use the current page release version');
+    assert.equal(cacheVersion(entry), version('app-runtime.js'), 'page bootstrap must use the current app runtime version');
     if ((area === 'factory-dashboard' && unified) || area === 'sales-dashboard') {
       const organizationCss = html.indexOf('../store-dashboard/organization-filter.css');
       const dashboardCss = html.indexOf('../shared/dashboard-filters.css');

@@ -973,7 +973,7 @@
     if (value === '跟进中') return 'amber';
     if (value === '战败' || value === '无效') return 'red';
     if (value === '未跟进') return 'gray';
-    if (value === '异地') return 'blue';
+    if (value === '异地' || value === '已到店' || value === '已试驾') return 'blue';
     return 'gray';
   }
 
