@@ -5,11 +5,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
-const factsVersion = '20261105-factory-rank-hierarchy-v1';
-const dateShortcutsVersion = '20261113-date-shortcuts-v1';
-const dashboardVersion = '20261123-store-advisor-rank-v1';
-const appRuntimeVersion = '20261123-lead-list-return-v1';
-const leadsRuntimeVersion = '20261123-lead-status-colors-v1';
+const linkedDemoVersion = '20261123-lead-list-return-v1';
+const allTimeVersion = '20261124-all-time-data-v1';
+const journeyMotionVersion = '20261124-customer-store-transition-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -52,11 +50,11 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     assert(index('date-filter-component-utils.js') < index('shared/unified-dashboard.js'));
     assert(index('shared/unified-dashboard.js') < index('app-runtime.js'));
     const sharedVersions = {
-      'shared/unified-data.js': factsVersion,
-      'shared/unified-dashboard.js': dashboardVersion,
-      'shared/linked-demo-data.js': appRuntimeVersion,
-      'date-filter-component-utils.js': dateShortcutsVersion,
-      'app-runtime.js': appRuntimeVersion
+      'shared/unified-data.js': allTimeVersion,
+      'shared/unified-dashboard.js': allTimeVersion,
+      'shared/linked-demo-data.js': linkedDemoVersion,
+      'date-filter-component-utils.js': allTimeVersion,
+      'app-runtime.js': journeyMotionVersion
     };
     for (const [file, expectedVersion] of Object.entries(sharedVersions)) {
       assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), expectedVersion, file);
@@ -64,15 +62,15 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), appRuntimeVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), journeyMotionVersion);
     if (area === 'leads') {
-      assert.equal(new URL(urls[index('leads/leads-modern-runtime.js')], 'https://prototype.example/').searchParams.get('v'), leadsRuntimeVersion);
+      assert.equal(new URL(urls[index('leads/leads-modern-runtime.js')], 'https://prototype.example/').searchParams.get('v'), allTimeVersion);
     }
     if (area === 'factory-dashboard') {
       assert.equal(new URL(urls[index('device-management/visit-organization-filter.js')], 'https://prototype.example/').searchParams.get('v'), '20261110-organization-brand-options-v1');
     }
     if (area === 'session') {
-      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), dateShortcutsVersion);
+      assert.equal(new URL(urls[index('session/session-real-runtime.js')], 'https://prototype.example/').searchParams.get('v'), allTimeVersion);
     }
   });
 }

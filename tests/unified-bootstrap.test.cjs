@@ -115,5 +115,5 @@ test('device entry preserves its original dependencies and versions its current 
     }
     assert(index('shared/unified-data.js') < index('device-management/page.js'));
   }
-  assert.equal(cacheVersion(urls[index('device-management/page.js')]), '20261113-date-shortcuts-v1', 'device page must use the current fix version');
+  assert.equal(cacheVersion(urls[index('device-management/page.js')]), '20261124-all-time-data-v1', 'device page must use the current fix version');
 });

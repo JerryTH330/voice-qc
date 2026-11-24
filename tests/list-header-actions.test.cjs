@@ -57,10 +57,11 @@ function adapterContext(overrides = {}) {
       records:[{sequence:4,advisorName:'陈佳',sn:'SN-A',size:'2 MB',startTime:'2026-10-14 12:15:00',duration:'00:04:00',completedAt:'未上传'}]},
     badgeEventRecords: [], badgeEventFilterState:{sn:'SN-A',date:'2026-10-14',type:'all'},
     visitEventFilterState:{record:{badgeSn:'SN-MISSING',businessId:'BIZ-2',advisor:'陈佳',date:'2026-10-14',startTime:'12:00:00',endTime:'12:24:00'},date:'2026-10-14',type:'all'},
-    getBadgeEventRecord: () => ({events:[{type:'power-on',time:'08:00:00',label:'工牌开机'}]}),
+    getBadgeEventRecord: (sn, date) => ({ sn, date, events:[{type:'power-on',time:'08:00:00',label:'工牌开机'}]}),
     badgeEventTypeOptions: [['all','全部事件'],['recording','录音'],['charging','充电']], ...overrides });
   const functions = ['getVisibleStoreFields','getStoreFieldValue','badgeEventTimeToSeconds','formatBadgeDurationSeconds','getStoreOverviewExportFilters','getVisibleEventExportRows','getDeviceListExportRequest','buildBadgeEventGroups','matchesBadgeEventGroupType','formatBadgeEventDuration',
-    'getBadgeManagementEmployee','getBadgeManagementRecords','getBadgeUploadStartTime','getBadgeUploadMatchTime','getBadgeUploadCompletedDate','getBadgeUploadDateRange','shiftBadgeUploadDate','getCompletedBadgeUploadRecords'];
+    'getBadgeManagementEmployee','getBadgeManagementRecords','getBadgeUploadStartTime','getBadgeUploadMatchTime','getBadgeUploadCompletedDate','getBadgeUploadDateRange','getBadgeUploadDates','shiftBadgeUploadDate','getCompletedBadgeUploadRecords',
+    'formatStoreDateDisplay','formatDeviceDateRange','isWithinDateTimeRange','getBadgeEventRecords'];
   vm.runInContext(functions.map(fn).join('\n'),context);
   context.getStoreOverviewExportFilters = () => [{label:'查询日期',value:'2026-10-14 至 2026-10-14'}];
   return context;

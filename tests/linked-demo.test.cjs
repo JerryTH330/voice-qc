@@ -19,6 +19,7 @@ function fn(source, name, indentation = '  ') {
 }
 function listContext(kind, search = '') {
   const context = dataContext(search);
+  context.window.__dateFilterComponentUtils = require('../date-filter-component-utils.js');
   const source = read(kind === 'session' ? 'session/session-real-runtime.js' : 'leads/leads-modern-runtime.js');
   const stop = kind === 'session' ? '  var lastRenderedOpenMenu' : '  var columnSettings';
   const functions = kind === 'session'
@@ -80,13 +81,15 @@ test('all visits resolve exact leads, optional recordings and badges without bor
   }
 });
 
-test('recording and lead runtimes append shared data while preserving raw sources and default dates', () => {
+test('recording and lead runtimes append shared data while preserving raw sources and defaulting to all dates', () => {
   const session = listContext('session');
   assert.equal(session.testList.records.length, session.__SESSION_REAL_RECORDING_DATA.rows.length + session.AIQCLinkedDemo.recordings.length);
-  assert.equal(session.testList.state.startDate, '2026-08-27'); assert.equal(session.testList.state.endDate, '2026-09-07');
+  assert.equal(session.testList.state.startDate, '');
+  assert.equal(session.testList.state.endDate, '');
   const leads = listContext('leads');
   assert.equal(leads.testList.records.length, leads.__LEADS_REAL_DATA.length + leads.AIQCLinkedDemo.leads.length);
-  assert.equal(leads.testList.states.leads.startDate, '2026-09-10');
+  assert.equal(leads.testList.states.leads.startDate, '');
+  assert.equal(leads.testList.states.leads.endDate, '');
   for (const lead of leads.AIQCLinkedDemo.leads) {
     const actual = leads.testList.records.find(record => record.id === lead.id);
     assert.equal(actual.advisorId, lead.advisorId); assert.equal(actual.arrivalTime, lead.arrivalTime);
@@ -167,7 +170,7 @@ test('device association route selects one visit or one badge and carries its da
     document: { querySelector() { return null; } },
     getVisitDefaultFilters() { return { source: [], status: [], leadId: '', recordingId: '', customerKeyword: '' }; },
     syncVisitDateDraft() {}, renderVisitOrganizationFilters() {}, renderVisits() {}, renderBadgePage() {},
-    selectBadgeRecord(sn, advisorName) { if (sn) capture.push([sn, advisorName]); },
+    selectBadgeRecord(sn, advisorName, date) { if (sn) capture.push([sn, advisorName, date]); },
     badgeRecordDrawer: { inert: true, setAttribute(key, value) { drawerAttributes[key] = value; }, classList: { add() {} }, querySelector() { return { focus() {} }; } },
     badgeRecordDrawerBackdrop: { hidden: true }, badgeRecordDrawerContentHost: {}, badgeRecordDrawerCloseTimer: null,
     badgeRecordDrawerTrigger: null, badgeRecordDrawerTitle: {}, badgeRecordDrawerSubtitle: {},
@@ -188,10 +191,7 @@ test('device association route selects one visit or one badge and carries its da
   const params = new URLSearchParams(badgeLink.hash.split('?')[1]);
   context.applyLinkedDemoRoute({ route: 'store-badges', params });
   assert.equal(context.badgeFilterState.snQuery, selected.badgeSn);
-  assert.equal(context.badgeEventFilterState.date, selected.date);
-  assert.equal(context.badgeUploadFilterState.startDate, selected.date);
-  assert.equal(context.badgeUploadFilterState.endDate, selected.date);
-  assert.deepEqual(capture[0], [selected.badgeSn, selected.advisor]);
+  assert.deepEqual(capture[0], [selected.badgeSn, selected.advisor, selected.date]);
   assert.equal(activeTab, 'events');
   assert.equal(context.badgeRecordDrawer.inert, false);
   assert.equal(context.badgeRecordDrawerBackdrop.hidden, false);
@@ -201,7 +201,7 @@ test('device association route selects one visit or one badge and carries its da
   context.document.querySelector = () => trigger;
   context.applyLinkedDemoRoute({ route: 'store-badges', params });
   assert.equal(context.badgeRecordDrawerTrigger, trigger);
-  assert.deepEqual(capture.at(-1), [selected.badgeSn, selected.advisor]);
+  assert.deepEqual(capture.at(-1), [selected.badgeSn, selected.advisor, selected.date]);
 });
 
 test('each visit matching drawer uses its own upload evidence rather than all same-day advisor fragments', () => {

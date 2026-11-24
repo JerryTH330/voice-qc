@@ -9,7 +9,7 @@ function list(kind,search=''){
 }
 async function exportRows(h,selector){h.click(selector);await Promise.resolve();await Promise.resolve();assert.equal(h.submitted.length,1);return h.submitted.pop();}
 for(const kind of ['session','leads'])test(`${kind}: visible fields and export rows use the same filtered facts and exact ID`,async()=>{
- const h=list(kind),d=h.window.AIQCData,rows=kind==='session'?d.query(d.defaultRange).recordings:d.query(d.defaultRange).leads;
+ const h=list(kind),d=h.window.AIQCData,rows=kind==='session'?d.recordings:d.leads;
  const request=await exportRows(h,kind==='session'?'[data-sr-export]':'[data-lr-export]');
  assert.equal(request.rows.length,rows.length);
  const headers=[...h.host.querySelectorAll(kind==='session'?'#sessionRealTable th':'.data-table th')].map(n=>n.textContent.trim());
@@ -29,7 +29,7 @@ test('focused original lead and recording export retain exact IDs and associatio
 test('customer aggregation and export never merge masked names or phones',async()=>{
  const h=list('leads','&leadsView=customers'),d=h.window.AIQCData;
  const request=await exportRows(h,'[data-lr-export]');
- assert.equal(request.rows.length,d.customers(d.leads.filter(l=>l.leadDate>=d.defaultRange.startDate&&l.leadDate<=d.defaultRange.endDate)).length);
+ assert.equal(request.rows.length,d.customers(d.leads).length);
  assert(request.rows.every(row=>row.some(value=>String(value).includes('客户ID缺失'))));
 });
 for(const kind of ['session','leads'])test(`${kind}: hiding a field updates table and export together`,async()=>{
@@ -47,8 +47,7 @@ for (const view of ['session', 'leads', 'customers']) test(`${view}: statistics 
  const ns = view === 'session' ? 'sr' : 'lr';
  const dateTrigger = ns === 'sr' ? '[data-sr-trigger="date"]' : '[data-lr-date-trigger]';
  const displayed = () => h.host.querySelector('.dimension-switcher__statistics-time').textContent;
- const range = h.window.AIQCData.defaultRange;
- const initial = `统计时间：${range.startDate.replace(/-/g, '/')} 至 ${range.endDate.replace(/-/g, '/')}`;
+ const initial = '统计时间：全部时间';
  assert.equal(displayed(), initial);
  const exportButton = h.host.querySelector(`[data-${ns}-export]`);
  assert.equal(h.window.document.getElementById(exportButton.getAttribute('aria-describedby')).textContent, '下载数据条数限制在 3 万条');
@@ -56,7 +55,7 @@ for (const view of ['session', 'leads', 'customers']) test(`${view}: statistics 
  h.click(dateTrigger);
  assert.deepEqual(
    [...h.host.querySelectorAll(`[data-${ns}-date-shortcut]`)].map(button=>button.textContent.trim()),
-   ['昨天','近三天','近七天','近一月','近半年']
+   ['全部时间','昨天','近三天','近七天','近一月','近半年']
  );
  h.click(`[data-${ns}-date-shortcut="last3"]`);
  assert.equal(displayed(), initial, 'draft dates must not change the displayed effective range');
@@ -90,5 +89,5 @@ test('lead statistics time becomes unlimited when the date field is hidden', () 
  field.dispatchEvent(new h.window.Event('change', {bubbles: true}));
  h.click('[data-lr-settings-save]');
  h.flush();
- assert.equal(h.host.querySelector('.dimension-switcher__statistics-time').textContent, '统计时间：不限');
+ assert.equal(h.host.querySelector('.dimension-switcher__statistics-time').textContent, '统计时间：全部时间');
 });

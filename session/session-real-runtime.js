@@ -234,8 +234,10 @@
   }
 
   var records = global.AIQCData ? global.AIQCData.recordings : hydrateRecords();
-  var defaultStartDate = global.AIQCData?.defaultRange.startDate || '2026-08-27';
-  var defaultEndDate = global.AIQCData?.defaultRange.endDate || '2026-09-07';
+  var dateUtils = global.__dateFilterComponentUtils;
+  var dateBounds = dateUtils.getDateCalendarBounds(records.map(function (record) {
+    return text(record.startTime).slice(0, 10);
+  }));
   var filterKeys = ['brand', 'scenario', 'sourceType', 'intentLevel', 'carSeries', 'leadCarSeries', 'province', 'city', 'store', 'region', 'zone', 'patroler', 'governor', 'advisor', 'customer', 'status'];
   var state = {
     selections: {},
@@ -247,8 +249,8 @@
       customerName: '',
       customerPhone: ''
     },
-    startDate: defaultStartDate,
-    endDate: defaultEndDate,
+    startDate: '',
+    endDate: '',
     dimensionMode: 'organization',
     collapsed: true,
     openMenu: null,
@@ -256,10 +258,10 @@
     menuQueries: {},
     menuOrders: {},
     activeDateField: 'startDate',
-    dateDraftStartDate: defaultStartDate,
-    dateDraftEndDate: defaultEndDate,
-    dateViewYear: Number(defaultStartDate.slice(0, 4)),
-    dateViewMonth: Number(defaultStartDate.slice(5, 7)),
+    dateDraftStartDate: '',
+    dateDraftEndDate: '',
+    dateViewYear: Number(dateBounds.latest.slice(0, 4)),
+    dateViewMonth: Number(dateBounds.latest.slice(5, 7)),
     settingsOpen: false,
     refreshBusy: false,
     columnDragging: '',
@@ -277,9 +279,13 @@
     var person = global.AIQCData?.advisors.find(function (item) {
       return item.storeId === entryParams.get('storeId') && item.advisorId === entryParams.get('advisorId');
     });
-    var validDate = function (value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value)); };
-    var start = entryParams.get('startDate'), end = entryParams.get('endDate');
-    if (!person || !validDate(start) || !validDate(end) || start > end) entryScopeError = '未找到对应顾问范围，请核对链接中的门店、顾问和日期。';
+    var validDate = function (value) {
+      var parsed = parseSessionDateValue(value);
+      return parsed && formatSessionDateValue(parsed) === value;
+    };
+    var start = entryParams.get('startDate') || '';
+    var end = entryParams.get('endDate') || '';
+    if (!person || (start && !validDate(start)) || (end && !validDate(end)) || (start && end && start > end)) entryScopeError = '未找到对应顾问范围，请核对链接中的门店、顾问和日期。';
     else {
       state.selections.store = [person.brand + '::' + person.dealerCode];
       state.selections.advisor = [person.advisorKey];
@@ -287,7 +293,7 @@
       state.selections.leadCarSeries = entryParams.getAll('model');
       state.startDate = state.dateDraftStartDate = start;
       state.endDate = state.dateDraftEndDate = end;
-      state.dateViewYear = Number(start.slice(0, 4)); state.dateViewMonth = Number(start.slice(5, 7));
+      syncSessionDateView(start || end || dateBounds.latest);
     }
   }
   if (linkedRecording) {
@@ -926,35 +932,47 @@
   }
 
   function getSessionDateRangeText(startDate, endDate) {
-    return formatSessionDateDisplay(startDate) + ' 至 ' + formatSessionDateDisplay(endDate);
+    return startDate || endDate
+      ? formatSessionDateDisplay(startDate) + ' 至 ' + formatSessionDateDisplay(endDate)
+      : '全部时间';
   }
 
   function renderSessionDateMenu() {
     var startDate = state.dateDraftStartDate;
     var endDate = state.dateDraftEndDate;
-    var todayValue = formatSessionDateValue(new Date());
-    var cells = getSessionDateCells(state.dateViewYear, state.dateViewMonth);
-    return '<div class="session-menu-panel session-menu-panel-date" data-sr-date-panel>' +
-      '<div class="session-date-panel-head"><div class="session-date-panel-copy"><span>录音开始时间范围</span><strong>' + escapeHtml(getSessionDateRangeText(startDate, endDate)) + '</strong></div>' +
-        '<div class="session-date-nav"><button type="button" class="session-date-nav-btn" data-sr-date-nav="-1" aria-label="上一个月"><i class="session-date-nav-arrow prev" aria-hidden="true"></i></button><strong>' + state.dateViewYear + '年' + state.dateViewMonth + '月</strong><button type="button" class="session-date-nav-btn" data-sr-date-nav="1" aria-label="下一个月"><i class="session-date-nav-arrow next" aria-hidden="true"></i></button></div></div>' +
-      '<div class="session-date-tabs"><button type="button" class="session-date-tab' + (state.activeDateField === 'startDate' ? ' active' : '') + '" data-sr-date-field="startDate"><span>开始日期</span><strong>' + escapeHtml(formatSessionDateDisplay(startDate)) + '</strong></button><button type="button" class="session-date-tab' + (state.activeDateField === 'endDate' ? ' active' : '') + '" data-sr-date-field="endDate"><span>结束日期</span><strong>' + escapeHtml(formatSessionDateDisplay(endDate)) + '</strong></button></div>' +
-      '<div class="session-date-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>' +
-      '<div class="session-date-grid">' + cells.map(function (date) {
-        if (!date) return '<span class="session-date-empty" aria-hidden="true"></span>';
-        var value = formatSessionDateValue(date);
-        var inRange = startDate && endDate && value >= startDate && value <= endDate;
-        return '<button type="button" class="session-date-day' + (inRange ? ' in-range' : '') + (value === startDate ? ' is-start' : '') + (value === endDate ? ' is-end' : '') + (value === todayValue ? ' is-today' : '') + '" data-sr-date-value="' + value + '">' + date.getDate() + '</button>';
-      }).join('') + '</div>' +
-      global.__dateFilterComponentUtils.renderDateShortcutsMarkup('sr-date') +
-      '<div class="session-cascader-footer session-date-footer"><span>' + escapeHtml('已选择 ' + getSessionDateRangeText(startDate, endDate)) + '</span><div class="session-date-actions"><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-sr-date-apply>应用日期</button></div></div>' +
-    '</div>';
+    var min = startDate && startDate < dateBounds.min ? startDate : dateBounds.min;
+    var max = endDate && endDate > dateBounds.max ? endDate : dateBounds.max;
+    var viewMonth = state.dateViewYear + '-' + String(state.dateViewMonth).padStart(2, '0');
+    var cells = getSessionDateCells(state.dateViewYear, state.dateViewMonth).map(function (date) {
+      if (!date) return null;
+      var value = formatSessionDateValue(date);
+      return {
+        value: value, day: date.getDate(),
+        isDisabled: value < min || value > max, isToday: value === dateBounds.today,
+        isStart: value === startDate, isEnd: value === endDate,
+        inRange: Boolean(startDate && endDate && value >= startDate && value <= endDate)
+      };
+    });
+    return dateUtils.renderDateRangePanelMarkup({
+      dataNamespace: 'sr-date',
+      title: '录音开始时间范围', rangeText: getSessionDateRangeText(startDate, endDate),
+      monthLabel: state.dateViewYear + '年' + state.dateViewMonth + '月', activeField: state.activeDateField,
+      startLabel: startDate ? formatSessionDateDisplay(startDate) : '未选择',
+      endLabel: endDate ? formatSessionDateDisplay(endDate) : '未选择',
+      cells: cells, disablePrevMonth: viewMonth <= min.slice(0, 7), disableNextMonth: viewMonth >= max.slice(0, 7),
+      shortcuts: [{ key: 'all', label: '全部时间', active: !startDate && !endDate }].concat(dateUtils.dateShortcuts),
+      showCancel: false
+    });
   }
 
   function renderDateControl() {
     var open = state.openMenu === 'date';
+    var rangeLabel = state.startDate || state.endDate
+      ? '<strong>' + escapeHtml(formatSessionDateDisplay(state.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatSessionDateDisplay(state.endDate)) + '</strong>'
+      : '<strong>全部时间</strong>';
     return '<div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu sr-date-control' + (open ? ' is-open' : '') + '" data-sr-control="date">' +
       '<span>录音开始时间</span>' +
-      '<button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-sr-trigger="date" aria-label="录音开始时间筛选" aria-haspopup="dialog" aria-expanded="' + (open ? 'true' : 'false') + '"><strong>' + escapeHtml(formatSessionDateDisplay(state.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatSessionDateDisplay(state.endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
+      '<button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-sr-trigger="date" aria-label="录音开始时间筛选" aria-haspopup="dialog" aria-expanded="' + (open ? 'true' : 'false') + '">' + rangeLabel + '<span class="session-date-icon" aria-hidden="true"></span></button>' +
       (showFilterMenu('date') ? renderSessionDateMenu() : '') +
     '</div>';
   }
@@ -963,8 +981,7 @@
     return global.DimensionSwitcher.render({
       namespace: 'sr', mode: state.dimensionMode,
       label: '录音组织筛选维度', panelId: 'sessionDimensionFilters',
-      statisticsTime: !state.startDate && !state.endDate ? '不限'
-        : formatSessionDateDisplay(state.startDate) + ' 至 ' + formatSessionDateDisplay(state.endDate)
+      statisticsTime: getSessionDateRangeText(state.startDate, state.endDate)
     });
   }
 
@@ -1078,7 +1095,7 @@
       settleFilterExtra(extraEl, state.collapsed);
     }
     positionFilterMenu();
-    var panel = container.querySelector('[data-sr-menu], [data-sr-date-panel]');
+    var panel = container.querySelector('[data-sr-menu], .session-menu-panel-date');
     if (panel && shouldEnterMenu && !reduceMotion) {
       var enterAnimation = animateFilterMenu(panel, 'in');
       container._menuAnimation = enterAnimation;
@@ -1118,13 +1135,13 @@
   }
 
   function positionFilterMenu() {
-    var menu = document.querySelector('#sessionRealFilterControls [data-sr-menu], #sessionRealFilterControls [data-sr-date-panel]');
+    var menu = document.querySelector('#sessionRealFilterControls [data-sr-menu], #sessionRealFilterControls .session-menu-panel-date');
     if (!menu) return;
     menu.style.left = '0px';
     var bounds = menu.getBoundingClientRect();
     var shift = Math.min(0, global.innerWidth - 24 - bounds.right);
     menu.style.left = Math.max(24 - bounds.left, shift) + 'px';
-    if (menu.hasAttribute('data-sr-date-panel')) {
+    if (menu.classList.contains('session-menu-panel-date')) {
       menu.style.maxHeight = Math.max(240, global.innerHeight - bounds.top - 24) + 'px';
     }
   }
@@ -1613,8 +1630,8 @@
     };
     if (queryKeyByColumn[key]) state.queries[queryKeyByColumn[key]] = '';
     if (key === 'startTime') {
-      state.startDate = defaultStartDate;
-      state.endDate = defaultEndDate;
+      state.startDate = '';
+      state.endDate = '';
     }
   }
 
@@ -1677,7 +1694,7 @@
     });
     var queryLabels = { audioId: '录音ID', leadId: '线索ID', advisorPhone: '顾问手机号', customerKeyword: '客户关键词', customerName: '客户名称', customerPhone: '客户号码' };
     Object.keys(state.queries).forEach(function (key) { if (state.queries[key]) filters.push({ label: queryLabels[key], value: state.queries[key] }); });
-    filters.push({ label: '录音日期', value: state.startDate + ' 至 ' + state.endDate });
+    filters.push({ label: '录音日期', value: getSessionDateRangeText(state.startDate, state.endDate) });
     var now = new Date();
     var pad = function (value) { return String(value).padStart(2, '0'); };
     var request = {
@@ -1855,7 +1872,7 @@
           state.activeDateField = 'startDate';
           state.dateDraftStartDate = state.startDate;
           state.dateDraftEndDate = state.endDate;
-          syncSessionDateView(state.dateDraftStartDate);
+          syncSessionDateView(state.dateDraftStartDate || state.dateDraftEndDate || dateBounds.latest);
           rerender();
           return;
         }
@@ -1991,12 +2008,17 @@
       node.dataset.srBound = 'true';
       node.addEventListener('click', function (event) {
         event.stopPropagation();
-        var range = global.__dateFilterComponentUtils.getDateShortcutRange(node.dataset.srDateShortcut, new Date());
-        var endValue = formatSessionDateValue(range.endDate);
-        state.dateDraftStartDate = formatSessionDateValue(range.startDate);
-        state.dateDraftEndDate = endValue;
-        state.activeDateField = 'endDate';
-        syncSessionDateView(endValue);
+        if (node.dataset.srDateShortcut === 'all') {
+          state.dateDraftStartDate = '';
+          state.dateDraftEndDate = '';
+          state.activeDateField = 'startDate';
+        } else {
+          var range = dateUtils.getDateShortcutRange(node.dataset.srDateShortcut);
+          state.dateDraftStartDate = formatSessionDateValue(range.startDate);
+          state.dateDraftEndDate = formatSessionDateValue(range.endDate);
+          state.activeDateField = 'endDate';
+        }
+        syncSessionDateView(state.dateDraftEndDate || dateBounds.latest);
         rerender();
       });
     });
@@ -2022,12 +2044,12 @@
         filterKeys.forEach(function (key) { state.selections[key] = []; });
         state.selections.status = isColumnVisible('status') ? ['已完成'] : [];
         Object.keys(state.queries).forEach(function (key) { state.queries[key] = ''; });
-        state.startDate = defaultStartDate;
-        state.endDate = defaultEndDate;
-        state.dateDraftStartDate = defaultStartDate;
-        state.dateDraftEndDate = defaultEndDate;
+        state.startDate = '';
+        state.endDate = '';
+        state.dateDraftStartDate = '';
+        state.dateDraftEndDate = '';
         state.activeDateField = 'startDate';
-        syncSessionDateView(defaultStartDate);
+        syncSessionDateView(dateBounds.latest);
         state.page = 1;
         state.collapsed = true;
         closeFilterMenu(true);

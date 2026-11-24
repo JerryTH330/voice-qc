@@ -62,7 +62,7 @@ const pageMeta = {
 const badgeEventRecords = window.AIQCData ? window.AIQCData.badgeEvents : [...(window.__BADGE_HISTORY_DATA?.events || []), ...(window.AIQCLinkedDemo?.events || [])];
 
 const badgeEventDefaultFilters = {
-  date: '2026-08-11',
+  date: '',
   sn: 'MN-BDG-004821',
   type: 'all'
 };
@@ -107,7 +107,8 @@ function renderBadgeEventIcon(event) {
 
 const badgeRecordState = {
   sn: badgeEventDefaultFilters.sn,
-  advisorName: '陈佳'
+  advisorName: '陈佳',
+  entryDate: ''
 };
 
 const badgeUploadRecords = window.AIQCData ? window.AIQCData.badgeUploads : [...(window.__BADGE_HISTORY_DATA?.uploads || []), ...(window.AIQCLinkedDemo?.uploads || [])];
@@ -115,8 +116,8 @@ const badgeUploadRecords = window.AIQCData ? window.AIQCData.badgeUploads : [...
 
 
 const badgeUploadDefaultFilters = {
-  startDate: '2026-08-06',
-  endDate: '2026-08-12'
+  startDate: '',
+  endDate: ''
 };
 const badgeUploadFilterState = { ...badgeUploadDefaultFilters };
 const badgeUploadDailyPaginationState = { page: 1, pageSize: 10 };
@@ -134,6 +135,7 @@ const badgeUploadMenuState = {
 const badgeUploadMenuMotion = { lastRendered: null };
 let badgeUploadSelectedDate = badgeUploadDefaultFilters.endDate;
 
+const deviceAllTimeShortcut = { key: 'all', label: '全部时间' };
 const visitDefaultFilters = {
   source: [],
   status: [],
@@ -143,10 +145,7 @@ const visitDefaultFilters = {
   customerKeyword: ''
 };
 function getVisitDefaultFilters() {
-  const today = new Date();
-  const start = new Date(today);
-  start.setDate(start.getDate() - 6);
-  return { ...visitDefaultFilters, startDate: formatStoreDateValue(start), endDate: formatStoreDateValue(today),
+  return { ...visitDefaultFilters, startDate: '', endDate: '',
     source: [...visitDefaultFilters.source], status: [...visitDefaultFilters.status] };
 }
 const visitFilterState = getVisitDefaultFilters();
@@ -253,8 +252,8 @@ const visitDateMenuState = {
   draftStartDate: visitFilterState.startDate,
   draftEndDate: visitFilterState.endDate,
   activeField: 'startDate',
-  viewYear: Number(visitFilterState.startDate.slice(0, 4)),
-  viewMonth: Number(visitFilterState.startDate.slice(5, 7))
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth() + 1
 };
 const visitMatchingFilterKeys = new Set();
 const visitStoreDrilldownState = {
@@ -647,10 +646,10 @@ function applyVisitDateDraft(field, value, menuState = visitDateMenuState) {
 }
 
 function applyVisitDateShortcut(key, menuState = visitDateMenuState) {
-  const { startDate, endDate } = globalThis.__dateFilterComponentUtils.getDateShortcutRange(key, new Date());
-  menuState.draftStartDate = formatStoreDateValue(startDate);
-  menuState.draftEndDate = formatStoreDateValue(endDate);
-  menuState.activeField = 'endDate';
+  const range = globalThis.__dateFilterComponentUtils.getDateShortcutRange(key, new Date());
+  menuState.draftStartDate = range ? formatStoreDateValue(range.startDate) : '';
+  menuState.draftEndDate = range ? formatStoreDateValue(range.endDate) : '';
+  menuState.activeField = range ? 'endDate' : 'startDate';
   syncVisitDateView(menuState.draftEndDate, menuState);
 }
 
@@ -675,12 +674,12 @@ function renderVisitDateMenu() {
   const endLabel = formatStoreDateDisplay(visitDateMenuState.draftEndDate);
   return globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup({
     dataNamespace: 'visit-date',
-    rangeText: `${startLabel} 至 ${endLabel}`,
+    rangeText: formatDeviceDateRange(visitDateMenuState.draftStartDate, visitDateMenuState.draftEndDate),
     monthLabel: `${visitDateMenuState.viewYear}年${visitDateMenuState.viewMonth}月`,
     activeField: visitDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(),
-    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
+    shortcuts: [deviceAllTimeShortcut, ...globalThis.__dateFilterComponentUtils.dateShortcuts],
     panelClassName: 'session-menu-panel session-menu-panel-date visit-filter-menu visit-time-panel',
     title: '到访日期范围',
     showCancel: false
@@ -691,12 +690,7 @@ function syncVisitTimeFilterControl() {
   const trigger = document.querySelector('[data-visit-time-trigger]');
   const panel = document.getElementById('visitTimePanel');
   if (!trigger || !panel) return;
-  const start = formatStoreDateDisplay(visitFilterState.startDate);
-  const end = formatStoreDateDisplay(visitFilterState.endDate);
-  trigger.querySelector('[data-visit-time-start]').textContent = start;
-  trigger.querySelector('[data-visit-time-end]').textContent = end;
-  trigger.title = `${start} 至 ${end}`;
-  trigger.setAttribute('aria-label', `到访日期范围：${trigger.title}`);
+  syncDeviceDateRangeTrigger(trigger, 'visit', '到访日期范围', visitFilterState);
   const open = visitMenuState.openMenu === 'time';
   trigger.setAttribute('aria-expanded', String(open));
   trigger.classList.toggle('active', open);
@@ -899,7 +893,7 @@ let visitDetailTrigger = null;
 
 const matchingPaginationState = { page: 1, pageSize: 20 };
 
-const matchingDefaultFilters = { ...(window.AIQCLinkedDemo?.dateRange || { startDate: '2026-08-11', endDate: '2026-08-12' }) };
+const matchingDefaultFilters = { startDate: '', endDate: '' };
 const matchingFilterState = { ...matchingDefaultFilters };
 const matchingExportButton = document.getElementById('matchingExportButton');
 let matchingExportBusy = false;
@@ -913,8 +907,8 @@ const matchingDateMenuState = {
   draftStartDate: matchingDefaultFilters.startDate,
   draftEndDate: matchingDefaultFilters.endDate,
   activeField: 'startDate',
-  viewYear: Number(matchingDefaultFilters.startDate.slice(0, 4)),
-  viewMonth: Number(matchingDefaultFilters.startDate.slice(5, 7))
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth() + 1
 };
 const matchingFieldSettingsModel = window.MatchingFieldSettings;
 let matchingFieldSettingsState = loadMatchingFieldSettings();
@@ -1172,12 +1166,12 @@ function renderMatchingDateMenu() {
   const endLabel = formatStoreDateDisplay(matchingDateMenuState.draftEndDate);
   return globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup({
     dataNamespace: 'matching-date',
-    rangeText: `${startLabel} 至 ${endLabel}`,
+    rangeText: formatDeviceDateRange(matchingDateMenuState.draftStartDate, matchingDateMenuState.draftEndDate),
     monthLabel: `${matchingDateMenuState.viewYear}年${matchingDateMenuState.viewMonth}月`,
     activeField: matchingDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(matchingDateMenuState),
-    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
+    shortcuts: [deviceAllTimeShortcut, ...globalThis.__dateFilterComponentUtils.dateShortcuts],
     panelClassName: 'session-menu-panel session-menu-panel-date matching-filter-menu matching-time-panel',
     title: '录音排查日期范围',
     showCancel: false
@@ -1188,12 +1182,7 @@ function syncMatchingTimeFilterControl() {
   const trigger = document.querySelector('[data-matching-time-trigger]');
   const panel = document.getElementById('matchingTimePanel');
   if (!trigger || !panel) return;
-  const start = formatStoreDateDisplay(matchingFilterState.startDate);
-  const end = formatStoreDateDisplay(matchingFilterState.endDate);
-  trigger.querySelector('[data-matching-time-start]').textContent = start;
-  trigger.querySelector('[data-matching-time-end]').textContent = end;
-  trigger.title = `${start} 至 ${end}`;
-  trigger.setAttribute('aria-label', `录音排查日期范围：${trigger.title}`);
+  syncDeviceDateRangeTrigger(trigger, 'matching', '录音排查日期范围', matchingFilterState);
   const open = matchingMenuState.openMenu === 'time';
   trigger.setAttribute('aria-expanded', String(open));
   trigger.classList.toggle('active', open);
@@ -1482,8 +1471,14 @@ function getBadgeUploadDateRange(startDate, endDate) {
 function getCompletedBadgeUploadRecords() {
   return getCurrentBadgeUploadRecords().filter((item) => {
     const completedDate = getBadgeUploadCompletedDate(item);
-    return completedDate && completedDate >= badgeUploadFilterState.startDate && completedDate <= badgeUploadFilterState.endDate;
+    return completedDate && isWithinDateTimeRange(completedDate, badgeUploadFilterState.startDate, badgeUploadFilterState.endDate);
   });
+}
+
+function getBadgeUploadDates(records = getCompletedBadgeUploadRecords()) {
+  const { startDate, endDate } = badgeUploadFilterState;
+  if (startDate && endDate) return getBadgeUploadDateRange(startDate, endDate);
+  return [...new Set(records.map(getBadgeUploadCompletedDate))].sort();
 }
 
 function getLatestBadgeUploadDate(records, fallbackDate) {
@@ -1491,11 +1486,10 @@ function getLatestBadgeUploadDate(records, fallbackDate) {
 }
 
 function resetBadgeUploadDateRange() {
-  const completedRecords = getCurrentBadgeUploadRecords().filter((item) => getBadgeUploadCompletedDate(item));
-  const latestDate = getLatestBadgeUploadDate(completedRecords, badgeUploadDefaultFilters.endDate);
-  badgeUploadFilterState.startDate = shiftBadgeUploadDate(latestDate, -6);
-  badgeUploadFilterState.endDate = latestDate;
-  badgeUploadSelectedDate = latestDate;
+  const entryDate = badgeRecordState.entryDate || '';
+  badgeUploadFilterState.startDate = entryDate;
+  badgeUploadFilterState.endDate = entryDate;
+  badgeUploadSelectedDate = getLatestBadgeUploadDate(getCompletedBadgeUploadRecords(), entryDate);
 }
 
 function normalizeDeviceQuery(value) {
@@ -1835,9 +1829,7 @@ function getMatchingExportFilters() {
     const value = matchingOrganizationModel.display(key, applied);
     filters.push({ label: field.label, value });
   });
-  if (matchingFilterState.startDate || matchingFilterState.endDate) {
-    filters.push({ label: '到访日期', value: `${matchingFilterState.startDate || '不限'} 至 ${matchingFilterState.endDate || '不限'}` });
-  }
+  filters.push({ label: '到访日期', value: formatDeviceDateRange(matchingFilterState.startDate, matchingFilterState.endDate, value => value) });
   return filters;
 }
 
@@ -1986,7 +1978,7 @@ function applyVisitStoreDrilldownFromRoute(params) {
     return date && formatStoreDateValue(date) === value ? value : matchingDefaultFilters[key];
   };
   const dates = { startDate: dateValue('startDate'), endDate: dateValue('endDate') };
-  if (dates.endDate < dates.startDate) dates.endDate = dates.startDate;
+  if (dates.startDate && dates.endDate && dates.endDate < dates.startDate) dates.endDate = dates.startDate;
   applyVisitStoreDrilldown(stores[0], organization, dates);
   visitStoreDrilldownState.routeHash = routeHash;
   return true;
@@ -2059,7 +2051,7 @@ function handleVisitStoreDrilldownClick(event) {
 }
 
 function syncBadgeEventDateView(filterState = badgeEventFilterState, menuState = badgeEventMenuState) {
-  const parsedDate = new Date(`${filterState.date}T00:00:00`);
+  const parsedDate = filterState.date ? new Date(`${filterState.date}T00:00:00`) : new Date();
   if (Number.isNaN(parsedDate.getTime())) return;
   menuState.dateViewYear = parsedDate.getFullYear();
   menuState.dateViewMonth = parsedDate.getMonth() + 1;
@@ -2084,7 +2076,7 @@ function renderBadgeEventDatePanel(filterState = badgeEventFilterState, menuStat
   return `
     <div class="session-menu-panel session-menu-panel-date badge-event-date-panel" role="dialog" aria-label="查询日期">
       <div class="session-date-panel-head">
-        <div class="session-date-panel-copy"><span>查询日期</span><strong>${escapeBadgeHtml(formatStoreDateDisplay(filterState.date))}</strong></div>
+        <div class="session-date-panel-copy"><span>查询日期</span><strong>${filterState.date ? escapeBadgeHtml(formatStoreDateDisplay(filterState.date)) : '全部时间'}</strong></div>
         <div class="session-date-nav">
           <button type="button" class="session-date-nav-btn" data-${prefix}-date-nav="-1" aria-label="上一个月"><i class="session-date-nav-arrow prev" aria-hidden="true"></i></button>
           <strong>${menuState.dateViewYear}年${menuState.dateViewMonth}月</strong>
@@ -2097,6 +2089,7 @@ function renderBadgeEventDatePanel(filterState = badgeEventFilterState, menuStat
           ? `<button type="button" class="session-date-day${cell.selected ? ' is-start is-end' : ''}" data-${prefix}-date-value="${cell.value}">${cell.day}</button>`
           : '<span class="session-date-empty" aria-hidden="true"></span>').join('')}
       </div>
+      ${prefix === 'badge-event' ? '<div class="session-date-shortcuts"><button type="button" class="session-date-shortcut" data-badge-event-date-all>全部时间</button></div>' : ''}
     </div>`;
 }
 
@@ -2111,7 +2104,7 @@ function renderBadgeEventFilters() {
     <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-event-filter-control${dateOpen ? ' is-open' : ''}">
       <span>查询日期</span>
       <button type="button" class="session-date-trigger${dateOpen ? ' active' : ''}" data-badge-event-date-trigger aria-label="查询日期筛选" aria-haspopup="dialog" aria-expanded="${dateOpen}">
-        <strong>${escapeBadgeHtml(formatStoreDateDisplay(badgeEventFilterState.date))}</strong><span class="session-date-icon" aria-hidden="true"></span>
+        <strong>${badgeEventFilterState.date ? escapeBadgeHtml(formatStoreDateDisplay(badgeEventFilterState.date)) : '全部时间'}</strong><span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${dateOpen ? renderBadgeEventDatePanel() : ''}
     </div>
@@ -2142,7 +2135,8 @@ function closeBadgeEventMenus(instant = false) {
 function syncBadgeUploadDateDraft() {
   badgeUploadMenuState.dateDraftStartDate = badgeUploadFilterState.startDate;
   badgeUploadMenuState.dateDraftEndDate = badgeUploadFilterState.endDate;
-  const parsedDate = new Date(`${badgeUploadMenuState.dateDraftStartDate}T00:00:00`);
+  badgeUploadMenuState.activeDateField = 'startDate';
+  const parsedDate = parseStoreDateValue(badgeUploadMenuState.dateDraftStartDate || badgeUploadSelectedDate) || new Date();
   if (!Number.isNaN(parsedDate.getTime())) {
     badgeUploadMenuState.dateViewYear = parsedDate.getFullYear();
     badgeUploadMenuState.dateViewMonth = parsedDate.getMonth() + 1;
@@ -2179,7 +2173,7 @@ function renderBadgeUploadFilters() {
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
   const startDate = badgeUploadFilterState.startDate;
   const endDate = badgeUploadFilterState.endDate;
-  const draftRangeText = `${formatStoreDateDisplay(badgeUploadMenuState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(badgeUploadMenuState.dateDraftEndDate)}`;
+  const draftRangeText = formatDeviceDateRange(badgeUploadMenuState.dateDraftStartDate, badgeUploadMenuState.dateDraftEndDate);
   const datePanel = dateOpen && panelRenderer ? panelRenderer({
     dataNamespace: 'badge-upload-date',
     rangeText: draftRangeText,
@@ -2188,6 +2182,7 @@ function renderBadgeUploadFilters() {
     startLabel: formatStoreDateDisplay(badgeUploadMenuState.dateDraftStartDate),
     endLabel: formatStoreDateDisplay(badgeUploadMenuState.dateDraftEndDate),
     cells: getBadgeUploadDateCells(),
+    shortcuts: [deviceAllTimeShortcut],
     summaryText: `已选择 ${draftRangeText}`,
     panelClassName: 'session-menu-panel session-menu-panel-date badge-upload-date-panel',
     title: '上传完成日期范围',
@@ -2197,7 +2192,7 @@ function renderBadgeUploadFilters() {
     <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-event-filter-control${dateOpen ? ' is-open' : ''}">
       <span>上传完成日期</span>
       <button type="button" class="session-date-trigger${dateOpen ? ' active' : ''}" data-badge-upload-date-trigger aria-label="上传完成日期筛选" aria-haspopup="dialog" aria-expanded="${dateOpen}">
-        <strong>${escapeBadgeHtml(formatStoreDateDisplay(startDate))}</strong><em>至</em><strong>${escapeBadgeHtml(formatStoreDateDisplay(endDate))}</strong><span class="session-date-icon" aria-hidden="true"></span>
+        ${renderDeviceDateRangeLabel(startDate, endDate)}<span class="session-date-icon" aria-hidden="true"></span>
       </button>
       ${datePanel}
     </div>
@@ -2220,9 +2215,12 @@ function closeBadgeUploadMenus(instant = false) {
 
 function getBadgeRecordProfile() {
   if (window.AIQCData) {
-    const history = badgeEventRecords.find(item => item.sn === badgeRecordState.sn && item.date === badgeEventFilterState.date);
+    const history = getBadgeEventRecords(badgeRecordState.sn, badgeEventFilterState.date);
+    const advisors = [...new Set(history.map(item => item.employeeName).filter(Boolean))];
+    const advisorName = advisors.length > 1 ? '多位历史人员' : advisors[0];
+    const association = history.some(item => item.associationMissing) ? '（历史人员关联缺失）' : '';
     const asset = window.AIQCData.getBadge(badgeRecordState.sn);
-    return {sn: badgeRecordState.sn, advisorName: history ? history.employeeName + (history.associationMissing ? '（历史人员关联缺失）' : '') : '历史人员关联缺失', storeName: history?.storeName || asset?.store || '—'};
+    return { sn: badgeRecordState.sn, advisorName: advisorName ? advisorName + association : '历史人员关联缺失', storeName: history[0]?.storeName || asset?.store || '—' };
   }
   const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
   if (detailRecord) return { advisorName: detailRecord.advisorName, storeName: detailRecord.store, sn: detailRecord.sn };
@@ -2330,7 +2328,7 @@ function renderBadgeUploads() {
   const dailyTbody = document.getElementById('badgeUploadDailyTableBody');
   if (!dailyTbody) return;
   const completedRecords = getCompletedBadgeUploadRecords();
-  const dates = getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate);
+  const dates = getBadgeUploadDates(completedRecords);
   if (!dates.includes(badgeUploadSelectedDate)) badgeUploadSelectedDate = getLatestBadgeUploadDate(completedRecords, badgeUploadFilterState.endDate);
   const countsByDate = completedRecords.reduce((result, item) => {
     const completedDate = getBadgeUploadCompletedDate(item);
@@ -2338,7 +2336,8 @@ function renderBadgeUploads() {
     return result;
   }, {});
   const dailySummary = document.getElementById('badgeUploadDailySummary');
-  if (dailySummary) dailySummary.textContent = `${badgeUploadFilterState.startDate} 至 ${badgeUploadFilterState.endDate} · 共 ${completedRecords.length} 条上传完成录音 · 点击数量查看明细`;
+  const rangeLabel = formatDeviceDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate);
+  if (dailySummary) dailySummary.textContent = `${rangeLabel} · 共 ${completedRecords.length} 条上传完成录音 · 点击数量查看明细`;
   const orderedDates = [...dates].reverse();
   const dailyTotalPages = Math.max(1, Math.ceil(orderedDates.length / badgeUploadDailyPaginationState.pageSize));
   badgeUploadDailyPaginationState.page = Math.min(badgeUploadDailyPaginationState.page, dailyTotalPages);
@@ -2347,18 +2346,17 @@ function renderBadgeUploads() {
   dailyTbody.innerHTML = dates.length ? visibleDates.map((date) => {
     const count = countsByDate[date] || 0;
     return `<tr class="${date === badgeUploadSelectedDate ? 'is-selected' : ''}"><td>${escapeBadgeHtml(date)}</td><td><button class="badge-upload-count-button" type="button" data-badge-upload-day="${escapeBadgeHtml(date)}" aria-label="查看 ${escapeBadgeHtml(date)} 的 ${count} 条录音上传明细">${count}</button></td></tr>`;
-  }).join('') : '<tr><td colspan="2" class="badge-record-empty">请选择有效的日期范围。</td></tr>';
+  }).join('') : '<tr><td colspan="2" class="badge-record-empty">当前工牌暂无上传完成的录音。</td></tr>';
   renderBadgeRecordPagination('badgeUploadDailyPagination', dates.length, 'daily');
 }
 
-function selectBadgeRecord(sn, advisorName) {
+function selectBadgeRecord(sn, advisorName, date = '') {
   badgeRecordState.sn = sn || badgeRecordState.sn;
   badgeRecordState.advisorName = advisorName || badgeRecordState.advisorName;
+  badgeRecordState.entryDate = date;
   badgeEventFilterState.sn = badgeRecordState.sn;
   badgeEventFilterState.type = 'all';
-  const eventRecord = getBadgeEventRecord(badgeRecordState.sn);
-  const detailRecord = badgeDetailRecords.find((item) => item.sn === badgeRecordState.sn);
-  badgeEventFilterState.date = eventRecord?.date || detailRecord?.queryDate || badgeEventDefaultFilters.date;
+  badgeEventFilterState.date = date;
   resetBadgeUploadDateRange();
   badgeUploadDailyPaginationState.page = 1;
   badgeUploadModalPaginationState.page = 1;
@@ -2657,17 +2655,21 @@ function calculateBadgeMetricDuration(record, metric) {
   return Math.floor(totalMilliseconds / 1000);
 }
 
-function renderBadgeEventDurationMetrics(record) {
-  const isToday = badgeEventFilterState.date === formatStoreDateValue(new Date());
-  const periodLabel = isToday ? '今日' : '当日';
+function renderBadgeEventDurationMetrics(records) {
+  const date = badgeEventFilterState.date;
+  const periodLabel = !date ? '累计' : date === formatStoreDateValue(new Date()) ? '今日' : '当日';
   const powerLabel = document.getElementById('badgePowerDurationLabel');
   const recordingLabel = document.getElementById('badgeRecordingDurationLabel');
   const powerValue = document.getElementById('badgePowerDurationValue');
   const recordingValue = document.getElementById('badgeRecordingDurationValue');
   if (powerLabel) powerLabel.textContent = `${periodLabel}开机时长`;
   if (recordingLabel) recordingLabel.textContent = `${periodLabel}录音时长`;
-  if (powerValue) powerValue.textContent = formatBadgeDurationSeconds(calculateBadgeMetricDuration(record, 'power'));
-  if (recordingValue) recordingValue.textContent = formatBadgeDurationSeconds(calculateBadgeMetricDuration(record, 'recording'));
+  const duration = metric => {
+    const values = records.map(record => calculateBadgeMetricDuration(record, metric));
+    return values.length && values.every(Number.isFinite) ? values.reduce((total, value) => total + value, 0) : null;
+  };
+  if (powerValue) powerValue.textContent = formatBadgeDurationSeconds(duration('power'));
+  if (recordingValue) recordingValue.textContent = formatBadgeDurationSeconds(duration('recording'));
 }
 
 function buildBadgeEventGroups(events) {
@@ -2896,31 +2898,26 @@ function renderBadgeEvents() {
   const summary = document.getElementById('badgeEventResultSummary');
   if (!timeline || !summary) return;
 
-  const record = getBadgeEventRecord(badgeEventFilterState.sn, badgeEventFilterState.date);
+  const { sn, date, type } = badgeEventFilterState;
+  const records = getBadgeEventRecords(sn, date);
   if (window.AIQCData) renderBadgeRecordHeader();
-  renderBadgeEventDurationMetrics(record);
+  renderBadgeEventDurationMetrics(records);
 
-  if (!record) {
-    summary.textContent = '共 0 组记录';
-    if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-events', [{ node: summary, value: 0, format: value => `共 ${Math.round(value)} 组记录` }],
-      { root: summary.closest('.card-head') });
-    timeline.classList.remove('event-timeline-grouped');
-    timeline.innerHTML = '<div class="event-empty-state">当前日期和工牌 SN 下暂无事件，请检查 SN 是否完整或调整查询日期。</div>';
-    return;
-  }
-
-  const emptyMessage = badgeEventFilterState.type === 'all'
-    ? '当前工牌在所选日期没有工牌事件。'
-    : '当前工牌在所选日期没有该类型事件。';
-  const groupedEvents = buildBadgeEventGroups(record.events.slice().sort((left, right) => left.time.localeCompare(right.time)))
-    .filter((group) => matchesBadgeEventGroupType(group, badgeEventFilterState.type));
-  summary.textContent = `共 ${groupedEvents.length} 组记录`;
-  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-events', [{ node: summary, value: groupedEvents.length, format: value => `共 ${Math.round(value)} 组记录` }],
+  const days = records.map(record => {
+    const events = record.events.slice().sort((left, right) => left.time.localeCompare(right.time));
+    const groups = buildBadgeEventGroups(events).filter(group => matchesBadgeEventGroupType(group, type));
+    return { record, groups };
+  }).filter(day => day.groups.length);
+  const groupCount = days.reduce((total, day) => total + day.groups.length, 0);
+  summary.textContent = `共 ${groupCount} 组记录`;
+  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-events', [{ node: summary, value: groupCount, format: value => `共 ${Math.round(value)} 组记录` }],
     { root: summary.closest('.card-head') });
-  timeline.classList.toggle('event-timeline-grouped', groupedEvents.length > 0);
-  timeline.innerHTML = groupedEvents.length
-    ? (record.associationMissing ? '<p class="muted-text">历史人员关联缺失：保留原始事件，未套用当前绑定人员。</p>' : '') + groupedEvents.map((group) => renderBadgeEventGroup(group, badgeEventFilterState.type)).join('')
-    : `<div class="event-empty-state">${emptyMessage}</div>`;
+  timeline.classList.toggle('event-timeline-grouped', groupCount > 0);
+  timeline.innerHTML = days.length ? days.map(({ record, groups }) => {
+    const heading = date ? '' : `<h3 class="badge-event-day-title">${escapeBadgeHtml(formatStoreDateDisplay(record.date))}</h3>`;
+    const note = record.associationMissing ? '<p class="muted-text">历史人员关联缺失：保留原始事件，未套用当前绑定人员。</p>' : '';
+    return heading + note + groups.map(group => renderBadgeEventGroup(group, type)).join('');
+  }).join('') : `<div class="event-empty-state">当前工牌${date ? '在所选日期' : ''}没有${type === 'all' ? '工牌事件' : '该类型事件'}。</div>`;
 }
 
 const detailData = {
@@ -3141,9 +3138,9 @@ const storeTodayDateValue = getStoreRelativeDateValue(0);
 const storeDefaultQueryDate = window.AIQCData?.defaultRange.startDate || getStoreRelativeDateValue(-1);
 const storeDefaultQueryDateObject = parseStoreDateValue(storeDefaultQueryDate);
 
+const storeDefaultFilters = { startDate: '', endDate: '' };
 const storeOverviewState = {
-  startDate: storeDefaultQueryDate,
-  endDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate,
+  ...storeDefaultFilters,
   sortKey: '',
   sortDirection: 'desc',
   page: 1,
@@ -3161,9 +3158,8 @@ const storeOrganizationModel = window.VisitOrganizationFilter.createModel(
 );
 const storeMenuState = { openMenu: '', closingMenu: null, query: '', pinnedIds: new Set() };
 const storeMenuMotion = { lastRendered: null };
-const storeDefaultFilters = { startDate: storeDefaultQueryDate, endDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate };
 const storeDateMenuState = {
-  draftStartDate: storeDefaultQueryDate, draftEndDate: window.AIQCData?.defaultRange.endDate || storeDefaultQueryDate,
+  draftStartDate: storeDefaultFilters.startDate, draftEndDate: storeDefaultFilters.endDate,
   activeField: 'startDate',
   viewYear: storeDefaultQueryDateObject.getFullYear(), viewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
@@ -3316,6 +3312,16 @@ function getBadgeEventRecord(sn, date = '') {
   };
 }
 
+function getBadgeEventRecords(sn, date) {
+  if (!date) {
+    const normalizedSn = String(sn || '').trim().toLowerCase();
+    const history = badgeEventRecords.filter(item => item.sn.toLowerCase() === normalizedSn);
+    if (history.length) return history.sort((left, right) => right.date.localeCompare(left.date));
+  }
+  const record = getBadgeEventRecord(sn, date);
+  return record ? [record] : [];
+}
+
 const dockDetailRecords = [{
   index: 22,
   sn: 'GAC-DCK-DEMO-001',
@@ -3396,7 +3402,7 @@ function buildDockDrawerRecords(dockRecord) {
   dockLogRecords.sort((left, right) => right.time.localeCompare(left.time));
 }
 
-const badgeDockDateDefaultFilters = { startDate: getStoreRelativeDateValue(-6), endDate: storeTodayDateValue };
+const badgeDockDateDefaultFilters = { startDate: '', endDate: '' };
 const badgeDockDateFilterState = { ...badgeDockDateDefaultFilters };
 const badgeDockEventFilterState = { selectedEvents: new Set(badgeDockEventOptions) };
 const badgeDockEventMenuState = { open: false };
@@ -5365,6 +5371,29 @@ function formatStoreDateDisplay(value) {
   return `${year}/${month}/${day}`;
 }
 
+function formatDeviceDateRange(start, end, format = formatStoreDateDisplay) {
+  return start || end ? `${start ? format(start) : '不限'} 至 ${end ? format(end) : '不限'}` : '全部时间';
+}
+
+function syncDeviceDateRangeTrigger(trigger, scope, label, { startDate, endDate }) {
+  const hasRange = Boolean(startDate || endDate);
+  const start = trigger.querySelector(`[data-${scope}-time-start]`);
+  const end = trigger.querySelector(`[data-${scope}-time-end]`);
+  start.textContent = hasRange ? formatStoreDateDisplay(startDate) : '全部时间';
+  end.textContent = formatStoreDateDisplay(endDate);
+  end.hidden = !hasRange;
+  const separator = trigger.querySelector('em');
+  if (separator) separator.hidden = !hasRange;
+  trigger.title = formatDeviceDateRange(startDate, endDate);
+  trigger.setAttribute('aria-label', `${label}：${trigger.title}`);
+}
+
+function renderDeviceDateRangeLabel(startDate, endDate) {
+  return startDate || endDate
+    ? `<strong>${escapeBadgeHtml(formatStoreDateDisplay(startDate))}</strong><em>至</em><strong>${escapeBadgeHtml(formatStoreDateDisplay(endDate))}</strong>`
+    : '<strong>全部时间</strong>';
+}
+
 function formatStoreDateValue(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -5636,12 +5665,12 @@ function renderStoreDateMenu() {
   const endLabel = formatStoreDateDisplay(storeDateMenuState.draftEndDate);
   return globalThis.__dateFilterComponentUtils.renderDateRangePanelMarkup({
     dataNamespace: 'store-date',
-    rangeText: `${startLabel} 至 ${endLabel}`,
+    rangeText: formatDeviceDateRange(storeDateMenuState.draftStartDate, storeDateMenuState.draftEndDate),
     monthLabel: `${storeDateMenuState.viewYear}年${storeDateMenuState.viewMonth}月`,
     activeField: storeDateMenuState.activeField,
     startLabel, endLabel,
     cells: getVisitDateCells(storeDateMenuState),
-    shortcuts: globalThis.__dateFilterComponentUtils.dateShortcuts,
+    shortcuts: [deviceAllTimeShortcut, ...globalThis.__dateFilterComponentUtils.dateShortcuts],
     panelClassName: 'session-menu-panel session-menu-panel-date store-filter-menu store-time-panel',
     title: '工牌总览日期范围',
     showCancel: false
@@ -5652,12 +5681,7 @@ function syncStoreTimeFilterControl() {
   const trigger = document.querySelector('[data-store-time-trigger]');
   const panel = document.getElementById('storeTimePanel');
   if (!trigger || !panel) return;
-  const start = formatStoreDateDisplay(storeOverviewState.startDate);
-  const end = formatStoreDateDisplay(storeOverviewState.endDate);
-  trigger.querySelector('[data-store-time-start]').textContent = start;
-  trigger.querySelector('[data-store-time-end]').textContent = end;
-  trigger.title = `${start} 至 ${end}`;
-  trigger.setAttribute('aria-label', `工牌总览日期范围：${trigger.title}`);
+  syncDeviceDateRangeTrigger(trigger, 'store', '工牌总览日期范围', storeOverviewState);
   const open = storeMenuState.openMenu === 'time';
   trigger.setAttribute('aria-expanded', String(open));
   trigger.classList.toggle('active', open);
@@ -6178,15 +6202,8 @@ function applyLinkedDemoRoute(routeState) {
     badgeFilterState.snQuery = badge.sn;
     renderBadgePage();
     const trigger = document.querySelector(`[data-badge-sn="${badge.sn}"]`) || null;
-    if (!trigger) selectBadgeRecord(badge.sn, badge.advisorName);
-    openBadgeRecordDrawer('events', trigger);
     const date = routeState.params.get('date');
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
-      badgeEventFilterState.date = date;
-      badgeUploadFilterState.startDate = badgeUploadFilterState.endDate = date;
-      badgeUploadSelectedDate = date;
-      syncBadgeEventDateView(); syncBadgeUploadDateDraft(); renderBadgeEventFilters(); renderBadgeUploadFilters(); renderBadgeEvents(); renderBadgeUploads();
-    }
+    openBadgeRecordDrawer('events', trigger, badge, /^\d{4}-\d{2}-\d{2}$/.test(date || '') ? date : '');
   }
 }
 
@@ -6545,7 +6562,7 @@ function renderBadgeDockSubdeviceCards() {
 }
 
 function syncBadgeDockDateView(value) {
-  const parsedDate = new Date(`${value}T00:00:00`);
+  const parsedDate = parseStoreDateValue(value) || new Date();
   if (Number.isNaN(parsedDate.getTime())) return;
   badgeDockDateMenuState.dateViewYear = parsedDate.getFullYear();
   badgeDockDateMenuState.dateViewMonth = parsedDate.getMonth() + 1;
@@ -6583,7 +6600,7 @@ function getBadgeDockDateCells() {
 function renderBadgeDockDateControl() {
   if (!badgeDockDateControl) return;
   const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
-  const draftRangeText = `${formatStoreDateDisplay(badgeDockDateMenuState.dateDraftStartDate)} 至 ${formatStoreDateDisplay(badgeDockDateMenuState.dateDraftEndDate)}`;
+  const draftRangeText = formatDeviceDateRange(badgeDockDateMenuState.dateDraftStartDate, badgeDockDateMenuState.dateDraftEndDate);
   const panel = badgeDockDateMenuState.open && panelRenderer ? panelRenderer({
     dataNamespace: 'badge-dock-date',
     rangeText: draftRangeText,
@@ -6592,6 +6609,7 @@ function renderBadgeDockDateControl() {
     startLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftStartDate),
     endLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftEndDate),
     cells: getBadgeDockDateCells(),
+    shortcuts: [deviceAllTimeShortcut],
     summaryText: `已选择 ${draftRangeText}`,
     panelClassName: 'session-menu-panel session-menu-panel-date badge-dock-date-panel',
     title: '日志日期范围',
@@ -6601,9 +6619,7 @@ function renderBadgeDockDateControl() {
   badgeDockDateControl.innerHTML = `
     <span>日期范围</span>
     <button type="button" class="session-date-trigger${badgeDockDateMenuState.open ? ' active' : ''}" data-badge-dock-date-trigger aria-label="选择子设备日志日期范围" aria-haspopup="dialog" aria-expanded="${badgeDockDateMenuState.open ? 'true' : 'false'}">
-      <strong>${escapeBadgeHtml(formatStoreDateDisplay(badgeDockDateFilterState.startDate))}</strong>
-      <em>至</em>
-      <strong>${escapeBadgeHtml(formatStoreDateDisplay(badgeDockDateFilterState.endDate))}</strong>
+      ${renderDeviceDateRangeLabel(badgeDockDateFilterState.startDate, badgeDockDateFilterState.endDate)}
       <span class="session-date-icon" aria-hidden="true"></span>
     </button>
     ${panel}`;
@@ -6635,7 +6651,7 @@ function renderBadgeDockEventControl() {
 function getFilteredBadgeDockLogRecords() {
   return dockLogRecords.filter((item) => {
     const date = item.time.slice(0, 10).replaceAll('/', '-');
-    const dateMatch = date >= badgeDockDateFilterState.startDate && date <= badgeDockDateFilterState.endDate;
+    const dateMatch = isWithinDateTimeRange(date, badgeDockDateFilterState.startDate, badgeDockDateFilterState.endDate);
     return dateMatch && badgeDockEventFilterState.selectedEvents.has(item.event);
   });
 }
@@ -6703,12 +6719,11 @@ function setBadgeRecordDrawerMode(isDock) {
   if (badgeDockDrawerView) badgeDockDrawerView.hidden = !isDock;
 }
 
-function openBadgeRecordDrawer(tab, trigger) {
+function openBadgeRecordDrawer(tab, trigger, badge, date = '') {
   if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeRecordDrawerContentHost) return;
   window.clearTimeout(badgeRecordDrawerCloseTimer);
   badgeRecordDrawerTrigger = trigger || null;
-  const sn = trigger?.dataset.badgeSn;
-  selectBadgeRecord(sn, trigger?.dataset.advisorName);
+  selectBadgeRecord(badge?.sn || trigger?.dataset.badgeSn, badge?.advisorName || trigger?.dataset.advisorName, date);
   setBadgeRecordDrawerMode(false);
   moveBadgeRecordContents(badgeRecordDrawerContentHost);
   syncBadgeRecordTabs(tab);
@@ -7088,7 +7103,7 @@ document.addEventListener('click', (event) => {
       badgeDockDateMenuState.activeDateField = 'endDate';
     } else {
       badgeDockDateMenuState.dateDraftEndDate = value;
-      if (badgeDockDateMenuState.dateDraftStartDate > value) badgeDockDateMenuState.dateDraftStartDate = value;
+      if (!badgeDockDateMenuState.dateDraftStartDate || badgeDockDateMenuState.dateDraftStartDate > value) badgeDockDateMenuState.dateDraftStartDate = value;
       badgeDockDateMenuState.activeDateField = 'startDate';
     }
     renderBadgeDockDateControl();
@@ -7098,6 +7113,14 @@ document.addEventListener('click', (event) => {
   if (event.target.closest('[data-badge-dock-date-cancel]')) {
     badgeDockDateMenuState.open = false;
     syncBadgeDockDateDraft();
+    renderBadgeDockDateControl();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-dock-date-shortcut="all"]')) {
+    badgeDockDateMenuState.dateDraftStartDate = '';
+    badgeDockDateMenuState.dateDraftEndDate = '';
+    badgeDockDateMenuState.activeDateField = 'startDate';
     renderBadgeDockDateControl();
     return;
   }
@@ -7210,9 +7233,9 @@ document.addEventListener('click', (event) => {
     return;
   }
 
-  const badgeEventDateValue = event.target.closest('[data-badge-event-date-value]');
+  const badgeEventDateValue = event.target.closest('[data-badge-event-date-value], [data-badge-event-date-all]');
   if (badgeEventDateValue) {
-    badgeEventFilterState.date = badgeEventDateValue.dataset.badgeEventDateValue;
+    badgeEventFilterState.date = badgeEventDateValue.dataset.badgeEventDateValue || '';
     closeBadgeEventMenus();
     renderBadgeEvents();
     renderBadgeRecordHeader();
@@ -7235,9 +7258,7 @@ document.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('[data-badge-event-reset]')) {
-    const currentRecord = badgeEventRecords.find((item) => item.sn === badgeRecordState.sn && item.date === badgeEventFilterState.date)
-      || badgeEventRecords.find((item) => item.sn === badgeRecordState.sn);
-    badgeEventFilterState.date = currentRecord?.date || badgeEventDefaultFilters.date;
+    badgeEventFilterState.date = badgeRecordState.entryDate;
     badgeEventFilterState.sn = badgeRecordState.sn;
     badgeEventFilterState.type = 'all';
     closeBadgeEventMenus(true);
@@ -7280,7 +7301,7 @@ document.addEventListener('click', (event) => {
       badgeUploadMenuState.activeDateField = 'endDate';
     } else {
       badgeUploadMenuState.dateDraftEndDate = value;
-      if (badgeUploadMenuState.dateDraftStartDate > value) badgeUploadMenuState.dateDraftStartDate = value;
+      if (!badgeUploadMenuState.dateDraftStartDate || badgeUploadMenuState.dateDraftStartDate > value) badgeUploadMenuState.dateDraftStartDate = value;
       badgeUploadMenuState.activeDateField = 'startDate';
     }
     renderBadgeUploadFilters();
@@ -7290,6 +7311,14 @@ document.addEventListener('click', (event) => {
   if (event.target.closest('[data-badge-upload-date-cancel]')) {
     syncBadgeUploadDateDraft();
     closeBadgeUploadMenus();
+    return;
+  }
+
+  if (event.target.closest('[data-badge-upload-date-shortcut="all"]')) {
+    badgeUploadMenuState.dateDraftStartDate = '';
+    badgeUploadMenuState.dateDraftEndDate = '';
+    badgeUploadMenuState.activeDateField = 'startDate';
+    renderBadgeUploadFilters();
     return;
   }
 
@@ -7306,7 +7335,6 @@ document.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-badge-upload-filter-reset]')) {
     resetBadgeUploadDateRange();
-    badgeUploadMenuState.activeDateField = 'startDate';
     badgeUploadDailyPaginationState.page = 1;
     badgeUploadModalPaginationState.page = 1;
     closeBadgeUploadMenus(true);
@@ -7794,7 +7822,7 @@ document.addEventListener('change', (event) => {
     const key = event.target.dataset.badgeRecordPageJump;
     const state = getBadgeRecordPaginationState(key);
     const totalItems = key === 'daily'
-      ? getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate).length
+      ? getBadgeUploadDates().length
       : badgeUploadModalState.records.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / state.pageSize));
     state.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
@@ -8147,7 +8175,7 @@ document.addEventListener('change', function (event) {
 
 function getStoreOverviewExportFilters() {
   const selected = storeOrganizationModel.applied;
-  const filters = [{ label: '查询日期', value: `${storeOverviewState.startDate} 至 ${storeOverviewState.endDate}` },
+  const filters = [{ label: '查询日期', value: formatDeviceDateRange(storeOverviewState.startDate, storeOverviewState.endDate, value => value) },
     { label: '筛选维度', value: selected.dimensionMode === 'geography' ? '地理维度' : '组织维度' }];
   Object.entries(window.VisitOrganizationFilter.fields).forEach(([key, field]) => {
     if (!selected[key].length) return;
@@ -8194,9 +8222,10 @@ function getDeviceListExportRequest(key) {
   } else if (key === 'uploads') {
     source = 'badgeUploads'; title = '每日录音上传数量'; labels = ['日期', '录音上传数量'];
     const counts = new Map();
-    getCompletedBadgeUploadRecords().forEach(item => { const date = getBadgeUploadCompletedDate(item); counts.set(date, (counts.get(date) || 0) + 1); });
-    rows = getBadgeUploadDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate).reverse().map(date => [date, counts.get(date) || 0]);
-    filters = [{ label: '工牌 SN', value: badgeRecordState.sn }, { label: '上传日期', value: `${badgeUploadFilterState.startDate} 至 ${badgeUploadFilterState.endDate}` }];
+    const completedRecords = getCompletedBadgeUploadRecords();
+    completedRecords.forEach(item => { const date = getBadgeUploadCompletedDate(item); counts.set(date, (counts.get(date) || 0) + 1); });
+    rows = getBadgeUploadDates(completedRecords).reverse().map(date => [date, counts.get(date) || 0]);
+    filters = [{ label: '工牌 SN', value: badgeRecordState.sn }, { label: '上传日期', value: formatDeviceDateRange(badgeUploadFilterState.startDate, badgeUploadFilterState.endDate, value => value) }];
   } else if (key === 'upload-details') {
     source = 'badgeUploadDetails'; title = badgeUploadModalState.isVisitDetail ? '到访匹配上传明细' : '录音上传明细';
     labels = ['序号', ...(badgeUploadModalState.isVisitDetail ? [] : ['顾问姓名', '工牌 SN']), '文件大小', '音频开始时间', '音频时长', '录音上传时间', '匹配时间'];
@@ -8213,12 +8242,15 @@ function getDeviceListExportRequest(key) {
     const date = visit ? visitEventFilterState.date : badgeEventFilterState.date;
     const sn = visit ? visit.badgeSn : badgeEventFilterState.sn;
     const type = visit ? visitEventFilterState.type : badgeEventFilterState.type;
-    const record = visit ? badgeEventRecords.find(item => item.sn === sn && item.date === date) : getBadgeEventRecord(sn, date);
+    const records = visit ? badgeEventRecords.filter(item => item.sn === sn && item.date === date).slice(0, 1) : getBadgeEventRecords(sn, date);
     source = visit ? 'visitEvents' : 'badgeEvents'; title = visit ? '到访工牌事件' : '工牌事件';
     labels = ['日期', '工牌 SN', '事件', '开始时间', '结束时间', '持续时长', '备注'];
-    rows = getVisibleEventExportRows(record?.events || [], type, date, sn);
-    if (record?.associationMissing) rows = rows.map(row => [...row.slice(0, -1), [row.at(-1), '历史人员关联缺失'].filter(Boolean).join('；')]);
-    filters = [{ label: '工牌 SN', value: sn || '—' }, { label: '查询日期', value: date },
+    rows = records.flatMap(record => {
+      const eventRows = getVisibleEventExportRows(record.events, type, record.date, sn);
+      return record.associationMissing
+        ? eventRows.map(row => [...row.slice(0, -1), [row.at(-1), '历史人员关联缺失'].filter(Boolean).join('；')]) : eventRows;
+    });
+    filters = [{ label: '工牌 SN', value: sn || '—' }, { label: '查询日期', value: date || '全部时间' },
       { label: '事件类型', value: badgeEventTypeOptions.find(item => item[0] === type)?.[1] || type }];
     if (visit) filters.push({ label: '业务 ID', value: visit.businessId }, { label: '顾问', value: visit.advisor || '—' },
       { label: '到访时段', value: `${visit.date} ${visit.startTime} 至 ${visit.endTime}` });

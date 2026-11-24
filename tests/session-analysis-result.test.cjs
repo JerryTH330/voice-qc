@@ -105,7 +105,7 @@ test('reset keeps the existing completed default without restoring a process fil
 
 test('reset after hiding analysis result keeps all outcomes and exports the same scope', async () => {
   const h = list();
-  const expected = h.window.AIQCData.query(h.window.AIQCData.defaultRange).recordings;
+  const expected = h.window.AIQCData.recordings;
   h.click('[data-sr-settings]');
   const checkbox = h.window.document.querySelector('[data-sr-column-visible="status"]');
   checkbox.checked = false;

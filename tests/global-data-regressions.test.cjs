@@ -48,6 +48,27 @@ test('visit and test drive statuses are blue in both lead table views', () => {
   }
 });
 
+test('lead dates default to all and calendar changes apply only after confirmation', async () => {
+  const h = list('leads');
+  const total = () => h.host.querySelector('#leadsPagination .session-pagination-total').textContent;
+  const data = h.window.AIQCData;
+  const all = `共 ${data.leads.length} 条`;
+  assert.equal(total(), all);
+  h.click('[data-lr-collapse]');
+  h.click('[data-lr-date-trigger]');
+  h.click('[data-lr-date-shortcut="last7"]');
+  assert.equal(total(), all);
+  h.click('[data-lr-date-apply]');
+  assert.equal(total(), `共 ${data.query(data.defaultRange).leads.length} 条`);
+  h.click('[data-lr-date-trigger]');
+  h.click('[data-lr-date-shortcut="all"]');
+  assert.notEqual(total(), all);
+  h.click('[data-lr-date-apply]');
+  assert.equal(total(), all);
+  await exportedIds(h, 'leads');
+  assert(h.submitted.at(-1).filters.some(filter => filter.label === '统计日期' && filter.value === '全部时间'));
+});
+
 test('advisor recording count opens and exports the full current scope, including scene and model restrictions', async () => {
   const h = setup('store'), a = h.controller;
   const person = a.result.advisors.find(item => item.recordingCount > 1);

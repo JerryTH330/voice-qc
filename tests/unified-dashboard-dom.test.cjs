@@ -4,11 +4,14 @@ const {setup}=require('./helpers/unified-dom.cjs');
 const plain=v=>JSON.parse(JSON.stringify(v));
 for(const kind of ['store','factory','sales'])test(`${kind}: calendar clicks stay open and drafts apply only explicitly`,()=>{
   const h=setup(kind),a=h.controller,initial=[a.state.startDate,a.state.endDate],total=a.result.recordings.length;
+  assert.deepEqual(initial, ['', '']);
+  assert.equal(h.host.querySelector('[data-unified-date-trigger] strong').textContent, '全部时间');
+  if (kind === 'factory') assert.equal(total, h.window.AIQCData.recordings.length);
   if(kind==='sales'){const person=h.window.AIQCData.advisors.find(p=>p.advisorKey===a.model.applied.advisor[0]);assert.equal(h.host.querySelector('#profile-avatar').textContent,person.advisorName.slice(0,1));assert.equal(h.host.querySelector('[data-mode].active').dataset.mode,a.state.timeMode);}
   h.click('[data-unified-date-trigger]');
   assert.deepEqual(
     [...h.host.querySelectorAll('[data-unified-date-shortcut]')].map(button=>button.textContent.trim()),
-    ['昨天','近三天','近七天','近一月','近半年']
+    ['全部时间','昨天','近三天','近七天','近一月','近半年']
   );
   h.click('[data-unified-date-shortcut="last6Months"]');
   assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,'2026-04-20');
@@ -20,15 +23,20 @@ for(const kind of ['store','factory','sales'])test(`${kind}: calendar clicks sta
     assert.equal(a.result.recordings.length,total);
   }
   h.click('[data-unified-date-cancel]');h.click('[data-unified-date-trigger]');
-  assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,initial[0]);
+  assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,'未选择');
   h.click('[data-unified-date-shortcut="yesterday"]');h.key('Escape');h.click('[data-unified-date-trigger]');
-  assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,initial[0]);
+  assert.equal(h.host.querySelector('[data-unified-date-field="startDate"] strong').textContent,'未选择');
   h.click('[data-unified-date-shortcut="yesterday"]');h.click('[data-unified-date-apply]');
   assert.equal(a.state.startDate,'2026-10-19');assert.equal(a.state.endDate,'2026-10-19');
   assert(a.result.recordings.every(r=>r.startTime.startsWith('2026-10-19')));
   h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="last30"]');
   h.window.document.body.dispatchEvent(new h.window.Event('click',{bubbles:true}));
   assert(!h.host.querySelector('[data-unified-date-apply]'));assert.equal(a.state.startDate,'2026-10-19');
+  h.click('[data-unified-date-trigger]');h.click('[data-unified-date-shortcut="all"]');
+  assert.equal(a.state.startDate,'2026-10-19');
+  h.click('[data-unified-date-apply]');
+  assert.deepEqual([a.state.startDate,a.state.endDate],initial);
+  assert.equal(a.result.recordings.length,total);
   a.destroy();
 });
 test('migrates old geographic selections to a fixed store and clears removed advisor conditions',()=>{
@@ -60,8 +68,8 @@ test('store advisor rank follows the sort across pages and hides arrows on one p
   const recordings = () => Number(table.querySelector('tbody tr .advisor-recording-link').textContent);
   assert.equal(table.querySelector('th').textContent, '排行');
   assert.equal(table.querySelector(recordingSort).parentElement.getAttribute('aria-sort'), 'descending');
-  assert.deepEqual(ranks(), [1]);
-  assert.equal(footer.textContent.trim(), '共 1 名顾问');
+  assert.deepEqual(ranks(), [1, 2]);
+  assert.equal(footer.textContent.trim(), '共 2 名顾问');
   assert.equal(footer.querySelector('button'), null);
   assert.equal(table.querySelector('.dashboard-pagination'), null);
 

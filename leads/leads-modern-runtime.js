@@ -260,10 +260,10 @@
       selections: {},
       leadIdQuery: '',
       recordingCountQuery: '',
-      startDate: global.AIQCData?.defaultRange.startDate || DEFAULT_DATE,
-      endDate: DEFAULT_DATE,
-      dateDraftStart: global.AIQCData?.defaultRange.startDate || DEFAULT_DATE,
-      dateDraftEnd: DEFAULT_DATE,
+      startDate: '',
+      endDate: '',
+      dateDraftStart: '',
+      dateDraftEnd: '',
       dateActiveField: 'startDate',
       dateViewYear: Number(DEFAULT_DATE.slice(0,4)),
       dateViewMonth: Number(DEFAULT_DATE.slice(5,7)),
@@ -723,6 +723,10 @@
     return value ? value.replace(/-/g, '/') : '不限';
   }
 
+  function dateRangeText(start, end) {
+    return start || end ? formatDateDisplay(start) + ' 至 ' + formatDateDisplay(end) : '全部时间';
+  }
+
   function formatDateValue(date) {
     return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
   }
@@ -755,24 +759,28 @@
     var viewState = state();
     return renderer({
       dataNamespace: 'lr-date',
-      rangeText: formatDateDisplay(viewState.dateDraftStart) + ' 至 ' + formatDateDisplay(viewState.dateDraftEnd),
+      rangeText: dateRangeText(viewState.dateDraftStart, viewState.dateDraftEnd),
       monthLabel: viewState.dateViewYear + '年' + viewState.dateViewMonth + '月',
       activeField: viewState.dateActiveField,
       startLabel: formatDateDisplay(viewState.dateDraftStart),
       endLabel: formatDateDisplay(viewState.dateDraftEnd),
       cells: dateCells(),
-      summaryText: '已选择 ' + formatDateDisplay(viewState.dateDraftStart) + ' 至 ' + formatDateDisplay(viewState.dateDraftEnd),
+      summaryText: '已选择 ' + dateRangeText(viewState.dateDraftStart, viewState.dateDraftEnd),
       panelClassName: 'session-menu-panel session-menu-panel-date lr-date-panel',
       title: currentView === 'leads' ? '统计日期范围' : '线索日期范围',
-      shortcuts: global.__dateFilterComponentUtils.dateShortcuts,
+      shortcuts: [{ key: 'all', label: '全部时间', active: !viewState.dateDraftStart && !viewState.dateDraftEnd }].concat(global.__dateFilterComponentUtils.dateShortcuts),
       showCancel: false
     });
   }
 
   function renderDateControl() {
-    var open = state().openMenu === 'date';
+    var viewState = state();
+    var open = viewState.openMenu === 'date';
+    var dateValue = viewState.startDate || viewState.endDate
+      ? '<strong>' + escapeHtml(formatDateDisplay(viewState.startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatDateDisplay(viewState.endDate)) + '</strong>'
+      : '<strong>全部时间</strong>';
     return '<div class="badge-field-filter badge-field-filter-date-time session-toolbar-menu session-toolbar-control-date' + (open ? ' is-open' : '') + '">' +
-      '<span>' + (currentView === 'leads' ? '统计日期' : '线索日期') + '</span><button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-lr-date-trigger aria-expanded="' + open + '"><strong>' + escapeHtml(formatDateDisplay(state().startDate)) + '</strong><em>至</em><strong>' + escapeHtml(formatDateDisplay(state().endDate)) + '</strong><span class="session-date-icon" aria-hidden="true"></span></button>' +
+      '<span>' + (currentView === 'leads' ? '统计日期' : '线索日期') + '</span><button type="button" class="session-date-trigger' + (open ? ' active' : '') + '" data-lr-date-trigger aria-expanded="' + open + '">' + dateValue + '<span class="session-date-icon" aria-hidden="true"></span></button>' +
       (menuVisible('date') ? renderDatePanel() : '') + '</div>';
   }
 
@@ -788,8 +796,7 @@
       namespace: 'lr', mode: viewState.dimensionMode,
       label: currentView === 'customers' ? '客户聚合组织筛选维度' : '线索组织筛选维度',
       panelId: 'leadsDimensionFilters',
-      statisticsTime: !viewState.startDate && !viewState.endDate ? '不限'
-        : formatDateDisplay(viewState.startDate) + ' 至 ' + formatDateDisplay(viewState.endDate)
+      statisticsTime: dateRangeText(viewState.startDate, viewState.endDate)
     });
   }
 
@@ -1132,6 +1139,9 @@
     var start = (viewState.page - 1) * viewState.pageSize;
     var pageItems = items.slice(start, start + viewState.pageSize);
     var columns = visibleColumns(currentView);
+    var examples = currentView === 'customers' && viewState.page === 1 ? global.__getLeadCustomerExampleRows?.() || [] : [];
+    var showExampleLabelInName = columns.some(function (column) { return column.key === 'customerName'; });
+    var hasRows = examples.length > 0 || items.length > 0;
     table.classList.toggle('customer-aggregate-table', currentView === 'customers');
     if (tableWrap) tableWrap.classList.toggle('customer-aggregate-wrap', currentView === 'customers');
     header.innerHTML = '<tr>' + columns.map(function (item) {
@@ -1140,27 +1150,31 @@
     }).join('') + '<th class="fixed-action-column">操作</th></tr>';
     bindAiLeadValidityHelp(header);
     if (emptyState) {
-      emptyState.hidden = items.length > 0;
+      emptyState.hidden = hasRows;
       var emptyTitle = document.getElementById('leadsEmptyStateTitle');
       var missingFocus = currentView === 'leads' && focusLeadId !== null && !linkedLead;
       if (emptyTitle) emptyTitle.textContent = missingFocus ? '未找到对应线索记录' : currentView === 'customers' ? '暂无符合条件的客户' : '暂无符合条件的线索';
       var emptyHint = emptyState.querySelector('p');
       if (emptyHint) emptyHint.textContent = missingFocus ? '线索ID：' + (focusLeadId || '未提供') + '，请核对线索ID或重置筛选。' : '请调整筛选条件后重试';
     }
-    if (tableWrap) tableWrap.classList.toggle('is-empty', !items.length);
-    body.innerHTML = pageItems.length ? pageItems.map(function (item) {
-      var detail = currentView === 'customers'
+    if (tableWrap) tableWrap.classList.toggle('is-empty', !hasRows);
+    body.innerHTML = examples.concat(pageItems).map(function (item) {
+      var exampleLabel = item.exampleKey ? '<span class="lead-customer-example-label">演示样例</span>' : '';
+      var detail = item.exampleKey
+        ? '<a class="table-link lead-customer-example-link" href="?route=customer-detail&amp;customerExample=' + escapeHtml(item.exampleKey) + '" aria-label="查看' + escapeHtml(item.customerName) + '演示详情">查看详情</a>'
+        : currentView === 'customers'
         ? Number(item.aggregateAudioCount) <= 0
           ? '<button class="table-link table-link-disabled" type="button" disabled aria-disabled="true">查看详情</button>'
           : item.crossStore || Number(item.aggregateLeadCount) > 1
             ? '<button class="table-link" data-lr-customer-detail-id="' + escapeHtml(item.id) + '">查看详情</button>'
             : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="customers">查看详情</button>'
         : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="leads">线索详情</button>';
-      return '<tr>' + columns.map(function (column) {
+      return '<tr' + (item.exampleKey ? ' data-customer-example-row="' + escapeHtml(item.exampleKey) + '"' : '') + '>' + columns.map(function (column) {
         var cellClass = column.key === 'associationSummary' ? ' class="cv-association-summary-cell"' : '';
-        return '<td data-column-key="' + escapeHtml(column.key) + '"' + cellClass + '>' + renderCell(item, column.key) + '</td>';
-      }).join('') + '<td class="fixed-action-column">' + detail + '</td></tr>';
-    }).join('') : '';
+        return '<td data-column-key="' + escapeHtml(column.key) + '"' + cellClass + '>' + renderCell(item, column.key) + (column.key === 'customerName' ? exampleLabel : '') + '</td>';
+      }).join('') + '<td class="fixed-action-column">' + detail + (showExampleLabelInName ? '' : exampleLabel) + '</td></tr>';
+    }).join('') + (examples.length && !items.length
+      ? '<tr><td colspan="' + (columns.length + 1) + '" class="lr-customer-example-empty"><span role="status">暂无符合条件的客户，请调整筛选条件后重试</span></td></tr>' : '');
     table.classList.add('badge-data-table', 'lr-data-table');
     var title = document.getElementById('leadsTableHeadTitle');
     if (title) title.textContent = currentView === 'customers' ? '客户聚合总览' : '线索总览';
@@ -1354,7 +1368,7 @@
         return item ? item.label + (['region', 'zone', 'province', 'city'].includes(key) ? '（' + item.meta + '）' : '') : value;
       }).join('、') };
     });
-    filters.push({ label: currentView === 'customers' ? '线索日期' : '统计日期', value: state().startDate + ' 至 ' + state().endDate });
+    filters.push({ label: currentView === 'customers' ? '线索日期' : '统计日期', value: dateRangeText(state().startDate, state().endDate) });
     if (state().leadIdQuery) filters.push({ label: '线索ID', value: state().leadIdQuery });
     if (state().recordingCountQuery) filters.push({ label: '录音数', value: state().recordingCountQuery });
     var now = new Date();
@@ -1500,8 +1514,8 @@
       if (state().openMenu === 'date') closeMenu(false);
       else {
         closeMenu(true);
-        state().dateDraftStart = state().startDate || DEFAULT_DATE;
-        state().dateDraftEnd = state().endDate || DEFAULT_DATE;
+        state().dateDraftStart = state().startDate;
+        state().dateDraftEnd = state().endDate;
         state().dateActiveField = 'startDate';
         openMenu('date');
         renderFilters();
@@ -1531,7 +1545,7 @@
         state().dateActiveField = 'endDate';
       } else {
         state().dateDraftEnd = picked;
-        if (state().dateDraftStart > picked) state().dateDraftStart = picked;
+        if (!state().dateDraftStart || state().dateDraftStart > picked) state().dateDraftStart = picked;
         state().dateActiveField = 'startDate';
       }
       renderFilters();
@@ -1539,6 +1553,12 @@
     }
     var dateShortcut = target.closest('[data-lr-date-shortcut]');
     if (dateShortcut) {
+      if (dateShortcut.dataset.lrDateShortcut === 'all') {
+        state().dateDraftStart = state().dateDraftEnd = '';
+        state().dateActiveField = 'startDate';
+        renderFilters();
+        return;
+      }
       var range = global.__dateFilterComponentUtils.getDateShortcutRange(dateShortcut.dataset.lrDateShortcut, new Date());
       state().dateDraftStart = formatDateValue(range.startDate);
       state().dateDraftEnd = formatDateValue(range.endDate);

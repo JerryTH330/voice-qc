@@ -301,13 +301,23 @@
       missingAssociations:rows.filter(r=>r.associationMissing).length };
   }
   function trend(rows, scope) {
-    let start = scope.startDate || rows.map(r=>r.startTime.slice(0,10)).sort()[0];
-    const end = scope.endDate || rows.map(r=>r.startTime.slice(0,10)).sort().at(-1);
+    const byDate = new Map();
+    let first = '', last = '';
+    for (const row of rows) {
+      const date = row.startTime.slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      if (!first || date < first) first = date;
+      if (!last || date > last) last = date;
+      if (!byDate.has(date)) byDate.set(date, []);
+      byDate.get(date).push(row);
+    }
+    let start = scope.startDate || first;
+    const end = scope.endDate || last;
     const result=[];
     if (!start || !end) return result;
     const cursor = new Date(`${start}T12:00:00`);
     while (start <= end) {
-      result.push({date:start,...metrics(rows.filter(r=>r.startTime.startsWith(start)))});
+      result.push({date:start,...metrics(byDate.get(start) || [])});
       cursor.setDate(cursor.getDate()+1);
       start=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
     }

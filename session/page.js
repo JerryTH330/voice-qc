@@ -9,15 +9,15 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     "../leads/real-lead-data.js?v=20261028-full-sync-v1",
     "../shared/linked-demo-data.js?v=20261123-lead-list-return-v1",
     "../shared/badge-history-data.js?v=20261028-full-sync-v1",
-    "../shared/unified-data.js?v=20261105-factory-rank-hierarchy-v1",
+    "../shared/unified-data.js?v=20261124-all-time-data-v1",
     "../session-search-utils.js?v=20261102-business-scenes-v1",
     "../shared/issue-rule-list.js?v=20261102-business-scenes-v1",
     "../device-management/xlsx-export-utils.js?v=20261028-full-sync-v1",
     "../shared/field-settings-interactions.js?v=20261028-full-sync-v1",
-    "../date-filter-component-utils.js?v=20261113-date-shortcuts-v1",
-    "../shared/unified-dashboard.js?v=20261123-store-advisor-rank-v1",
-    "../app-runtime.js?v=20261123-lead-list-return-v1",
-    "./session-real-runtime.js?v=20261113-date-shortcuts-v1"
+    "../date-filter-component-utils.js?v=20261124-all-time-data-v1",
+    "../shared/unified-dashboard.js?v=20261124-all-time-data-v1",
+    "../app-runtime.js?v=20261124-customer-store-transition-v1",
+    "./session-real-runtime.js?v=20261124-all-time-data-v1"
 ];
   const loadNext = (index) => {
     if (index >= scripts.length) return;

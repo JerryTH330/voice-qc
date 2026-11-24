@@ -30,6 +30,26 @@
     return { startDate, endDate };
   }
 
+  function getDateCalendarBounds(dates, anchorDate = new Date()) {
+    function formatDate(date) {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${date.getFullYear()}-${month}-${day}`;
+    }
+
+    const today = formatDate(anchorDate);
+    let min = formatDate(shiftCalendarMonths(anchorDate, -6));
+    let max = today;
+    let latest = '';
+    for (const date of dates) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      if (date < min) min = date;
+      if (date > max) max = date;
+      if (date > latest) latest = date;
+    }
+    return { min, max, today, latest: latest || today };
+  }
+
   function escapeHtml(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -55,6 +75,7 @@
     isOpen = false,
     startLabel,
     endLabel,
+    emptyLabel = '',
     dataNamespace = 'session-date',
     rootClassName = 'store-date-root',
     triggerClassName = 'session-date-trigger',
@@ -79,9 +100,9 @@
           aria-haspopup="dialog"
           aria-expanded="${isOpen ? 'true' : 'false'}"
         >
-          <strong>${escapeHtml(startLabel || '未选择')}</strong>
-          <em>至</em>
-          <strong>${escapeHtml(endLabel || '未选择')}</strong>
+          ${emptyLabel && !startLabel && !endLabel
+            ? `<strong>${escapeHtml(emptyLabel)}</strong>`
+            : `<strong>${escapeHtml(startLabel || '未选择')}</strong><em>至</em><strong>${escapeHtml(endLabel || '未选择')}</strong>`}
           <span class="session-date-icon" aria-hidden="true"></span>
         </button>
         ${isOpen ? String(menuHtml || '') : ''}
@@ -188,6 +209,7 @@
     dateShortcuts,
     shiftCalendarMonths,
     getDateShortcutRange,
+    getDateCalendarBounds,
     renderDateShortcutsMarkup,
     renderDateRangeControlMarkup,
     renderDateRangePanelMarkup

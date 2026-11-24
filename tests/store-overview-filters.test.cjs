@@ -54,8 +54,9 @@ function setup({ storedSettings = null, storageThrows = false, unified = false }
   const functions = ['getStoreFieldValue','renderStoreFieldCell','getStoreOverviewExportFilters','getDeviceListExportRequest','getBadgeExportTimestamp','getFilteredStoreRecords','sumStoreMetric','getStoreBadgeAssetCount','getStoreBindingRate','formatStoreBindingRate',
     'updateStoreSortHeaders','renderStoreOverviewPagination','formatStoreOverviewMetricValue','setStoreOverviewMetricValue','animateStoreOverviewMetric','animateStoreOverviewMetrics','renderStoreOverview',
     'getStoreSelectCandidates','syncStoreDateDraft','renderStoreMultiSelect','renderStoreOrganizationFilters','renderStoreDateMenu','syncStoreTimeFilterControl','positionStoreFilterMenu','closeStoreFilterMenus','handleStoreFilterClick','handleStoreDateClick','updateStoreFilterSearch','handleStoreFilterKeydown','updateStoreResults',
-    'escapeBadgeHtml','formatStoreDateDisplay','syncVisitDateView','applyVisitDateDraft','applyVisitDateShortcut','getVisitDateCells','isRecordDrawerMenuVisible','openRecordDrawerMenuState','closeRecordDrawerMenuState'];
+    'escapeBadgeHtml','formatStoreDateDisplay','formatDeviceDateRange','syncDeviceDateRangeTrigger','syncVisitDateView','applyVisitDateDraft','applyVisitDateShortcut','getVisitDateCells','isRecordDrawerMenuVisible','openRecordDrawerMenuState','closeRecordDrawerMenuState'];
   vm.runInContext(functions.map(fn).join('\n'), context);
+  vm.runInContext(source.match(/^const deviceAllTimeShortcut = .*;$/m)[0], context);
   vm.runInContext(source.slice(source.indexOf('const storeFieldSettingsModel ='), source.indexOf('function getStoreSelectCandidates(')), context);
   state = vm.runInContext('({ model: storeOrganizationModel, records: storeOverviewRecords, advisors: storeOrganizationRecords, view: storeOverviewState, menu: storeMenuState, date: storeDateMenuState, defaults: storeDefaultFilters, get settings() { return storeFieldSettingsState; }, get draft() { return storeFieldSettingsDraft; } })', context);
   function event(dataset = {}, key) {
@@ -76,7 +77,8 @@ test('store filters retain the full directory and original six totals, independe
   assert.equal(h.node('storeMetricStoreCount').textContent, records.length.toLocaleString('zh-CN'));
   assert.equal(h.node('storeMetricBindingCount').textContent, records.reduce((sum, r) => sum+r.bindings,0).toLocaleString('zh-CN'));
   assert.equal(h.node('storeMetricBindingRate').textContent, '100.0%');
-  assert.equal(h.state.view.startDate, h.context.getStoreRelativeDateValue(-1));
+  assert.equal(h.state.view.startDate, '');
+  assert.equal(h.state.view.endDate, '');
 });
 
 test('the actual renderer exposes four independent multi-selects and the shared dimension paths', () => {
@@ -152,7 +154,7 @@ test('geography candidates remain independent, and incompatible cross-dimension 
   assert.deepEqual(plain(model.applied.advisor),[other.advisorKey]);
 });
 
-test('date selection remains a draft until apply; reset restores yesterday and the organization dimension', () => {
+test('date selection remains a draft until apply; reset restores all time and the organization dimension', () => {
   const h = setup(), original=h.state.view.startDate;
   h.click({storeTimeTrigger:''}); h.click({storeDateValue:'2026-10-01'}); h.click({storeDateValue:'2026-10-03'});
   assert.equal(h.state.view.startDate,original);

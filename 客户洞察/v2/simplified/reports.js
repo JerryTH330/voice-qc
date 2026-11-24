@@ -1,7 +1,7 @@
 (function (host) {
   'use strict';
   function mount({ root, getSnapshot, notify }) {
-    const R = host.InsightReportModel, key = 'voice-qc-insight-report-tasks-v1';
+    const R = host.InsightReportModel, dates = host.InsightDateRange, key = 'voice-qc-insight-report-tasks-v1';
     const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const labels = { queued: '排队中', running: '生成中', succeeded: '已完成', failed: '失败' };
     let tasks = [], active = '', timer;
@@ -15,7 +15,7 @@
       const busy = tasks.some(t => ['queued', 'running'].includes(t.status));
       document.getElementById('generateReport').textContent = busy ? '查看报告进度' : '生成AI解读报告';
       if (!task) {
-        body.innerHTML = `<p class="ci-note">点击生成时会锁定当前筛选范围；完成后可直接阅读，不需要下载。当前为演示任务。</p>${tasks.length ? tasks.map(t => `<article class="ci-report-task"><div><strong>${esc(t.snapshot.template)}线索报告</strong><p>${esc(t.snapshot.scope.start)} 至 ${esc(t.snapshot.scope.end)}下发 · ${esc(t.snapshot.template)} · ${t.snapshot.coverage.total}条</p><small>${esc(new Date(t.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }))}</small></div><div><span class="ci-report-status" data-status="${esc(t.status)}">${labels[t.status]}</span><button class="ci-text" data-report-open="${esc(t.id)}" type="button">${t.status === 'succeeded' ? '阅读报告' : '查看进度'}</button>${['succeeded','failed'].includes(t.status) ? `<button class="ci-text" data-report-remove="${esc(t.id)}" type="button">删除</button>` : ''}</div></article>`).join('') : '<p class="ci-report-empty">暂无报告。选择数据范围后，点击“生成AI解读报告”。</p>'}`;
+        body.innerHTML = `<p class="ci-note">点击生成时会锁定当前筛选范围；完成后可直接阅读，不需要下载。当前为演示任务。</p>${tasks.length ? tasks.map(t => `<article class="ci-report-task"><div><strong>${esc(t.snapshot.template)}线索报告</strong><p>线索下发日期 ${esc(dates.label(t.snapshot.scope))} · ${esc(t.snapshot.template)} · ${t.snapshot.coverage.total}条</p><small>${esc(new Date(t.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }))}</small></div><div><span class="ci-report-status" data-status="${esc(t.status)}">${labels[t.status]}</span><button class="ci-text" data-report-open="${esc(t.id)}" type="button">${t.status === 'succeeded' ? '阅读报告' : '查看进度'}</button>${['succeeded','failed'].includes(t.status) ? `<button class="ci-text" data-report-remove="${esc(t.id)}" type="button">删除</button>` : ''}</div></article>`).join('') : '<p class="ci-report-empty">暂无报告。选择数据范围后，点击“生成AI解读报告”。</p>'}`;
         return;
       }
       const data = task.snapshot;

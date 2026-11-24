@@ -43,7 +43,7 @@ test('changing insight scope in overview invalidates compare output without rend
   assert.equal(renders, 2);
 });
 
-test('customer insight renders the five shared date shortcuts in platform order', () => {
+test('customer insight retains the five shared date shortcuts alongside all time', () => {
   const {preset, create} = insightDateRange;
   const latest = '2026-03-31';
   assert.deepEqual(preset('yesterday', latest), {start: '2026-03-30', end: '2026-03-30'});
@@ -53,7 +53,7 @@ test('customer insight renders the five shared date shortcuts in platform order'
   assert.deepEqual(draft.preset('last6Months'), {start: '2026-02-01', end: latest});
   let {document} = parseHTML(draft.render());
   assert.deepEqual([...document.querySelectorAll('[data-range-shortcut]')].map(button => button.textContent),
-    ['昨天', '近三天', '近七天', '近一月', '近半年']);
+    ['全部时间', '昨天', '近三天', '近七天', '近一月', '近半年']);
   assert.equal(document.querySelector('[data-range-shortcut="last6Months"]').getAttribute('aria-pressed'), 'true');
   assert.equal(document.querySelectorAll('.session-date-grid').length, 1);
   assert.equal(document.querySelector('[data-range-nav="-1"]').disabled, true);
@@ -68,6 +68,75 @@ test('customer insight renders the five shared date shortcuts in platform order'
   draft.selectField('startDate');
   draft.pick('2026-02-28');
   assert.deepEqual(draft.pick('2026-03-01'), {start: '2026-02-28', end: '2026-03-01'});
+});
+
+test('customer insight all-time calendar can stage and clear a manual range', () => {
+  const allTime = {start: '', end: ''};
+  const draft = insightDateRange.create({...allTime, min: '2026-02-01', max: '2026-03-31'});
+  assert.equal(draft.state.month, '2026-03-01');
+  assert.deepEqual(draft.selectedRange(), allTime);
+  let {document} = parseHTML(draft.render());
+  assert.equal(document.querySelector('[data-range-shortcut="all"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(document.querySelectorAll('.session-date-day.in-range').length, 0);
+  draft.pick('2026-03-12');
+  assert.equal(draft.selectedRange(), null);
+  draft.pick('2026-03-15');
+  assert.deepEqual(draft.selectedRange(), {start: '2026-03-12', end: '2026-03-15'});
+  draft.preset('all');
+  ({document} = parseHTML(draft.render()));
+  assert.equal(document.querySelector('[data-range-apply]').disabled, false);
+  assert.deepEqual(draft.selectedRange(), allTime);
+});
+
+test('customer insight all-time totals, drill evidence and report use the same eligible leads', () => {
+  const window = {
+    SalesStrategyModel: require('../客户洞察/v2/sales-strategy-model.js'),
+    InsightDemoTopics: require('../客户洞察/v2/simplified/demo-topics.js'),
+    InsightDateRange: insightDateRange,
+    __DEVICE_ORGANIZATION_DEALERS: []
+  };
+  const context = vm.createContext({window});
+  for (const file of ['model.js', 'report-model.js']) {
+    const path = require.resolve('../客户洞察/v2/simplified/' + file);
+    vm.runInContext(fs.readFileSync(path, 'utf8'), context, {filename: path});
+  }
+  const {InsightSimpleModel: insightModel, InsightReportModel: insightReport} = window;
+  const defaults = insightModel.defaults();
+  assert.equal(insightDateRange.label(defaults), '全部时间');
+  assert.equal(defaults.template, 'not_arrived7');
+  assert.equal(defaults.minAgeDays, 7);
+  const filters = {brand: ['埃安'], organizationStores: ['aion-shop']};
+  const cohort = {template: 'not_arrived', filters};
+  const record = (leadId, issuedAt, patch = {}) => ({
+    id: leadId, leadId, issuedAt, brand: '埃安', storeId: 'aion-shop', visitState: false,
+    regionId: 'region-one', region: '大区一', scene: defaults.scenes[0], analysisState: 'ready',
+    actions: {}, annotations: {resistance: [{name: '价格敏感'}]}, ...patch
+  });
+  const fixture = [
+    record('old', '2025-12-01'),
+    record('cutoff', insightModel.cutoff),
+    record('after-cutoff', insightModel.shift(insightModel.cutoff, 1)),
+    record('no-date', null),
+    record('other-brand', insightModel.cutoff, {brand: '传祺'}),
+    record('other-store', insightModel.cutoff, {storeId: 'other-shop'}),
+    record('arrived', insightModel.cutoff, {visitState: true})
+  ];
+  const all = insightModel.query(cohort, false, fixture);
+  assert.equal(all.errors.length, 0);
+  assert.equal(all.populationCount, 3);
+  assert.equal(all.counts.not_arrived, 2);
+  const explicit = insightModel.query({...cohort, start: insightModel.cutoff, end: insightModel.cutoff}, false, fixture);
+  for (const [result, leadIds] of [[all, ['old', 'cutoff']], [explicit, ['cutoff']]]) {
+    assert.deepEqual(Array.from(result.records, item => item.leadId), leadIds);
+    const drill = insightModel.drill(result, {kind: 'customers', dimension: 'resistance', targetName: '价格敏感'});
+    assert.deepEqual(Array.from(drill.children[0].summary.records, item => item.leadId), leadIds);
+    const report = insightReport.snapshot(result, insightDateRange.label(result.scope));
+    assert.deepEqual(Array.from(report.leads, item => item.id), leadIds);
+    assert.equal(report.coverage.total, leadIds.length);
+  }
+  const incomplete = insightModel.query({...cohort, start: insightModel.cutoff}, false, fixture);
+  assert.ok(incomplete.errors.length);
+  assert.equal(incomplete.records.length, 0);
 });
 
 test('customer insight leaves the main area empty until initialization', () => {

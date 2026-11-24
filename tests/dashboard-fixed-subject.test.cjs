@@ -25,7 +25,7 @@ for(const kind of ['store','factory'])test(`${kind}: advisor controls stay absen
 
 test('store business controls and every result stay within its explicit store through reset',()=>{
   const h=setup('store','',{search:'?storeId='+shop}),a=h.controller,d=h.window.AIQCData;
-  const expected=d.query({...d.defaultRange,predicate:row=>row.storeId===shop});
+  const expected=d.query({predicate:row=>row.storeId===shop});
   assert(expected.recordings.length>0);
   assert.deepEqual(Array.from(a.result.recordings,row=>row.audioId),Array.from(expected.recordings,row=>row.audioId));
   assert.deepEqual(Array.from(a.result.leads,row=>row.id),Array.from(expected.leads,row=>row.id));
@@ -54,7 +54,8 @@ test('sales has only date and keeps the same advisor when changing source, date 
   a.state.startDate='2026-04-01';a.state.endDate='2026-04-02';a.render();
   h.click('[data-unified-reset]');
   assert.equal(a.subject.advisor.advisorKey,advisor.advisorKey);
-  assert.equal(a.state.startDate,h.window.AIQCData.defaultRange.startDate);
+  assert.equal(a.state.startDate,'');
+  assert.equal(a.state.endDate,'');
   assert(a.result.recordings.length>0);
   h.window.location.search='';
   h.click('[data-route="sales-dcc"]');

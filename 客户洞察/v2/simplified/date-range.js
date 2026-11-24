@@ -4,6 +4,9 @@
 })(typeof window === 'object' ? window : this, function (dateUtils) {
   'use strict';
   const pad = n => String(n).padStart(2, '0');
+  const allTime = { key: 'all', label: '全部时间' };
+  const isAllTime = ({ start, end }) => start === '' && end === '';
+  const label = range => isAllTime(range) ? allTime.label : `${range.start} 至 ${range.end}`;
   function addMonths(value, delta) {
     const [year, month, date] = value.split('-').map(Number);
     const first = new Date(Date.UTC(year, month - 1 + delta, 1));
@@ -17,7 +20,8 @@
   }
   function create({ start, end, min, max }) {
     const monthOf = value => value.slice(0, 7) + '-01';
-    const state = { start, end, activeField: 'startDate', month: monthOf(start), hover: '' };
+    const state = { start, end, activeField: 'startDate', month: monthOf(start || max), hover: '' };
+    const selectedRange = () => state.end || isAllTime(state) ? { start: state.start, end: state.end } : null;
     function canNavigate(delta) {
       const next = addMonths(state.month, delta);
       return next >= monthOf(min) && next <= monthOf(max);
@@ -42,7 +46,7 @@
     function pick(value) {
       if (!value || value < min || value > max) return null;
       state.hover = '';
-      if (state.activeField === 'startDate') {
+      if (!state.start || state.activeField === 'startDate') {
         state.start = value;
         state.end = '';
         state.activeField = 'endDate';
@@ -58,20 +62,20 @@
       return { start: range.start < min ? min : range.start, end: range.end };
     }
     function choosePreset(key) {
-      const range = availablePreset(key);
+      const range = key === allTime.key ? { start: '', end: '' } : availablePreset(key);
       if (!range) return null;
       Object.assign(state, range, { activeField: 'startDate', hover: '' });
-      reveal(range.start);
+      reveal(range.start || max);
       return range;
     }
     function hover(value) {
-      if (state.end || state.activeField !== 'endDate' || state.hover === value || value < min || value > max) return false;
+      if (!state.start || state.end || state.activeField !== 'endDate' || state.hover === value || value < min || value > max) return false;
       state.hover = value;
       return true;
     }
     function inRange(value) {
       const last = state.end || state.hover || state.start;
-      return value >= state.start && value <= last || value >= last && value <= state.start;
+      return !!state.start && (value >= state.start && value <= last || value >= last && value <= state.start);
     }
     function render(focusDay) {
       const [year, month] = state.month.split('-').map(Number);
@@ -79,7 +83,7 @@
       const count = new Date(Date.UTC(year, month, 0)).getUTCDate();
       const selectedDay = state.activeField === 'endDate' && state.end ? state.end : state.start;
       const firstDay = state.month < min ? min : state.month;
-      const focus = focusDay || (monthOf(selectedDay) === state.month ? selectedDay : firstDay);
+      const focus = focusDay || (selectedDay && monthOf(selectedDay) === state.month ? selectedDay : firstDay);
       const cells = Array(offset).fill(null);
       for (let index = 1; index <= count; index++) {
         const value = state.month.slice(0, 8) + pad(index);
@@ -89,22 +93,24 @@
           isStart: value === state.start, isEnd: value === state.end, isToday: value === max
         });
       }
+      const range = selectedRange();
+      const rangeText = range ? label(range) : state.start + ' 至 待选择';
       return dateUtils.renderDateRangePanelMarkup({
         dataNamespace: 'range',
         panelClassName: 'session-menu-panel session-menu-panel-date fo-date-panel',
-        title: '线索下发时间', rangeText: state.start + ' 至 ' + (state.end || '待选择'),
+        title: '线索下发时间', rangeText,
         monthLabel: year + '年' + month + '月', activeField: state.activeField,
-        startLabel: state.start, endLabel: state.end || '请选择', cells,
+        startLabel: state.start || '请选择', endLabel: state.end || '请选择', cells,
         disablePrevMonth: !canNavigate(-1), disableNextMonth: !canNavigate(1),
-        summaryText: state.end ? '已选择 ' + state.start + ' 至 ' + state.end : '请选择结束日期',
-        applyDisabled: !state.end,
-        shortcuts: dateUtils.dateShortcuts.map(({ key, label }) => {
+        summaryText: range ? '已选择 ' + rangeText : '请选择结束日期',
+        applyDisabled: !range,
+        shortcuts: [{ ...allTime, active: isAllTime(state) }, ...dateUtils.dateShortcuts.map(({ key, label }) => {
           const range = availablePreset(key);
           return { key, label, disabled: !range, active: !!range && range.start === state.start && range.end === state.end };
-        })
+        })]
       });
     }
-    return { state, pick, preset: choosePreset, hover, inRange, navigate, reveal, selectField, render };
+    return { state, selectedRange, pick, preset: choosePreset, hover, inRange, navigate, reveal, selectField, render };
   }
-  return { addMonths, preset, create };
+  return { addMonths, preset, create, isAllTime, label };
 });

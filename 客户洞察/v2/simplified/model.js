@@ -131,7 +131,7 @@
   }
   function defaults() {
     return { template: 'not_arrived7', comparisonTemplate: 'arrived7', stage: 'all', brand: '埃安', org: '全国', model: 'all',
-      start: '2026-06-30', end: '2026-07-19', minAgeDays: 7, scenes: allScenes.slice(), organizationDimension: 'organization' };
+      start: '', end: '', minAgeDays: 7, scenes: allScenes.slice(), organizationDimension: 'organization' };
   }
   function query(input = {}, compare = false, fixture) {
     const scope = { ...defaults(), ...input, stage: 'all', asOf: snapshotAt };
@@ -141,19 +141,25 @@
     scope.minAgeDays = templates[scope.template].days;
     if (templates[scope.comparisonTemplate].days && templates[scope.comparisonTemplate].days !== scope.minAgeDays) scope.comparisonTemplate = templates[scope.template].defaultReference;
     delete scope.windowDays; delete scope.statuses; delete scope.a; delete scope.b;
+    const allTime = dates.isAllTime(scope);
     const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
-    if (!validDate(scope.start) || !validDate(scope.end)) errors.push('请选择有效的线索下发日期。');
-    if (scope.start > scope.end) errors.push('开始日期不能晚于结束日期。');
-    if (scope.start < minimumDispatchDate || scope.end > base.cutoff) errors.push(`可选下发日期范围为${minimumDispatchDate}至${base.cutoff}。`);
+    if (!allTime) {
+      if (!validDate(scope.start) || !validDate(scope.end)) errors.push('请选择有效的线索下发日期。');
+      else if (scope.start > scope.end) errors.push('开始日期不能晚于结束日期。');
+      else if (scope.start < minimumDispatchDate || scope.end > base.cutoff) errors.push(`可选下发日期范围为${minimumDispatchDate}至${base.cutoff}。`);
+    }
     const filters = scope.filters;
     scope.scenes = (filters?.scene?.length ? filters.scene : Array.isArray(input.scenes) ? input.scenes : allScenes).filter(value => allScenes.includes(value));
     const brands = filters ? (filters.brand?.length ? Object.keys(base.models).filter(brand => filters.brand.includes(brand)) : Object.keys(base.models)) : [scope.brand];
     // Scene selection scopes evidence, never excludes unrecorded/unanalysed leads from the business cohort.
     const source = fixture || base.sampleRecords.map(annotate);
-    const population = errors.length ? [] : source.filter(record => brands.includes(record.brand)
-      && record.issuedAt.slice(0, 10) >= scope.start && record.issuedAt.slice(0, 10) <= scope.end
-      && (filters || scope.org === '全国' || record.region === scope.org)
-      && (filters || scope.model === 'all' || record.model === scope.model))
+    const population = errors.length ? [] : source.filter(record => {
+      const issuedDay = record.issuedAt?.slice(0, 10);
+      return brands.includes(record.brand) && issuedDay && Number.isFinite(Date.parse(record.issuedAt)) && issuedDay <= base.cutoff
+        && (allTime || issuedDay >= scope.start && issuedDay <= scope.end)
+        && (filters || scope.org === '全国' || record.region === scope.org)
+        && (filters || scope.model === 'all' || record.model === scope.model);
+    })
       .filter(record => !filters || (Object.entries(filterFields).every(([key, field]) => !filters[key]?.length || filters[key].includes(record[field]))
         && (!Array.isArray(filters.organizationStores) || filters.organizationStores.includes(record.storeId))))
       .map(record => {

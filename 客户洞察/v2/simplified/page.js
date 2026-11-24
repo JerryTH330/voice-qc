@@ -79,7 +79,7 @@
   }
   function scopeText(s = scope, includeGroups = compare, includeDrill = true) {
     const filterScope = s === scope ? drillRootLabel() : F.summary(F.create(M, s));
-    return `${includeGroups ? `${M.templates[s.template].label} vs ${M.templates[s.comparisonTemplate].label}` : M.templates[s.template].label} · ${filterScope}\n线索下发日期 ${s.start} 至 ${s.end} · ${M.ageLabel(s.minAgeDays)}\n数据截至 ${M.snapshotAt.replace('T', ' ')}\n语音证据场景：${s.scenes.map(k => M.sceneLabels[k]).join('、') || '未选择'}${includeDrill && drillState ? `\n分析项：${drillState.targetName}\n组织路径：${drillState.path.map(p => p.name).join(' / ') || drillRootLabel()}` : ''}`;
+    return `${includeGroups ? `${M.templates[s.template].label} vs ${M.templates[s.comparisonTemplate].label}` : M.templates[s.template].label} · ${filterScope}\n线索下发日期 ${D.label(s)} · ${M.ageLabel(s.minAgeDays)}\n数据截至 ${M.snapshotAt.replace('T', ' ')}\n语音证据场景：${s.scenes.map(k => M.sceneLabels[k]).join('、') || '未选择'}${includeDrill && drillState ? `\n分析项：${drillState.targetName}\n组织路径：${drillState.path.map(p => p.name).join(' / ') || drillRootLabel()}` : ''}`;
   }
   function renderTemplates() {
     $('analysisTemplates').innerHTML = select('leadStatus', '分析人群', scope.template, Object.entries(M.templates).map(([key, state]) => [key, state.label]));
@@ -92,10 +92,13 @@
     document.querySelector('[data-select="leadStatus"] .session-select-trigger')?.focus({ preventScroll: true });
   }
   function renderFilters() {
-    const dateControl = window.__dateFilterComponentUtils.renderDateRangeControlMarkup({
-      currentValue: 'custom', startLabel: scope.start, endLabel: scope.end, dataNamespace: 'range',
-      rootClassName: 'fo-date-root', triggerLabel: '线索下发时间', triggerId: 'dateTrigger', menuId: 'dateMenu'
-    });
+    const dateLabel = D.label(scope);
+    const dateControl = D.isAllTime(scope)
+      ? `<div class="fo-date-root"><button type="button" class="session-date-trigger" id="dateTrigger" aria-controls="dateMenu" aria-label="线索下发时间：${esc(dateLabel)}" aria-haspopup="dialog" aria-expanded="false"><strong>${esc(dateLabel)}</strong><span class="session-date-icon" aria-hidden="true"></span></button></div>`
+      : window.__dateFilterComponentUtils.renderDateRangeControlMarkup({
+        currentValue: 'custom', startLabel: scope.start, endLabel: scope.end, dataNamespace: 'range',
+        rootClassName: 'fo-date-root', triggerLabel: `线索下发时间：${dateLabel}`, triggerId: 'dateTrigger', menuId: 'dateMenu'
+      });
     $('mainFilters').innerHTML = `<div class="badge-field-filter ci-select fo-date-control" data-select="dates"><span>线索下发时间</span>${dateControl}<div id="dateMenu" role="dialog" aria-label="选择线索下发时间" hidden></div></div>`
       + `<div id="analysisTemplates">${select('leadStatus', '分析人群', scope.template, Object.entries(M.templates).map(([key, state]) => [key, state.label]))}</div>`;
     const root = $('insightScopeFilters');
@@ -135,9 +138,9 @@
     $('dateMenu').querySelector('[data-range-field="startDate"]').focus({ preventScroll: true });
   }
   function commitDateRange() {
-    if (!dateRange?.state.end) return;
-    const { start, end } = dateRange.state;
-    closeMenus(); updateScope({ start, end }); $('dateTrigger').focus({ preventScroll: true });
+    const range = dateRange?.selectedRange();
+    if (!range) return;
+    closeMenus(); updateScope(range); $('dateTrigger').focus({ preventScroll: true });
   }
 
   function render() {
@@ -438,9 +441,10 @@
     }
     const rows = visible.map(({ row, index }, slot) => {
       const { color, share } = slices[slot];
+      const count = `（${num(row.count)}/${num(row.denominator)}）`;
       const metrics = compare
         ? `A ${pct(row.aRate)}（${num(row.aCount)}/${num(row.aTotal)}）<br>B ${pct(row.bRate)}（${num(row.bCount)}/${num(row.bTotal)}）`
-        : `${share}（${num(row.count)}/${num(row.denominator)}）`;
+        : showChart ? `${share}<wbr><span class="ci-pie-count">${count}</span>` : `${share}${count}`;
       const delta = Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp` : '—';
       return `<button type="button" class="ci-pie-item" data-profile-drill="${key}" data-profile-index="${index}">
         <i style="background:${color}"></i><span>${esc(row.name)}</span><strong>${metrics}</strong>
@@ -487,7 +491,8 @@
     const label = M.topics[scope.stage][key]?.label;
     const source = $('profile-card-' + key);
     if (!label || !source || downloadingProfiles.has(key)) return;
-    const fileName = `${label}-${scope.start}-${scope.end}.png`;
+    const dateSuffix = D.isAllTime(scope) ? D.label(scope) : `${scope.start}-${scope.end}`;
+    const fileName = `${label}-${dateSuffix}.png`;
     const board = source.closest('.ci-profile-overview');
     const mount = document.createElement('div');
     // Inherit the same view classes, viewport and card width, without touching the live card.

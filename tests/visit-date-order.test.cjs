@@ -20,6 +20,7 @@ function setup(now = '2026-10-13T12:00:00') {
   const organization = { draft: { brand: [], store: [] }, matches: () => true, reset() {}, apply() {} };
   const context = vm.createContext({
     Date: ClockDate,
+    __dateFilterComponentUtils: require('../date-filter-component-utils.js'),
     window: { VisitOrganizationFilter: { fields: { brand: {}, store: {} } } },
     visitOrganizationModel: organization,
     visitStoreDrilldownState: { active: false },
@@ -43,7 +44,7 @@ function setup(now = '2026-10-13T12:00:00') {
   });
   const defaults = source.slice(source.indexOf('const visitDefaultFilters ='), source.indexOf('const visitEnumFields ='));
   const menu = source.match(/const visitDateMenuState = \{[\s\S]*?\n\};/)[0];
-  const functions = ['formatStoreDateValue', 'parseStoreDateValue', 'syncVisitDateView', 'syncVisitDateDraft',
+  const functions = ['formatStoreDateValue', 'parseStoreDateValue', 'syncVisitDateView', 'syncVisitDateDraft', 'applyVisitDateShortcut',
     'clearHiddenVisitFilters', 'getFilteredVisitRecords', 'resetVisitFilters'].map(sourceFunction).join('\n');
   vm.runInContext(functions + '\n' + defaults + '\n' + menu, context);
   const filter = vm.runInContext('visitFilterState', context);
@@ -51,45 +52,48 @@ function setup(now = '2026-10-13T12:00:00') {
   return { context, filter, calendar, setNow: value => { currentTime = value; } };
 }
 
-test('initial visit range includes today and the preceding six dates, with matching calendar state', () => {
+test('initial visit dates are unrestricted and the calendar opens in the current month', () => {
   const { filter, calendar } = setup();
-  assert.equal(filter.startDate, '2026-10-07');
-  assert.equal(filter.endDate, '2026-10-13');
+  assert.equal(filter.startDate, '');
+  assert.equal(filter.endDate, '');
   assert.equal(calendar.draftStartDate, filter.startDate);
   assert.equal(calendar.draftEndDate, filter.endDate);
   assert.equal(calendar.viewYear, 2026);
   assert.equal(calendar.viewMonth, 10);
 });
 
-test('recent-seven-day defaults cross month, year and leap-day boundaries', () => {
+test('the manual recent-seven-day shortcut still crosses month, year and leap-day boundaries', () => {
   for (const [today, start] of [['2027-01-03', '2026-12-28'], ['2024-03-03', '2024-02-26'], ['2026-11-02', '2026-10-27']]) {
-    const { filter } = setup(`${today}T12:00:00`);
-    assert.equal(filter.startDate, start);
-    assert.equal(filter.endDate, today);
+    const { context, filter, calendar } = setup(`${today}T12:00:00`);
+    context.applyVisitDateShortcut('last7');
+    assert.deepEqual([calendar.draftStartDate, calendar.draftEndDate], [start, today]);
+    assert.deepEqual([filter.startDate, filter.endDate], ['', '']);
+    context.applyVisitDateShortcut('all');
+    assert.deepEqual([calendar.draftStartDate, calendar.draftEndDate], ['', '']);
   }
 });
 
-test('ordinary reset recalculates the range after midnight and restores the first page', () => {
+test('ordinary reset clears the date range and restores the first page', () => {
   const ui = setup('2026-10-13T23:59:00');
   ui.filter.startDate = '2026-08-11';
   ui.filter.source.push('模板导入');
   ui.setNow('2026-10-14T00:01:00');
   ui.context.resetVisitFilters();
-  assert.equal(ui.filter.startDate, '2026-10-08');
-  assert.equal(ui.filter.endDate, '2026-10-14');
+  assert.equal(ui.filter.startDate, '');
+  assert.equal(ui.filter.endDate, '');
   assert.deepEqual(plain(ui.filter.source), []);
   assert.equal(ui.context.visitPaginationState.page, 1);
-  assert.equal(ui.calendar.draftEndDate, '2026-10-14');
+  assert.equal(ui.calendar.draftEndDate, '');
 });
 
-test('hiding the arrival-date field restores a freshly calculated default range', () => {
+test('hiding the arrival-date field clears the date range', () => {
   const ui = setup();
   ui.filter.startDate = '2020-01-01';
   ui.setNow('2026-10-14T12:00:00');
   ui.context.visitFieldSettingsModel.getHiddenFilterKeys = () => ['time'];
   ui.context.clearHiddenVisitFilters();
-  assert.equal(ui.filter.startDate, '2026-10-08');
-  assert.equal(ui.filter.endDate, '2026-10-14');
+  assert.equal(ui.filter.startDate, '');
+  assert.equal(ui.filter.endDate, '');
   assert.equal(ui.calendar.draftEndDate, ui.filter.endDate);
 });
 
@@ -109,9 +113,11 @@ test('arrival dates include both complete boundary days and newest arrivals come
   assert.deepEqual(plain(ui.context.visitRecords), original);
 });
 
-test('an ordinary recent range does not move historical demo records into today', () => {
+test('all time keeps the original date of a historical arrival and filters out a later applied range', () => {
   const ui = setup();
   ui.context.visitRecords = [{ businessId: 'historical', date: '2026-08-12', startTime: '17:05:16' }];
+  assert.equal(ui.context.getFilteredVisitRecords()[0].date, '2026-08-12');
+  ui.filter.startDate = '2026-10-01';
   assert.equal(ui.context.getFilteredVisitRecords().length, 0);
   ui.filter.startDate = ui.filter.endDate = '2026-08-12';
   assert.equal(ui.context.getFilteredVisitRecords()[0].businessId, 'historical');

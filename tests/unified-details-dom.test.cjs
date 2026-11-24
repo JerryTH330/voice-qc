@@ -71,3 +71,50 @@ test('customer detail uses selected exact lead IDs and loaded recordings only',(
   assert.equal(h.host.querySelectorAll('[data-customer-ai-generate]').length,0);
   assert.doesNotMatch(h.host.textContent,/有两个孩子|苏州园区门店|N60/);
 });
+test('historical examples open their own complete journeys from the top of the customer list', () => {
+  const list = setup('store', '', { file: 'leads/index.html', search: '?route=leads&leadsView=customers' });
+  list.run('shared/field-settings-interactions.js');
+  list.run('leads/leads-modern-runtime.js');
+  const customers = list.window.AIQCData.customers(list.window.AIQCData.leads);
+  const rows = [...list.host.querySelectorAll('#leadsTableBody > tr')];
+  assert.deepEqual(rows.slice(0, 2).map(row => row.dataset.customerExampleRow), ['multi-node', 'multi-store']);
+  assert.deepEqual(rows.slice(0, 2).map(row => row.querySelector('[data-column-key="customerName"]').textContent.trim()), ['林嘉远演示样例', '郑昱辰演示样例']);
+  assert.equal(rows.length, 12);
+  assert.equal(list.host.querySelector('#leadsPagination .session-pagination-total').textContent, `共 ${customers.length} 条`);
+  const links = rows.slice(0, 2).map(row => row.querySelector('.lead-customer-example-link'));
+  list.click('[data-lr-page="2"]');
+  assert.equal(list.host.querySelectorAll('#leadsTableBody > tr').length, 10);
+  assert(!list.host.querySelector('[data-customer-example-row]'));
+  list.click('[data-lr-view="leads"]');
+  assert(!list.host.querySelector('[data-customer-example-row]'));
+
+  const fixtures = [
+    { customer: '林*远', leads: 4, stores: 3, recordings: 21 },
+    { customer: '郑*辰', leads: 7, stores: 7, recordings: 8 }
+  ];
+  for (const [index, fixture] of fixtures.entries()) {
+    const { search } = new URL(links[index].getAttribute('href'), list.window.location.href);
+    const h = setup('store', '', { file: 'leads/index.html', search });
+    assert.equal(h.host.querySelector('#customerDetailHeroTitle').textContent, fixture.customer);
+    assert.equal(h.host.querySelector('#customerDetailLeadCount').textContent, `关联线索：${fixture.leads}条线索`);
+    assert.equal(h.host.querySelector('#customerDetailStoreCount').textContent, `关联门店：${fixture.stores}个门店`);
+    assert.equal(h.host.querySelectorAll('[data-customer-journey-entry]').length, fixture.recordings);
+    assert(!h.host.querySelector('[data-customer-example-label]').hidden);
+    assert(h.host.querySelector('[data-customer-ai-generate]'));
+    assert(!h.host.querySelector('[data-lead-session-link]'));
+    const detailedSummaries = h.host.querySelectorAll('[data-example-journey-summary]');
+    assert.equal(detailedSummaries.length, 1);
+    const summary = detailedSummaries[0];
+    const summaryCard = summary.closest('[data-customer-journey-entry]');
+    assert.equal(summary.querySelectorAll('p').length, 3);
+    assert(summary.textContent.includes(summaryCard.querySelector('.customer-journey-store-name').textContent.split(' · ')[0]));
+    assert.equal(summaryCard.querySelector('[data-journey-card-toggle]').getAttribute('aria-controls'), summary.id);
+
+    h.run('shared/field-settings-interactions.js');
+    h.run('leads/leads-modern-runtime.js');
+    h.click('.customer-detail-page [data-route="leads"]');
+    const returned = new URLSearchParams(h.window.location.search);
+    assert.equal(returned.get('leadsView'), 'customers');
+    assert(!returned.has('customerExample'));
+  }
+});

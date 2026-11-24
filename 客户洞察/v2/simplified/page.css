@@ -16,7 +16,12 @@
 .ci-profile-group-heading>span { color:var(--blue); font-size:12px; font-weight:600; }
 .ci-profile-group-heading h3 { margin:0; font-size:15px; font-weight:600; color:var(--text); }
 .ci-profile-group-heading>small { font-size:12px; color:var(--muted); }
-.ci-profile-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.ci-profile-grid { --profile-card-gap:16px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--profile-card-gap); }
+.ci-profile-grid:has(.ci-profile-donut) {
+  /* Give the ring and legend room side by side, with at most three cards per row. */
+  --profile-card-min-width: max(400px, calc((100% - 2 * var(--profile-card-gap)) / 3));
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--profile-card-min-width)),1fr));
+}
 .ci-profile-card { min-width:0; padding:16px 16px 0; border:1px solid var(--line); border-radius:16px; background:var(--card); display:flex; flex-direction:column; scroll-margin:24px; }
 .ci-profile-card:focus { outline:2px solid var(--blue); outline-offset:3px; }
 .ci-profile-card>header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
@@ -53,13 +58,18 @@
 .ci-pie-item span { overflow-wrap:anywhere; }
 .ci-pie-item strong { font-size:11px; font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .ci-pie-item small { grid-column:2 / -1; color:var(--muted); font-size:10px; }
+.ci-pie-card:has(.ci-profile-donut) .ci-pie-item { grid-template-columns:8px max-content minmax(0,1fr); align-items:baseline; }
+.ci-pie-card:has(.ci-profile-donut) .ci-pie-item > i { align-self:start; margin-block-start:4px; }
+.ci-pie-card:has(.ci-profile-donut) .ci-pie-item > span { white-space:nowrap; }
+.ci-pie-card:has(.ci-profile-donut) .ci-pie-item > strong { text-align:right; white-space:normal; }
+.ci-pie-count { display:inline-block; white-space:nowrap; }
 @media(max-width:480px) {
   .ci-profile-donut { width:106px; }
   .ci-profile-donut-center.is-showing-share strong { font-size:18px; }
   .ci-profile-donut-center.is-showing-share > span { max-width:44%; font-size:10px; line-height:1.1; }
   .ci-pie-layout { gap:8px; }
 }
-@container profile-donut-card (max-width:248px) {
+@container profile-donut-card (max-width:365px) {
   .ci-pie-layout { flex-direction:column; align-items:stretch; gap:8px; }
 }
 .ci-profile-card header p { margin:6px 0 0; color:var(--muted); font-size:12px; line-height:1.6; }

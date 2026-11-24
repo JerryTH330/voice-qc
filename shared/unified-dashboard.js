@@ -5,6 +5,10 @@
   const number = (value, suffix = '') => value === null || value === undefined ? '—' : `${Number(value).toLocaleString('zh-CN',{maximumFractionDigits:1})}${suffix}`;
   const sceneKeys = { first_follow:'首触跟进', invite_store:'邀约到店', schedule_confirm:'排程确认', store_reception:'销售接待', test_drive:'试乘试驾' };
   const dateValue = date => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  const allDates = { startDate: '', endDate: '' };
+  const dateRangeText = ({ startDate, endDate }) => startDate || endDate
+    ? `${startDate || '不限'} 至 ${endDate || '不限'}`
+    : '全部时间';
   const detailUrl = (kind,id) => `../${kind === 'lead' ? 'leads' : 'session'}/index.html?${new URLSearchParams(kind === 'lead' ? {route:'leads-detail',leadSource:'leads',leadId:id} : {route:'session-detail',sessionId:id})}`;
   const listUrl = (kind,id) => `../${kind === 'lead' ? 'leads' : 'session'}/index.html?${new URLSearchParams(kind === 'lead' ? {route:'leads',focusLeadId:id} : {route:'session',focusRecordingId:id})}`;
   const metricIcons = {
@@ -81,7 +85,7 @@
     const saved = global.__unifiedDashboardStates ||= {};
     const stateKey = sales ? `sales-${role}` : kind;
     if(subject && saved[stateKey]?.subjectKey && saved[stateKey].subjectKey!==subject.key)delete saved[stateKey];
-    const state = saved[stateKey] ||= { ...data.defaultRange,scenes:[],models:[],intent:'all',sort:'recordingCount',descending:true,page:1,pageSize:10,timeMode:'followup',completed:[] };
+    const state = saved[stateKey] ||= { ...allDates,scenes:[],models:[],intent:'all',sort:'recordingCount',descending:true,page:1,pageSize:10,timeMode:'followup',completed:[] };
     if(subject)state.subjectKey=subject.key;
     if(sales){state.scenes=[];state.models=[];}
     else if(subject?.store){const values=new Set(data.modelOptions([subject.store.brand]).map(option=>option.value));state.models=state.models.filter(value=>values.has(value));}
@@ -110,7 +114,7 @@
     } else {filterRoot=node('storeDashboardOrganizationFilters');businessRoot=node('storeDashboardBusinessFilters');}
     function closeDate() { if(!dateOpen)return; dateOpen=false;renderDate(); }
     function closeMenus() {business?.closeMenu();closeDate();}
-    function reset() {Object.assign(state,{...data.defaultRange,scenes:[],models:[],intent:'all',page:1,rankPage:1});if(sales){model.reset();model.set('advisor',people.map(person=>person.advisorKey));model.apply();}business?.render();closeDate();}
+    function reset() {Object.assign(state,{...allDates,scenes:[],models:[],intent:'all',page:1,rankPage:1});if(sales){model.reset();model.set('advisor',people.map(person=>person.advisorKey));model.apply();}business?.render();closeDate();}
     function change() {
       state.organization=JSON.parse(JSON.stringify(model.applied));
       const brands=subject?.store?[subject.store.brand]:model.applied.brand.map(id=>id.replace(/^brand:/,''));
@@ -135,18 +139,45 @@
       const end=new Date(),start=new Date(end);if(days===1){start.setDate(start.getDate()-1);end.setDate(end.getDate()-1);}else start.setDate(start.getDate()-days+1);
       return {startDate:dateValue(start),endDate:dateValue(end)};
     }
+    const dateBounds = dateUtils.getDateCalendarBounds([
+      ...data.recordings.map(record => record.startTime.slice(0, 10)),
+      ...data.leads.map(lead => lead.leadDate),
+      ...data.visits.map(visit => visit.date)
+    ]);
     function renderDate() {
-      const now=new Date(),today=dateValue(now),min=dateValue(dateUtils.shiftCalendarMonths(now,-6));
-      const cells=[];
-      if(dateOpen) {
-        const year=viewDate.getFullYear(),month=viewDate.getMonth(),first=new Date(year,month,1),offset=(first.getDay()+6)%7;
-        for(let i=0;i<offset;i++)cells.push(null);
-        for(let day=1;day<=new Date(year,month+1,0).getDate();day++) {const value=dateValue(new Date(year,month,day));cells.push({value,day,isDisabled:value<min||value>today,inRange:value>=draft.startDate&&value<=draft.endDate,isStart:value===draft.startDate,isEnd:value===draft.endDate,isToday:value===today});}
+      const { min, max, today } = dateBounds;
+      const minimum = draft.startDate && draft.startDate < min ? draft.startDate : min;
+      const maximum = draft.endDate && draft.endDate > max ? draft.endDate : max;
+      const cells = [];
+      if (dateOpen) {
+        const year = viewDate.getFullYear(), month = viewDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        for (let i = 0; i < (firstDay.getDay() + 6) % 7; i++) cells.push(null);
+        for (let day = 1; day <= lastDay; day++) {
+          const value = dateValue(new Date(year, month, day));
+          cells.push({
+            value, day, isDisabled: value < minimum || value > maximum, isToday: value === today,
+            isStart: value === draft.startDate, isEnd: value === draft.endDate,
+            inRange: Boolean(draft.startDate && draft.endDate && value >= draft.startDate && value <= draft.endDate)
+          });
+        }
       }
-      const menu=dateOpen?dateUtils.renderDateRangePanelMarkup({dataNamespace:'unified-date',title:'统计日期范围',rangeText:`${draft.startDate} 至 ${draft.endDate}`,panelClassName:`session-menu-panel session-menu-panel-date ${sales?'sales-statistics-date-panel':kind==='factory'?'fo-date-panel':'sd-statistics-date-panel'}`,monthLabel:`${viewDate.getFullYear()}年${viewDate.getMonth()+1}月`,activeField,startLabel:draft.startDate,endLabel:draft.endDate,cells,
-        disablePrevMonth:dateValue(new Date(viewDate.getFullYear(),viewDate.getMonth(),1)).slice(0,7)<=min.slice(0,7),disableNextMonth:dateValue(viewDate).slice(0,7)>=today.slice(0,7),
-        shortcuts:dateUtils.dateShortcuts}):'';
-      const control='<span>统计日期</span>'+dateUtils.renderDateRangeControlMarkup({currentValue:'custom',isOpen:dateOpen,startLabel:state.startDate,endLabel:state.endDate,dataNamespace:'unified-date',rootClassName:sales?'sales-role-date-root':kind==='factory'?'fo-date-root':'sd-statistics-date-root',triggerClassName:`session-date-trigger${sales?' sales-role-date-trigger':''}`,menuHtml:menu});
+      const viewMonth = dateOpen ? dateValue(viewDate).slice(0, 7) : '';
+      const menu = dateOpen ? dateUtils.renderDateRangePanelMarkup({
+        dataNamespace: 'unified-date', title: '统计日期范围', rangeText: dateRangeText(draft),
+        panelClassName: `session-menu-panel session-menu-panel-date ${sales ? 'sales-statistics-date-panel' : kind === 'factory' ? 'fo-date-panel' : 'sd-statistics-date-panel'}`,
+        monthLabel: `${viewDate.getFullYear()}年${viewDate.getMonth() + 1}月`, activeField,
+        startLabel: draft.startDate || '未选择', endLabel: draft.endDate || '未选择', cells,
+        disablePrevMonth: viewMonth <= minimum.slice(0, 7), disableNextMonth: viewMonth >= maximum.slice(0, 7),
+        shortcuts: [{ key: 'all', label: '全部时间', active: !draft.startDate && !draft.endDate }, ...dateUtils.dateShortcuts]
+      }) : '';
+      const control = '<span>统计日期</span>' + dateUtils.renderDateRangeControlMarkup({
+        currentValue: 'custom', isOpen: dateOpen, startLabel: state.startDate, endLabel: state.endDate,
+        emptyLabel: '全部时间', dataNamespace: 'unified-date',
+        rootClassName: sales ? 'sales-role-date-root' : kind === 'factory' ? 'fo-date-root' : 'sd-statistics-date-root',
+        triggerClassName: `session-date-trigger${sales ? ' sales-role-date-trigger' : ''}`, menuHtml: menu
+      });
       dateHost.innerHTML=sales?`<div class="so-filter-control badge-field-filter sales-statistics-date-control">${control}</div>`:control;
     }
     function currentScope() {return {startDate:state.startDate,endDate:state.endDate,scenes:sales?[]:state.scenes,models:sales?[]:state.models,source,predicate:r=>(!subject || (sales?!!subject.advisor && r.advisorKey===subject.advisor.advisorKey:!!subject.store && r.storeId===subject.storeId)) && model.matches(r)};}
@@ -158,7 +189,7 @@
       const own=rows.map(row=>row.qualifiedRate),average=rows.map(row=>comparison.get(row.date) ?? null),volume=rows.map(row=>row.recordingCount);
       const labels=rows.map(row=>row.date.slice(5)),max=Math.max(1,...volume),step=Math.max(1,Math.ceil(max/5));
       const minimum=[...own,...average].filter(value=>value!==null).some(value=>value<50)?0:50;
-      canvas.setAttribute('aria-label',`${state.startDate}至${state.endDate}，录音${result.metrics.recordingCount}条；合格率${number(result.metrics.qualifiedRate,'%')}`);
+      canvas.setAttribute('aria-label',`${dateRangeText(state)}，录音${result.metrics.recordingCount}条；合格率${number(result.metrics.qualifiedRate,'%')}`);
       canvas.dataset.recordingTotal=String(result.metrics.recordingCount);
       if(kind==='factory'&&global.Chart){
         chartInstance?.destroy();
@@ -240,7 +271,9 @@
       const start=(state.rankPage-1)*pageSize;
       const ranked=records.slice(start,start+pageSize);
       const recordingsUrl=advisor=>{
-        const params=new URLSearchParams({route:'session',recordingScope:'advisor',storeId:advisor.storeId,advisorId:advisor.advisorId,startDate:state.startDate,endDate:state.endDate});
+        const params=new URLSearchParams({route:'session',recordingScope:'advisor',storeId:advisor.storeId,advisorId:advisor.advisorId});
+        if (state.startDate) params.set('startDate', state.startDate);
+        if (state.endDate) params.set('endDate', state.endDate);
         state.scenes.forEach(scene=>params.append('scene',scene));
         state.models.forEach(model=>params.append('model',model));
         return `../session/index.html?${params}`;
@@ -348,7 +381,7 @@
       const comparison=data.query({...currentScope(),predicate:undefined}),difference=m.qualifiedRate===null||comparison.metrics.qualifiedRate===null?null:m.qualifiedRate-comparison.metrics.qualifiedRate;
       text('sop-national-avg',number(comparison.metrics.qualifiedRate));
       if(kind==='factory'){html('sop-national-diff',`<span class="sop-improve-copy"><span class="sop-improve-label sop-national-diff-label">${difference>0?'+':''}</span><span class="sop-improve-value sop-national-diff-value">${number(difference,'%')}</span></span>`);node('sop-national-diff').classList.toggle('up',difference!==null&&difference>=0);node('sop-national-diff').classList.toggle('down',difference!==null&&difference<0);html('sop-period-change','<span class="sop-period-change-value" style="color:#64748b">环比 —</span>');node('sop-period-change').classList.remove('up','down');}else{text('sop-national-diff',number(difference,'%'));text('sop-period-change','暂无同比数据');}
-      text('sop-summary-trend-title','优势发掘');text('sop-summary-trend-text',`${state.startDate} 至 ${state.endDate}，所有指标来自当前筛选的基础记录。`);text('sop-summary-weakness-text','暂无逐录音短板分析结果');text('sop-summary-risk-text','暂无逐录音风险分析结果');
+      text('sop-summary-trend-title','优势发掘');text('sop-summary-trend-text',`${dateRangeText(state)}，所有指标来自当前筛选的基础记录。`);text('sop-summary-weakness-text','暂无逐录音短板分析结果');text('sop-summary-risk-text','暂无逐录音风险分析结果');
       renderMissingRuleResults();
       if(sales){const completed=result.leads.filter(lead=>state.completed.includes(lead.id)).length;html('execution-focus-metrics',[{label:'高质量线索',value:result.leads.filter(lead=>['H','A'].includes(lead.intentGrade)).length,sub:'H/A级线索在筛选时间内',tone:'blue',icon:'star'},{label:'待处理',value:result.leads.length-completed,sub:'线索待人工确认',tone:'amber',icon:'clock'},{label:'已完成',value:completed,sub:'已标记完成状态',tone:'green',icon:'check'},{label:'线索总数',value:result.leads.length,sub:'筛选时间内的全部线索',tone:'violet',icon:'list'}].map(presentation.executionMetric).join(''));}
       renderMissingHistory();
@@ -366,14 +399,39 @@
       if(button.disabled)return;
       if(dateHost.contains(button))event.stopPropagation();
       if(d.unifiedReset!==undefined){reset();change();return;}
-      if(d.unifiedDateTrigger!==undefined){event.stopPropagation();ui?.closeMenu();business?.closeMenu();dateOpen=!dateOpen;draft={startDate:state.startDate,endDate:state.endDate};activeField='startDate';viewDate=new Date(`${draft.startDate}T12:00:00`);renderDate();}
-      else if(d.unifiedDateField){activeField=d.unifiedDateField;renderDate();}
-      else if(d.unifiedDateNav){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+Number(d.unifiedDateNav),1);renderDate();}
-      else if(d.unifiedDateValue){draft[activeField]=d.unifiedDateValue;if(draft.startDate>draft.endDate){if(activeField==='startDate')draft.endDate=draft.startDate;else draft.startDate=draft.endDate;}activeField=activeField==='startDate'?'endDate':'startDate';renderDate();}
-      else if(d.unifiedDateShortcut){
-        const {startDate,endDate}=dateUtils.getDateShortcutRange(d.unifiedDateShortcut);
-        draft={startDate:dateValue(startDate),endDate:dateValue(endDate)};
-        viewDate=startDate;renderDate();
+      if (d.unifiedDateTrigger !== undefined) {
+        event.stopPropagation();
+        ui?.closeMenu();
+        business?.closeMenu();
+        dateOpen = !dateOpen;
+        draft = { startDate: state.startDate, endDate: state.endDate };
+        activeField = 'startDate';
+        viewDate = new Date(`${draft.startDate || draft.endDate || dateBounds.latest}T12:00:00`);
+        renderDate();
+      } else if (d.unifiedDateField) {
+        activeField = d.unifiedDateField;
+        if (draft[activeField]) viewDate = new Date(`${draft[activeField]}T12:00:00`);
+        renderDate();
+      } else if (d.unifiedDateNav) {
+        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + Number(d.unifiedDateNav), 1);
+        renderDate();
+      } else if (d.unifiedDateValue) {
+        draft[activeField] = d.unifiedDateValue;
+        const otherField = activeField === 'startDate' ? 'endDate' : 'startDate';
+        if (!draft[otherField] || draft.startDate > draft.endDate) draft[otherField] = draft[activeField];
+        activeField = otherField;
+        renderDate();
+      } else if (d.unifiedDateShortcut) {
+        if (d.unifiedDateShortcut === 'all') {
+          draft = { ...allDates };
+          activeField = 'startDate';
+          viewDate = new Date(`${dateBounds.latest}T12:00:00`);
+        } else {
+          const { startDate, endDate } = dateUtils.getDateShortcutRange(d.unifiedDateShortcut);
+          draft = { startDate: dateValue(startDate), endDate: dateValue(endDate) };
+          viewDate = startDate;
+        }
+        renderDate();
       }
       else if(d.unifiedDateCancel!==undefined)closeDate();
       else if(d.unifiedDateApply!==undefined){Object.assign(state,draft,{page:1,rankPage:1,rankExpanded:[]});dateOpen=false;render();}

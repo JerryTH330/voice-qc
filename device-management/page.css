@@ -605,6 +605,7 @@ code { padding: 2px 5px; color: #7b4aa8; background: rgba(124, 58, 237, .08); bo
 .badge-event-record-card > .card-head p { margin-top: 5px; color: #8994a5; font-size: 14px; font-weight: 400; line-height: 20px; }
 .badge-event-record-card > .card-head .data-source-note { color: #7d899c; font-size: 14px; font-weight: 400; line-height: 18px; }
 .event-timeline.event-timeline-grouped { padding: 16px 18px 22px; gap: 14px; }
+.badge-event-day-title { margin: 0; color: #52627a; font-size: 14px; font-weight: 600; }
 .event-timeline .event-group-card { min-height: 0; padding: 0; display: block; overflow: hidden; border: 1px solid #dbe4f0; border-radius: 12px; background: #fff; }
 .event-timeline .event-group-card:last-child { border-bottom: 1px solid #dbe4f0; }
 .event-session-head { min-height: 0; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; background: #f7faff; }

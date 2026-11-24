@@ -8360,6 +8360,14 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .replace(/'/g, '&#39;')
       }
 
+      let disposeJourneyCardAccordions = null
+
+      function getJourneyScrollContainer() {
+        const main = pageHost.closest('.main')
+        const overflow = main && window.getComputedStyle(main).overflowY
+        return /^(auto|scroll|overlay)$/.test(overflow) ? main : document.scrollingElement
+      }
+
       function initJourneyCardAccordions(routeId) {
         const isCustomerDetail = routeId === 'customer-detail'
         const cardSelector = isCustomerDetail
@@ -8372,8 +8380,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
         const animationDuration = 240
+        const summaries = new Map()
+        let stabilizationFrame = 0
 
         const updateToggleButton = (card, expanded) => {
           const button = card.querySelector('[data-journey-card-toggle]')
@@ -8385,78 +8394,81 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           button.classList.toggle('is-expanded', expanded)
         }
 
-        const setCardExpanded = (card, expanded, { instant = false } = {}) => {
-          const summaryContent = card.querySelector('.journey-session-summary-section > .journey-section-content')
-          if (!summaryContent) return
+        const getSummaryLineHeight = (content) => Number.parseFloat(window.getComputedStyle(content).lineHeight) || 20
 
-          summaryContent._journeyCardAnimation?.cancel()
-          summaryContent._journeyCardAnimation = null
-          const lineHeight = Number.parseFloat(window.getComputedStyle(summaryContent).lineHeight) || 20
+        const setCardExpanded = (summary, expanded, { instant = false } = {}) => {
+          const { card, content, body, button } = summary
+          const startHeight = content.getBoundingClientRect().height
+          const lineHeight = getSummaryLineHeight(content)
+          const targetHeight = expanded ? body.getBoundingClientRect().height : lineHeight
+          summary.animation?.cancel()
+          summary.animation = null
+
           card.classList.toggle('is-summary-expanded', expanded)
-          card.classList.toggle('is-summary-collapsed', !expanded)
+          card.classList.toggle('is-summary-collapsed', !expanded && !button.hidden)
           updateToggleButton(card, expanded)
 
-          if (instant || reducedMotionQuery.matches || typeof summaryContent.animate !== 'function') {
-            summaryContent.style.height = expanded ? '' : `${lineHeight}px`
-            summaryContent.style.overflow = expanded ? '' : 'hidden'
-            return
-          }
+          const clipped = !expanded && !button.hidden
+          content.style.height = clipped ? `${lineHeight}px` : ''
+          content.style.overflow = clipped ? 'hidden' : ''
+          if (instant || button.hidden || reducedMotionQuery.matches || typeof content.animate !== 'function'
+            || Math.abs(startHeight - targetHeight) < 1) return
 
-          if (expanded) {
-            const startHeight = summaryContent.getBoundingClientRect().height
-            const targetHeight = summaryContent.scrollHeight
-            summaryContent.style.overflow = 'hidden'
-            summaryContent._journeyCardAnimation = summaryContent.animate([
-              { height: `${startHeight}px` },
-              { height: `${targetHeight}px` }
-            ], {
-              duration: animationDuration,
-              easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
-            })
-            summaryContent._journeyCardAnimation.addEventListener('finish', () => {
-              summaryContent._journeyCardAnimation = null
-              summaryContent.style.height = ''
-              summaryContent.style.overflow = ''
-            }, { once: true })
-            return
-          }
-
-          const startHeight = summaryContent.getBoundingClientRect().height
-          summaryContent.style.overflow = 'hidden'
-          summaryContent._journeyCardAnimation = summaryContent.animate([
+          content.style.overflow = 'hidden'
+          const animation = content.animate([
             { height: `${startHeight}px` },
-            { height: `${lineHeight}px` }
+            { height: `${targetHeight}px` }
           ], {
             duration: animationDuration,
-            easing: 'cubic-bezier(0.64, 0, 0.78, 0)'
+            easing: expanded ? 'cubic-bezier(0.22, 1, 0.36, 1)' : 'cubic-bezier(0.64, 0, 0.78, 0)'
           })
-          summaryContent._journeyCardAnimation.addEventListener('finish', () => {
-            summaryContent._journeyCardAnimation = null
-            summaryContent.style.height = `${lineHeight}px`
-            summaryContent.style.overflow = 'hidden'
+          summary.animation = animation
+          animation.addEventListener('finish', () => {
+            if (summary.animation !== animation) return
+            summary.animation = null
+            content.style.overflow = clipped ? 'hidden' : ''
           }, { once: true })
         }
 
+        const syncSummaryAvailability = (summary) => {
+          const { body, button, content } = summary
+          const height = body.getBoundingClientRect().height
+          if (height <= 0) return
+
+          const fits = height <= getSummaryLineHeight(content) + 0.5
+          if (button.hidden === fits) return
+          button.hidden = fits
+          setCardExpanded(summary, false, { instant: true })
+        }
+
+        const stopStabilization = () => {
+          if (stabilizationFrame) window.cancelAnimationFrame(stabilizationFrame)
+          stabilizationFrame = 0
+        }
+
         const stabilizeCardPosition = (card, anchorTop) => {
+          const scrollContainer = getJourneyScrollContainer()
           if (!scrollContainer || reducedMotionQuery.matches) {
             return
           }
           const startTime = performance.now()
           const stabilize = (timestamp) => {
-            if (!card.isConnected) return
+            stabilizationFrame = 0
+            if (!card.isConnected || card.hidden) return
             const offset = card.getBoundingClientRect().top - anchorTop
             if (Math.abs(offset) > 0.5) {
               scrollContainer.scrollTop += offset
             }
             if (timestamp - startTime < animationDuration + 40) {
-              window.requestAnimationFrame(stabilize)
+              stabilizationFrame = window.requestAnimationFrame(stabilize)
             }
           }
-          window.requestAnimationFrame(stabilize)
+          stabilizationFrame = window.requestAnimationFrame(stabilize)
         }
 
         const collapseAll = ({ instant = false } = {}) => {
-          cards.forEach((card) => setCardExpanded(card, false, { instant }))
+          stopStabilization()
+          summaries.forEach((summary) => setCardExpanded(summary, false, { instant }))
         }
 
         cards.forEach((card, index) => {
@@ -8469,24 +8481,33 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const summaryId = `journey-card-summary-${routeId}-${index + 1}`
           summaryContent.id = summaryId
 
+          const summaryBody = document.createElement('div')
+          summaryBody.className = 'journey-session-summary-body'
+          summaryBody.append(...summaryContent.childNodes)
+          summaryContent.append(summaryBody)
+
           const toggleButton = document.createElement('button')
           toggleButton.type = 'button'
           toggleButton.className = 'journey-card-toggle'
+          toggleButton.hidden = true
           toggleButton.dataset.journeyCardToggle = 'true'
           toggleButton.setAttribute('aria-controls', summaryId)
           toggleButton.setAttribute('aria-expanded', 'false')
           toggleButton.setAttribute('aria-label', '展开会话小结')
           toggleButton.setAttribute('title', '展开会话小结')
           toggleButton.innerHTML = '<svg class="journey-card-toggle-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
+          const summary = { card, content: summaryContent, body: summaryBody, button: toggleButton, animation: null }
+          summaries.set(summaryBody, summary)
           toggleButton.addEventListener('click', () => {
+            stopStabilization()
             const shouldExpand = !card.classList.contains('is-summary-expanded')
-            const previouslyExpanded = cards.find((item) => item !== card && item.classList.contains('is-summary-expanded'))
+            const previouslyExpanded = Array.from(summaries.values()).find((item) => item !== summary && item.card.classList.contains('is-summary-expanded'))
             const anchorTop = card.getBoundingClientRect().top
 
             if (previouslyExpanded) {
               setCardExpanded(previouslyExpanded, false)
             }
-            setCardExpanded(card, shouldExpand)
+            setCardExpanded(summary, shouldExpand)
 
             if (shouldExpand && previouslyExpanded) {
               stabilizeCardPosition(card, anchorTop)
@@ -8496,7 +8517,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
 
         timeline._collapseJourneyCards = collapseAll
-        collapseAll({ instant: true })
+        summaries.forEach(syncSummaryAvailability)
+        const observer = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
+          entries.forEach(({ target }) => syncSummaryAvailability(summaries.get(target)))
+        }) : null
+        summaries.forEach(({ body }) => observer?.observe(body))
+        disposeJourneyCardAccordions = () => {
+          observer?.disconnect()
+          stopStabilization()
+          summaries.forEach(({ animation }) => animation?.cancel())
+        }
       }
 
       function getScriptLibrarySceneKey(scene) {
@@ -11305,8 +11335,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return `关联${leadCount}条线索，${storeCount}家门店，${audioCount}条录音，其中${recordStoreCount}家门店有录音`
       }
 
-      function getLeadNaturalCustomerKey(item = {}) {
-        if (window.AIQCData) return window.AIQCData.customerKey(item)
+      function getLeadNaturalCustomerKey(item = {}, { historicalDemo = false } = {}) {
+        if (window.AIQCData && !historicalDemo) return window.AIQCData.customerKey(item)
         const customerPhone = String(item.customerPhone || '').trim()
         const customerName = String(item.customerName || '').trim()
         return customerPhone && customerName
@@ -11322,13 +11352,13 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return Number(parseDateTimeValue(item.updatedAt || item.updated_at || item.lastContact || item.recordStartTime || '1970-01-01 00:00'))
       }
 
-      function buildLeadCustomerAggregateRecords(records) {
-        if (window.AIQCData) return window.AIQCData.customers(records)
+      function buildLeadCustomerAggregateRecords(records, { historicalDemo = false } = {}) {
+        if (window.AIQCData && !historicalDemo) return window.AIQCData.customers(records)
         const customerMap = new Map()
         const sortedRecords = [...records].sort((left, right) => parseDateTimeValue(right.recordStartTime) - parseDateTimeValue(left.recordStartTime))
 
         sortedRecords.forEach((item) => {
-          const key = getLeadNaturalCustomerKey(item)
+          const key = getLeadNaturalCustomerKey(item, { historicalDemo })
           const recordTime = parseDateTimeValue(item.recordStartTime)
           const contactTime = parseDateTimeValue(item.lastContact || item.recordStartTime) || recordTime
           const itemAudioCount = Number.isFinite(Number(item.recordingCount))
@@ -14196,6 +14226,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       }
 
       let leadDetailResizeObserver = null
+      const customerDetailExampleFlags = new Map([
+        ['multi-node', 'isMultiNodeCustomerDemo'],
+        ['multi-store', 'isMultiStoreCustomerDemo']
+      ])
       const customerDetailDefaultSelection = {
         customerName: '郑昱辰',
         customerPhone: '138****2751',
@@ -14290,9 +14324,47 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }) || null
       }
 
-      function buildCustomerDetailPayload(selection = customerDetailSelection) {
-        if (window.AIQCData) return window.AIQCData.customerPayload(selection)
-        const aggregateRecord = getCustomerDetailAggregateRecord(selection)
+      function getCustomerDetailExample(key) {
+        const flag = customerDetailExampleFlags.get(key)
+        if (!flag) return null
+        const records = leadRecordTemplates.filter(record => record[flag])
+        return buildLeadCustomerAggregateRecords(records, { historicalDemo: true })[0] || null
+      }
+
+      function getActiveCustomerDetailExample() {
+        const params = new URLSearchParams(window.location.search)
+        return params.get('route') === 'customer-detail' ? getCustomerDetailExample(params.get('customerExample')) : null
+      }
+
+      window.__getLeadCustomerExampleRows = () => Array.from(customerDetailExampleFlags.keys()).flatMap(key => {
+        const example = getCustomerDetailExample(key)
+        if (!example) return []
+        const detail = buildCustomerDetailPayload(example, example)
+        const { aggregateLeadCount, aggregateStoreCount, aggregateAudioCount, aggregateRecordedStoreCount, journeyEntries } = detail
+        const fields = ['province', 'city', 'dealerCode', 'region', 'zone', 'patroler', 'governor', 'advisorName']
+        const aggregateValues = Object.fromEntries(fields.map(field => [field, [...new Set(example.aggregateLeadRecords.map(lead => lead[field]).filter(Boolean))]]))
+        aggregateValues.brand = [...example.aggregateBrandSet].filter(Boolean)
+        aggregateValues.store = detail.storeBreakdown.map(store => store.name)
+        return [{
+          ...example,
+          exampleKey: key,
+          aggregateLeadCount,
+          aggregateStoreCount,
+          aggregateAudioCount,
+          multiLead: aggregateLeadCount > 1,
+          crossStore: aggregateStoreCount > 1,
+          recordCoverage: detail.recordCoverage,
+          storeRecordCoverage: detail.storeRecordCoverage,
+          firstRecordingAt: journeyEntries.at(-1)?.time,
+          latestRecordingAt: journeyEntries[0]?.time,
+          aggregateValues,
+          associationSummary: `关联${aggregateLeadCount}条线索，${aggregateStoreCount}家门店，${aggregateAudioCount}条录音，其中${aggregateRecordedStoreCount}家门店有录音`
+        }]
+      })
+
+      function buildCustomerDetailPayload(selection = customerDetailSelection, example = getActiveCustomerDetailExample()) {
+        if (window.AIQCData && !example) return window.AIQCData.customerPayload(selection)
+        const aggregateRecord = example || getCustomerDetailAggregateRecord(selection)
         const safeSelection = {
           ...customerDetailDefaultSelection,
           ...selection,
@@ -14486,6 +14558,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           .sort((left, right) => parseDateTimeValue(right.time) - parseDateTimeValue(left.time))
 
         return {
+          historicalDemo: Boolean(example),
           leadId: getCustomerDetailRecordId(safeSelection.customerPhone),
           store: storeCountText,
           customer: safeSelection.customerName,
@@ -14644,15 +14717,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function bindCustomerJourneyNodeNavigation() {
         const steps = Array.from(pageHost.querySelectorAll('[data-customer-journey-target]'))
         const cards = Array.from(pageHost.querySelectorAll('[data-customer-journey-entry]'))
-        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
-        if (!steps.length || !cards.length || !scrollContainer) {
+        if (!steps.length || !cards.length) {
           return
         }
 
         const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const isDocumentScroll = scrollContainer === document.scrollingElement
-          || scrollContainer === document.documentElement
-          || scrollContainer === document.body
         let scrollAnimationFrame = 0
 
         const highlightCard = (card, step) => {
@@ -14668,13 +14737,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const scrollToCard = (card, step) => {
+          const scrollContainer = getJourneyScrollContainer()
+          if (!scrollContainer) return
           if (scrollAnimationFrame) {
             window.cancelAnimationFrame(scrollAnimationFrame)
             scrollAnimationFrame = 0
           }
 
           const startScrollTop = scrollContainer.scrollTop
-          const containerTop = isDocumentScroll ? 0 : scrollContainer.getBoundingClientRect().top
+          const containerTop = scrollContainer === document.scrollingElement ? 0 : scrollContainer.getBoundingClientRect().top
           const targetScrollTop = Math.max(0, Math.min(
             scrollContainer.scrollHeight - scrollContainer.clientHeight,
             startScrollTop + card.getBoundingClientRect().top - containerTop - 24
@@ -14692,7 +14763,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ? 4 * progress * progress * progress
             : 1 - Math.pow(-2 * progress + 2, 3) / 2
           const animateScroll = (timestamp) => {
-            if (!card.isConnected) {
+            if (!card.isConnected || card.hidden) {
               scrollAnimationFrame = 0
               return
             }
@@ -14735,15 +14806,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function bindLeadJourneyNodeNavigation() {
         const steps = Array.from(pageHost.querySelectorAll('[data-lead-journey-target]'))
         const cards = Array.from(pageHost.querySelectorAll('[data-lead-journey-entry]'))
-        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
-        if (!steps.length || steps.length !== cards.length || !scrollContainer) {
+        if (!steps.length || steps.length !== cards.length) {
           return
         }
 
         const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const isDocumentScroll = scrollContainer === document.scrollingElement
-          || scrollContainer === document.documentElement
-          || scrollContainer === document.body
         let scrollAnimationFrame = 0
 
         const highlightCard = (card, step) => {
@@ -14759,13 +14826,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
 
         const scrollToCard = (card, step) => {
+          const scrollContainer = getJourneyScrollContainer()
+          if (!scrollContainer) return
           if (scrollAnimationFrame) {
             window.cancelAnimationFrame(scrollAnimationFrame)
             scrollAnimationFrame = 0
           }
 
           const startScrollTop = scrollContainer.scrollTop
-          const containerTop = isDocumentScroll ? 0 : scrollContainer.getBoundingClientRect().top
+          const containerTop = scrollContainer === document.scrollingElement ? 0 : scrollContainer.getBoundingClientRect().top
           const targetScrollTop = Math.max(0, Math.min(
             scrollContainer.scrollHeight - scrollContainer.clientHeight,
             startScrollTop + card.getBoundingClientRect().top - containerTop - 24
@@ -14853,9 +14922,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
 
         timeline.innerHTML = `
           <div class="journey-axis-track" aria-hidden="true"></div>
-          ${payload.journeyEntries.map((entry) => {
+          ${payload.journeyEntries.map((entry, index) => {
             const levelMeta = getCustomerJourneyLevelMeta(entry.intentLevel)
             const toneClass = entry.tone ? ` customer-journey-item-${entry.tone}` : ''
+            const summary = escapeHtml(entry.summary || '当前录音未提供会话小结')
+            const showDetailedExample = payload.historicalDemo && index === 0
             return `
               <article class="journey-item customer-journey-item${toneClass}" data-customer-journey-entry="${escapeHtml(entry.id)}" data-customer-journey-store="${escapeHtml(entry.filterKey)}">
                 <div class="journey-header">
@@ -14865,7 +14936,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                   </div>
                   <div class="journey-call-id">
                     <span class="journey-call-id-label">录音ID</span>
-                    <a
+                    ${payload.historicalDemo ? `<span class="journey-call-id-value">${escapeHtml(entry.id)}</span>` : `<a
                       class="lead-journey-session-link"
                       data-lead-session-link="true"
                       data-session-id="${escapeHtml(entry.id)}"
@@ -14873,14 +14944,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                       data-session-date="${escapeHtml(entry.time.slice(0, 10).replaceAll('-', '/'))}"
                       data-session-scene="${escapeHtml(entry.stage)}"
                       href="javascript:void(0)"
-                    ><span class="journey-call-id-value">${escapeHtml(entry.id)}</span><span class="journey-call-id-arrow" aria-hidden="true"></span></a>
+                    ><span class="journey-call-id-value">${escapeHtml(entry.id)}</span><span class="journey-call-id-arrow" aria-hidden="true"></span></a>`}
                   </div>
                 </div>
                 <div class="journey-axis" aria-hidden="true"><span class="journey-axis-dot"></span></div>
                 <div class="journey-body">
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-summary.svg" alt="" />会话小结</div>
-                    <div class="journey-section-content">${escapeHtml(entry.summary || '当前录音未提供会话小结')}</div>
+                    ${showDetailedExample ? `<div class="journey-section-content" data-example-journey-summary>
+                      <p>${summary}</p>
+                      <p>本次触点为${escapeHtml(entry.store)}的${escapeHtml(entry.stage)}，由顾问${escapeHtml(entry.advisorName)}跟进。</p>
+                      <p>后续建议：${escapeHtml(entry.action)}</p>
+                    </div>` : `<div class="journey-section-content">${summary}</div>`}
                   </div>
                   <div class="journey-section">
                     <div class="journey-section-label"><img class="journey-section-icon" src="../assets/journey-follow.svg" alt="" />策略跟进</div>
@@ -15189,18 +15264,16 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         }
       }
 
-      function renderCustomerAiPortraitGeneration() {
-        if (window.AIQCData) {
-          const panel = pageHost.querySelector('.customer-ai-generate-panel')
-          if (panel) panel.innerHTML = '<div class="empty-state-card">暂无客户综合画像分析结果</div>'
-          return
-        }
+      function renderCustomerAiPortraitGeneration(payload = buildCustomerDetailPayload()) {
         const panel = pageHost.querySelector('.customer-ai-generate-panel')
         if (!panel) {
           return
         }
+        if (payload.unified) {
+          panel.innerHTML = '<div class="empty-state-card">暂无客户综合画像分析结果</div>'
+          return
+        }
 
-        const payload = buildCustomerDetailPayload()
         const modeMeta = getCustomerAiInsightModeMeta(payload)
         const portraitText = getCustomerAiPortraitGeneratedText(payload)
 
@@ -15342,7 +15415,73 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
-      function initCustomerJourneyFilter() {
+      function createCustomerJourneyTransition() {
+        const panel = pageHost.querySelector('.customer-journey-panel')
+        if (!panel) return (update) => update()
+
+        const rails = [...panel.querySelectorAll('.lead-detail-journey-evolution')]
+        const targets = [panel, ...rails]
+        const overview = panel.querySelector('.customer-hero-flat-timeline')
+        const board = panel.querySelector('.customer-journey-board')
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+        let animations = []
+        let boardFade = null
+
+        const clear = () => {
+          animations.forEach((animation) => animation.cancel())
+          animations = []
+          boardFade = null
+          targets.forEach((target) => target.removeAttribute('data-journey-height-transition'))
+        }
+
+        return (update, { changeStore = false } = {}) => {
+          const canAnimate = !reducedMotion.matches && typeof panel.animate === 'function'
+          const startHeights = canAnimate ? targets.map((target) => target.getBoundingClientRect().height) : []
+          const startOpacity = changeStore && canAnimate && boardFade?.playState === 'running'
+            ? Number(window.getComputedStyle(board).opacity)
+            : 0.78
+          const scrollContainer = getJourneyScrollContainer()
+          const scrollTop = scrollContainer?.scrollTop
+          clear()
+          update()
+          if (!canAnimate) return
+
+          const endHeights = targets.map((target) => target.getBoundingClientRect().height)
+          targets.forEach((target, index) => {
+            const start = startHeights[index]
+            const end = endHeights[index]
+            if (!start || !end || Math.abs(end - start) < 1) return
+
+            target.setAttribute('data-journey-height-transition', '')
+            animations.push(target.animate([
+              { height: `${start}px` },
+              { height: `${end}px` }
+            ], { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' }))
+          })
+
+          if (changeStore) {
+            for (const content of [overview, board]) {
+              if (!content?.getClientRects().length) continue
+              const animation = content.animate([{ opacity: startOpacity }, { opacity: 1 }], {
+                duration: 180,
+                easing: 'ease-out',
+                fill: 'backwards'
+              })
+              if (content === board) boardFade = animation
+              animations.push(animation)
+            }
+          }
+
+          const first = animations[0]
+          if (!first) return
+          if (scrollContainer) scrollContainer.scrollTop = scrollTop
+          first.addEventListener('finish', () => {
+            if (animations[0] === first) clear()
+          }, { once: true })
+        }
+      }
+
+      function initCustomerJourneyFilter(transition) {
         const board = pageHost.querySelector('.customer-journey-board')
         const timeline = board?.querySelector('.customer-journey-timeline')
         const overview = pageHost.querySelector('.customer-hero-flat-timeline')
@@ -15369,109 +15508,19 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             return diff !== 0 ? diff : left.index - right.index
           })
           .map(({ item }) => item)
+        timeSortedItems.forEach((item) => timeline.appendChild(item))
+        const recordedScopeKeys = new Set(scopeCards
+          .filter((card) => (card.dataset.customerJourneyScope || 'all') !== 'all')
+          .filter((card) => Number(card.dataset.customerJourneyAudioCount) > 0)
+          .map((card) => card.dataset.customerJourneyScope))
         let selectedScope = 'all'
-        let scrollAnimationFrame = 0
-        const scrollContainer = pageHost.closest('.main') || document.scrollingElement
-        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const initialBoardPaddingBottom = board.style.paddingBottom
-        const baseBoardPaddingBottom = Number.parseFloat(window.getComputedStyle(board).paddingBottom) || 0
-
-        const setScrollCompensation = (height) => {
-          board.style.paddingBottom = `${baseBoardPaddingBottom + Math.max(0, height)}px`
-        }
-
-        const restoreBoardPadding = () => {
-          board.style.paddingBottom = initialBoardPaddingBottom
-        }
-
-        const animateHeightChange = (applyChange) => {
-          if (!scrollContainer || reducedMotionQuery.matches) {
-            applyChange()
-            return
-          }
-
-          if (scrollAnimationFrame) {
-            window.cancelAnimationFrame(scrollAnimationFrame)
-            scrollAnimationFrame = 0
-          }
-
-          const scrollTopBefore = scrollContainer.scrollTop
-          const scrollHeightBefore = scrollContainer.scrollHeight
-          const guardHeight = Math.max(scrollHeightBefore, scrollContainer.clientHeight)
-
-          // 先用临时占位撑住原有滚动范围，避免筛选内容时被浏览器单帧拉回顶部。
-          setScrollCompensation(guardHeight)
-          applyChange()
-
-          const naturalScrollHeight = Math.max(
-            scrollContainer.clientHeight,
-            scrollContainer.scrollHeight - guardHeight
-          )
-          const targetScrollTop = Math.min(
-            scrollTopBefore,
-            Math.max(0, naturalScrollHeight - scrollContainer.clientHeight)
-          )
-          const requiredCompensation = Math.max(0, scrollTopBefore - targetScrollTop)
-
-          setScrollCompensation(requiredCompensation)
-          scrollContainer.scrollTop = scrollTopBefore
-
-          if (requiredCompensation < 1) {
-            restoreBoardPadding()
-            return
-          }
-
-          const duration = 360
-          let startTime = 0
-          const easeInOutCubic = (progress) => progress < 0.5
-            ? 4 * progress * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 3) / 2
-
-          const step = (timestamp) => {
-            if (!board.isConnected) {
-              scrollAnimationFrame = 0
-              return
-            }
-            if (!startTime) {
-              startTime = timestamp
-            }
-
-            const progress = Math.min((timestamp - startTime) / duration, 1)
-            const easedProgress = easeInOutCubic(progress)
-            const remainingCompensation = requiredCompensation * (1 - easedProgress)
-
-            setScrollCompensation(remainingCompensation)
-            scrollContainer.scrollTop = scrollTopBefore
-              + (targetScrollTop - scrollTopBefore) * easedProgress
-
-            if (progress < 1) {
-              scrollAnimationFrame = window.requestAnimationFrame(step)
-              return
-            }
-
-            scrollAnimationFrame = 0
-            restoreBoardPadding()
-            scrollContainer.scrollTop = targetScrollTop
-          }
-
-          scrollAnimationFrame = window.requestAnimationFrame(step)
-        }
 
         const applyFilter = () => {
-          timeSortedItems.forEach((item) => {
-            timeline.appendChild(item)
-          })
-
           scopeCards.forEach((card) => {
             const isActive = (card.dataset.customerJourneyScope || 'all') === selectedScope
             card.classList.toggle('is-active', isActive)
             card.setAttribute('aria-pressed', String(isActive))
           })
-
-          const recordedScopeKeys = new Set(scopeCards
-            .filter((card) => (card.dataset.customerJourneyScope || 'all') !== 'all')
-            .filter((card) => Number(card.dataset.customerJourneyAudioCount) > 0)
-            .map((card) => card.dataset.customerJourneyScope))
 
           detailItems.forEach((item) => {
             const filterKey = item.dataset.customerJourneyStore || ''
@@ -15495,7 +15544,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           overview.classList.toggle('is-single-step', visibleStepCount <= 1)
           if (evolutionContainer) {
             evolutionContainer.hidden = visibleStepCount === 0
-            window.requestAnimationFrame(() => evolutionContainer._syncEvolutionLayout?.())
+            evolutionContainer._syncEvolutionLayout?.()
           } else {
             overview.hidden = visibleStepCount === 0
           }
@@ -15514,9 +15563,11 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             if (nextScope === selectedScope) {
               return
             }
-            timeline._collapseJourneyCards?.({ instant: true })
-            selectedScope = nextScope
-            animateHeightChange(applyFilter)
+            transition(() => {
+              timeline._collapseJourneyCards?.({ instant: true })
+              selectedScope = nextScope
+              applyFilter()
+            }, { changeStore: true })
           })
         })
 
@@ -15588,19 +15639,22 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function initCustomerDetailPage() {
         const customerPayload = buildCustomerDetailPayload()
         applyCustomerDetailPayload(customerPayload)
+        const exampleLabel = pageHost.querySelector('[data-customer-example-label]')
+        if (exampleLabel) exampleLabel.hidden = !customerPayload.historicalDemo
         syncCustomerDetailDateDisplays()
-        initCustomerJourneyFilter()
+        const transitionJourneyLayout = createCustomerJourneyTransition()
+        initCustomerJourneyFilter(transitionJourneyLayout)
         syncJourneyCompactDateTimes()
         syncCustomerJourneyHeaderWidth()
         window.requestAnimationFrame(syncCustomerJourneyHeaderWidth)
-        bindCustomerStoreEvolutionUI()
-        bindCustomerDetailEvolutionUI()
+        bindCustomerStoreEvolutionUI(transitionJourneyLayout)
+        bindCustomerDetailEvolutionUI(transitionJourneyLayout)
         bindCustomerJourneyNodeNavigation()
         bindLeadDetailSessionLinks(customerPayload)
         syncCustomerIntentionStoreTones()
         initCustomerHeroJourneyToggle()
-        renderCustomerAiPortraitGeneration()
-        if (!window.AIQCData) {
+        renderCustomerAiPortraitGeneration(customerPayload)
+        if (!customerPayload.unified) {
           bindCustomerAiPortraitGeneration()
           initCustomerDemoModeSwitcher()
         } else {
@@ -16069,6 +16123,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         const countProperty = options.countProperty || '--lead-evolution-step-count'
         const syncRowEnds = options.syncRowEnds !== false
         const getVisibleSteps = () => [...track.querySelectorAll(itemSelector)].filter((step) => !step.hidden)
+        const transition = options.transition || ((update) => update())
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const scrollBehavior = () => reducedMotion.matches ? 'instant' : 'smooth'
+        const setScrollLeft = (left) => track.scrollTo({ left, behavior: 'instant' })
 
         const prevBtn = container.querySelector('.lead-detail-evolution-arrow-prev')
         const nextBtn = container.querySelector('.lead-detail-evolution-arrow-next')
@@ -16088,7 +16146,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             toggleBtn.setAttribute('aria-expanded', 'false')
             toggleBtn.textContent = '展开'
           }
-          track.scrollLeft = 0
+          setScrollLeft(0)
         }
 
         function syncLayoutMode() {
@@ -16099,7 +16157,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           container.toggleAttribute('data-evolution-overflow', overflow)
           if (!overflow) {
             collapseEvolution()
-            track.scrollLeft = 0
+            setScrollLeft(0)
           }
           return overflow
         }
@@ -16111,7 +16169,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           return Math.min(alignedScroll, Math.max(0, track.scrollWidth - track.clientWidth))
         }
 
-        function alignTrackToNearestStep(behavior = 'smooth') {
+        function alignTrackToNearestStep(behavior = scrollBehavior()) {
           if (container.hasAttribute('data-evolution-expanded')) return
           const maxScrollLeft = getMaxAlignedScrollLeft()
           const alignedScrollLeft = Math.round(track.scrollLeft / stepWidth) * stepWidth
@@ -16152,7 +16210,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const targetScrollLeft = (currentStepIndex + direction * pageStepCount) * stepWidth
           track.scrollTo({
             left: Math.max(0, Math.min(getMaxAlignedScrollLeft(), targetScrollLeft)),
-            behavior: 'smooth'
+            behavior: scrollBehavior()
           })
         }
 
@@ -16176,7 +16234,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             if (container.hasAttribute('data-evolution-expanded') || !container.hasAttribute('data-evolution-overflow')) return
             if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
               event.preventDefault()
-              track.scrollBy({ left: event.deltaY, behavior: 'smooth' })
+              track.scrollBy({ left: event.deltaY, behavior: scrollBehavior() })
             }
           }, { passive: false })
         }
@@ -16185,26 +16243,18 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           toggleBtn._evolutionBound = true
           toggleBtn.addEventListener('click', () => {
             if (!container.hasAttribute('data-evolution-overflow')) return
-            const isExpanded = container.hasAttribute('data-evolution-expanded')
-            if (isExpanded) {
-              container.removeAttribute('data-evolution-expanded')
-              toggleBtn.setAttribute('aria-expanded', 'false')
-              toggleBtn.textContent = '展开'
-              window.requestAnimationFrame(() => {
-                const savedScrollLeft = Number(container._leadEvolutionCollapsedScrollLeft || 0)
-                track.scrollLeft = Math.min(getMaxAlignedScrollLeft(), savedScrollLeft)
-                syncExpandedRowEnds()
-                updateArrows()
-              })
-            } else {
-              container._leadEvolutionCollapsedScrollLeft = track.scrollLeft
-              container.setAttribute('data-evolution-expanded', '')
-              toggleBtn.setAttribute('aria-expanded', 'true')
-              toggleBtn.textContent = '收起'
-              track.scrollLeft = 0
-              window.requestAnimationFrame(syncExpandedRowEnds)
-            }
-            updateArrows()
+            transition(() => {
+              window.clearTimeout(track._evolutionAlignTimer)
+              const expanding = !container.hasAttribute('data-evolution-expanded')
+              if (expanding) container._leadEvolutionCollapsedScrollLeft = track.scrollLeft
+              container.toggleAttribute('data-evolution-expanded', expanding)
+              toggleBtn.setAttribute('aria-expanded', String(expanding))
+              toggleBtn.textContent = expanding ? '收起' : '展开'
+              const savedScrollLeft = Number(container._leadEvolutionCollapsedScrollLeft || 0)
+              setScrollLeft(expanding ? 0 : Math.min(getMaxAlignedScrollLeft(), savedScrollLeft))
+              syncExpandedRowEnds()
+              updateArrows()
+            })
           })
         }
 
@@ -16212,11 +16262,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           let previousEvolutionWidth = evolution.clientWidth
           container._leadEvolutionResizeObserver = new ResizeObserver(() => {
             const currentEvolutionWidth = evolution.clientWidth
+            if (currentEvolutionWidth === previousEvolutionWidth) return
+            previousEvolutionWidth = currentEvolutionWidth
             const overflow = syncLayoutMode()
-            if (overflow && currentEvolutionWidth !== previousEvolutionWidth) {
-              previousEvolutionWidth = currentEvolutionWidth
-              alignTrackToNearestStep('auto')
-            }
+            if (overflow) alignTrackToNearestStep('instant')
             syncExpandedRowEnds()
             updateArrows()
           })
@@ -16241,14 +16290,15 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         )
       }
 
-      function bindCustomerDetailEvolutionUI() {
+      function bindCustomerDetailEvolutionUI(transition) {
         bindJourneyEvolutionUI(
           pageHost.querySelector('.customer-detail-journey-evolution'),
-          pageHost.querySelector('#customerDetailJourneyEvolutionSteps')
+          pageHost.querySelector('#customerDetailJourneyEvolutionSteps'),
+          { transition }
         )
       }
 
-      function bindCustomerStoreEvolutionUI() {
+      function bindCustomerStoreEvolutionUI(transition) {
         bindJourneyEvolutionUI(
           pageHost.querySelector('.customer-store-evolution'),
           pageHost.querySelector('#customerDetailStoreCards'),
@@ -16258,7 +16308,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             itemGap: 12,
             trackEndPadding: 0,
             countProperty: '--customer-store-card-count',
-            syncRowEnds: false
+            syncRowEnds: false,
+            transition
           }
         )
       }
@@ -21894,7 +21945,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               returnUrl.searchParams.set('route', 'leads')
               returnUrl.searchParams.set('leadsView', returnView)
               if (returnView === 'customers') returnUrl.searchParams.delete('focusLeadId')
-              ;['leadId', 'leadSource', 'leadReturnView'].forEach((key) => returnUrl.searchParams.delete(key))
+              ;['leadId', 'leadSource', 'leadReturnView', 'customerExample'].forEach((key) => returnUrl.searchParams.delete(key))
               returnUrl.hash = 'leads'
               window.location.href = returnUrl.toString()
               return
@@ -21992,6 +22043,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           url.searchParams.delete('leadReturnView')
         }
 
+        if (routeId !== 'customer-detail') url.searchParams.delete('customerExample')
+
         if (routeId !== 'session-detail') {
           url.searchParams.delete('sessionId')
           url.searchParams.delete('sessionStore')
@@ -22041,6 +22094,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         window.destroyFactoryDashboardPage?.()
         destroyLeadDetailPage()
         destroyCustomerDetailPage()
+        disposeJourneyCardAccordions?.()
+        disposeJourneyCardAccordions = null
         destroySessionDetailPage()
         sessionMenuState.openMenu = null
         sessionMenuState.organizationSearchQuery = ''

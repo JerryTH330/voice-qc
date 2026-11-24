@@ -217,7 +217,7 @@ function createHarness({ savedSettings, storageError = false, linkedDemo = false
   const functions = [
     'expandVisitRecordTemplates', 'getVisitDefaultFilters', 'escapeBadgeHtml', 'formatDeviceCount',
     'normalizeDeviceQuery', 'matchesVisitCustomerKeyword', 'getVisitLeadId', 'getFilteredVisitRecords',
-    'formatStoreDateValue', 'formatStoreDateDisplay', 'parseStoreDateValue',
+    'formatStoreDateValue', 'formatStoreDateDisplay', 'parseStoreDateValue', 'formatDeviceDateRange', 'syncDeviceDateRangeTrigger',
     'syncVisitDateView', 'syncVisitDateDraft', 'applyVisitDateDraft', 'applyVisitDateShortcut', 'getVisitDateCells',
     'prefersBadgeReducedMotion', 'isRecordDrawerMenuVisible', 'beginRecordDrawerMenuRender',
     'closeRecordDrawerMenuState', 'openRecordDrawerMenuState', 'playRecordDrawerMenuMotion',
@@ -241,7 +241,7 @@ function createHarness({ savedSettings, storageError = false, linkedDemo = false
   ];
   vm.runInContext(functions.map(sourceFunction).join('\n'), context);
   const constants = [
-    'visitDefaultFilters', 'visitFilterState', 'visitEnumFields', 'visitProcessingStatuses', 'visitRecordTemplates', 'visitDemoStoreMappings',
+    'deviceAllTimeShortcut', 'visitDefaultFilters', 'visitFilterState', 'visitEnumFields', 'visitProcessingStatuses', 'visitRecordTemplates', 'visitDemoStoreMappings',
     'visitDemoAdvisorMappings', 'visitDirectoryDealers', 'visitRecords', 'visitOrganizationModel', 'visitMenuState',
     'visitDateMenuState', 'visitMatchingFilterKeys', 'visitStoreDrilldownState', 'visitExportButton',
     'matchingPaginationState', 'matchingDefaultFilters', 'matchingFilterState', 'matchingExportButton', 'matchingOrganizationModel',
@@ -435,7 +435,7 @@ test('date selection is a draft until applied and includes whole days regardless
   context.handleMatchingFilterClick(event('[data-matching-time-trigger]'));
   assert.match(nodes.matchingTimePanel.innerHTML, /data-matching-date-apply/);
   context.handleMatchingDateClick(event('[data-matching-date-value]', { matchingDateValue: '2026-08-12' }));
-  assert.equal(state.filter.startDate, '2026-08-11');
+  assert.equal(state.filter.startDate, '');
   context.handleMatchingDateClick(event('[data-matching-date-apply]', { matchingDateApply: '' }));
   assert.equal(state.filter.startDate, '2026-08-12');
   assert.equal(state.filter.endDate, '2026-08-12');
@@ -464,8 +464,8 @@ test('reset restores the default dimension and dates while retaining expanded la
   context.updateMatchingResults();
   context.handleMatchingFilterClick(event('[data-matching-filter-reset]'));
   assert.equal(state.model.applied.dimensionMode, 'organization');
-  assert.equal(state.filter.startDate, '2026-08-11');
-  assert.equal(state.filter.endDate, '2026-08-12');
+  assert.equal(state.filter.startDate, '');
+  assert.equal(state.filter.endDate, '');
   assert.equal(nodes.matchingMetricVisits.textContent, '1,286');
   assert.equal(nodes.matchingAdvancedFilters.hidden, false);
   assert.equal(nodes.matchingFilterControls.classList.contains('is-collapsed'), false);
@@ -1004,7 +1004,7 @@ test('matching export uses applied geographic filters and saved column order, ig
   assert.deepEqual(new Set(request.rows.map((row) => row[1])), new Set(records.map((record) => record.store)));
   const snapshot = new Map(request.filters.map((filter) => [filter.label, filter.value]));
   assert.equal(snapshot.get('筛选维度'), '地理维度');
-  assert.equal(snapshot.get('到访日期'), '2026-08-11 至 2026-08-12');
+  assert.equal(snapshot.get('到访日期'), '全部时间');
   assert.equal(snapshot.get('品牌'), records[0].brand);
   assert.equal(snapshot.get('省份'), [...new Set(records.map((record) => `${record.province}（${record.brand}）`))].join('、'));
   assert.equal(snapshot.get('门店'), records.map((record) => record.store).join('、'));
@@ -1031,7 +1031,7 @@ test('export content is fixed before readiness, repeat clicks are blocked and em
   assert.equal(submissions.length, 1);
   assert.equal(submissions[0].rows.length, 3);
   assert.equal(submissions[0].columns.length, 14);
-  assert.equal(submissions[0].filters.find((filter) => filter.label === '到访日期').value, '2026-08-11 至 2026-08-12');
+  assert.equal(submissions[0].filters.find((filter) => filter.label === '到访日期').value, '全部时间');
   assert.equal(state.exportBusy, false);
   assert.equal(nodes.matchingExportButton.disabled, true);
   assert.equal(nodes.matchingExportButton.getAttribute('aria-busy'), 'false');
@@ -1109,7 +1109,7 @@ test('export manager source menu, filtered list and details recognize the actual
   assert.ok(!node('exportRows').innerHTML.includes('other-source.xlsx'));
   const detail = context.detail(task);
   assert.match(detail, /来源：<strong>录音排查<\/strong>/);
-  assert.match(detail, /2026-08-11 至 2026-08-12/);
+  assert.match(detail, /全部时间/);
   assert.equal((detail.match(/export-field-number/g) || []).length, 14);
   assert.ok(detail.indexOf('品牌') < detail.indexOf('录音匹配率'));
 });
@@ -1415,8 +1415,8 @@ test('invalid store routes return to matching and malformed dates use safe defau
   const record = state.visits[0];
   const params = new URLSearchParams({ store: record.storeCode, brand: record.brand, startDate: '2026-02-31', endDate: 'no-date' });
   assert.equal(context.applyVisitStoreDrilldownFromRoute(params), true);
-  assert.equal(state.visitFilter.startDate, context.window.AIQCLinkedDemo.dateRange.startDate);
-  assert.equal(state.visitFilter.endDate, context.window.AIQCLinkedDemo.dateRange.endDate);
+  assert.equal(state.visitFilter.startDate, '');
+  assert.equal(state.visitFilter.endDate, '');
   params.set('brand', record.brand === '埃安' ? '传祺' : '埃安');
   assert.equal(context.applyVisitStoreDrilldownFromRoute(params), false);
   context.window.location.hash = '#store-visits?store=missing'; context.handleDeviceRouteChange();

@@ -8,8 +8,15 @@ function exportHarness(view, count) {
   const session = view === 'session';
   const source = fs.readFileSync(path.join(__dirname, session ? '../session/session-real-runtime.js' : '../leads/leads-modern-runtime.js'), 'utf8');
   const name = session ? 'exportRecords' : 'exportCurrent';
-  const start = source.indexOf(`  async function ${name}(`);
-  const body = source.slice(start, source.indexOf('\n  }', start) + 4);
+  const extract = (functionName, prefix = '') => {
+    const start = source.indexOf(`  ${prefix}function ${functionName}(`);
+    assert.ok(start >= 0, functionName);
+    return source.slice(start, source.indexOf('\n  }', start) + 4);
+  };
+  const formatters = session
+    ? ['formatSessionDateDisplay', 'getSessionDateRangeText']
+    : ['formatDateDisplay', 'dateRangeText'];
+  const body = [...formatters.map(formatter => extract(formatter)), extract(name, 'async ')].join('\n');
   const items = Array.from({length: count}, (_, id) => ({id}));
   const state = {selections: {}, queries: {}, startDate: '2026-11-03', endDate: '2026-11-09'};
   const submitted = [], messages = [], button = {disabled: false};
