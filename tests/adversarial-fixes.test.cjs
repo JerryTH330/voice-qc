@@ -176,22 +176,6 @@ test('visit route retains explicit missing and empty IDs without widening or kee
   assert.equal(c.getFilteredVisitRecords().length, 1, 'manual ID queries remain fuzzy');
 });
 
-test('export detail renders every submitted filter, including analysis result, with escaped values', () => {
-  const task = {filename: '录音.xlsx', source: 'session', status: 'completed', recordCount: 127,
-    createdAt: 1, completedAt: 2, expiresAt: 3, columns: [{label: '录音ID'}, {label: '质检场景'}],
-    filters: [{label: '录音日期', value: '2026-10-22 至 2026-10-28'}, {label: '分析结果', value: '失败'}, {label: '顾问', value: '<script>bad</script>'}, {label: '质检场景', value: '邀约到店'}]};
-  const c = vm.createContext({ExportTasks: {sources: {session: '录音列表'}}, date: String,
-    status: () => '已完成', escape: value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')});
-  vm.runInContext(['filterValue', 'detail'].map(name => sourceFunction('export-management/page.js', name)).join('\n'), c);
-  const html = c.detail(task);
-  const {document} = parseHTML(`<main>${html}</main>`);
-  const filters = [...document.querySelectorAll('.export-detail-filters dl > div')];
-  assert.deepEqual(filters.map(row => [row.querySelector('dt').textContent, row.querySelector('dd').textContent]), task.filters.map(filter => [filter.label === '质检场景' ? '业务场景' : filter.label, filter.value]));
-  assert.match(document.querySelector('.export-field-list').textContent, /业务场景/);
-  assert.equal(task.columns[1].label, '质检场景', 'historical task metadata remains intact');
-  assert.equal(document.querySelector('script'), null);
-});
-
 test('customer insight uses its durable standalone URL from multiple modules and can leave through navigation', () => {
   for (const file of ['script-library/index.html', 'session/index.html', '客户洞察/v2/index.html']) {
     const {window, document} = parseHTML(fs.readFileSync(require.resolve('../' + file), 'utf8'));

@@ -4020,7 +4020,7 @@ body::before {
 }
 
 .sales-role-dashboard-page .review-score-progress {
-  stroke: url(#reviewScoreGradient);
+  stroke: var(--chart-primary, var(--blue));
   stroke-linecap: round;
 }
 

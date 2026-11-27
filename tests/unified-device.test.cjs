@@ -4,6 +4,7 @@ const source=fs.readFileSync(path.join(__dirname,'../device-management/page.js')
 function harness(){
  const h=setup('store'),d=h.window.AIQCData;h.controller.destroy();
  Object.assign(h.c,{badgeDetailRecords:d.badges,badgeEventRecords:d.badgeEvents,badgeUploadRecords:d.badgeUploads,badgeRecordState:{sn:''},badgeEventFilterState:{sn:'',date:'',type:'all'},badgeUploadFilterState:{startDate:'',endDate:''},badgeEventTypeOptions:[['all','全部事件']],getBadgeExportTimestamp:()=> 'test'});
+ vm.runInContext(source.match(/^const badgeTimelineEventTypes = .*;$/m)[0],h.c);
  for(const name of ['getBadgeEventRecord','getBadgeEventRecords','getCurrentBadgeUploadRecords','getBadgeRecordProfile','getBadgeUploadMatchTime','getBadgeExportCellValue','getVisibleEventExportRows','badgeEventTimeToSeconds','formatBadgeDurationSeconds','buildBadgeEventGroups','matchesBadgeEventGroupType','formatBadgeEventDuration','formatStoreDateDisplay','formatDeviceDateRange','getBadgeUploadDates','getBadgeUploadDateRange','shiftBadgeUploadDate','getCompletedBadgeUploadRecords','getBadgeUploadCompletedDate','isWithinDateTimeRange','getDeviceListExportRequest']){
   const start=source.indexOf('function '+name+'(');assert(start>=0,name);vm.runInContext(source.slice(start,source.indexOf('\n}\n',start)+2),h.c);
  }

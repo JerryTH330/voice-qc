@@ -19,7 +19,8 @@ test('factory retains original metric layout, six slots, help and comparison mar
  assert.equal(root.querySelectorAll('.hm-layout-bottom .metric-def-btn').length,6);
  assert.equal(root.querySelectorAll('.hm-layout-bottom .hm-value small').length,6);
  assert(root.querySelector('#sop-ai-summary .hint-text'));assert(root.querySelector('#sop-national-diff .sop-improve-value'));
- assert.equal(root.querySelectorAll('#chart-legend .legend-dot').length,3);
+ assert.equal(root.querySelectorAll('#chart-legend .chart-legend-symbol').length,3);
+ assert.equal(root.querySelector('#chart-legend [stroke-dasharray]').getAttribute('stroke'),h.window.AIQCChartPalette.reference);
  h.click('[data-unified-rank-toggle]');assert(root.querySelector('.factory-rank-name-child'));assert(!root.querySelector('.factory-rank-name-store'));
  h.click('#rank-expand-toggle');assert(root.querySelector('.factory-rank-name-store'));
  h.controller.destroy();
@@ -38,7 +39,8 @@ for(const role of ['dcc','advisor'])test(`sales ${role} retains its own KPI, sum
   }
  assert.equal(root.querySelectorAll('#execution-focus-metrics .execution-metric').length,4);
  assert(root.querySelector('.sales-statistics-date-control .sales-role-date-root .sales-role-date-trigger'));
- assert.equal(root.querySelectorAll('#trend-legend .legend-dot').length,3);
+ assert.equal(root.querySelectorAll('#trend-legend .chart-legend-symbol').length,3);
+ assert.equal(root.querySelector('#trend-legend [stroke-dasharray]').getAttribute('stroke-dasharray'),'6 4');
  if(a.result.leads.length){assert(root.querySelector('#salesTodoPagination [data-unified-page-size]'));assert(root.querySelector('[data-unified-page-jump]'));h.click('[data-unified-expand]');assert(root.querySelector('.todo-guidance-label-reason'));assert(root.querySelector('.role-tag-row'));assert(root.querySelector('.review-score-progress').getAttribute('d'));}
  else assert(root.querySelector('#todo-list .todo-empty-illustration'));
  a.destroy();
@@ -83,6 +85,13 @@ test('original sales canvas draws score gaps without zero points and fills separ
  assert.equal(calls.filter(c=>c[0]==='arc').length,4);
  assert.equal(calls.filter(c=>c[0]==='fill').length,6); // Two separate area fills and four points.
  assert(calls.filter(c=>c[0]==='arc').every(c=>Number.isFinite(c[1])&&Number.isFinite(c[2])));
+ calls.length=0;
+ h.window.AIQCDashboardPresentation.drawTrendChart(canvas,{
+  labels:['a','b','c','d','e'],leftAxis:{min:0,max:100,ticks:[]},rightAxis:{min:0,max:100,ticks:[]},
+  datasets:[{data:[80,90,null,70,null],axis:'right',color:h.window.AIQCChartPalette.reference,
+   solidPoint:true,pointRadius:[0,0,0,3,0],dash:[6,4]}]
+ },1);
+ assert.deepEqual(calls.filter(c=>c[0]==='arc').map(c=>c[3]),[3]);
  h.controller.destroy();
 });
 test('same-page change from the jump input does not replace a focused pagination subtree',()=>{

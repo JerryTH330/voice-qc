@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>图表色板规范 · AI 质检平台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #162033;
+      --muted: #526278;
+      --line: #d9e2ef;
+      --wash: #f5f8fc;
+      --paper: #fff;
+      --blue: #2563eb;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font: 16px/1.6 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    * { box-sizing: border-box; }
+    body, h1, h2, h3, h4, p, figure, dl, dd { margin: 0; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 3px solid var(--blue); outline-offset: 3px;
+    }
+    .wrap { width: min(1100px, 100%); margin: 0 auto; padding-inline: clamp(16px, 5vw, 64px); }
+    .masthead { border-bottom: 1px solid var(--line); }
+    .masthead .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 28px; min-height: 65px; flex-wrap: wrap; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; white-space: nowrap; }
+    .brand-mark { display: inline-flex; align-items: end; gap: 3px; height: 21px; }
+    .brand-mark i { width: 5px; border-radius: 2px; background: var(--blue); }
+    .brand-mark i:nth-child(1) { height: 8px; } .brand-mark i:nth-child(2) { height: 14px; } .brand-mark i:nth-child(3) { height: 20px; }
+    nav { display: flex; gap: clamp(14px, 3vw, 32px); }
+    nav a { color: var(--muted); font-size: 14px; text-decoration: none; padding-block: 10px; }
+    nav a:hover { color: var(--blue); text-decoration: underline; }
+    .intro { padding: clamp(34px, 6vw, 70px) 0 clamp(30px, 5vw, 54px); }
+    h1 { font-size: clamp(32px, 5vw, 54px); line-height: 1.18; letter-spacing: -.045em; font-weight: 700; }
+    .intro p { margin-top: 14px; color: var(--muted); }
+    .chapter { border-top: 1px solid var(--line); padding-block: clamp(26px, 4.5vw, 48px); scroll-margin-top: 16px; }
+    h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.25; letter-spacing: -.035em; }
+    h3 { font-size: 18px; line-height: 1.45; }
+    .lede { margin: 9px 0 20px; color: var(--muted); max-width: 55em; }
+    .swatches { display: grid; gap: 8px; }
+    .swatches.sequence { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .swatches.core { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .swatches.extended { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .swatch { width: 100%; display: grid; gap: 5px; text-align: left; padding: 0 0 5px; border: 0; border-radius: 6px; background: transparent; }
+    .swatch .sample { display: block; width: 100%; height: 56px; border-radius: 5px; background: var(--sample); }
+    .sequence .sample { height: clamp(60px, 7vw, 84px); }
+    .extended .sample { height: 34px; }
+    .swatch .name { margin-top: 3px; font-size: 14px; font-weight: 550; }
+    .index { font: 12px/1.4 var(--mono); color: var(--muted); margin-right: 5px; }
+    .hex { width: fit-content; color: var(--muted); font: 14px/1.45 var(--mono); font-variant-numeric: tabular-nums; }
+    .swatch:hover .hex, .copy-role:hover code { text-decoration: underline; color: var(--ink); }
+    .group-title { font-size: 15px; margin: 18px 0 9px; }
+    .example { border: 1px solid var(--line); border-radius: 14px; padding: clamp(14px, 3vw, 28px); margin-top: 22px; }
+    .example-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 16px; }
+    .caption { font-size: 14px; color: var(--muted); }
+    .heat-table { width: 100%; border-spacing: 4px; table-layout: fixed; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .heat-table th { font-weight: 500; color: var(--muted); }
+    .heat-table th:first-child { width: 5em; text-align: left; }
+    .heat-table td { text-align: center; height: 41px; border-radius: 4px; }
+    .missing { background: repeating-linear-gradient(135deg, #fff 0 5px, #e0e6ed 5px 7px); }
+    figcaption, .note { margin-top: 13px; color: var(--muted); font-size: 14px; }
+    .example-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .periods { display: inline-flex; border-radius: 7px; background: var(--wash); padding: 3px; }
+    .periods button, .expand { border: 0; border-radius: 5px; background: transparent; padding: 6px 12px; font-size: 14px; }
+    .periods button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    .expand { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+    .ring-layout { display: grid; grid-template-columns: minmax(160px, .65fr) minmax(160px, 1fr); align-items: center; gap: 18px 36px; max-width: 720px; margin: 0 auto; }
+    .donut { display: grid; place-items: center; position: relative; isolation: isolate; width: min(100%, 200px); margin: auto; aspect-ratio: 1; border-radius: 50%; }
+    .donut::before { content: ""; position: absolute; inset: 18%; border-radius: 50%; background: var(--paper); z-index: -1; }
+    .donut-center { text-align: center; }
+    .donut-center b { display: block; font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .donut-center small { font-size: 14px; color: var(--muted); }
+    .ring-legend { list-style: none; margin: 0; padding: 0; }
+    .ring-legend li { display: grid; grid-template-columns: 15px 1fr auto; align-items: center; gap: 10px; padding-block: 3px; font-size: 14px; }
+    .ring-legend b { font-weight: 550; font-variant-numeric: tabular-nums; }
+    .arc { width: 13px; height: 13px; border-style: solid; border-width: 4px 0 0 4px; border-color: var(--sample); border-top-left-radius: 100%; }
+    .role-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+    .copy-role { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; width: 100%; padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid var(--line); text-align: left; font-size: 15px; }
+    .line-key { position: relative; height: 0; width: 30px; display: inline-block; border-top: 3px solid var(--sample); }
+    .line-key.a::after, .line-key.b::after { content: ""; position: absolute; left: 11px; top: -5px; width: 7px; height: 7px; background: var(--sample); }
+    .line-key.a::after { border-radius: 50%; }
+    .line-key.ref { border-top: 2px dashed var(--sample); }
+    .other-key { width: 25px; height: 12px; border-radius: 3px; background: var(--sample); }
+    .trend { display: block; width: 100%; height: 176px; }
+    .trend text { fill: var(--muted); font: 14px "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+    .trend-key { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+    .trend-key span { display: inline-flex; align-items: center; gap: 7px; }
+    .guidance { display: grid; gap: 6px; margin: 18px 0 0; padding-left: 1.25em; color: var(--muted); font-size: 15px; }
+    .copy-feedback { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: calc(100% - 32px); background: var(--ink); color: var(--paper); border-radius: 7px; padding: 7px 14px; pointer-events: none; box-shadow: 0 3px 12px #16203324; }
+    .copy-feedback:empty { visibility: hidden; }
+    dialog { max-width: min(360px, calc(100% - 32px)); padding: 22px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--paper); }
+    dialog::backdrop { background: #16203345; }
+    dialog label, dialog input { display: block; width: 100%; margin-bottom: 10px; }
+    dialog input { padding: 6px; font-family: var(--mono); }
+    dialog button { margin-top: 12px; padding: 5px 16px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    @media (max-width: 710px) {
+      .swatches.core { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .swatches.extended { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .role-list { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .masthead .wrap { padding-block: 10px; }
+      nav { gap: 12px; }
+      .swatches { gap: 8px 5px; }
+      .sequence .index { display: block; margin-bottom: 2px; }
+      .sequence .hex { font-size: 12px; }
+      .swatches.extended { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .heat-table { border-spacing: 2px; font-size: 14px; }
+      .heat-table th:first-child { width: 2.6em; }
+      .ring-layout { grid-template-columns: 1fr; }
+      .donut { width: 150px; }
+      .ring-legend { width: 100%; }
+    }
+    @media (pointer: coarse) {
+      .periods button, .expand, nav a { min-height: 44px; }
+      .copy-role { min-height: 48px; }
+    }
+    @media print {
+      :root { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .wrap { width: 100%; max-width: none; padding: 0; }
+      .masthead { padding-bottom: 6px; }
+      .masthead .wrap { min-height: 0; }
+      nav, .example-tools, .copy-feedback, dialog, .copy-hint { display: none; }
+      .intro, .chapter { padding-block: 16px; }
+      .swatches, figure, .role-list { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>AI 质检平台</div>
+      <nav aria-label="规范目录"><a href="#sequence">数值色阶</a><a href="#categories">分类色</a><a href="#comparison">对比用色</a><a href="./chart-palette.md">规范文档</a></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <header class="intro">
+      <h1>图表色板规范</h1>
+      <p>适用于平台浅色页面上的白底图表。<span class="copy-hint">点击色卡可复制 HEX 色值。</span>下方图表均使用示例数据。</p>
+    </header>
+    <section class="chapter" id="sequence">
+      <h2>数值色阶</h2>
+      <p class="lede">热力图和分级分布用五档蓝色，数值越高，颜色越深。单系列柱图和折线图用第 4 档主题蓝，分别用柱长和点的位置表达数值。</p>
+      <div class="swatches sequence" id="sequence-colors" role="group" aria-label="数值色阶，从低到高"></div>
+      <figure class="example">
+        <div class="example-head"><h3>门店 SOP 执行率</h3><span class="caption">热力图 · 分档示例</span></div>
+        <table class="heat-table" aria-label="三家门店的 SOP 执行率示例，单位为百分比">
+          <thead><tr><th scope="col">门店</th><th scope="col">周一</th><th scope="col">周二</th><th scope="col">周三</th><th scope="col">周四</th><th scope="col">周五</th></tr></thead>
+          <tbody id="heat-body"></tbody>
+        </table>
+        <figcaption>示例每 20 个百分点进一档，20%、40%、60%、80% 归入后一档。0% 用第 1 档，缺失值显示斜纹和「—」。正式图表按指标定义分档，跨门店、跨时段沿用同一组分界。</figcaption>
+      </figure>
+    </section>
+    <section class="chapter" id="categories">
+      <h2>分类色</h2>
+      <p class="lede">车型、品牌和画像标签各有固定颜色。同一维度按类别标识保存颜色，跨图、筛选、排序和导出时沿用。新类别按色号顺序取下一个空位。</p>
+      <h3 class="group-title">常用 6 色</h3>
+      <div class="swatches core" id="core-colors" role="group" aria-label="常用分类色"></div>
+      <h3 class="group-title">扩展 7 色</h3>
+      <div class="swatches extended" id="extended-colors" role="group" aria-label="扩展分类色"></div>
+      <p class="note">环图用纯色填充，扇区之间留细白缝，图例取对应原色。浅色用于细折线时，给数据点加深色轮廓，并在线尾标明系列名。超过 13 类时用分组或明细列表。</p>
+      <figure class="example" id="ring-example">
+        <div class="example-head">
+          <h3>客户画像 · 需求特征</h3>
+          <div class="example-tools">
+            <div class="periods" role="group" aria-label="选择环图示例时段">
+              <button type="button" data-period="0" aria-pressed="true">上期</button><button type="button" data-period="1" aria-pressed="false">本期</button>
+            </div>
+            <button id="expand-ring" class="expand" type="button" aria-expanded="false" aria-controls="ring-legend">展开 13 项</button>
+          </div>
+        </div>
+        <div class="ring-layout">
+          <div id="ring" class="donut" role="img" aria-label="需求特征提及构成示例">
+            <div class="donut-center" aria-hidden="true"><b id="ring-total"></b><small>提及次数</small></div>
+          </div>
+          <ul id="ring-legend" class="ring-legend" aria-label="标签和提及占比"></ul>
+        </div>
+        <figcaption>默认列出前 5 项，其余提及合为灰色「其他」。切到本期，「空间大」从第一降到第三，仍用主题蓝。展开后，每个标签恢复自己的颜色。</figcaption>
+        <span id="ring-status" class="sr-only" role="status"></span>
+      </figure>
+    </section>
+    <section class="chapter" id="comparison">
+      <h2>对比用色</h2>
+      <p class="lede">两个平级客群固定用蓝、紫。与全国或门店均值比较时，均值统一用灰色虚线，并在图例写明参照对象。</p>
+      <div class="role-list" id="role-colors" role="group" aria-label="固定用途及色值"></div>
+      <figure class="example">
+        <div class="example-head"><h3>客群质检合格率</h3><span class="caption">折线图 · 相同百分比刻度</span></div>
+        <svg class="trend" id="trend" role="img" aria-label="两个客群的质检合格率和门店均值，周一至周五"></svg>
+        <div class="trend-key" id="trend-key" aria-hidden="true"></div>
+        <figcaption>A 组用圆点，B 组用方点。均线建议用 2 px 灰线，每段 6 px、间隔 4 px，缩小或灰度查看时仍能找到参照。</figcaption>
+      </figure>
+      <ul class="guidance">
+        <li>图例、标记和导出图片使用同一颜色与点形。浅色上用深色数字，深色上用白字，也可以把数值移到色块外。</li>
+        <li>颜色表示成功、告警或失败时，沿用对应的业务状态色，并写明状态名称。「其他」表示已合并的真实类别，缺失数据单独显示「—」。</li>
+      </ul>
+    </section>
+    <noscript><p>请在浏览器启用 JavaScript 查看完整色卡与图表示例。五档蓝色从低到高为 #D8E6FF、#9EBDF6、#6092F5、#2563EB、#1E469D。</p></noscript>
+  </main>
+  <div id="copy-feedback" class="copy-feedback" role="status"></div>
+  <dialog id="manual-copy" aria-label="手动复制色值">
+    <form method="dialog">
+      <label for="manual-hex">复制 HEX 色值</label>
+      <input id="manual-hex" readonly spellcheck="false">
+      <p class="caption">色值已选中，可使用系统的复制操作。</p>
+      <button type="submit">完成</button>
+    </form>
+  </dialog>
+  <script src="../../shared/chart-palette.js?v=20261124-chart-palette-v1"></script>
+  <!-- Portable copy for designers who open this HTML file on its own. -->
+  <script type="application/json" id="palette-data">
+  {
+    "sequence": [
+      {"code":"S1","name":"低","hex":"#D8E6FF"},
+      {"code":"S2","name":"较低","hex":"#9EBDF6"},
+      {"code":"S3","name":"中","hex":"#6092F5"},
+      {"code":"S4","name":"主题蓝","hex":"#2563EB"},
+      {"code":"S5","name":"高","hex":"#1E469D"}
+    ],
+    "categories": [
+      {"code":"C01","name":"主题蓝","hex":"#2563EB"},
+      {"code":"C02","name":"晴空蓝","hex":"#55B2F2"},
+      {"code":"C03","name":"薄荷青","hex":"#38BDA5"},
+      {"code":"C04","name":"浅藤紫","hex":"#A58AEF"},
+      {"code":"C05","name":"杏橙","hex":"#F3A56C"},
+      {"code":"C06","name":"蔷薇粉","hex":"#DF749D"},
+      {"code":"C07","name":"蜜黄","hex":"#E9BD4D"},
+      {"code":"C08","name":"湖蓝","hex":"#177FA8"},
+      {"code":"C09","name":"嫩叶绿","hex":"#87C966"},
+      {"code":"C10","name":"鸢尾紫","hex":"#7755CD"},
+      {"code":"C11","name":"深青","hex":"#147C70"},
+      {"code":"C12","name":"冰蓝","hex":"#9CD0F4"},
+      {"code":"C13","name":"靛蓝","hex":"#475BAA"}
+    ],
+    "cohortB":"#7C3AED",
+    "reference":"#64748B",
+    "other":"#DCE3ED"
+  }
+  </script>
+  <script>
+    (() => {
+      const get = id => document.getElementById(id);
+      const palette = window.AIQCChartPalette || JSON.parse(get('palette-data').textContent);
+      const { sequence, categories } = palette;
+      const colorByCode = new Map(categories.map(color => [color.code, color.hex]));
+      const roles = [
+        { key: 'a', name: '客群 A', hex: colorByCode.get('C01') },
+        { key: 'b', name: '客群 B', hex: palette.cohortB },
+        { key: 'ref', name: '全国或门店均值', hex: palette.reference },
+        { key: 'other', name: '合并项「其他」', hex: palette.other }
+      ];
+      function showSwatches(id, list) {
+        get(id).innerHTML = list.map(({code, name, hex}) => `
+          <button type="button" class="swatch" style="--sample:${hex}" data-copy="${hex}" aria-label="复制 ${code} ${name} ${hex}">
+            <span class="sample" aria-hidden="true"></span>
+            <span class="name"><span class="index">${code}</span>${name}</span><code class="hex">${hex}</code>
+          </button>`).join('');
+      }
+      showSwatches('sequence-colors', sequence);
+      showSwatches('core-colors', categories.slice(0, 6));
+      showSwatches('extended-colors', categories.slice(6));
+      function keyMark(role) {
+        const classes = role.key === 'other' ? 'other-key' : 'line-key ' + role.key;
+        return `<i class="${classes}" style="--sample:${role.hex}" aria-hidden="true"></i>`;
+      }
+      get('role-colors').innerHTML = roles.map(role => `
+        <button class="copy-role" type="button" data-copy="${role.hex}" aria-label="复制 ${role.name} ${role.hex}">
+          ${keyMark(role)}<span>${role.name}</span><code class="hex">${role.hex}</code>
+        </button>`).join('');
+      get('trend-key').innerHTML = roles.slice(0, 3).map(role =>
+        `<span>${keyMark(role)}${role.key === 'ref' ? '门店均值' : role.name}</span>`).join('');
+
+      const heatRows = [
+        ['一店', [8, 26, 55, 73, 92]], ['二店', [0, 20, 40, 60, 80]], ['三店', [17, null, 59, 78, 100]]
+      ];
+      function heatCell(value) {
+        if (value === null) return '<td class="missing" aria-label="缺失数据">—</td>';
+        const index = Math.min(4, Math.floor(value / 20));
+        return `<td style="background:${sequence[index].hex};color:${index < 3 ? 'var(--ink)' : 'var(--paper)'}">${value}%</td>`;
+      }
+      get('heat-body').innerHTML = heatRows.map(([name, values]) =>
+        `<tr><th scope="row">${name}</th>${values.map(heatCell).join('')}</tr>`).join('');
+
+      const features = [
+        ['C01', '空间大', 24, 15], ['C02', '动力强', 17, 21], ['C03', '省油/省电', 14, 22],
+        ['C04', '安全配置', 11, 12], ['C05', '智能科技', 9, 3], ['C06', '外观好看', 6, 2],
+        ['C07', '性价比高', 5, 9], ['C08', '保值率高', 4, 4], ['C09', '保养便宜', 3, 2],
+        ['C10', '家用合适', 2, 4], ['C11', '跑网约车', 2, 1], ['C12', '接送孩子', 2, 3], ['C13', '后备箱大', 1, 2]
+      ];
+      let period = 0;
+      let expanded = false;
+      function renderRing() {
+        const ranked = features.map(([code, name, previous, current]) => ({
+          name, hex: colorByCode.get(code), count: period === 0 ? previous : current
+        })).sort((a, b) => b.count - a.count);
+        const total = ranked.reduce((sum, item) => sum + item.count, 0);
+        const visible = expanded ? ranked : ranked.slice(0, 5);
+        if (!expanded) visible.push({ name: '其他', hex: palette.other, count: ranked.slice(5).reduce((sum, item) => sum + item.count, 0) });
+        let angle = 0;
+        const stops = [];
+        for (const item of visible) {
+          const end = angle + item.count / total * 360;
+          const edge = end - Math.min(1.15, (end - angle) * .14);
+          stops.push(`${item.hex} ${angle}deg ${edge}deg`, `var(--paper) ${edge}deg ${end}deg`);
+          angle = end;
+        }
+        get('ring').style.backgroundImage = 'conic-gradient(' + stops.join(',') + ')';
+        get('ring-total').textContent = total;
+        const detail = (period === 0 ? '上期' : '本期') + '，共 ' + total + ' 次提及，' + (expanded ? '显示全部 13 项' : '显示前五项和其他');
+        get('ring').setAttribute('aria-label', detail);
+        get('ring-status').textContent = detail;
+        get('ring-legend').innerHTML = visible.map(({name, hex, count}) => `
+          <li><i class="arc" style="--sample:${hex}" aria-hidden="true"></i><span>${name}</span><b>${Math.round(count / total * 100)}%</b></li>`).join('');
+        get('expand-ring').textContent = expanded ? '收起至前 5 项' : '展开 13 项';
+        get('expand-ring').setAttribute('aria-expanded', String(expanded));
+        for (const button of document.querySelectorAll('[data-period]')) {
+          button.setAttribute('aria-pressed', String(Number(button.dataset.period) === period));
+        }
+      }
+      for (const button of document.querySelectorAll('[data-period]')) {
+        button.addEventListener('click', () => { period = Number(button.dataset.period); renderRing(); });
+      }
+      get('expand-ring').addEventListener('click', () => { expanded = !expanded; renderRing(); });
+      renderRing();
+
+      const trend = get('trend');
+      const days = ['周一', '周二', '周三', '周四', '周五'];
+      const trendSeries = [
+        { ...roles[0], values: [70, 78, 76, 88, 92] },
+        { ...roles[1], values: [68, 72, 81, 79, 85] },
+        { ...roles[2], name: '门店均值', values: [74, 75, 76, 77, 78] }
+      ];
+      function drawTrend() {
+        const width = trend.clientWidth;
+        if (!width) return;
+        const left = 47, right = width - 19, top = 15, bottom = 140;
+        const x = index => left + (right - left) * index / (days.length - 1);
+        const y = value => bottom - (value - 60) / 40 * (bottom - top);
+        trend.setAttribute('viewBox', `0 0 ${width} 176`);
+        const grid = [60, 80, 100].map(value => `<line x1="${left}" x2="${right}" y1="${y(value)}" y2="${y(value)}" stroke="var(--line)"/>
+          <text x="${left - 7}" y="${y(value) + 4}" text-anchor="end">${value}%</text>`).join('');
+        const ticks = days.map((day, i) => `<text x="${x(i)}" y="166" text-anchor="middle">${day}</text>`).join('');
+        const lines = [trendSeries[2], trendSeries[0], trendSeries[1]].map(series => {
+          const points = series.values.map((value, i) => `${x(i)},${y(value)}`).join(' ');
+          const isReference = series.key === 'ref';
+          const markers = isReference ? '' : series.values.map((value, i) => {
+            const title = `<title>${days[i]} ${series.name} ${value}%</title>`;
+            if (series.key === 'a') return `<circle cx="${x(i)}" cy="${y(value)}" r="4" fill="${series.hex}">${title}</circle>`;
+            return `<rect x="${x(i) - 3.5}" y="${y(value) - 3.5}" width="7" height="7" fill="${series.hex}">${title}</rect>`;
+          }).join('');
+          return `<polyline points="${points}" fill="none" stroke="${series.hex}" stroke-width="${isReference ? 2 : 2.6}" ${isReference ? 'stroke-dasharray="6 4"' : ''}/>${markers}`;
+        }).join('');
+        const description = trendSeries.map(s => s.name + '依次为 ' + s.values.join('%、') + '%').join('。');
+        trend.innerHTML = '<title>客群质检合格率</title><desc>周一至周五。' + description + '。</desc>' + grid + ticks + lines;
+      }
+      drawTrend();
+      if ('ResizeObserver' in window) new ResizeObserver(drawTrend).observe(trend);
+      else window.addEventListener('resize', drawTrend);
+
+      let feedbackTimer;
+      async function copyColor(hex) {
+        try {
+          await navigator.clipboard.writeText(hex);
+          clearTimeout(feedbackTimer);
+          get('copy-feedback').textContent = '已复制 ' + hex;
+          feedbackTimer = setTimeout(() => { get('copy-feedback').textContent = ''; }, 1800);
+        } catch {
+          const input = get('manual-hex');
+          input.value = hex;
+          get('manual-copy').showModal();
+          input.focus();
+          input.select();
+        }
+      }
+      document.addEventListener('click', event => {
+        const button = event.target.closest('[data-copy]');
+        if (button) copyColor(button.dataset.copy);
+      });
+    })();
+  </script>
+</body>
+</html>

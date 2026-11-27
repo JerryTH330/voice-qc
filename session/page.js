@@ -15,8 +15,9 @@ window.__AI_QC_DEFAULT_ROUTE = 'session';
     "../device-management/xlsx-export-utils.js?v=20261028-full-sync-v1",
     "../shared/field-settings-interactions.js?v=20261028-full-sync-v1",
     "../date-filter-component-utils.js?v=20261124-all-time-data-v1",
-    "../shared/unified-dashboard.js?v=20261124-all-time-data-v1",
-    "../app-runtime.js?v=20261124-customer-store-transition-v1",
+    "../shared/chart-palette.js?v=20261124-chart-palette-v1",
+    "../shared/unified-dashboard.js?v=20261124-chart-palette-v1",
+    "../app-runtime.js?v=20261124-chart-palette-v1",
     "./session-real-runtime.js?v=20261124-all-time-data-v1"
 ];
   const loadNext = (index) => {

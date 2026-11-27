@@ -846,7 +846,7 @@
       ]
     },
     "product_positive": {
-      "label": "产品提及·正向",
+      "label": "产品提及-正向",
       "sentiment": "positive",
       "description": "客户认可的产品项",
       "topics": [
@@ -908,7 +908,7 @@
       ]
     },
     "product_negative": {
-      "label": "产品提及·负向",
+      "label": "产品提及-负向",
       "sentiment": "negative",
       "description": "客户不满的产品项",
       "topics": [
@@ -970,7 +970,7 @@
       ]
     },
     "product_neutral": {
-      "label": "产品提及·中性",
+      "label": "产品提及-中性",
       "sentiment": "neutral",
       "description": "客户仅提及、未表达明确态度的产品项",
       "topics": [
@@ -1949,7 +1949,7 @@
       ]
     },
     "product_positive": {
-      "label": "产品提及·正向",
+      "label": "产品提及-正向",
       "sentiment": "positive",
       "description": "客户认可的产品项",
       "topics": [
@@ -2011,7 +2011,7 @@
       ]
     },
     "product_negative": {
-      "label": "产品提及·负向",
+      "label": "产品提及-负向",
       "sentiment": "negative",
       "description": "客户不满的产品项",
       "topics": [
@@ -2073,7 +2073,7 @@
       ]
     },
     "product_neutral": {
-      "label": "产品提及·中性",
+      "label": "产品提及-中性",
       "sentiment": "neutral",
       "description": "客户仅提及、未表达明确态度的产品项",
       "topics": [

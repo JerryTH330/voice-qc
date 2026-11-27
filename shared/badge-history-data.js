@@ -12,8 +12,6 @@ window.__BADGE_HISTORY_DATA = { events: [
       { type: 'recording-start', label: '开始录音', time: '08:05:00', icon: '录', color: 'blue' },
       { type: 'recording-end', label: '结束录音', time: '10:36:57', icon: '停', color: 'red' },
       { type: 'power-off', label: '工牌关机', time: '10:36:57', color: 'neutral' },
-      { type: 'charging-start', label: '开始充电', time: '10:36:59', icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: '11:35:58', icon: '满', color: 'neutral' },
       { type: 'power-on', label: '工牌开机', time: '11:36:00', color: 'green' },
       { type: 'recording-start', label: '开始录音', time: '11:36:13', icon: '录', color: 'blue' },
       { type: 'recording-end', label: '结束录音', time: '14:59:16', icon: '停', color: 'red' },
@@ -33,8 +31,6 @@ window.__BADGE_HISTORY_DATA = { events: [
       { type: 'recording-start', label: '开始录音', time: '08:45:00', icon: '录', color: 'blue' },
       { type: 'recording-end', label: '结束录音', time: '12:00:00', icon: '停', color: 'red' },
       { type: 'low-battery', label: '工牌电量预警', time: '16:00:00', icon: '低', color: 'red', note: '剩余电量 18%' },
-      { type: 'charging-start', label: '开始充电', time: '16:15:00', icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: '17:00:00', icon: '满', color: 'neutral' },
       { type: 'power-on', label: '工牌开机', time: '17:00:00', color: 'green' },
       { type: 'power-off', label: '工牌关机', time: '17:10:00', color: 'neutral' }
     ]

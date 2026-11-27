@@ -9,16 +9,6 @@ const pageMeta = {
     description: '查看工牌的绑定、录音、连接、剩余电量、剩余内存与上传状态',
     actions: [{ label: '字段设置', style: 'badge-field-settings-trigger', action: 'field-settings' }]
   },
-  management: {
-    title: '工牌管理',
-    description: '管理当前门店工牌与员工的绑定关系，支持换绑、解绑和移除',
-    actions: []
-  },
-  docks: {
-    title: '充电坞明细',
-    description: '按门店、状态和充电坞 SN 查看充电坞资产与子设备状态',
-    actions: []
-  },
   'store-badges': {
     title: '门店工牌明细',
     description: '查看当前门店绑定员工的录音、连接、剩余电量、剩余内存与上传状态',
@@ -73,7 +63,6 @@ const badgeEventTypeOptions = [
   ['power-on', '工牌开机'],
   ['power-off', '工牌关机'],
   ['recording', '录音'],
-  ['charging', '充电'],
   ['low-battery', '电量预警']
 ];
 const badgeEventMenuState = {
@@ -92,7 +81,7 @@ const visitEventMenuState = {
   focusReturnKey: null
 };
 const visitEventMenuMotion = { lastRendered: null };
-const badgeSecondaryEventTypes = new Set(['recording-start', 'recording-end', 'low-battery']);
+const badgeTimelineEventTypes = new Set(['power-on', 'power-off', 'recording-start', 'recording-end', 'low-battery']);
 const badgeEventIconAssets = {
   'power-on': 'power-on.svg',
   'power-off': 'power-off.svg'
@@ -2522,10 +2511,10 @@ function renderVisitEvents() {
   const { record, date, type } = visitEventFilterState;
   if (!record) return;
   const eventRecord = badgeEventRecords.find((item) => item.sn === record.badgeSn && item.date === date);
-  const events = (eventRecord?.events || []).slice().sort((left, right) => left.time.localeCompare(right.time));
+  const events = (eventRecord?.events || []).filter(event => badgeTimelineEventTypes.has(event.type))
+    .sort((left, right) => left.time.localeCompare(right.time));
   const count = events.filter((event) => type === 'all'
     || (type === 'recording' && ['recording-start', 'recording-end'].includes(event.type))
-    || (type === 'charging' && ['charging-start', 'charging-end'].includes(event.type))
     || event.type === type).length;
   visitEventResultSummary.textContent = `${date} · 共 ${count} 条`;
   if (window.ListSummaryCounters) window.ListSummaryCounters.update('visit-events', [{ node: visitEventResultSummary, value: count, format: value => `${date} · 共 ${Math.round(value)} 条` }],
@@ -2634,14 +2623,14 @@ function calculateBadgeMetricDuration(record, metric) {
   events.forEach(({ event, timestamp }) => {
     if (metric === 'power') {
       if (event.type === 'power-on' && activeStart === null) activeStart = timestamp;
-      if ((event.type === 'power-off' || event.type === 'charging-start') && activeStart !== null) {
+      if (event.type === 'power-off' && activeStart !== null) {
         addInterval(activeStart, timestamp);
         activeStart = null;
       }
       return;
     }
     if (event.type === 'recording-start' && activeStart === null) activeStart = timestamp;
-    if (['recording-end', 'power-off', 'charging-start'].includes(event.type) && activeStart !== null) {
+    if (['recording-end', 'power-off'].includes(event.type) && activeStart !== null) {
       addInterval(activeStart, timestamp);
       activeStart = null;
     }
@@ -2676,7 +2665,6 @@ function buildBadgeEventGroups(events) {
   const groups = [];
   let activeSession = null;
   let activeRecording = null;
-  let activeCharging = null;
   let sessionNumber = 0;
 
   function startSession(event) {
@@ -2686,7 +2674,6 @@ function buildBadgeEventGroups(events) {
       number: sessionNumber,
       start: event,
       end: null,
-      endReason: null,
       powerOns: [],
       powerOffs: [],
       recordings: [],
@@ -2697,12 +2684,9 @@ function buildBadgeEventGroups(events) {
   }
 
   events.forEach((event) => {
+    if (!badgeTimelineEventTypes.has(event.type)) return;
     if (event.type === 'power-on') {
-      if (!activeSession && !activeCharging) startSession(event);
-      if (!activeSession) {
-        groups.push({ kind: 'standalone', event, types: new Set([event.type]) });
-        return;
-      }
+      if (!activeSession) startSession(event);
       activeSession.powerOns.push(event);
       activeSession.types.add(event.type);
       activeRecording = null;
@@ -2710,11 +2694,7 @@ function buildBadgeEventGroups(events) {
     }
 
     if (event.type === 'recording-start') {
-      if (!activeSession && !activeCharging) startSession(event);
-      if (!activeSession) {
-        groups.push({ kind: 'standalone', event, types: new Set([event.type]) });
-        return;
-      }
+      if (!activeSession) startSession(event);
       activeRecording = { start: event, end: null };
       activeSession.recordings.push(activeRecording);
       activeSession.types.add(event.type);
@@ -2737,34 +2717,9 @@ function buildBadgeEventGroups(events) {
     if (event.type === 'power-off' && activeSession) {
       activeSession.powerOffs.push(event);
       activeSession.end = event;
-      activeSession.endReason = 'power-off';
       activeSession.types.add(event.type);
       activeSession = null;
       activeRecording = null;
-      return;
-    }
-
-    if (event.type === 'charging-start') {
-      if (activeSession) {
-        activeSession.end = event;
-        activeSession.endReason = 'charging-start';
-        activeSession = null;
-        activeRecording = null;
-      }
-      activeCharging = {
-        kind: 'charging',
-        start: event,
-        end: null,
-        types: new Set(['charging-start'])
-      };
-      groups.push(activeCharging);
-      return;
-    }
-
-    if (event.type === 'charging-end' && activeCharging) {
-      activeCharging.end = event;
-      activeCharging.types.add(event.type);
-      activeCharging = null;
       return;
     }
 
@@ -2775,18 +2730,6 @@ function buildBadgeEventGroups(events) {
 }
 
 function renderBadgeEventGroup(group, activeType) {
-  if (group.kind === 'charging') {
-    const endTime = group.end?.time || '进行中';
-    return `
-      <article class="event-group-card event-charge-card">
-        <div class="event-group-row event-charge-row">
-          <span class="event-dot green"><img src="../assets/device-event-icons/charging.svg" alt="" aria-hidden="true" /></span>
-          <div class="event-group-copy"><strong>充电</strong><p>${escapeBadgeHtml(group.start.time)} — ${escapeBadgeHtml(endTime)}</p></div>
-          <em>${group.end ? escapeBadgeHtml(formatBadgeEventDuration(group.start.time, group.end.time)) : '进行中'}</em>
-        </div>
-      </article>`;
-  }
-
   if (group.kind === 'session') {
     const showAllDetails = activeType === 'all';
     const detailRows = [];
@@ -2884,7 +2827,6 @@ function matchesBadgeEventGroupType(group, type) {
       || (group.kind === 'standalone' && group.event.type === 'power-off');
   }
   if (type === 'recording') return group.kind === 'session' && group.recordings.length > 0;
-  if (type === 'charging') return group.kind === 'charging';
   if (type === 'low-battery') {
     return (group.kind === 'session' && group.warnings.length > 0)
       || (group.kind === 'standalone' && group.event.type === 'low-battery');
@@ -3071,11 +3013,8 @@ const drawerBody = document.getElementById('drawerBody');
 const badgeRecordPageContent = document.getElementById('badgeRecordPageContent');
 const badgeRecordDrawer = document.getElementById('badgeRecordDrawer');
 const badgeRecordDrawerBackdrop = document.getElementById('badgeRecordDrawerBackdrop');
-const badgeRecordDrawerBody = document.getElementById('badgeRecordDrawerBody');
 const badgeRecordDrawerFilterHost = document.getElementById('badgeRecordDrawerFilterHost');
 const badgeRecordDrawerContentHost = document.getElementById('badgeRecordDrawerContentHost');
-const badgeRecordDrawerTitle = document.getElementById('badgeRecordDrawerTitle');
-const badgeRecordDrawerSubtitle = document.getElementById('badgeRecordDrawerSubtitle');
 const badgeFieldSettingsDrawer = document.getElementById('badgeFieldSettingsDrawer');
 let badgeFieldSettingsTrigger = null;
 const badgeFieldSettingsBackdrop = document.getElementById('badgeFieldSettingsBackdrop');
@@ -3084,12 +3023,6 @@ const badgeFieldSettingsSelectedCount = document.getElementById('badgeFieldSetti
 const badgeDetailRefreshButton = document.getElementById('badgeDetailRefreshButton');
 const badgeDetailRefreshLabel = document.querySelector('[data-badge-detail-refresh-label]');
 const badgeDetailExportButton = document.getElementById('badgeDetailExportButton');
-const badgeDockDrawerView = document.getElementById('badgeDockDrawerView');
-const badgeDockSubdeviceList = document.getElementById('badgeDockSubdeviceList');
-const badgeDockLogTimeline = document.getElementById('badgeDockLogTimeline');
-const badgeDockRefreshBtn = document.getElementById('badgeDockRefreshBtn');
-const badgeDockEventControl = document.getElementById('badgeDockEventControl');
-const badgeDockDateControl = document.getElementById('badgeDockDateControl');
 let badgeRecordDrawerTrigger = null;
 let badgeRecordDrawerCloseTimer = 0;
 let badgeDetailRefreshTimer = 0;
@@ -3164,7 +3097,7 @@ const storeDateMenuState = {
   viewYear: storeDefaultQueryDateObject.getFullYear(), viewMonth: storeDefaultQueryDateObject.getMonth() + 1
 };
 
-const badgeTypes = ['充电坞版本工牌', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
+const badgeTypes = ['—', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE'];
 
 function isBadgeWifiCapable(badgeType) {
   return String(badgeType || '') !== '4G版本工牌';
@@ -3222,7 +3155,6 @@ const badgeDetailRecords = window.AIQCData ? window.AIQCData.badges : (sharedOrg
   const battery = index === 6 ? 100 : index % 25 === 0 && index < 425 ? 7 + (index % 13) : 56 + ((index * 7) % 43);
   const usedMemory = 28 + ((index * 13) % 68);
   const pendingUploads = index % 48 === 0 ? 1 + (index % 6) : 0;
-  const dockConnected = index % 4 === 0;
   return {
     ...organization,
     queryDate: store.syncedAt.slice(0, 10),
@@ -3233,7 +3165,6 @@ const badgeDetailRecords = window.AIQCData ? window.AIQCData.badges : (sharedOrg
     badgeStatus: getGeneratedBadgeStatus(index),
     recordingStatus: recording ? '录音中' : '未录音',
     connectionStatus: isBadgeWifiCapable(badgeType) ? (connected ? '已连接' : '未连接') : '—',
-    dockConnected,
     signal: index % 3 === 0 ? '信号良好' : index % 3 === 1 ? '一般' : '较弱',
     battery,
     remainingMemory: 100 - usedMemory,
@@ -3277,8 +3208,6 @@ function buildGeneratedBadgeEvents(detailRecord) {
       { type: 'recording-start', label: '开始录音', time: at(4 * 60 * 60 + 35 * 60), icon: '录', color: 'blue' },
       { type: 'recording-end', label: '结束录音', time: at(5 * 60 * 60 + 28 * 60), icon: '停', color: 'red' },
       { type: 'power-off', label: '工牌关机', time: at(7 * 60 * 60 + 5 * 60), color: 'neutral' },
-      { type: 'charging-start', label: '开始充电', time: at(7 * 60 * 60 + 8 * 60), icon: '充', color: 'violet' },
-      { type: 'charging-end', label: '结束充电', time: at(8 * 60 * 60 + 2 * 60), icon: '满', color: 'neutral' },
       { type: 'power-on', label: '工牌开机', time: at(8 * 60 * 60 + 2 * 60), color: 'green' },
       { type: 'power-off', label: '工牌关机', time: at(9 * 60 * 60), color: 'neutral' }
     );
@@ -3322,98 +3251,6 @@ function getBadgeEventRecords(sn, date) {
   return record ? [record] : [];
 }
 
-const dockDetailRecords = [{
-  index: 22,
-  sn: 'GAC-DCK-DEMO-001',
-  brand: '广汽埃安',
-  region: '华东大区',
-  zone: '上海战区',
-  store: '上海浦东体验中心',
-  storeCode: 'SH-PD-001',
-  status: '离线',
-  hasBoundBadges: false
-}, ...storeOverviewRecords.flatMap((store, storeIndex) => Array.from({ length: 2 }, (_, dockIndex) => {
-  const index = storeIndex * 2 + dockIndex;
-  return {
-    index,
-    sn: `GAC-DCK-${String(21001 + index * 13).padStart(6, '0')}`,
-    brand: '广汽埃安',
-    region: store.organization,
-    zone: store.zone,
-    store: store.name,
-    storeCode: store.code,
-    status: index % 4 === 0 ? '离线' : '在线',
-    hasBoundBadges: true
-  };
-}))];
-
-let activeDockDetailRecord = null;
-let dockSubdeviceRecords = [];
-let dockLogRecords = [];
-const badgeDockEventOptions = [
-  '充电坞上线',
-  '充电坞下线',
-  '工牌上线',
-  '工牌下线',
-  '录音上传完成',
-  '当天录音上传完成',
-  '设备日志上传完成',
-  '定位日志上传完成'
-];
-
-function buildDockDrawerRecords(dockRecord) {
-  const storeBadges = badgeDetailRecords.filter((item) => item.store === dockRecord.store);
-  const deviceCount = Math.min(storeBadges.length, 2 + (dockRecord.index % 3));
-  const startIndex = (dockRecord.index * 3) % Math.max(1, storeBadges.length);
-  dockSubdeviceRecords = Array.from({ length: deviceCount }, (_, offset) => storeBadges[(startIndex + offset) % storeBadges.length])
-    .filter(Boolean)
-    .map((badge, offset) => ({
-      port: `端口 ${offset + 1}`,
-      sn: badge.sn,
-      employee: badge.advisorName,
-      availableSpace: `${Math.max(2.4, badge.remainingMemory * 0.32).toFixed(1)} GB`,
-      battery: badge.battery,
-      capturedAt: `${storeTodayDateValue.replaceAll('-', '/')} ${String(14 - offset).padStart(2, '0')}:${String(11 + dockRecord.index).padStart(2, '0')}:02`
-    }));
-  const logEvents = badgeDockEventOptions.filter((eventName) => !eventName.startsWith('充电坞'));
-  dockLogRecords = [];
-  for (let daysAgo = 0; daysAgo < 7; daysAgo += 1) {
-    const date = parseStoreDateValue(storeTodayDateValue);
-    date.setDate(date.getDate() - daysAgo);
-    const dateText = formatStoreDateValue(date).replaceAll('-', '/');
-    dockSubdeviceRecords.forEach((device, deviceIndex) => {
-      const hour = 9 + ((dockRecord.index + deviceIndex + daysAgo) % 7);
-      dockLogRecords.push({
-        time: `${dateText} ${String(hour).padStart(2, '0')}:${String(12 + deviceIndex * 9).padStart(2, '0')}:${String(10 + daysAgo).padStart(2, '0')}`,
-        event: logEvents[(dockRecord.index + deviceIndex + daysAgo) % logEvents.length],
-        sn: device.sn,
-        employee: device.employee
-      });
-    });
-    if (daysAgo === 0 || daysAgo === 3) {
-      dockLogRecords.push({
-        time: `${dateText} 08:${String(20 + dockRecord.index).padStart(2, '0')}:05`,
-        event: daysAgo === 0 ? '充电坞上线' : '充电坞下线',
-        sn: '-',
-        employee: '-'
-      });
-    }
-  }
-  dockLogRecords.sort((left, right) => right.time.localeCompare(left.time));
-}
-
-const badgeDockDateDefaultFilters = { startDate: '', endDate: '' };
-const badgeDockDateFilterState = { ...badgeDockDateDefaultFilters };
-const badgeDockEventFilterState = { selectedEvents: new Set(badgeDockEventOptions) };
-const badgeDockEventMenuState = { open: false };
-const badgeDockDateMenuState = {
-  open: false,
-  dateDraftStartDate: badgeDockDateDefaultFilters.startDate,
-  dateDraftEndDate: badgeDockDateDefaultFilters.endDate,
-  activeDateField: 'startDate',
-  dateViewYear: storeDefaultQueryDateObject.getFullYear(),
-  dateViewMonth: storeDefaultQueryDateObject.getMonth() + 1
-};
 const badgeFieldDefinitions = Object.freeze([
   { key: 'brand', label: '品牌', filterType: 'select', organizationLevel: 0, idKey: 'brandId', nameKey: 'brand' },
   { key: 'region', label: '大区', filterType: 'select', organizationLevel: 1, idKey: 'regionId', nameKey: 'region' },
@@ -3432,7 +3269,6 @@ const badgeFieldDefinitions = Object.freeze([
   { key: 'badgeStatus', label: '工牌状态', filterType: 'select' },
   { key: 'recordingStatus', label: '录音状态', filterType: 'select' },
   { key: 'connectionStatus', label: 'WiFi 连接', filterType: 'select' },
-  { key: 'dockConnected', label: '是否接入充电坞', filterType: 'select' },
   { key: 'signal', label: '信号', filterType: 'select' },
   { key: 'battery', label: '剩余电量', filterType: 'numberRange', minKey: 'batteryMin', maxKey: 'batteryMax', unit: '%' },
   { key: 'remainingMemory', label: '剩余内存', filterType: 'numberRange', minKey: 'memoryMin', maxKey: 'memoryMax', unit: '%' },
@@ -3523,7 +3359,6 @@ const badgeDefaultFilters = {
   badgeStatus: [],
   recordingStatus: [],
   connectionStatus: '全部',
-  dockConnected: '全部',
   signal: '全部',
   batteryMin: '',
   batteryMax: '',
@@ -3713,17 +3548,6 @@ function playRecordDrawerMenuMotion(container, state, motion, onExitDone) {
 }
 
 const badgePaginationState = { page: 1, pageSize: 10 };
-const dockDefaultFilters = {
-  store: '全部门店',
-  snQuery: '',
-  status: '全部'
-};
-const dockFilterState = { ...dockDefaultFilters };
-const dockMenuState = {
-  openMenu: '',
-  storeQuery: ''
-};
-const dockPaginationState = { page: 1, pageSize: 10 };
 const storeDrilldownState = {
   active: false,
   storeCode: '',
@@ -3742,513 +3566,6 @@ function escapeBadgeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
-}
-
-const badgeManagementDealer = sharedOrganizationDirectory?.dealers?.[0] || {
-  dealerCode: 'DEMO-001',
-  dealerName: '示例门店',
-  advisors: []
-};
-const badgeManagementDirectoryEmployees = [
-  { employeeId: `AION-${badgeManagementDealer.dealerCode}-06`, employeeName: '陆思远', storeName: badgeManagementDealer.dealerName },
-  { employeeId: `AION-${badgeManagementDealer.dealerCode}-07`, employeeName: '沈嘉怡', storeName: badgeManagementDealer.dealerName },
-  { employeeId: `AION-${badgeManagementDealer.dealerCode}-08`, employeeName: '林知夏', storeName: badgeManagementDealer.dealerName },
-  { employeeId: `AION-${badgeManagementDealer.dealerCode}-09`, employeeName: '许安然', storeName: badgeManagementDealer.dealerName }
-];
-const badgeManagementEmployees = [
-  ...(badgeManagementDealer.advisors || []).map((advisor) => ({
-    employeeId: advisor.advisorId,
-    employeeName: advisor.advisorName,
-    storeName: badgeManagementDealer.dealerName
-  })),
-  { ...badgeManagementDirectoryEmployees[0] }
-];
-const badgeManagementBadges = badgeDetailRecords
-  .filter((item) => (item.brand || item.dealer?.brand) === badgeManagementDealer.brand
-    && (item.dealerCode || item.dealer?.dealerCode) === badgeManagementDealer.dealerCode)
-  .map((item) => ({
-    sn: item.sn,
-    employeeId: item.advisorId,
-    connectionStatus: item.connectionStatus,
-    battery: item.battery,
-    syncedAt: item.syncedAt
-  }));
-for (const badge of badgeManagementBadges) {
-  if (!badge.employeeId || badgeManagementEmployees.some((employee) => employee.employeeId === badge.employeeId)) continue;
-  const asset = badgeDetailRecords.find((item) => item.sn === badge.sn);
-  badgeManagementEmployees.push({ employeeId: badge.employeeId, employeeName: asset.advisorName || '姓名未提供', storeName: badgeManagementDealer.dealerName });
-}
-const badgeManagementState = {
-  query: '',
-  status: '全部',
-  openMenuSn: '',
-  activeSn: '',
-  memberOpen: false,
-  memberQuery: '',
-  selectedEmployeeId: '',
-  directoryQuery: '',
-  selectedDirectoryIds: new Set(),
-  confirmAction: '',
-  confirmSn: ''
-};
-
-function getBadgeManagementEmployee(employeeId) {
-  return badgeManagementEmployees.find((employee) => employee.employeeId === employeeId) || null;
-}
-
-function getBadgeManagementBinding(employeeId) {
-  return badgeManagementBadges.find((badge) => badge.employeeId === employeeId) || null;
-}
-
-function getBadgeManagementRecords() {
-  const query = badgeManagementState.query.trim().toLocaleLowerCase('zh-CN');
-  return badgeManagementBadges.filter((badge) => {
-    const employee = getBadgeManagementEmployee(badge.employeeId);
-    const status = employee ? '已绑定' : '未绑定';
-    if (badgeManagementState.status !== '全部' && badgeManagementState.status !== status) return false;
-    if (!query) return true;
-    return `${badge.sn} ${employee?.employeeName || ''} ${employee?.employeeId || ''}`.toLocaleLowerCase('zh-CN').includes(query);
-  });
-}
-
-function renderBadgeManagementPage() {
-  window.ListHeaderActions?.sync('management');
-  const storeName = document.getElementById('badgeManagementStoreName');
-  const count = document.getElementById('badgeManagementCount');
-  const tableBody = document.getElementById('badgeManagementTableBody');
-  if (!storeName || !count || !tableBody) return;
-  const records = getBadgeManagementRecords();
-  storeName.textContent = badgeManagementDealer.dealerName;
-  count.textContent = records.length;
-  if (window.ListSummaryCounters) window.ListSummaryCounters.update('badge-management', [{ node: count, value: records.length }],
-    { root: count.closest('.session-filter-summary') });
-  if (badgeManagementState.openMenuSn && !records.some((badge) => badge.sn === badgeManagementState.openMenuSn)) {
-    badgeManagementState.openMenuSn = '';
-  }
-  tableBody.innerHTML = records.length ? records.map((badge) => {
-    const employee = getBadgeManagementEmployee(badge.employeeId);
-    const menuOpen = badgeManagementState.openMenuSn === badge.sn;
-    return `<tr data-badge-management-row="${escapeBadgeHtml(badge.sn)}">
-      <td><strong class="badge-management-sn-text">${escapeBadgeHtml(badge.sn)}</strong></td>
-      <td><span class="badge-management-employee-name${employee ? '' : ' unbound'}">${escapeBadgeHtml(employee?.employeeName || '未绑定员工')}</span></td>
-      <td><span class="badge-management-employee-id">${escapeBadgeHtml(employee?.employeeId || '—')}</span></td>
-      <td><span class="badge-management-bind-tag${employee ? '' : ' unbound'}">${employee ? '已绑定' : '未绑定'}</span></td>
-      <td><span class="badge-management-connection-status${badge.connectionStatus === '已连接' ? ' connected' : ''}">${escapeBadgeHtml(badge.connectionStatus)}</span></td>
-      <td><span class="badge-management-battery">${escapeBadgeHtml(`${badge.battery}%`)}</span></td>
-      <td><span class="badge-management-sync-time">${escapeBadgeHtml(badge.syncedAt)}</span></td>
-      <td class="badge-management-operation-cell">
-        <div class="badge-management-row-menu-wrap">
-          <button class="badge-management-row-menu-button" type="button" data-badge-management-menu="${escapeBadgeHtml(badge.sn)}" aria-label="打开 ${escapeBadgeHtml(badge.sn)} 操作菜单" aria-expanded="${menuOpen}">…</button>
-          ${menuOpen ? `<div class="badge-management-row-menu" role="menu">
-            <button type="button" role="menuitem" data-badge-management-action="rebind" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}">换绑成员</button>
-            <button type="button" role="menuitem" data-badge-management-action="unbind" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}"${employee ? '' : ' disabled title="该工牌当前未绑定员工"'}>解绑成员</button>
-            <button class="danger" type="button" role="menuitem" data-badge-management-action="remove" data-badge-management-sn="${escapeBadgeHtml(badge.sn)}">移除工牌</button>
-          </div>` : ''}
-        </div>
-      </td>
-    </tr>`;
-  }).join('') : '<tr class="session-empty-row badge-management-empty-row"><td colspan="8"><strong>未找到符合条件的工牌</strong><span>请调整搜索内容或绑定状态</span></td></tr>';
-}
-
-function renderBadgeManagementMemberOptions() {
-  const options = document.getElementById('badgeManagementMemberOptions');
-  if (!options) return;
-  const query = badgeManagementState.memberQuery.trim().toLocaleLowerCase('zh-CN');
-  const employees = badgeManagementEmployees.filter((employee) => !query
-    || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query));
-  options.innerHTML = employees.length ? employees.map((employee) => {
-    const binding = getBadgeManagementBinding(employee.employeeId);
-    const selected = employee.employeeId === badgeManagementState.selectedEmployeeId;
-    return `<button class="badge-management-member-option${selected ? ' active' : ''}" type="button" data-badge-management-member-option="${escapeBadgeHtml(employee.employeeId)}"${binding ? ` disabled title="已绑定工牌 ${escapeBadgeHtml(binding.sn)}"` : ''}>
-      <span><strong>${escapeBadgeHtml(employee.employeeName)}</strong><small>${escapeBadgeHtml(employee.employeeId)}</small></span>
-      <em>${binding ? `已绑定 · ${escapeBadgeHtml(binding.sn)}` : '未绑定'}</em>
-    </button>`;
-  }).join('') : '<div class="badge-management-option-empty">未找到符合条件的员工</div>';
-}
-
-function renderBadgeManagementMemberModal() {
-  const snInput = document.getElementById('badgeManagementMemberSn');
-  const value = document.getElementById('badgeManagementMemberValue');
-  const trigger = document.querySelector('[data-badge-management-member-trigger]');
-  const panel = document.getElementById('badgeManagementMemberPanel');
-  const submit = document.getElementById('badgeManagementMemberSubmit');
-  const search = document.querySelector('[data-badge-management-member-search]');
-  if (!snInput || !value || !trigger || !panel || !submit) return;
-  const employee = getBadgeManagementEmployee(badgeManagementState.selectedEmployeeId);
-  snInput.value = badgeManagementState.activeSn;
-  value.textContent = employee ? `${employee.employeeName}（${employee.employeeId}）` : '请选择成员';
-  trigger.classList.toggle('has-value', Boolean(employee));
-  trigger.setAttribute('aria-expanded', String(badgeManagementState.memberOpen));
-  panel.hidden = !badgeManagementState.memberOpen;
-  submit.disabled = !employee;
-  if (search) search.value = badgeManagementState.memberQuery;
-  renderBadgeManagementMemberOptions();
-}
-
-function openBadgeManagementMemberModal(sn) {
-  badgeManagementState.openMenuSn = '';
-  badgeManagementState.activeSn = sn;
-  badgeManagementState.selectedEmployeeId = '';
-  badgeManagementState.memberQuery = '';
-  badgeManagementState.memberOpen = false;
-  renderBadgeManagementPage();
-  renderBadgeManagementMemberModal();
-  openModal(document.getElementById('badgeManagementMemberModal'));
-}
-
-function closeBadgeManagementMemberModal() {
-  badgeManagementState.memberOpen = false;
-  closeModal(document.getElementById('badgeManagementMemberModal'));
-}
-
-function renderBadgeManagementDirectory() {
-  const list = document.getElementById('badgeManagementDirectoryList');
-  const submit = document.getElementById('badgeManagementAddSubmit');
-  const selectedCount = document.getElementById('badgeManagementSelectedCount');
-  const selectAll = document.querySelector('[data-badge-management-select-all]');
-  if (!list || !submit || !selectedCount || !selectAll) return;
-  const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
-  const query = badgeManagementState.directoryQuery.trim().toLocaleLowerCase('zh-CN');
-  const available = badgeManagementDirectoryEmployees.filter((employee) => !existingIds.has(employee.employeeId));
-  const visible = available.filter((employee) => !query
-    || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query));
-  list.innerHTML = visible.length ? visible.map((employee) => `<label class="badge-management-directory-item">
-    <input type="checkbox" data-badge-management-directory-option="${escapeBadgeHtml(employee.employeeId)}"${badgeManagementState.selectedDirectoryIds.has(employee.employeeId) ? ' checked' : ''} />
-    <span><strong>${escapeBadgeHtml(employee.employeeName)}</strong><small>${escapeBadgeHtml(employee.employeeId)}</small></span>
-    <em>${escapeBadgeHtml(employee.storeName)}</em>
-  </label>`).join('') : '<div class="badge-management-option-empty">未找到可导入的当前门店员工</div>';
-  const selectedAvailableCount = available.filter((employee) => badgeManagementState.selectedDirectoryIds.has(employee.employeeId)).length;
-  selectedCount.textContent = `已选择 ${selectedAvailableCount} 人`;
-  submit.disabled = selectedAvailableCount === 0;
-  const visibleIds = visible.map((employee) => employee.employeeId);
-  const selectedVisibleCount = visibleIds.filter((id) => badgeManagementState.selectedDirectoryIds.has(id)).length;
-  selectAll.checked = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
-  selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleIds.length;
-}
-
-function openBadgeManagementAddModal() {
-  badgeManagementState.memberOpen = false;
-  badgeManagementState.directoryQuery = '';
-  badgeManagementState.selectedDirectoryIds = new Set();
-  closeModal(document.getElementById('badgeManagementMemberModal'));
-  const search = document.querySelector('[data-badge-management-directory-search]');
-  if (search) search.value = '';
-  renderBadgeManagementDirectory();
-  openModal(document.getElementById('badgeManagementAddModal'));
-}
-
-function closeBadgeManagementAddModal({ returnToMember = true } = {}) {
-  closeModal(document.getElementById('badgeManagementAddModal'));
-  if (returnToMember && badgeManagementState.activeSn) {
-    renderBadgeManagementMemberModal();
-    openModal(document.getElementById('badgeManagementMemberModal'));
-  }
-}
-
-function openBadgeManagementConfirm(action, sn) {
-  const badge = badgeManagementBadges.find((item) => item.sn === sn);
-  if (!badge) return;
-  const employee = getBadgeManagementEmployee(badge.employeeId);
-  const title = document.getElementById('badgeManagementConfirmTitle');
-  const descriptionNode = document.getElementById('badgeManagementConfirmDescription');
-  const detail = document.getElementById('badgeManagementConfirmDetail');
-  const icon = document.getElementById('badgeManagementConfirmIcon');
-  const submit = document.getElementById('badgeManagementConfirmSubmit');
-  badgeManagementState.openMenuSn = '';
-  badgeManagementState.confirmAction = action;
-  badgeManagementState.confirmSn = sn;
-  renderBadgeManagementPage();
-  if (action === 'unbind') {
-    title.textContent = '确认解绑成员';
-    descriptionNode.textContent = '解绑后，该工牌将变为未绑定状态，仍保留在当前工牌列表中。';
-    submit.textContent = '确认解绑';
-    submit.className = 'btn primary';
-    icon.className = 'badge-management-confirm-icon';
-  } else {
-    title.textContent = '确认移除工牌';
-    descriptionNode.textContent = employee
-      ? '移除后将清除该工牌当前数据，并同步解除员工绑定；历史录音、事件和绑定记录不会删除。'
-      : '移除后将清除该工牌当前数据；历史录音、事件和绑定记录不会删除。';
-    submit.textContent = '确认移除';
-    submit.className = 'btn danger';
-    icon.className = 'badge-management-confirm-icon danger';
-  }
-  detail.innerHTML = `<strong>工牌 SN：${escapeBadgeHtml(sn)}</strong><br />当前成员：${escapeBadgeHtml(employee ? `${employee.employeeName}（${employee.employeeId}）` : '未绑定')}`;
-  openModal(document.getElementById('badgeManagementConfirmModal'));
-}
-
-function closeBadgeManagementConfirm() {
-  closeModal(document.getElementById('badgeManagementConfirmModal'));
-  badgeManagementState.confirmAction = '';
-  badgeManagementState.confirmSn = '';
-}
-
-function submitBadgeManagementRebind() {
-  const badge = badgeManagementBadges.find((item) => item.sn === badgeManagementState.activeSn);
-  const employee = getBadgeManagementEmployee(badgeManagementState.selectedEmployeeId);
-  if (!badge || !employee) return;
-  const existingBinding = getBadgeManagementBinding(employee.employeeId);
-  if (existingBinding) {
-    showToast(`该员工已绑定工牌：${existingBinding.sn}`, 'error');
-    badgeManagementState.selectedEmployeeId = '';
-    renderBadgeManagementMemberModal();
-    return;
-  }
-  badge.employeeId = employee.employeeId;
-  closeBadgeManagementMemberModal();
-  renderBadgeManagementPage();
-  showToast('换绑成功', 'success');
-}
-
-function submitBadgeManagementDirectory() {
-  const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
-  const imported = badgeManagementDirectoryEmployees.filter((employee) => badgeManagementState.selectedDirectoryIds.has(employee.employeeId) && !existingIds.has(employee.employeeId));
-  if (!imported.length) return;
-  badgeManagementEmployees.push(...imported.map((employee) => ({ ...employee })));
-  badgeManagementState.selectedDirectoryIds = new Set();
-  closeBadgeManagementAddModal({ returnToMember: true });
-  renderBadgeManagementMemberModal();
-  showToast(`人员添加成功，共 ${imported.length} 人`, 'success');
-}
-
-function submitBadgeManagementConfirm() {
-  const badgeIndex = badgeManagementBadges.findIndex((item) => item.sn === badgeManagementState.confirmSn);
-  if (badgeIndex < 0) {
-    closeBadgeManagementConfirm();
-    showToast('该工牌已被移除', 'error');
-    return;
-  }
-  if (badgeManagementState.confirmAction === 'unbind') {
-    badgeManagementBadges[badgeIndex].employeeId = '';
-    closeBadgeManagementConfirm();
-    renderBadgeManagementPage();
-    showToast('解绑成功', 'success');
-    return;
-  }
-  badgeManagementBadges.splice(badgeIndex, 1);
-  closeBadgeManagementConfirm();
-  renderBadgeManagementPage();
-  showToast('工牌已移除', 'success');
-}
-
-function handleBadgeManagementClick(event) {
-  const menuButton = event.target.closest('[data-badge-management-menu]');
-  if (menuButton) {
-    const sn = menuButton.dataset.badgeManagementMenu;
-    badgeManagementState.openMenuSn = badgeManagementState.openMenuSn === sn ? '' : sn;
-    renderBadgeManagementPage();
-    return true;
-  }
-
-  const actionButton = event.target.closest('[data-badge-management-action]');
-  if (actionButton && !actionButton.disabled) {
-    const { badgeManagementAction: action, badgeManagementSn: sn } = actionButton.dataset;
-    if (action === 'rebind') openBadgeManagementMemberModal(sn);
-    else openBadgeManagementConfirm(action, sn);
-    return true;
-  }
-
-  if (event.target.closest('[data-badge-management-member-trigger]')) {
-    badgeManagementState.memberOpen = !badgeManagementState.memberOpen;
-    renderBadgeManagementMemberModal();
-    if (badgeManagementState.memberOpen) window.requestAnimationFrame(() => document.querySelector('[data-badge-management-member-search]')?.focus());
-    return true;
-  }
-
-  const memberOption = event.target.closest('[data-badge-management-member-option]');
-  if (memberOption && !memberOption.disabled) {
-    badgeManagementState.selectedEmployeeId = memberOption.dataset.badgeManagementMemberOption;
-    badgeManagementState.memberOpen = false;
-    renderBadgeManagementMemberModal();
-    return true;
-  }
-
-  if (event.target.closest('[data-badge-management-open-add]')) {
-    openBadgeManagementAddModal();
-    return true;
-  }
-  if (event.target.closest('[data-badge-management-member-submit]')) {
-    submitBadgeManagementRebind();
-    return true;
-  }
-  if (event.target.closest('.badge-management-modal-close') || event.target === document.getElementById('badgeManagementMemberModal')) {
-    closeBadgeManagementMemberModal();
-    return true;
-  }
-  if (event.target.closest('.badge-management-add-close') || event.target === document.getElementById('badgeManagementAddModal')) {
-    closeBadgeManagementAddModal({ returnToMember: true });
-    return true;
-  }
-  if (event.target.closest('[data-badge-management-select-all]')) {
-    const checkbox = event.target.closest('[data-badge-management-select-all]');
-    const existingIds = new Set(badgeManagementEmployees.map((employee) => employee.employeeId));
-    const query = badgeManagementState.directoryQuery.trim().toLocaleLowerCase('zh-CN');
-    const visibleIds = badgeManagementDirectoryEmployees
-      .filter((employee) => !existingIds.has(employee.employeeId))
-      .filter((employee) => !query || `${employee.employeeName} ${employee.employeeId}`.toLocaleLowerCase('zh-CN').includes(query))
-      .map((employee) => employee.employeeId);
-    visibleIds.forEach((id) => checkbox.checked ? badgeManagementState.selectedDirectoryIds.add(id) : badgeManagementState.selectedDirectoryIds.delete(id));
-    renderBadgeManagementDirectory();
-    return true;
-  }
-  if (event.target.closest('[data-badge-management-add-submit]')) {
-    submitBadgeManagementDirectory();
-    return true;
-  }
-  if (event.target.closest('.badge-management-confirm-close') || event.target === document.getElementById('badgeManagementConfirmModal')) {
-    closeBadgeManagementConfirm();
-    return true;
-  }
-  if (event.target.closest('[data-badge-management-confirm-submit]')) {
-    submitBadgeManagementConfirm();
-    return true;
-  }
-  if (event.target.closest('[data-badge-management-reset]')) {
-    badgeManagementState.query = '';
-    badgeManagementState.status = '全部';
-    const search = document.querySelector('[data-badge-management-search]');
-    const status = document.querySelector('[data-badge-management-status]');
-    if (search) search.value = '';
-    if (status) status.value = '全部';
-    renderBadgeManagementPage();
-    showToast('筛选条件已重置');
-    return true;
-  }
-  if (badgeManagementState.openMenuSn && !event.target.closest('.badge-management-row-menu')) {
-    badgeManagementState.openMenuSn = '';
-    renderBadgeManagementPage();
-  }
-  return false;
-}
-
-function renderDockStoreMenu() {
-  const query = dockMenuState.storeQuery.trim().toLocaleLowerCase('zh-CN');
-  const stores = [...new Set(dockDetailRecords.map((item) => item.store))]
-    .filter((store) => !query || store.toLocaleLowerCase('zh-CN').includes(query))
-    .sort((left, right) => left.localeCompare(right, 'zh-CN'));
-  return `
-    <div class="session-menu-panel dock-store-menu" data-dock-menu-panel="store">
-      <div class="dock-store-options" id="dockStoreOptions" role="listbox" aria-label="门店选项">
-        <button type="button" role="option" aria-selected="${dockFilterState.store === '全部门店'}" class="session-menu-option${dockFilterState.store === '全部门店' ? ' active' : ''}" data-dock-store-option="全部门店"><span>全部门店</span></button>
-        ${stores.length ? stores.map((store) => `<button type="button" role="option" aria-selected="${dockFilterState.store === store}" class="session-menu-option${dockFilterState.store === store ? ' active' : ''}" data-dock-store-option="${escapeBadgeHtml(store)}"><span>${escapeBadgeHtml(store)}</span></button>`).join('') : '<div class="dock-store-empty">未找到匹配门店</div>'}
-      </div>
-    </div>`;
-}
-
-function renderDockStatusMenu() {
-  return `
-    <div class="session-menu-panel dock-status-menu" data-dock-menu-panel="status">
-      <div class="session-menu-option-list" role="listbox" aria-label="状态选项">
-        ${['全部', '在线', '离线'].map((option) => `<button type="button" role="option" aria-selected="${dockFilterState.status === option}" class="session-menu-option${dockFilterState.status === option ? ' active' : ''}" data-dock-status="${option}"><span>${option}</span></button>`).join('')}
-      </div>
-    </div>`;
-}
-
-function renderDockSearchControl(key, label, value) {
-  return `
-    <label class="session-toolbar-control session-toolbar-control-search-field">
-      <span>${label}</span>
-      <input type="search" class="session-search-input badge-search-input" value="${escapeBadgeHtml(value)}" placeholder="请输入${label}" data-dock-search="${key}" />
-    </label>`;
-}
-
-function renderDockFilters() {
-  const container = document.getElementById('dockDetailFilterControls');
-  if (!container) return;
-  const storeOpen = dockMenuState.openMenu === 'store';
-  const statusOpen = dockMenuState.openMenu === 'status';
-  const storeSearchActive = storeOpen || Boolean(dockMenuState.storeQuery.trim());
-  container.innerHTML = `
-    <div class="session-filter-row session-filter-row-main dock-filter-row-main">
-      <div class="session-toolbar-control session-toolbar-control-org session-toolbar-menu${storeOpen ? ' is-open' : ''}" data-dock-menu-root="store">
-        <span>门店</span>
-        <div class="session-select-trigger session-select-trigger-search${storeOpen ? ' active' : ''}">
-          <div class="session-select-trigger-search-main">
-            <input type="search" class="session-select-trigger-search-input${storeSearchActive ? '' : ' is-display-mode'}" value="${escapeBadgeHtml(storeSearchActive ? dockMenuState.storeQuery : '')}" placeholder="${escapeBadgeHtml(storeSearchActive ? '搜索门店名称' : dockFilterState.store)}" data-dock-store-search role="combobox" aria-label="搜索并筛选门店" aria-autocomplete="list" aria-expanded="${storeOpen}" aria-controls="dockStoreOptions" />
-          </div>
-          <button type="button" class="session-select-trigger-search-toggle" data-dock-store-trigger aria-label="${storeOpen ? '收起' : '展开'}门店选项" aria-expanded="${storeOpen}" aria-haspopup="listbox"><span class="session-select-caret" aria-hidden="true"></span></button>
-        </div>
-        ${storeOpen ? renderDockStoreMenu() : ''}
-      </div>
-      ${renderDockSearchControl('snQuery', '充电坞SN', dockFilterState.snQuery)}
-      <div class="session-toolbar-control session-toolbar-menu dock-status-control${statusOpen ? ' is-open' : ''}" data-dock-menu-root="status">
-        <span>状态</span>
-        <button type="button" class="session-select-trigger${statusOpen ? ' active' : ''}" data-dock-status-trigger aria-label="筛选充电坞状态" aria-expanded="${statusOpen}" aria-haspopup="listbox"><strong>${dockFilterState.status}</strong><span class="session-select-caret" aria-hidden="true"></span></button>
-        ${statusOpen ? renderDockStatusMenu() : ''}
-      </div>
-      <button type="button" class="btn session-reset-btn dock-filter-reset device-reset-btn" data-dock-reset>重置</button>
-    </div>`;
-}
-
-function getFilteredDockRecords() {
-  const snQuery = dockFilterState.snQuery.trim().toLowerCase();
-  return dockDetailRecords.filter((item) => {
-    const storeMatch = dockFilterState.store === '全部门店' || item.store === dockFilterState.store;
-    const statusMatch = dockFilterState.status === '全部' || item.status === dockFilterState.status;
-    return storeMatch && statusMatch && (!snQuery || item.sn.toLowerCase().includes(snQuery));
-  });
-}
-
-function getDockPaginationItems(totalPages) {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
-  const items = [1];
-  if (dockPaginationState.page > 3) items.push('left');
-  for (let page = Math.max(2, dockPaginationState.page - 1); page <= Math.min(totalPages - 1, dockPaginationState.page + 1); page += 1) items.push(page);
-  if (dockPaginationState.page < totalPages - 2) items.push('right');
-  items.push(totalPages);
-  return items;
-}
-
-function renderDockPagination(totalItems) {
-  const container = document.getElementById('dockDetailPagination');
-  if (!container) return;
-  const totalPages = Math.max(1, Math.ceil(totalItems / dockPaginationState.pageSize));
-  dockPaginationState.page = Math.min(dockPaginationState.page, totalPages);
-  container.innerHTML = `
-    <div class="dashboard-pagination">
-      <span class="session-pagination-total">共 ${totalItems} 条</span>
-      <div class="dashboard-pagination-controls">
-        <div class="custom-select-container page-select page-size-select">
-          <button type="button" class="custom-select-trigger page-size-trigger" data-dock-page-size-trigger><span>${dockPaginationState.pageSize} 条/页</span></button>
-          <div class="custom-select-options page-size-options">${[10, 20, 50].map((size) => `<button type="button" class="custom-option page-size-option${size === dockPaginationState.pageSize ? ' active' : ''}" data-dock-page-size="${size}"><span>${size} 条/页</span></button>`).join('')}</div>
-        </div>
-        <div class="page-group">
-          <button type="button" class="page-arrow" data-dock-page-action="prev" ${dockPaginationState.page === 1 ? 'disabled' : ''}>‹</button>
-          ${getDockPaginationItems(totalPages).map((item) => typeof item === 'number' ? `<button type="button" class="page-num${item === dockPaginationState.page ? ' active' : ''}" data-dock-page="${item}">${item}</button>` : '<span class="page-ellipsis">…</span>').join('')}
-          <button type="button" class="page-arrow" data-dock-page-action="next" ${dockPaginationState.page === totalPages ? 'disabled' : ''}>›</button>
-        </div>
-        <div class="page-group page-jump-group"><span class="session-page-jump-label">前往</span><label class="page-select page-jump-select"><input type="number" min="1" max="${totalPages}" value="${dockPaginationState.page}" data-dock-page-jump /></label><span class="session-page-jump-suffix">页</span></div>
-      </div>
-    </div>`;
-}
-
-function renderDockDetail() {
-  const tbody = document.getElementById('dockDetailTableBody');
-  if (!tbody) return;
-  const records = getFilteredDockRecords();
-  const totalPages = Math.max(1, Math.ceil(records.length / dockPaginationState.pageSize));
-  dockPaginationState.page = Math.min(dockPaginationState.page, totalPages);
-  const start = (dockPaginationState.page - 1) * dockPaginationState.pageSize;
-  const visibleRecords = records.slice(start, start + dockPaginationState.pageSize);
-  const count = document.getElementById('dockFilterCount');
-  if (count) count.textContent = records.length.toLocaleString('zh-CN');
-  if (window.ListSummaryCounters && count) window.ListSummaryCounters.update('docks', [{ node: count, value: records.length, grouping: true }],
-    { root: count.closest('.session-filter-summary') });
-  tbody.innerHTML = visibleRecords.length ? visibleRecords.map((item) => `<tr>
-    <td><span class="cell-main">${escapeBadgeHtml(item.sn)}</span></td>
-    <td><span class="status-inline ${item.status === '在线' ? 'green' : 'gray'}"><span class="status-inline-dot" aria-hidden="true"></span><span>${escapeBadgeHtml(item.status)}</span></span></td>
-    <td>${escapeBadgeHtml(item.brand)}</td>
-    <td>${escapeBadgeHtml(item.region)}</td>
-    <td>${escapeBadgeHtml(item.zone)}</td>
-    <td>${escapeBadgeHtml(item.store)}</td>
-    <td><button class="table-link${item.hasBoundBadges ? '' : ' table-link-disabled'}" type="button" data-dock-detail-open data-dock-sn="${escapeBadgeHtml(item.sn)}"${item.hasBoundBadges ? '' : ' disabled aria-disabled="true" title="暂无绑定工牌"'}>查看</button></td>
-  </tr>`).join('') : '<tr class="session-empty-row"><td colspan="7">当前筛选条件下暂无充电坞，请调整门店、状态或充电坞 SN 后重试。</td></tr>';
-  renderDockPagination(records.length);
-}
-
-function renderDockPage() {
-  renderDockFilters();
-  renderDockDetail();
 }
 
 function getBadgeOrganizationParts(path) {
@@ -4903,7 +4220,6 @@ function renderBadgeAdvisorFilter() {
 }
 
 function getBadgeFieldSelectOptions(field) {
-  if (field.key === 'dockConnected') return [{ value: '已接入', label: '已接入' }, { value: '未接入', label: '未接入' }];
   if (badgeFixedMultiSelectValues[field.key]) {
     const values = badgeFixedMultiSelectValues[field.key];
     const selected = new Set(getBadgeSelectedValues(field.key));
@@ -5067,7 +4383,6 @@ function getFilteredBadgeRecords() {
     if (!textMatches(item, 'sn', 'snQuery')) return false;
     if (isBadgeAdvisorFilterVisible() && badgeFilterState.advisorIds.length && !badgeFilterState.advisorIds.includes(item.advisorId)) return false;
     if (!['badgeType', 'brand', 'region', 'zone', 'patroler', 'province', 'city', 'governor', 'store', 'bindingStatus', 'badgeStatus', 'recordingStatus', 'connectionStatus', 'signal'].every((key) => selectMatches(item, key))) return false;
-    if (visibleKeys.has('dockConnected') && badgeFilterState.dockConnected !== '全部' && (item.dockConnected ? '已接入' : '未接入') !== badgeFilterState.dockConnected) return false;
     if (visibleKeys.has('battery') && !isBadgeNumberInRange(item.battery, badgeFilterState.batteryMin, badgeFilterState.batteryMax)) return false;
     if (visibleKeys.has('remainingMemory') && !isBadgeNumberInRange(item.remainingMemory, badgeFilterState.memoryMin, badgeFilterState.memoryMax)) return false;
     if (visibleKeys.has('uptime') && !isBadgeNumberInRange(getBadgeUptimeHours(item.uptime), badgeFilterState.uptimeMin, badgeFilterState.uptimeMax)) return false;
@@ -5101,7 +4416,6 @@ function getBadgeExportColumnWidth(field) {
     badgeStatus: 14,
     recordingStatus: 14,
     connectionStatus: 14,
-    dockConnected: 18,
     signal: 14,
     battery: 14,
     remainingMemory: 14,
@@ -5115,7 +4429,6 @@ function getBadgeExportColumnWidth(field) {
 function getBadgeExportCellValue(item, field) {
   if (field.key === 'pendingUploads') return String(item.pendingUploads) + (item.pendingAssociationMissing ? `（已加载${item.loadedPendingUploads}，关联缺失）` : '');
   if (field.key === 'bindingStatus') return getBadgeBindingStatus(item);
-  if (field.key === 'dockConnected') return item.dockConnected ? '已接入' : '未接入';
   if (field.key === 'battery' || field.key === 'remainingMemory') return `${item[field.key]}%`;
   return item[field.key] ?? '';
 }
@@ -5227,7 +4540,6 @@ function renderBadgeFieldCell(item, field) {
     if (!isBadgeWifiCapable(item.badgeType) || item.connectionStatus === '—' || item.connectionStatus === '/') return '—';
     return `<span class="status-inline ${item.connectionStatus === '已连接' ? 'green' : 'red'}"><span class="status-inline-dot"></span><span>${escapeBadgeHtml(item.connectionStatus)}</span></span>`;
   }
-  if (field.key === 'dockConnected') return `<span class="status-inline ${item.dockConnected ? 'green' : 'gray'}"><span class="status-inline-dot"></span><span>${item.dockConnected ? '已接入' : '未接入'}</span></span>`;
   if (field.key === 'battery') return renderBatteryIndicator(item.battery);
   if (field.key === 'remainingMemory') return `<strong class="${item.remainingMemory < 20 ? 'danger-text' : ''}">${item.remainingMemory}%</strong>`;
   if (field.key === 'pendingUploads') return `<strong class="${item.pendingUploads >= 5 ? 'danger-text' : item.pendingUploads > 0 ? 'amber-text' : ''}">${escapeBadgeHtml(getBadgeExportCellValue(item, field))}</strong>`;
@@ -6179,6 +5491,10 @@ function validRoute(value) {
 
 function getRouteState() {
   const [routeValue = '', queryString = ''] = window.location.hash.replace(/^#/, '').split('?');
+  if (routeValue === 'management' || routeValue === 'docks') {
+    window.history.replaceState(window.history.state, '', '#stores');
+    return { route: 'stores', params: new URLSearchParams() };
+  }
   return { route: validRoute(routeValue), params: new URLSearchParams(queryString) };
 }
 
@@ -6326,8 +5642,6 @@ function setRoute(route, updateHash = true) {
   document.body.classList.toggle('device-badge-detail-page', safeRoute === 'badges' || storeDrilldownRoute);
   document.body.classList.toggle('device-visits-page', visitRoute);
   document.body.classList.toggle('device-matching-page', safeRoute === 'dashboard');
-  document.body.classList.toggle('device-badge-management-page', safeRoute === 'management');
-  document.body.classList.toggle('device-dock-detail-page', safeRoute === 'docks');
   const detailRoute = safeRoute === 'events' || safeRoute === 'uploads';
   if (detailRoute) {
     closeBadgeRecordDrawer({ restoreFocus: false, immediate: true });
@@ -6525,9 +5839,7 @@ function syncBodyScrollLock() {
     || document.getElementById('storeFieldSettingsDrawer')?.getAttribute('aria-hidden') === 'false'
     || visitDrawer.getAttribute('aria-hidden') === 'false'
     || !importModal.hidden
-    || [badgeUploadDetailModal, visitEventDetailModal].some((modal) => !modal.hidden && modal.classList.contains('is-visit-detail'))
-    || ['badgeManagementMemberModal', 'badgeManagementAddModal', 'badgeManagementConfirmModal']
-      .some((id) => !document.getElementById(id)?.hidden);
+    || [badgeUploadDetailModal, visitEventDetailModal].some((modal) => !modal.hidden && modal.classList.contains('is-visit-detail'));
   document.body.style.overflow = locked ? 'hidden' : '';
 }
 
@@ -6537,214 +5849,13 @@ function getBadgeRecordDrawerFocusableElements() {
     .filter((element) => !element.hidden && !element.closest('[hidden]') && element.getAttribute('aria-hidden') !== 'true');
 }
 
-function renderBadgeDockSubdeviceCards() {
-  if (!badgeDockSubdeviceList) return;
-  const visibleRecords = dockSubdeviceRecords;
-  if (visibleRecords.length) {
-    badgeDockSubdeviceList.innerHTML = visibleRecords.map((item) => {
-      return `<article class="badge-dock-device-card" aria-label="${escapeBadgeHtml(item.port)}，工牌 ${escapeBadgeHtml(item.sn)}">
-        <div class="badge-dock-device-identity">
-          <span class="badge-dock-device-port">${escapeBadgeHtml(item.port)}</span>
-          <strong class="badge-dock-device-sn">${escapeBadgeHtml(item.sn)}</strong>
-        </div>
-        <div class="badge-dock-device-battery">
-          ${renderBatteryIndicator(item.battery, '电池电量')}
-        </div>
-        <div class="badge-dock-device-meta">
-          <div class="badge-dock-device-fact"><span>可用空间</span><strong>${escapeBadgeHtml(item.availableSpace)}</strong></div>
-          <div class="badge-dock-device-fact"><span>设备获取时间</span><strong>${escapeBadgeHtml(item.capturedAt)}</strong></div>
-        </div>
-      </article>`;
-    }).join('');
-  } else {
-    badgeDockSubdeviceList.innerHTML = `<div class="badge-dock-empty-state"><div class="badge-dock-empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#E2E8F0" d="M24 6a18 18 0 0 0-18 18c0 9.941 8.059 18 18 18s18-8.059 18-18A18 18 0 0 0 24 6Zm-9 16h18v4H15v-4Z" /><path fill="#94A3B8" d="M24 30a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm0-14a2 2 0 0 0-2 2v8a2 2 0 0 0 4 0v-8a2 2 0 0 0-2-2Z" /></svg></div><span>暂无设备</span></div>`;
-  }
-}
-
-function syncBadgeDockDateView(value) {
-  const parsedDate = parseStoreDateValue(value) || new Date();
-  if (Number.isNaN(parsedDate.getTime())) return;
-  badgeDockDateMenuState.dateViewYear = parsedDate.getFullYear();
-  badgeDockDateMenuState.dateViewMonth = parsedDate.getMonth() + 1;
-}
-
-function syncBadgeDockDateDraft() {
-  badgeDockDateMenuState.dateDraftStartDate = badgeDockDateFilterState.startDate;
-  badgeDockDateMenuState.dateDraftEndDate = badgeDockDateFilterState.endDate;
-  badgeDockDateMenuState.activeDateField = 'startDate';
-  syncBadgeDockDateView(badgeDockDateMenuState.dateDraftStartDate);
-}
-
-function getBadgeDockDateCells() {
-  const cells = [];
-  const { dateViewYear: year, dateViewMonth: month } = badgeDockDateMenuState;
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDate = new Date(year, month, 0).getDate();
-  const leadingSlots = (firstDay.getDay() + 6) % 7;
-  for (let index = 0; index < leadingSlots; index += 1) cells.push(null);
-  for (let day = 1; day <= lastDate; day += 1) {
-    const value = formatStoreDateValue(new Date(year, month - 1, day));
-    cells.push({
-      day,
-      value,
-      inRange: value >= badgeDockDateMenuState.dateDraftStartDate && value <= badgeDockDateMenuState.dateDraftEndDate,
-      isStart: value === badgeDockDateMenuState.dateDraftStartDate,
-      isEnd: value === badgeDockDateMenuState.dateDraftEndDate,
-      isToday: value === storeTodayDateValue
-    });
-  }
-  while (cells.length % 7 !== 0) cells.push(null);
-  return cells;
-}
-
-function renderBadgeDockDateControl() {
-  if (!badgeDockDateControl) return;
-  const panelRenderer = globalThis.__dateFilterComponentUtils?.renderDateRangePanelMarkup;
-  const draftRangeText = formatDeviceDateRange(badgeDockDateMenuState.dateDraftStartDate, badgeDockDateMenuState.dateDraftEndDate);
-  const panel = badgeDockDateMenuState.open && panelRenderer ? panelRenderer({
-    dataNamespace: 'badge-dock-date',
-    rangeText: draftRangeText,
-    monthLabel: `${badgeDockDateMenuState.dateViewYear}年${badgeDockDateMenuState.dateViewMonth}月`,
-    activeField: badgeDockDateMenuState.activeDateField,
-    startLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftStartDate),
-    endLabel: formatStoreDateDisplay(badgeDockDateMenuState.dateDraftEndDate),
-    cells: getBadgeDockDateCells(),
-    shortcuts: [deviceAllTimeShortcut],
-    summaryText: `已选择 ${draftRangeText}`,
-    panelClassName: 'session-menu-panel session-menu-panel-date badge-dock-date-panel',
-    title: '日志日期范围',
-    applyLabel: '确定'
-  }) : '';
-  badgeDockDateControl.classList.toggle('is-open', badgeDockDateMenuState.open);
-  badgeDockDateControl.innerHTML = `
-    <span>日期范围</span>
-    <button type="button" class="session-date-trigger${badgeDockDateMenuState.open ? ' active' : ''}" data-badge-dock-date-trigger aria-label="选择子设备日志日期范围" aria-haspopup="dialog" aria-expanded="${badgeDockDateMenuState.open ? 'true' : 'false'}">
-      ${renderDeviceDateRangeLabel(badgeDockDateFilterState.startDate, badgeDockDateFilterState.endDate)}
-      <span class="session-date-icon" aria-hidden="true"></span>
-    </button>
-    ${panel}`;
-}
-
-function renderBadgeDockEventControl() {
-  if (!badgeDockEventControl) return;
-  const selectedEvents = badgeDockEventFilterState.selectedEvents;
-  const allSelected = selectedEvents.size === badgeDockEventOptions.length;
-  const someSelected = selectedEvents.size > 0 && !allSelected;
-  const selectionLabel = allSelected
-    ? '全部事件'
-    : selectedEvents.size === 1
-      ? [...selectedEvents][0]
-      : selectedEvents.size > 1
-        ? `已选 ${selectedEvents.size} 项`
-        : '未选择';
-  const optionMarkup = (value, label, selected, indeterminate = false) => `<button type="button" class="session-menu-option badge-dock-event-option${selected ? ' active' : ''}${indeterminate ? ' is-indeterminate' : ''}" data-badge-dock-event-option="${escapeBadgeHtml(value)}" role="option" aria-selected="${selected}" aria-checked="${indeterminate ? 'mixed' : selected}"><span class="badge-dock-event-check" aria-hidden="true"></span><span>${escapeBadgeHtml(label)}</span></button>`;
-  badgeDockEventControl.classList.toggle('is-open', badgeDockEventMenuState.open);
-  badgeDockEventControl.innerHTML = `
-    <span>事件名称</span>
-    <button type="button" class="session-select-trigger${badgeDockEventMenuState.open ? ' active' : ''}" data-badge-dock-event-trigger aria-label="筛选子设备日志事件名称" aria-haspopup="listbox" aria-expanded="${badgeDockEventMenuState.open}">
-      <strong>${escapeBadgeHtml(selectionLabel)}</strong>
-      <span class="session-select-caret" aria-hidden="true"></span>
-    </button>
-    ${badgeDockEventMenuState.open ? `<div class="session-menu-panel badge-dock-event-menu"><div class="session-menu-option-list" role="listbox" aria-label="事件名称选项" aria-multiselectable="true">${optionMarkup('all', '全部事件', allSelected, someSelected)}${badgeDockEventOptions.map((option) => optionMarkup(option, option, selectedEvents.has(option))).join('')}</div></div>` : ''}`;
-}
-
-function getFilteredBadgeDockLogRecords() {
-  return dockLogRecords.filter((item) => {
-    const date = item.time.slice(0, 10).replaceAll('/', '-');
-    const dateMatch = isWithinDateTimeRange(date, badgeDockDateFilterState.startDate, badgeDockDateFilterState.endDate);
-    return dateMatch && badgeDockEventFilterState.selectedEvents.has(item.event);
-  });
-}
-
-const badgeDockLogEventVisuals = {
-  '充电坞上线': { tone: 'green', icon: '../assets/device-dock-log-icons/dock-online.svg' },
-  '充电坞下线': { tone: 'neutral', icon: '../assets/device-dock-log-icons/dock-offline.svg' },
-  '工牌上线': { tone: 'green', icon: '../assets/device-dock-log-icons/badge-online.svg' },
-  '工牌下线': { tone: 'neutral', icon: '../assets/device-dock-log-icons/badge-offline.svg' },
-  '录音上传完成': { tone: 'blue', icon: '../assets/device-dock-log-icons/recording-uploaded.svg' },
-  '当天录音上传完成': { tone: 'blue', icon: '../assets/device-dock-log-icons/recording-uploaded.svg' },
-  '设备日志上传完成': { tone: 'violet', icon: '../assets/device-dock-log-icons/device-log-uploaded.svg' },
-  '定位日志上传完成': { tone: 'violet', icon: '../assets/device-dock-log-icons/device-log-uploaded.svg' }
-};
-
-function getBadgeDockLogEventVisual(eventName) {
-  return badgeDockLogEventVisuals[eventName] || badgeDockLogEventVisuals['设备日志上传完成'];
-}
-
-function renderBadgeDockLogTimeline() {
-  if (!badgeDockLogTimeline) return;
-  const filteredRecords = getFilteredBadgeDockLogRecords();
-  badgeDockLogTimeline.classList.toggle('event-timeline-grouped', filteredRecords.length > 0);
-  badgeDockLogTimeline.innerHTML = filteredRecords.length ? filteredRecords.map((item) => {
-    const visual = getBadgeDockLogEventVisual(item.event);
-    const employee = String(item.employee || '').trim();
-    const badgeSn = String(item.sn || '').trim();
-    const employeeHtml = employee && employee !== '-' && employee !== '—' ? `<strong>${escapeBadgeHtml(employee)}</strong>` : '';
-    const badgeSnHtml = badgeSn && badgeSn !== '-' && badgeSn !== '—' ? `<span>${escapeBadgeHtml(badgeSn)}</span>` : '';
-    const metaHtml = employeeHtml || badgeSnHtml ? `<div class="badge-dock-log-event-meta">${employeeHtml}${badgeSnHtml}</div>` : '';
-    return `<article class="event-group-card event-standalone-card badge-dock-log-event">
-      <div class="event-group-row">
-        <span class="event-dot ${visual.tone}" aria-hidden="true"><img src="${visual.icon}" alt="" width="16" height="16"></span>
-        <div class="event-group-copy">
-          <strong>${escapeBadgeHtml(item.event)}</strong>
-          <p>${escapeBadgeHtml(item.time)}</p>
-        </div>
-        ${metaHtml}
-      </div>
-    </article>`;
-  }).join('') : '<div class="event-empty-state">当前筛选条件下暂无子设备日志。</div>';
-}
-
-function renderBadgeDockDrawer(sn) {
-  if (!badgeRecordDrawerTitle || !badgeRecordDrawerSubtitle || !badgeDockDrawerView) return;
-  activeDockDetailRecord = dockDetailRecords.find((item) => item.sn === sn) || null;
-  if (!activeDockDetailRecord) return;
-  buildDockDrawerRecords(activeDockDetailRecord);
-  badgeRecordDrawerTitle.textContent = '充电坞详情';
-  badgeRecordDrawerSubtitle.textContent = `充电坞 SN：${activeDockDetailRecord.sn}`;
-  Object.assign(badgeDockDateFilterState, badgeDockDateDefaultFilters);
-  badgeDockEventFilterState.selectedEvents = new Set(badgeDockEventOptions);
-  badgeDockEventMenuState.open = false;
-  badgeDockDateMenuState.open = false;
-  syncBadgeDockDateDraft();
-  renderBadgeDockSubdeviceCards();
-  renderBadgeDockEventControl();
-  renderBadgeDockDateControl();
-  renderBadgeDockLogTimeline();
-}
-
-function setBadgeRecordDrawerMode(isDock) {
-  const normalSections = badgeRecordDrawerBody?.querySelectorAll('.badge-record-profile-card, .badge-record-drawer-controls, .badge-record-drawer-content-host');
-  normalSections?.forEach((section) => { section.hidden = isDock; });
-  if (badgeDockDrawerView) badgeDockDrawerView.hidden = !isDock;
-}
-
 function openBadgeRecordDrawer(tab, trigger, badge, date = '') {
   if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeRecordDrawerContentHost) return;
   window.clearTimeout(badgeRecordDrawerCloseTimer);
   badgeRecordDrawerTrigger = trigger || null;
   selectBadgeRecord(badge?.sn || trigger?.dataset.badgeSn, badge?.advisorName || trigger?.dataset.advisorName, date);
-  setBadgeRecordDrawerMode(false);
   moveBadgeRecordContents(badgeRecordDrawerContentHost);
   syncBadgeRecordTabs(tab);
-  if (badgeRecordDrawerTitle) badgeRecordDrawerTitle.textContent = '工牌记录';
-  if (badgeRecordDrawerSubtitle) badgeRecordDrawerSubtitle.textContent = '查看当前顾问工牌的设备事件和录音上传记录';
-  badgeRecordDrawerBackdrop.hidden = false;
-  badgeRecordDrawer.inert = false;
-  badgeRecordDrawer.setAttribute('aria-hidden', 'false');
-  window.requestAnimationFrame(() => {
-    badgeRecordDrawer.classList.add('open');
-    badgeRecordDrawer.querySelector('[data-badge-record-drawer-close]')?.focus();
-    syncBodyScrollLock();
-  });
-}
-
-function openDockDetailDrawer(trigger) {
-  if (!badgeRecordDrawer || !badgeRecordDrawerBackdrop || !badgeDockDrawerView) return;
-  window.clearTimeout(badgeRecordDrawerCloseTimer);
-  badgeRecordDrawerTrigger = trigger || null;
-  setBadgeRecordDrawerMode(true);
-  renderBadgeDockDrawer(trigger?.dataset.dockSn);
   badgeRecordDrawerBackdrop.hidden = false;
   badgeRecordDrawer.inert = false;
   badgeRecordDrawer.setAttribute('aria-hidden', 'false');
@@ -6761,8 +5872,6 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
   const trigger = badgeRecordDrawerTrigger;
   closeBadgeEventMenus(true);
   closeBadgeUploadMenus(true);
-  badgeDockEventMenuState.open = false;
-  badgeDockDateMenuState.open = false;
   badgeRecordDrawer.classList.remove('open');
   if (restoreFocus && trigger?.isConnected) trigger.focus();
   badgeRecordDrawer.inert = true;
@@ -6772,9 +5881,6 @@ function closeBadgeRecordDrawer({ restoreFocus = true, immediate = false } = {})
     badgeRecordDrawerBackdrop.hidden = true;
     restoreBadgeRecordFilterToolbars();
     moveBadgeRecordContents(badgeRecordPageContent);
-    setBadgeRecordDrawerMode(false);
-    if (badgeRecordDrawerTitle) badgeRecordDrawerTitle.textContent = '工牌记录';
-    if (badgeRecordDrawerSubtitle) badgeRecordDrawerSubtitle.textContent = '查看当前顾问工牌的设备事件和录音上传记录';
     if (restoreFocus && trigger?.isConnected) trigger.focus();
     badgeRecordDrawerTrigger = null;
   };
@@ -6954,7 +6060,6 @@ document.addEventListener('click', (event) => {
   if (handleVisitEventFiltersClick(event)) return;
   if (handleVisitFieldSettingsClick(event)) return;
   if (handleVisitOrganizationClick(event)) return;
-  if (handleBadgeManagementClick(event)) return;
   if (handleVisitStoreDrilldownClick(event)) return;
 
   if (event.target.closest('[data-store-drilldown-back]')) {
@@ -7002,135 +6107,9 @@ document.addEventListener('click', (event) => {
     return;
   }
 
-  const dockDetailOpen = event.target.closest('[data-dock-detail-open]');
-  if (dockDetailOpen) {
-    openDockDetailDrawer(dockDetailOpen);
-    return;
-  }
-
   const badgeRecordDrawerOpen = event.target.closest('[data-badge-record-drawer-open]');
   if (badgeRecordDrawerOpen) {
     openBadgeRecordDrawer(badgeRecordDrawerOpen.dataset.badgeRecordDrawerOpen, badgeRecordDrawerOpen);
-    return;
-  }
-
-  if (event.target.closest('#badgeDockRefreshBtn')) {
-    if (badgeDockRefreshBtn) {
-      window.clearTimeout(badgeDockRefreshBtn.refreshTimer);
-      badgeDockRefreshBtn.classList.add('spinning');
-      badgeDockRefreshBtn.setAttribute('aria-busy', 'true');
-      badgeDockRefreshBtn.refreshTimer = window.setTimeout(() => {
-        badgeDockRefreshBtn.classList.remove('spinning');
-        badgeDockRefreshBtn.removeAttribute('aria-busy');
-      }, 700);
-    }
-    renderBadgeDockSubdeviceCards();
-    renderBadgeDockLogTimeline();
-    showToast('子设备状态已刷新', 'success');
-    return;
-  }
-
-  if (!event.target.closest('#badgeDockEventControl') && badgeDockEventMenuState.open) {
-    badgeDockEventMenuState.open = false;
-    renderBadgeDockEventControl();
-  }
-
-  if (event.target.closest('[data-badge-dock-event-trigger]')) {
-    badgeDockEventMenuState.open = !badgeDockEventMenuState.open;
-    badgeDockDateMenuState.open = false;
-    renderBadgeDockEventControl();
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  const badgeDockEventOption = event.target.closest('[data-badge-dock-event-option]');
-  if (badgeDockEventOption) {
-    const value = badgeDockEventOption.dataset.badgeDockEventOption;
-    const selectedEvents = badgeDockEventFilterState.selectedEvents;
-    if (value === 'all') {
-      badgeDockEventFilterState.selectedEvents = selectedEvents.size === badgeDockEventOptions.length
-        ? new Set()
-        : new Set(badgeDockEventOptions);
-    } else if (selectedEvents.has(value)) {
-      selectedEvents.delete(value);
-    } else {
-      selectedEvents.add(value);
-    }
-    renderBadgeDockEventControl();
-    renderBadgeDockLogTimeline();
-    return;
-  }
-
-  if (!event.target.closest('#badgeDockDateControl') && badgeDockDateMenuState.open) {
-    badgeDockDateMenuState.open = false;
-    renderBadgeDockDateControl();
-  }
-
-  if (event.target.closest('[data-badge-dock-date-trigger]')) {
-    badgeDockDateMenuState.open = !badgeDockDateMenuState.open;
-    badgeDockEventMenuState.open = false;
-    if (badgeDockDateMenuState.open) syncBadgeDockDateDraft();
-    renderBadgeDockEventControl();
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  const badgeDockDateNav = event.target.closest('[data-badge-dock-date-nav]');
-  if (badgeDockDateNav) {
-    const nextMonth = new Date(badgeDockDateMenuState.dateViewYear, badgeDockDateMenuState.dateViewMonth - 1 + Number(badgeDockDateNav.dataset.badgeDockDateNav), 1);
-    badgeDockDateMenuState.dateViewYear = nextMonth.getFullYear();
-    badgeDockDateMenuState.dateViewMonth = nextMonth.getMonth() + 1;
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  const badgeDockDateField = event.target.closest('[data-badge-dock-date-field]');
-  if (badgeDockDateField) {
-    badgeDockDateMenuState.activeDateField = badgeDockDateField.dataset.badgeDockDateField;
-    syncBadgeDockDateView(badgeDockDateMenuState.activeDateField === 'startDate'
-      ? badgeDockDateMenuState.dateDraftStartDate
-      : badgeDockDateMenuState.dateDraftEndDate);
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  const badgeDockDateValue = event.target.closest('[data-badge-dock-date-value]');
-  if (badgeDockDateValue) {
-    const value = badgeDockDateValue.dataset.badgeDockDateValue;
-    if (badgeDockDateMenuState.activeDateField === 'startDate') {
-      badgeDockDateMenuState.dateDraftStartDate = value;
-      if (badgeDockDateMenuState.dateDraftEndDate < value) badgeDockDateMenuState.dateDraftEndDate = value;
-      badgeDockDateMenuState.activeDateField = 'endDate';
-    } else {
-      badgeDockDateMenuState.dateDraftEndDate = value;
-      if (!badgeDockDateMenuState.dateDraftStartDate || badgeDockDateMenuState.dateDraftStartDate > value) badgeDockDateMenuState.dateDraftStartDate = value;
-      badgeDockDateMenuState.activeDateField = 'startDate';
-    }
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-dock-date-cancel]')) {
-    badgeDockDateMenuState.open = false;
-    syncBadgeDockDateDraft();
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-dock-date-shortcut="all"]')) {
-    badgeDockDateMenuState.dateDraftStartDate = '';
-    badgeDockDateMenuState.dateDraftEndDate = '';
-    badgeDockDateMenuState.activeDateField = 'startDate';
-    renderBadgeDockDateControl();
-    return;
-  }
-
-  if (event.target.closest('[data-badge-dock-date-apply]')) {
-    badgeDockDateFilterState.startDate = badgeDockDateMenuState.dateDraftStartDate;
-    badgeDockDateFilterState.endDate = badgeDockDateMenuState.dateDraftEndDate;
-    badgeDockDateMenuState.open = false;
-    renderBadgeDockDateControl();
-    renderBadgeDockLogTimeline();
     return;
   }
 
@@ -7371,94 +6350,6 @@ document.addEventListener('click', (event) => {
     visitPaginationState.page += visitPageAction.dataset.visitPageAction === 'next' ? 1 : -1;
     renderVisits();
     return;
-  }
-
-  if (event.target.matches('[data-dock-store-search]')) {
-    if (dockMenuState.openMenu !== 'store') {
-      dockMenuState.openMenu = 'store';
-      dockMenuState.storeQuery = '';
-      renderDockFilters();
-      window.requestAnimationFrame(() => document.querySelector('[data-dock-store-search]')?.focus());
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-dock-store-trigger]')) {
-    dockMenuState.openMenu = dockMenuState.openMenu === 'store' ? '' : 'store';
-    dockMenuState.storeQuery = '';
-    renderDockFilters();
-    if (dockMenuState.openMenu === 'store') {
-      window.requestAnimationFrame(() => document.querySelector('[data-dock-store-search]')?.focus());
-    }
-    return;
-  }
-
-  const dockStoreOption = event.target.closest('[data-dock-store-option]');
-  if (dockStoreOption) {
-    dockFilterState.store = dockStoreOption.dataset.dockStoreOption;
-    dockMenuState.openMenu = '';
-    dockMenuState.storeQuery = '';
-    dockPaginationState.page = 1;
-    renderDockPage();
-    return;
-  }
-
-  if (event.target.closest('[data-dock-status-trigger]')) {
-    dockMenuState.openMenu = dockMenuState.openMenu === 'status' ? '' : 'status';
-    dockMenuState.storeQuery = '';
-    renderDockFilters();
-    return;
-  }
-
-  const dockStatus = event.target.closest('[data-dock-status]');
-  if (dockStatus) {
-    dockFilterState.status = dockStatus.dataset.dockStatus;
-    dockPaginationState.page = 1;
-    dockMenuState.openMenu = '';
-    renderDockPage();
-    return;
-  }
-
-  if (event.target.closest('[data-dock-reset]')) {
-    Object.assign(dockFilterState, dockDefaultFilters);
-    dockMenuState.openMenu = '';
-    dockMenuState.storeQuery = '';
-    dockPaginationState.page = 1;
-    renderDockPage();
-    showToast('筛选条件已重置');
-    return;
-  }
-
-  const dockPage = event.target.closest('[data-dock-page]');
-  if (dockPage) {
-    dockPaginationState.page = Number(dockPage.dataset.dockPage);
-    renderDockDetail();
-    return;
-  }
-
-  const dockPageAction = event.target.closest('[data-dock-page-action]');
-  if (dockPageAction && !dockPageAction.disabled) {
-    dockPaginationState.page += dockPageAction.dataset.dockPageAction === 'next' ? 1 : -1;
-    renderDockDetail();
-    return;
-  }
-
-  if (event.target.closest('[data-dock-page-size-trigger]')) {
-    event.target.closest('[data-dock-page-size-trigger]').parentElement.querySelector('.page-size-options')?.classList.toggle('open');
-    return;
-  }
-
-  const dockPageSize = event.target.closest('[data-dock-page-size]');
-  if (dockPageSize) {
-    dockPaginationState.pageSize = Number(dockPageSize.dataset.dockPageSize);
-    dockPaginationState.page = 1;
-    renderDockDetail();
-    return;
-  }
-
-  if (!event.target.closest('[data-dock-menu-root]') && dockMenuState.openMenu) {
-    dockMenuState.openMenu = '';
-    renderDockFilters();
   }
 
   const badgeDimension = event.target.closest('[data-badge-dimension]');
@@ -7799,25 +6690,6 @@ document.addEventListener('change', (event) => {
     updateVisitFilterControl(event.target);
     return;
   }
-  if (event.target.matches('[data-badge-management-status]')) {
-    badgeManagementState.status = event.target.value;
-    renderBadgeManagementPage();
-    return;
-  }
-  const directoryOption = event.target.closest('[data-badge-management-directory-option]');
-  if (directoryOption) {
-    const employeeId = directoryOption.dataset.badgeManagementDirectoryOption;
-    if (directoryOption.checked) badgeManagementState.selectedDirectoryIds.add(employeeId);
-    else badgeManagementState.selectedDirectoryIds.delete(employeeId);
-    renderBadgeManagementDirectory();
-    return;
-  }
-  if (event.target.matches('[data-dock-page-jump]')) {
-    const totalPages = Math.max(1, Math.ceil(getFilteredDockRecords().length / dockPaginationState.pageSize));
-    dockPaginationState.page = Math.min(totalPages, Math.max(1, Number(event.target.value) || 1));
-    renderDockDetail();
-    return;
-  }
   if (event.target.matches('[data-badge-record-page-jump]')) {
     const key = event.target.dataset.badgeRecordPageJump;
     const state = getBadgeRecordPaginationState(key);
@@ -7855,19 +6727,6 @@ document.addEventListener('change', (event) => {
   }
 });
 
-function syncDockStoreSearchInput(input) {
-  const value = input.value;
-  const cursorStart = input.selectionStart ?? value.length;
-  const cursorEnd = input.selectionEnd ?? value.length;
-  dockMenuState.storeQuery = value;
-  renderDockFilters();
-  window.requestAnimationFrame(() => {
-    const nextInput = document.querySelector('[data-dock-store-search]');
-    nextInput?.focus();
-    nextInput?.setSelectionRange(cursorStart, cursorEnd);
-  });
-}
-
 document.addEventListener('input', (event) => {
   if (event.target.matches('input[type="search"][data-visit-filter]') && !event.isComposing) {
     updateVisitFilterControl(event.target);
@@ -7889,31 +6748,6 @@ document.addEventListener('input', (event) => {
       nextInput.focus();
       nextInput.setSelectionRange(cursorStart, cursorEnd);
     });
-    return;
-  }
-  if (event.target.matches('[data-badge-management-search]') && !event.isComposing) {
-    badgeManagementState.query = event.target.value;
-    renderBadgeManagementPage();
-    return;
-  }
-  if (event.target.matches('[data-badge-management-member-search]') && !event.isComposing) {
-    badgeManagementState.memberQuery = event.target.value;
-    renderBadgeManagementMemberOptions();
-    return;
-  }
-  if (event.target.matches('[data-badge-management-directory-search]') && !event.isComposing) {
-    badgeManagementState.directoryQuery = event.target.value;
-    renderBadgeManagementDirectory();
-    return;
-  }
-  if (event.target.matches('[data-dock-search]') && !event.isComposing) {
-    dockFilterState[event.target.dataset.dockSearch] = event.target.value;
-    dockPaginationState.page = 1;
-    renderDockDetail();
-    return;
-  }
-  if (event.target.matches('[data-dock-store-search]') && !event.isComposing) {
-    syncDockStoreSearchInput(event.target);
     return;
   }
   if (!event.target.matches('[data-badge-search]') || event.isComposing) return;
@@ -7954,8 +6788,6 @@ document.addEventListener('compositionend', (event) => {
     window.requestAnimationFrame(() => document.querySelector(`[data-badge-field-select-search="${key}"]`)?.focus());
     return;
   }
-  if (!event.target.matches('[data-dock-store-search]')) return;
-  syncDockStoreSearchInput(event.target);
 });
 
 document.addEventListener('change', (event) => {
@@ -8005,14 +6837,6 @@ document.addEventListener('input', (event) => {
   renderBadgeDetail();
 });
 
-document.addEventListener('focusin', (event) => {
-  if (!event.target.matches('[data-dock-store-search]') || dockMenuState.openMenu === 'store') return;
-  dockMenuState.openMenu = 'store';
-  dockMenuState.storeQuery = '';
-  renderDockFilters();
-  window.requestAnimationFrame(() => document.querySelector('[data-dock-store-search]')?.focus());
-});
-
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && document.querySelector('[data-store-page-size-trigger][aria-expanded="true"]')) {
     event.preventDefault();
@@ -8057,26 +6881,6 @@ document.addEventListener('keydown', (event) => {
     }
     return;
   }
-  if (event.key === 'Escape' && !document.getElementById('badgeManagementConfirmModal')?.hidden) {
-    closeBadgeManagementConfirm();
-    return;
-  }
-  if (event.key === 'Escape' && !document.getElementById('badgeManagementAddModal')?.hidden) {
-    closeBadgeManagementAddModal({ returnToMember: true });
-    return;
-  }
-  if (event.key === 'Escape' && !document.getElementById('badgeManagementMemberModal')?.hidden) {
-    if (badgeManagementState.memberOpen) {
-      badgeManagementState.memberOpen = false;
-      renderBadgeManagementMemberModal();
-    } else closeBadgeManagementMemberModal();
-    return;
-  }
-  if (event.key === 'Escape' && badgeManagementState.openMenuSn) {
-    badgeManagementState.openMenuSn = '';
-    renderBadgeManagementPage();
-    return;
-  }
   if (event.key === 'Tab' && isBadgeRecordDrawerOpen()) {
     const focusable = getBadgeRecordDrawerFocusableElements();
     if (!focusable.length) return;
@@ -8095,10 +6899,6 @@ document.addEventListener('keydown', (event) => {
     event.target.blur();
     return;
   }
-  if (event.key === 'Enter' && event.target.matches('[data-dock-page-jump]')) {
-    event.target.blur();
-    return;
-  }
   if (event.key === 'Enter' && event.target.matches('[data-visit-page-jump]')) {
     event.target.blur();
     return;
@@ -8112,21 +6912,6 @@ document.addEventListener('keydown', (event) => {
     closeBadgeFilterMenu(false);
     closeBadgePageSizeMenu();
     renderBadgeFilters();
-    return;
-  }
-  if (dockMenuState.openMenu) {
-    dockMenuState.openMenu = '';
-    renderDockFilters();
-    return;
-  }
-  if (badgeDockEventMenuState.open) {
-    badgeDockEventMenuState.open = false;
-    renderBadgeDockEventControl();
-    return;
-  }
-  if (badgeDockDateMenuState.open) {
-    badgeDockDateMenuState.open = false;
-    renderBadgeDockDateControl();
     return;
   }
   if (closeBadgeEventMenus()) return;
@@ -8153,8 +6938,6 @@ setRoute(initialRouteState.route, !window.location.hash);
 renderStoreOverview();
 renderStoreOrganizationFilters();
 renderBadgePage();
-renderBadgeManagementPage();
-renderDockPage();
 selectBadgeRecord(badgeRecordState.sn, badgeRecordState.advisorName);
 clearHiddenVisitFilters();
 renderVisitOrganizationFilters();
@@ -8193,7 +6976,6 @@ function getVisibleEventExportRows(events, type, date, sn) {
       end === undefined ? '—' : end ? formatBadgeEventDuration(start.time, end.time) : '进行中', note || '—']);
   }
   groups.forEach(group => {
-    if (group.kind === 'charging') { add('充电', group.start, group.end); return; }
     if (group.kind === 'standalone') { add(group.event.label, group.event, undefined, group.event.note); return; }
     if (type === 'all' || type === 'power-on') group.powerOns.forEach(event => add('工牌开机', event));
     if (type === 'all' || type === 'recording') group.recordings.forEach(recording => add('录音', recording.start, recording.end));
@@ -8211,14 +6993,6 @@ function getDeviceListExportRequest(key) {
     labels = fields.map(field => field.label);
     rows = getFilteredStoreRecords().map(item => fields.map(field => getStoreFieldValue(item, field)));
     filters = getStoreOverviewExportFilters();
-  } else if (key === 'management') {
-    source = 'badgeManagement'; title = '工牌管理';
-    labels = ['工牌 SN', '员工姓名', '员工工号', '绑定状态', '连接状态', '剩余电量', '最新同步'];
-    rows = getBadgeManagementRecords().map(item => {
-      const employee = getBadgeManagementEmployee(item.employeeId);
-      return [item.sn, employee?.employeeName || '未绑定员工', employee?.employeeId || '—', employee ? '已绑定' : '未绑定', item.connectionStatus, `${item.battery}%`, item.syncedAt];
-    });
-    filters = [{ label: '当前门店', value: badgeManagementDealer.dealerName }, { label: '搜索', value: badgeManagementState.query || '不限' }, { label: '绑定状态', value: badgeManagementState.status }];
   } else if (key === 'uploads') {
     source = 'badgeUploads'; title = '每日录音上传数量'; labels = ['日期', '录音上传数量'];
     const counts = new Map();
@@ -8260,7 +7034,7 @@ function getDeviceListExportRequest(key) {
 }
 
 if (window.ListHeaderActions) {
-  const renderers = { stores: renderStoreOverview, management: renderBadgeManagementPage, visits: renderVisits,
+  const renderers = { stores: renderStoreOverview, visits: renderVisits,
     matching: () => renderMatchingDashboard({ preservePage: true }), events: renderBadgeEvents,
     uploads: renderBadgeUploads, 'upload-details': renderBadgeUploadModal, 'visit-events': renderVisitEvents };
   Object.entries(renderers).forEach(([key, refresh]) => window.ListHeaderActions.register(key, {

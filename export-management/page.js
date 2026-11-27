@@ -4,7 +4,9 @@
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const date = value => value == null ? '—' : new Date(value).toLocaleString('zh-CN', { hour12: false });
   const dateKey = value => { const d = new Date(value); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  let page = 1, pages = 1, detailId = null, deleteId = null, lastMarkup = '', lastDetail = '', refreshVersion = 0;
+  const linkedTaskId = new URLSearchParams(location.search).get('task');
+  let locateLinkedTask = Boolean(linkedTaskId);
+  let page = 1, pages = 1, deleteId = null, lastMarkup = '', refreshVersion = 0;
   let ui, service;
   function showRefreshToast() {
     window.PlatformToast.show('导出任务已刷新', { kind: 'success', duration: 1800 });
@@ -14,43 +16,6 @@
   try { await window.__exportReady; ui = window.ExportTaskUI; service = ui.service; await service.seedDemoTasks(); }
   catch (error) { report(error); return; }
   const status = task => `<span class="export-status ${escape(task.status)}">${escape(ExportTasks.statuses[task.status])}</span>`;
-  let detailDownloadBusy = false;
-  function filterValue(filter) {
-    return `<span class="export-filter-scope">${escape(filter.value)}</span>`;
-  }
-  function detail(task) {
-    const visibleFilters = task.filters || [];
-    const fieldLabel = label => ['质检场景', '适用场景', '所属业务场景'].includes(label) ? '业务场景' : label;
-    return `<section class="export-file-summary" aria-label="任务信息">
-      <div class="export-file-art"><img src="../assets/export-detail/excel.svg" width="72" height="72" alt=""><span>XLSX</span></div>
-      <div class="export-file-copy"><h3>${escape(task.filename)}</h3><p>来源：<strong>${escape(ExportTasks.sources[task.source])}</strong></p>${status(task)}</div>
-      <div class="export-record-count"><span>记录数</span><p><strong>${task.recordCount.toLocaleString('zh-CN')}</strong><span>条</span></p></div>
-    </section>
-    <div class="export-detail-content">
-      <section class="export-detail-section export-detail-times" aria-label="任务时间"><h3>任务时间</h3><div class="export-detail-section-body"><dl class="export-timeline">${[['提交时间', task.createdAt, 'submitted'], ['完成时间', task.completedAt, 'completed'], ['失效时间', task.expiresAt, 'expiry']].map(([label, value, step]) => `<div class="export-timeline-step ${step}${value == null ? ' is-pending' : ''}"><dt>${label}</dt><dd>${date(value)}</dd></div>`).join('')}</dl></div></section>
-      <section class="export-detail-section export-detail-filters"><h3>提交时的筛选条件</h3><div class="export-detail-section-body">${visibleFilters.length ? `<dl>${visibleFilters.map(filter => `<div><dt>${escape(fieldLabel(filter.label))}</dt><dd>${filterValue(filter)}</dd></div>`).join('')}</dl>` : `<p class="export-muted">${task.filters?.length ? '暂无其他筛选条件' : '未设置筛选条件，导出全部记录'}</p>`}</div></section>
-      <section class="export-detail-section"><h3>导出字段<span class="export-field-caption">（按导出顺序）</span></h3><div class="export-detail-section-body"><ol class="export-field-list">${task.columns.map((column, index) => `<li><span class="export-field-number" aria-hidden="true">${index + 1}</span><span>${escape(fieldLabel(column.label))}</span></li>`).join('')}</ol></div></section>
-    </div>`;
-  }
-  function renderDetail(task) {
-    const html = detail(task);
-    if (html !== lastDetail) { byId('exportDetailBody').innerHTML = html; lastDetail = html; }
-    const notes = {
-      completed: `文件将于 ${date(task.expiresAt)} 失效，请及时下载`,
-      queued: '任务排队中，完成后可下载文件',
-      running: '正在生成文件，完成后可下载',
-      failed: '文件生成失败，请回原列表重新发起导出',
-      expired: '文件已过期，请回原列表重新发起导出'
-    };
-    byId('exportDetailNote').textContent = notes[task.status];
-    const footer = byId('exportDetail').querySelector('.export-detail-footer');
-    footer.classList.toggle('is-failed', task.status === 'failed');
-    footer.classList.toggle('is-completed', task.status === 'completed');
-    const download = byId('exportDetailDownload');
-    download.disabled = task.status !== 'completed' || detailDownloadBusy;
-    download.setAttribute('aria-busy', String(detailDownloadBusy));
-    download.querySelector('span:last-child').textContent = detailDownloadBusy ? '下载中…' : '下载文件';
-  }
   const choices = {
     exportSource: [['', '全部来源'], ...Object.entries(ExportTasks.sources)],
     exportStatus: [['', '全部状态'], ...Object.entries(ExportTasks.statuses)],
@@ -107,7 +72,7 @@
       const value = dateKey(new Date(year, month, day)), inRange = draftStart && draftEnd && value >= draftStart && value <= draftEnd;
       return `<button type="button" class="session-date-day${inRange ? ' in-range' : ''}${value === draftStart ? ' is-start' : ''}${value === draftEnd ? ' is-end' : ''}${value === dateKey(Date.now()) ? ' is-today' : ''}" data-day="${value}" aria-label="${value}">${day}</button>`;
     }).join('');
-    byId('exportDateMenu').innerHTML = `<div class="session-date-panel-head"><div class="session-date-panel-copy"><span>提交日期范围</span><strong>${draftStart || draftEnd ? '已选择日期范围' : '不限日期'}</strong></div><div class="session-date-nav"><button type="button" class="session-date-nav-btn" data-month="-1" aria-label="上一个月"><i class="session-date-nav-arrow prev"></i></button><strong>${year}年${month + 1}月</strong><button type="button" class="session-date-nav-btn" data-month="1" aria-label="下一个月"><i class="session-date-nav-arrow next"></i></button></div></div><div class="session-date-tabs">${[['start', '开始日期', draftStart], ['end', '结束日期', draftEnd]].map(([key, label, value]) => `<button type="button" class="session-date-tab${activeDate === key ? ' active' : ''}" data-date-field="${key}"><span>${label}</span><strong>${value || '不限'}</strong></button>`).join('')}</div><div class="session-date-weekdays">${['一','二','三','四','五','六','日'].map(day => `<span>${day}</span>`).join('')}</div><div class="session-date-grid">${cells}</div>${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('export-date')}<div class="session-cascader-footer session-date-footer"><span>按提交日期筛选</span><div class="session-date-actions"><button type="button" class="session-date-shortcut" data-export-date-clear>不限日期</button><button type="button" class="session-date-shortcut" data-date-cancel>取消</button><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-date-apply>应用日期</button></div></div>`;
+    byId('exportDateMenu').innerHTML = `<div class="session-date-panel-head"><div class="session-date-panel-copy"><span>导出日期范围</span><strong>${draftStart || draftEnd ? '已选择日期范围' : '不限日期'}</strong></div><div class="session-date-nav"><button type="button" class="session-date-nav-btn" data-month="-1" aria-label="上一个月"><i class="session-date-nav-arrow prev"></i></button><strong>${year}年${month + 1}月</strong><button type="button" class="session-date-nav-btn" data-month="1" aria-label="下一个月"><i class="session-date-nav-arrow next"></i></button></div></div><div class="session-date-tabs">${[['start', '开始日期', draftStart], ['end', '结束日期', draftEnd]].map(([key, label, value]) => `<button type="button" class="session-date-tab${activeDate === key ? ' active' : ''}" data-date-field="${key}"><span>${label}</span><strong>${value || '不限'}</strong></button>`).join('')}</div><div class="session-date-weekdays">${['一','二','三','四','五','六','日'].map(day => `<span>${day}</span>`).join('')}</div><div class="session-date-grid">${cells}</div>${window.__dateFilterComponentUtils.renderDateShortcutsMarkup('export-date')}<div class="session-cascader-footer session-date-footer"><span>按导出日期筛选</span><div class="session-date-actions"><button type="button" class="session-date-shortcut" data-export-date-clear>不限日期</button><button type="button" class="session-date-shortcut" data-date-cancel>取消</button><button type="button" class="btn-primary session-date-action-btn session-date-apply-btn" data-date-apply>应用日期</button></div></div>`;
   }
   byId('exportDateTrigger').onclick = () => {
     const wasOpen = !byId('exportDateMenu').hidden; closeMenus(); if (wasOpen) return;
@@ -168,11 +133,21 @@
       const query = byId('exportSearch').value.trim().toLocaleLowerCase('zh-CN');
       const source = byId('exportSource').value, selectedStatus = byId('exportStatus').value;
       const start = byId('exportStart').value, end = byId('exportEnd').value;
-      if (start && end && start > end) throw new Error('提交开始日期不能晚于结束日期');
+      if (start && end && start > end) throw new Error('开始日期不能晚于结束日期');
       const filtered = all.filter(task => (!query || task.filename.toLocaleLowerCase('zh-CN').includes(query)) && (!source || task.source === source) && (!selectedStatus || task.status === selectedStatus) && (!start || dateKey(task.createdAt) >= start) && (!end || dateKey(task.createdAt) <= end));
       const size = Number(byId('exportPageSize').value);
       pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages);
-      const markup = filtered.slice((page - 1) * size, page * size).map(task => `<tr><td><button class="export-link export-name" data-detail="${escape(task.id)}" title="${escape(task.filename)}">${escape(task.filename)}</button></td><td>${escape(ExportTasks.sources[task.source])}</td><td>${status(task)}</td><td>${task.recordCount.toLocaleString('zh-CN')}</td><td>${date(task.createdAt)}</td><td>${date(task.completedAt)}</td><td>${date(task.expiresAt)}</td><td><div class="export-actions"><button class="export-link" type="button" ${task.status === 'completed' ? `data-download="${escape(task.id)}"` : 'disabled'}>下载</button>${['completed', 'failed', 'expired'].includes(task.status) ? `<button class="export-link danger" data-delete="${escape(task.id)}">删除</button>` : '<span class="export-muted">—</span>'}</div></td></tr>`).join('');
+      const linkedTaskIndex = locateLinkedTask ? filtered.findIndex(task => task.id === linkedTaskId) : -1;
+      if (linkedTaskIndex >= 0) page = Math.floor(linkedTaskIndex / size) + 1;
+      const markup = filtered.slice((page - 1) * size, page * size).map(task => `
+        <tr${task.id === linkedTaskId ? ' aria-current="true" tabindex="-1"' : ''}>
+          <td><span class="export-name" title="${escape(task.filename)}">${escape(task.filename)}</span></td>
+          <td>${escape(ExportTasks.sources[task.source])}</td>
+          <td>${status(task)}</td>
+          <td>${task.recordCount.toLocaleString('zh-CN')}</td>
+          <td>${date(task.createdAt)}</td>
+          <td><div class="export-actions"><button class="export-link" type="button" ${task.status === 'completed' ? `data-download="${escape(task.id)}"` : 'disabled'}>下载</button>${['completed', 'failed', 'expired'].includes(task.status) ? `<button class="export-link danger" data-delete="${escape(task.id)}">删除</button>` : '<span class="export-muted">—</span>'}</div></td>
+        </tr>`).join('');
       if (markup !== lastMarkup) { byId('exportRows').innerHTML = markup; lastMarkup = markup; }
       byId('exportCount').innerHTML = `当前匹配 <strong>${filtered.length}</strong> 个任务`;
       if (window.ListSummaryCounters) window.ListSummaryCounters.update('exports',
@@ -183,65 +158,14 @@
       byId('exportEmpty').hidden = filtered.length > 0;
       byId('exportEmpty').querySelector('h3').textContent = all.length ? '没有匹配的导出任务' : '暂无导出任务';
       byId('exportEmpty').querySelector('p').textContent = all.length ? '试试调整筛选条件或搜索词' : '在支持导出的业务列表中点击导出，即可创建任务';
-      if (detailId && byId('exportDetail').open) {
-        const task = all.find(item => item.id === detailId);
-        if (!task) { closeDetail(); ui.notify('任务已被删除', null, 'info'); }
-        else renderDetail(task);
+      if (linkedTaskIndex >= 0) {
+        const row = byId('exportRows').querySelector('tr[aria-current="true"]');
+        row.focus({ preventScroll: true });
+        row.scrollIntoView({ block: 'center', inline: 'nearest' });
       }
+      locateLinkedTask = false;
     } catch (error) { if (version === refreshVersion) report(error); return false; }
   }
-  const detailDrawer = byId('exportDetail');
-  let detailCloseTimer, detailTrigger, detailOpenVersion = 0;
-  function closeDetail() {
-    if (!detailDrawer.open) return;
-    ++detailOpenVersion;
-    clearTimeout(detailCloseTimer);
-    detailDrawer.classList.remove('is-open');
-    const finish = () => {
-      detailDrawer.close();
-      detailId = null;
-      if (detailTrigger?.isConnected) detailTrigger.focus();
-      detailTrigger = null;
-    };
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
-    else detailCloseTimer = setTimeout(finish, 230);
-  }
-  async function openDetail(id) {
-    const version = ++detailOpenVersion;
-    const trigger = document.activeElement;
-    const task = await service.get(id);
-    if (version !== detailOpenVersion) return;
-    clearTimeout(detailCloseTimer);
-    detailTrigger = trigger;
-    detailId = id; renderDetail(task);
-    if (!detailDrawer.open) detailDrawer.showModal();
-    byId('exportDetailBody').scrollTop = 0;
-    detailDrawer.getBoundingClientRect();
-    detailDrawer.classList.add('is-open');
-    detailDrawer.querySelector('[data-close]').focus();
-  }
-  byId('exportDetailDownload').onclick = async () => {
-    if (!detailId || detailDownloadBusy || byId('exportDetailDownload').disabled) return;
-    detailDownloadBusy = true;
-    const button = byId('exportDetailDownload');
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    button.querySelector('span:last-child').textContent = '下载中…';
-    try { await ui.download(detailId); }
-    catch (error) { ui.notify(error.message, null, 'error'); }
-    finally { detailDownloadBusy = false; await refresh(); }
-  };
-  detailDrawer.addEventListener('cancel', event => { event.preventDefault(); closeDetail(); });
-  let detailBackdropPressed = false;
-  function isOutsideDetail(event) {
-    const rect = detailDrawer.getBoundingClientRect();
-    return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
-  }
-  detailDrawer.addEventListener('pointerdown', event => { detailBackdropPressed = event.target === detailDrawer && isOutsideDetail(event); });
-  detailDrawer.addEventListener('click', event => {
-    if (detailBackdropPressed && event.target === detailDrawer && isOutsideDetail(event)) closeDetail();
-    detailBackdropPressed = false;
-  });
   ['exportSearch', 'exportSource', 'exportStatus', 'exportStart', 'exportEnd', 'exportPageSize'].forEach(id => byId(id).addEventListener('input', () => { page = 1; refresh(); }));
   byId('exportReset').onclick = () => { ['exportSearch', 'exportSource', 'exportStatus', 'exportStart', 'exportEnd'].forEach(id => { byId(id).value = ''; }); syncSelects(); syncDate(); closeMenus(); page = 1; refresh(); window.PlatformToast.show('筛选条件已重置', { kind: 'info', duration: 2200 }); };
   byId('exportRefresh').onclick = async () => {
@@ -265,11 +189,12 @@
   };
   byId('exportPrevious').onclick = () => { page = Math.max(1, page - 1); refresh(); };
   byId('exportNext').onclick = () => { page = Math.min(pages, page + 1); refresh(); };
-  document.querySelectorAll('[data-close]').forEach(button => { button.onclick = () => button.dataset.close === 'exportDetail' ? closeDetail() : byId(button.dataset.close).close(); });
+  document.querySelectorAll('[data-close="exportDelete"]').forEach(button => {
+    button.onclick = () => byId('exportDelete').close();
+  });
   byId('exportRows').addEventListener('click', async event => {
     const button = event.target.closest('button'); if (!button) return;
     try {
-      if (button.dataset.detail) await openDetail(button.dataset.detail);
       if (button.dataset.download) await ui.download(button.dataset.download);
       if (button.dataset.delete) {
         const task = await service.get(button.dataset.delete);
@@ -292,6 +217,4 @@
   };
   window.addEventListener('export-tasks-changed', refresh);
   await refresh();
-  const target = new URLSearchParams(location.search).get('task');
-  if (target) { try { await openDetail(target); } catch (error) { ui.notify(error.message, null, 'error'); } }
 })();

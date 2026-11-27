@@ -67,7 +67,7 @@
       advisorPhone: `138****${String(storeIndex * 3 + advisorIndex + 1).padStart(4, '0')}`,
       sn: `MN-LINK-${String(storeIndex * 3 + advisorIndex + 1).padStart(6, '0')}`,
       linkedDemo: true, queryDate: dateRange.endDate, badgeType: '明略Wi-Fi工牌', badgeStatus: '在线',
-      recordingStatus: '未录音', connectionStatus: '已连接', dockConnected: true, signal: '信号良好',
+      recordingStatus: '未录音', connectionStatus: '已连接', signal: '信号良好',
       battery: 61 + (storeIndex * 7 + advisorIndex) % 39, remainingMemory: 45 + (storeIndex * 11) % 50,
       uptime: '10:00:00', pendingUploads: 0, syncedAt: `${dateRange.endDate} 23:59:59` };
   }));

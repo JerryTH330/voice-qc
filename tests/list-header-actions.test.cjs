@@ -43,11 +43,6 @@ function adapterContext(overrides = {}) {
     getStoreBindingRate: item => item.badges ? item.bindings / item.badges * 100 : null,
     formatStoreBindingRate: value => value === null ? '—' : `${value.toFixed(1)}%`,
     projectDemoTimestampToDate: (value,date) => date + value.slice(10),
-    badgeManagementDealer: { dealerName:'门店甲' }, badgeManagementState: { query:'0007',status:'已绑定' },
-    badgeManagementEmployees: [{employeeId:'0007',employeeName:'陈佳'}],
-    badgeManagementBadges: [
-      {sn:'SN-A',employeeId:'0007',connectionStatus:'已连接',battery:52,syncedAt:'2026-10-14 09:00:00'},
-      {sn:'SN-B',employeeId:'',connectionStatus:'未连接',battery:82,syncedAt:'2026-10-14 09:00:00'}],
     badgeUploadFilterState: { startDate:'2026-10-12',endDate:'2026-10-14' },
     getCurrentBadgeUploadRecords: () => [
       {status:'已上传',completedAt:'2026-10-12 11:00:00'}, {status:'已上传',completedAt:'2026-10-12 12:00:00'},
@@ -58,11 +53,12 @@ function adapterContext(overrides = {}) {
     badgeEventRecords: [], badgeEventFilterState:{sn:'SN-A',date:'2026-10-14',type:'all'},
     visitEventFilterState:{record:{badgeSn:'SN-MISSING',businessId:'BIZ-2',advisor:'陈佳',date:'2026-10-14',startTime:'12:00:00',endTime:'12:24:00'},date:'2026-10-14',type:'all'},
     getBadgeEventRecord: (sn, date) => ({ sn, date, events:[{type:'power-on',time:'08:00:00',label:'工牌开机'}]}),
-    badgeEventTypeOptions: [['all','全部事件'],['recording','录音'],['charging','充电']], ...overrides });
+    badgeEventTypeOptions: [['all','全部事件'],['recording','录音']], ...overrides });
   const functions = ['getVisibleStoreFields','getStoreFieldValue','badgeEventTimeToSeconds','formatBadgeDurationSeconds','getStoreOverviewExportFilters','getVisibleEventExportRows','getDeviceListExportRequest','buildBadgeEventGroups','matchesBadgeEventGroupType','formatBadgeEventDuration',
-    'getBadgeManagementEmployee','getBadgeManagementRecords','getBadgeUploadStartTime','getBadgeUploadMatchTime','getBadgeUploadCompletedDate','getBadgeUploadDateRange','getBadgeUploadDates','shiftBadgeUploadDate','getCompletedBadgeUploadRecords',
+    'getBadgeUploadStartTime','getBadgeUploadMatchTime','getBadgeUploadCompletedDate','getBadgeUploadDateRange','getBadgeUploadDates','shiftBadgeUploadDate','getCompletedBadgeUploadRecords',
     'formatStoreDateDisplay','formatDeviceDateRange','isWithinDateTimeRange','getBadgeEventRecords'];
-  vm.runInContext(functions.map(fn).join('\n'),context);
+  const eventTypes = source.match(/^const badgeTimelineEventTypes = .*;$/m)[0];
+  vm.runInContext([eventTypes, ...functions.map(fn)].join('\n'),context);
   context.getStoreOverviewExportFilters = () => [{label:'查询日期',value:'2026-10-14 至 2026-10-14'}];
   return context;
 }
@@ -121,13 +117,6 @@ test('store filter metadata uses applied selections and directory names, never u
   assert.ok(filters.some(item=>item.value==='陈佳')); assert.ok(!JSON.stringify(filters).includes('A1'));
 });
 
-test('management exports match search and binding filters and retain employee ID text', () => {
-  const c=adapterContext(); let input=c.getDeviceListExportRequest('management');
-  assert.equal(input.rows.length,1); assert.equal(input.rows[0][2],'0007'); assert.equal(input.rows[0][3],'已绑定');
-  c.badgeManagementState.query=''; c.badgeManagementState.status='未绑定'; input=c.getDeviceListExportRequest('management');
-  assert.equal(input.rows.length,1); assert.equal(input.rows[0][0],'SN-B'); assert.equal(input.rows[0][2],'—');
-});
-
 test('daily upload export follows completion dates, includes zero-count days and excludes pending/out-of-range data', () => {
   const c=adapterContext(), input=c.getDeviceListExportRequest('uploads');
   assert.deepEqual(plain(input.rows),[['2026-10-14',0],['2026-10-13',0],['2026-10-12',2]]);
@@ -150,8 +139,8 @@ test('event export merges intervals, retains open intervals and exports only the
   const rows=plain(c.getVisibleEventExportRows(events,'recording','2026-10-14','SN-A'));
   assert.equal(rows.length,2); assert.equal(rows[0][4],'08:10:00'); assert.equal(rows[1][4],'进行中');
   assert.ok(rows.every(row=>row[2]==='录音'));
-  const charge=plain(c.getVisibleEventExportRows(events,'charging','2026-10-14','SN-A'));
-  assert.equal(charge.length,1); assert.equal(charge[0][2],'充电'); assert.equal(charge[0][4],'09:00:00');
+  const all = plain(c.getVisibleEventExportRows(events, 'all', '2026-10-14', 'SN-A'));
+  assert.deepEqual(all.map(row => row[2]), ['工牌开机', '录音', '录音', '电量预警', '工牌关机']);
 });
 
 test('visit event export keeps an empty evidence set and never substitutes generated badge events', () => {
@@ -163,7 +152,7 @@ test('every new source completes as a real workbook in the shared export task se
   const c=adapterContext(); c.badgeEventRecords.push({sn:'SN-MISSING',date:'2026-10-14',events:[{type:'power-on',time:'08:00:00',label:'工牌开机'}]});
   let tasks=[], time=Date.parse('2026-10-15T00:00:00Z');
   const service=createService({userId:'test',now:()=>time,buildFile:createXlsxBytes,store:{async update(fn){const result=fn(tasks);return structuredClone(result);}}});
-  for (const key of ['stores','management','uploads','upload-details','events','visit-events']) {
+  for (const key of ['stores','uploads','upload-details','events','visit-events']) {
     const input=plain(c.getDeviceListExportRequest(key)); const task=await service.submit(input);
     assert.equal(task.source,input.source); assert.equal(task.recordCount,input.rows.length);
     time+=2000; await service.advance(); time+=10000; await service.advance();
@@ -171,7 +160,7 @@ test('every new source completes as a real workbook in the shared export task se
     assert.equal(output.bytes[0],80); assert.equal(output.bytes[1],75);
     assert.ok(xml.includes(input.columns[0].label)); assert.ok(xml.includes(String(input.rows[0][0])));
   }
-  for (const key of ['customerInsights','adoptedActions','docks','scriptLibrary']) assert.equal(sources[key],undefined);
+  for (const key of ['customerInsights','adoptedActions','badgeManagement','docks','scriptLibrary']) assert.equal(sources[key],undefined);
 });
 
 test('matching refresh keeps its current page while a new filter render returns to page one', () => {

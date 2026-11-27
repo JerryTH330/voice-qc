@@ -187,6 +187,12 @@
       const compare=data.query({...scope,predicate:sales?r=>!!selected&&r.storeId===selected.storeId&&model.matches({...r,advisorKey:selected.advisorKey}):undefined});
       const rows=result.trend,comparison=new Map(compare.trend.map(row=>[row.date,row.qualifiedRate]));
       const own=rows.map(row=>row.qualifiedRate),average=rows.map(row=>comparison.get(row.date) ?? null),volume=rows.map(row=>row.recordingCount);
+      const palette = global.AIQCChartPalette;
+      const volumeFill = palette.sequence[0].hex;
+      const areaFill = palette.primary + '14';
+      // A single reference observation has no line segment, so keep a point at that date.
+      const referencePoints = average.map((value, index) => Number.isFinite(value)
+        && !Number.isFinite(average[index - 1]) && !Number.isFinite(average[index + 1]) ? 3 : 0);
       const labels=rows.map(row=>row.date.slice(5)),max=Math.max(1,...volume),step=Math.max(1,Math.ceil(max/5));
       const minimum=[...own,...average].filter(value=>value!==null).some(value=>value<50)?0:50;
       canvas.setAttribute('aria-label',`${dateRangeText(state)}，录音${result.metrics.recordingCount}条；合格率${number(result.metrics.qualifiedRate,'%')}`);
@@ -194,11 +200,16 @@
       if(kind==='factory'&&global.Chart){
         chartInstance?.destroy();
         chartInstance=new global.Chart(canvas,{type:'line',data:{labels,datasets:[
-          {label:'质检合格率',data:own,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',fill:true,tension:.4,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#3B82F6',yAxisID:'y'},
-          {label:'全国质检合格率',data:average,borderColor:'#F59E0B',backgroundColor:'transparent',borderDash:[6,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:3,fill:false,yAxisID:'y'},
-          {type:'bar',label:'录音量',data:volume,backgroundColor:'rgba(59,130,246,0.13)',borderColor:'rgba(37,99,235,.92)',borderWidth:1.5,borderSkipped:'bottom',borderRadius:4,barPercentage:.55,categoryPercentage:.7,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E293B',titleColor:'#94A3B8',bodyColor:'#E2E8F0',padding:10,cornerRadius:8,callbacks:{label:context=>` ${context.dataset.label}: ${context.parsed.y}${context.dataset.yAxisID==='y'?'%':'条'}`}}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},maxTicksLimit:10}},y:{position:'left',min:minimum,max:100,grid:{color:'#F1F5F9'},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},callback:value=>value+'%'}},y1:{position:'right',min:0,grid:{display:false},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},callback:value=>value>=1000?(value/1000).toFixed(1)+'k':value}}}}});
+          {label:'质检合格率',data:own,borderColor:palette.primary,backgroundColor:areaFill,fill:true,tension:.4,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:palette.primary,yAxisID:'y'},
+          {
+            label:'全国质检合格率', data:average, yAxisID:'y', fill:false, tension:.4,
+            // Draw the dashed reference over the solid series when their rates coincide.
+            order:-1, borderColor:palette.reference, backgroundColor:'transparent', borderDash:[6,4], borderWidth:2,
+            pointRadius:referencePoints, pointBackgroundColor:palette.reference, pointHoverRadius:3
+          },
+          {type:'bar',label:'录音量',data:volume,backgroundColor:volumeFill,borderColor:palette.primary,borderWidth:1.5,borderSkipped:'bottom',borderRadius:4,barPercentage:.55,categoryPercentage:.7,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{itemSort:(a,b)=>a.datasetIndex-b.datasetIndex,backgroundColor:'#1E293B',titleColor:'#94A3B8',bodyColor:'#E2E8F0',padding:10,cornerRadius:8,callbacks:{label:context=>` ${context.dataset.label}: ${context.parsed.y}${context.dataset.yAxisID==='y'?'%':'条'}`}}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},maxTicksLimit:10}},y:{position:'left',min:minimum,max:100,grid:{color:'#F1F5F9'},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},callback:value=>value+'%'}},y1:{position:'right',min:0,grid:{display:false},border:{display:false},ticks:{color:'#94A3B8',font:{size:11},callback:value=>value>=1000?(value/1000).toFixed(1)+'k':value}}}}});
       } else {
-        const config={labels,leftAxis:{min:0,max:step*5,ticks:Array.from({length:6},(_,i)=>i*step),label:'录音量',formatLabel:value=>String(value)},rightAxis:{min:minimum,max:100,ticks:minimum===0?[0,25,50,75,100]:[50,60,70,80,90,100],label:'合格率',formatLabel:value=>`${value}%`},bars:{axis:'left',data:volume,fill:'rgba(37,99,235,.16)',stroke:'rgba(37,99,235,.92)',widthRatio:.72,radius:6},datasets:[{axis:'right',color:'#2563eb',data:own,pointRadius:4,lineWidth:3,curved:true,solidPoint:true,fillColor:'rgba(37,99,235,.08)'},{axis:'right',color:kind==='factory'?'#F59E0B':'#94a3b8',data:average,pointRadius:kind==='factory'?0:4,lineWidth:2.5,dash:[6,4],curved:true,solidPoint:true}]};
+        const config={labels,leftAxis:{min:0,max:step*5,ticks:Array.from({length:6},(_,i)=>i*step),label:'录音量',formatLabel:value=>String(value)},rightAxis:{min:minimum,max:100,ticks:minimum===0?[0,25,50,75,100]:[50,60,70,80,90,100],label:'合格率',formatLabel:value=>`${value}%`},bars:{axis:'left',data:volume,fill:volumeFill,stroke:palette.primary,widthRatio:.72,radius:6},datasets:[{axis:'right',color:palette.primary,data:own,pointRadius:4,lineWidth:3,curved:true,solidPoint:true,fillColor:areaFill},{axis:'right',color:palette.reference,data:average,pointRadius:referencePoints,lineWidth:2,dash:[6,4],curved:true,solidPoint:true}]};
         const layout=presentation.drawTrendChart(canvas,config,1);
         global.__unifiedDashboardController.chartConfig=config;
         let tooltip=canvas.parentElement.querySelector('[data-unified-chart-tooltip]');
@@ -206,8 +217,12 @@
         canvas.onmousemove=event=>{if(!rows.length)return;const bounds=canvas.getBoundingClientRect(),position=event.clientX-bounds.left;const bars=layout?.bars || [];const index=bars.length?bars.reduce((best,bar)=>Math.abs(bar.centerX-position)<Math.abs(bars[best].centerX-position)?bars.indexOf(bar):best,0):Math.max(0,Math.min(rows.length-1,Math.floor(position/(bounds.width||1)*rows.length)));const rowIndex=bars.length?bars[index].index:index,row=rows[rowIndex];tooltip.textContent=`${row.date} · 录音 ${row.recordingCount} 条 · ${sales?'个人':'当前'}合格率 ${number(row.qualifiedRate,'%')} · ${sales?'门店':'全国'}合格率 ${number(average[rowIndex],'%')}`;tooltip.style.left=`${Math.max(0,Math.min((bounds.width||700)-320,position))}px`;tooltip.style.top='12px';tooltip.classList.add('visible');};
         canvas.onmouseleave=()=>tooltip.classList.remove('visible');
       }
-      const factory=kind==='factory';
-      html(sales?'trend-legend':'chart-legend',`<span class="legend-item"><i class="legend-dot" style="background:${factory?'#3B82F6':'#2563eb'}"></i>${sales?'个人':'当前'}合格率</span><span class="legend-item"><i class="legend-dot" style="background:${factory?'#F59E0B':'#94a3b8'}"></i>${sales?'门店':'全国'}质检合格率</span><span class="legend-item"><i class="legend-dot" style="background:rgba(37,99,235,.15)"></i>${sales?'个人':''}录音量</span>`);
+      const legendItem = (label, symbol) => `<span class="legend-item"><svg class="chart-legend-symbol" width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">${symbol}</svg>${label}</span>`;
+      html(sales ? 'trend-legend' : 'chart-legend', [
+        legendItem((sales ? '个人' : '当前') + '合格率', `<path d="M0 6h24" stroke="${palette.primary}" stroke-width="2.5"/><circle cx="12" cy="6" r="3.5" fill="${palette.primary}"/>`),
+        legendItem((sales ? '门店' : '全国') + '质检合格率', `<path d="M0 6h24" stroke="${palette.reference}" stroke-width="2" stroke-dasharray="6 4"/>`),
+        legendItem((sales ? '个人' : '') + '录音量', `<rect x="6" y="1" width="12" height="10" rx="2" fill="${volumeFill}" stroke="${palette.primary}"/>`)
+      ].join(''));
       const emptyNode=node('storeTrendEmpty');if(emptyNode)emptyNode.hidden=true;
     }
     function pager(total) {

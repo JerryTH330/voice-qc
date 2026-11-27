@@ -44,11 +44,16 @@
       paint(metric, from);
     }
 
-    function sync(group) {
+    function releaseFinishedOnce(key, group) {
+      if (group.once && group.metrics.every(metric => !metric.animation)) groups.delete(key);
+    }
+
+    function sync(group, key) {
       const shown = visible(group.root);
       const scope = group.root?.closest('dialog, .modal-backdrop, .badge-record-drawer, .page-panel');
       const context = `${host.location.pathname}${host.location.hash}|${group.context || ''}`;
-      const entering = shown && (!group.visible || context !== group.contextKey || scope !== group.scope);
+      const changingView = context !== group.contextKey || scope !== group.scope;
+      const entering = shown && (!group.visible || (!group.once && changingView));
       group.visible = shown;
       group.contextKey = context;
       group.scope = scope;
@@ -59,20 +64,24 @@
         else paint(metric, metric.current);
         metric.changed = false;
       });
+      releaseFinishedOnce(key, group);
       requestTick();
     }
 
     function tick(timestamp) {
       animationFrame = null;
-      groups.forEach(group => group.metrics.forEach(metric => {
-        const animation = metric.animation;
-        if (!animation) return;
-        if (animation.start === null) animation.start = timestamp + animation.delay;
-        const progress = Math.max(0, Math.min((timestamp - animation.start) / 920, 1));
-        const eased = 1 - (1 - progress) ** 3;
-        paint(metric, animation.from + (metric.target - animation.from) * eased);
-        if (progress === 1) settle(metric);
-      }));
+      groups.forEach((group, key) => {
+        group.metrics.forEach(metric => {
+          const animation = metric.animation;
+          if (!animation) return;
+          if (animation.start === null) animation.start = timestamp + animation.delay;
+          const progress = Math.max(0, Math.min((timestamp - animation.start) / 920, 1));
+          const eased = 1 - (1 - progress) ** 3;
+          paint(metric, animation.from + (metric.target - animation.from) * eased);
+          if (progress === 1) settle(metric);
+        });
+        releaseFinishedOnce(key, group);
+      });
       requestTick();
     }
 
@@ -95,7 +104,7 @@
       });
     }
 
-    function update(key, entries, { root, context = '' } = {}) {
+    function update(key, entries, { root, context = '', once = false } = {}) {
       const previous = groups.get(key);
       const metrics = entries.map((entry, index) => {
         const node = entry.node || host.document.getElementById(entry.id);
@@ -113,9 +122,9 @@
       }).filter(Boolean);
       if (!metrics.length) return;
       const group = previous || { visible: false };
-      Object.assign(group, { metrics, root: root || metrics[0].node.parentElement, context });
+      Object.assign(group, { metrics, root: root || metrics[0].node.parentElement, context, once });
       groups.set(key, group);
-      sync(group);
+      sync(group, key);
     }
 
     const observer = new host.MutationObserver(records => {

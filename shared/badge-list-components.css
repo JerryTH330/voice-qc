@@ -168,6 +168,17 @@
   background: #fff;
 }
 .badge-data-table tbody tr:hover td:last-child { background: #f8fbff; }
+
+.store-sort-button { padding: 0; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.store-sort-icon { display: inline-flex; width: 10px; height: 16px; flex: 0 0 10px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.store-sort-icon i { display: block; width: 8px; height: 5px; background: #a8b1bf; opacity: .72; transition: background-color .16s ease, opacity .16s ease; }
+.store-sort-icon-up { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.store-sort-icon-down { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.store-sort-button:hover, .store-sort-button.active { color: var(--blue); }
+.store-sort-button:hover .store-sort-icon i { background: #7d8ba1; opacity: 1; }
+.store-sort-button.active .store-sort-icon i { background: #b7c3d3; opacity: .52; }
+.store-sort-button.is-ascending .store-sort-icon i.store-sort-icon-up,
+.store-sort-button.is-descending .store-sort-icon i.store-sort-icon-down { background: var(--blue); opacity: 1; }
 .badge-inline-action { margin-left: 16px; }
 .badge-detail-table-card .battery + strong { font-size: 14px; }
 .badge-detail-table-card .session-pagination {
@@ -175,7 +186,6 @@
   border-top-color: rgba(217, 226, 239, .72);
 }
 
-.badge-dock-refresh-icon,
 .badge-detail-refresh-icon {
   width: 16px;
   height: 16px;
@@ -194,9 +204,8 @@
   mask-repeat: no-repeat;
   mask-size: contain;
 }
-.badge-dock-refresh-btn.spinning .badge-dock-refresh-icon,
-.badge-detail-refresh-btn.is-refreshing .badge-detail-refresh-icon { animation: badge-dock-spin .7s linear infinite; }
-@keyframes badge-dock-spin { to { transform: rotate(360deg); } }
+.badge-detail-refresh-btn.is-refreshing .badge-detail-refresh-icon { animation: badge-list-refresh-spin .7s linear infinite; }
+@keyframes badge-list-refresh-spin { to { transform: rotate(360deg); } }
 .badge-field-settings-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(610px, 92vw); background: #fff; z-index: 110; transform: translateX(102%); transition: transform .23s ease; box-shadow: -18px 0 50px rgba(13,23,43,.15); display: flex; flex-direction: column; }
 .badge-field-settings-drawer.open { transform: translateX(0); }
 .badge-field-settings-head { min-height: 98px; padding: 19px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; }

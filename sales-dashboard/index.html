@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./page.css?v=20261120-sales-cloud-kpis-v1" />
+        <link rel="stylesheet" href="./page.css?v=20261124-chart-palette-v1" />
     <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261109-dimension-text-dark-v3" />
     <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261028-date-field-width-v1" />
     <link rel="stylesheet" href="./organization-filter.css?v=20261028-full-sync-v1" />
     <link rel="stylesheet" href="./business-filters.css?v=20261028-full-sync-v1" />
-    <link rel="stylesheet" href="./source-tabs.css?v=20261028-full-sync-v1" />
+    <link rel="stylesheet" href="../shared/page-view-tabs.css?v=20261125-page-view-tabs-v1" />
+    <link rel="stylesheet" href="./source-tabs.css?v=20261125-page-view-tabs-v1" />
     <link rel="stylesheet" href="../shared/dashboard-responsive.css?v=20261120-metric-icon-size-v1" />
     <link rel="stylesheet" href="./filter-layout.css?v=20261028-full-sync-v1" />
 <title>销售看板 · AI质检平台</title>
@@ -142,10 +143,10 @@
             <div class="sales-role-shell">
               <div class="sales-role-main-column">
                 <div class="sales-role-nav">
-                  <div class="role-page-switch" data-sales-source="dcc" role="tablist" aria-label="录音来源">
-                    <span class="sales-source-indicator" aria-hidden="true"><span class="sales-source-indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
-                    <button type="button" class="role-switch-link active" data-route="sales-dcc">云外呼</button>
-                    <button type="button" class="role-switch-link" data-route="sales-advisor">工牌</button>
+                  <div class="role-page-switch page-view-tabs animate-selection" data-sales-source="dcc" role="tablist" aria-label="录音来源">
+                    <span class="sales-source-indicator page-view-tabs__indicator" aria-hidden="true"><span class="sales-source-indicator-labels page-view-tabs__indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
+                    <button type="button" class="role-switch-link page-view-tabs__tab active" data-route="sales-dcc">云外呼</button>
+                    <button type="button" class="role-switch-link page-view-tabs__tab" data-route="sales-advisor">工牌</button>
                   </div>
                   <section class="card session-filter-card badge-session-filter-card dashboard-filter-card sales-filter-card">
                     <div class="sales-organization-filter" data-sales-organization-filters="dcc"></div>
@@ -218,13 +219,6 @@
                         <div class="review-score-area">
                           <div class="review-score-circle" id="review-score-circle">
                             <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
-                              <defs>
-                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                                  <stop offset="0%" stop-color="#67bfff"></stop>
-                                  <stop offset="52%" stop-color="#38bdf8"></stop>
-                                  <stop offset="100%" stop-color="#2563eb"></stop>
-                                </linearGradient>
-                              </defs>
                               <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
                               <path class="review-score-progress" d=""></path>
                             </svg>
@@ -347,10 +341,10 @@
             <div class="sales-role-shell">
               <div class="sales-role-main-column">
                 <div class="sales-role-nav">
-                  <div class="role-page-switch" data-sales-source="advisor" role="tablist" aria-label="录音来源">
-                    <span class="sales-source-indicator" aria-hidden="true"><span class="sales-source-indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
-                    <button type="button" class="role-switch-link" data-route="sales-dcc">云外呼</button>
-                    <button type="button" class="role-switch-link active" data-route="sales-advisor">工牌</button>
+                  <div class="role-page-switch page-view-tabs animate-selection" data-sales-source="advisor" role="tablist" aria-label="录音来源">
+                    <span class="sales-source-indicator page-view-tabs__indicator" aria-hidden="true"><span class="sales-source-indicator-labels page-view-tabs__indicator-labels"><span>云外呼</span><span>工牌</span></span></span>
+                    <button type="button" class="role-switch-link page-view-tabs__tab" data-route="sales-dcc">云外呼</button>
+                    <button type="button" class="role-switch-link page-view-tabs__tab active" data-route="sales-advisor">工牌</button>
                   </div>
                   <section class="card session-filter-card badge-session-filter-card dashboard-filter-card sales-filter-card">
                     <div class="sales-organization-filter" data-sales-organization-filters="advisor"></div>
@@ -423,13 +417,6 @@
                         <div class="review-score-area">
                           <div class="review-score-circle" id="review-score-circle">
                             <svg class="review-score-ring" viewBox="0 0 100 100" aria-hidden="true">
-                              <defs>
-                                <linearGradient id="reviewScoreGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                                  <stop offset="0%" stop-color="#67bfff"></stop>
-                                  <stop offset="52%" stop-color="#38bdf8"></stop>
-                                  <stop offset="100%" stop-color="#2563eb"></stop>
-                                </linearGradient>
-                              </defs>
                               <circle class="review-score-track" cx="50" cy="50" r="42"></circle>
                               <path class="review-score-progress" d=""></path>
                             </svg>
@@ -920,8 +907,8 @@
           </div>
         </template>
 
-    <script src="../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
+    <script src="../unified-navigation-shell.js?v=20261124-retire-device-modules-v1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="./page.js?v=20261124-customer-store-transition-v1"></script>
+<script src="./page.js?v=20261124-chart-palette-v1"></script>
   </body>
 </html>

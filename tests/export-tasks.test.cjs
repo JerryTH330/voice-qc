@@ -1,12 +1,24 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createService } = require('../shared/export-tasks.js');
+const { createService, sources } = require('../shared/export-tasks.js');
 const xlsx = require('../device-management/xlsx-export-utils.js');
 function fixture(initialTasks = []) {
   let tasks = structuredClone(initialTasks), time = Date.parse('2026-09-22T00:00:00Z');
-  const store = { update: async fn => { const draft = structuredClone(tasks); const result = fn(draft); tasks = draft; return structuredClone(result); } };
+  let abortNext = false;
+  const store = {
+    async update(fn) {
+      const draft = structuredClone(tasks);
+      const result = fn(draft);
+      if (abortNext) {
+        abortNext = false;
+        throw new Error('模拟存储事务中止');
+      }
+      tasks = draft;
+      return structuredClone(result);
+    }
+  };
   const make = (userId = 'alice', buildFile = xlsx.createXlsxBytes) => createService({ store, userId, now: () => time, buildFile });
-  return { make, advance: ms => { time += ms; } };
+  return { make, store, abortNextUpdate: () => { abortNext = true; }, advance: ms => { time += ms; } };
 }
 const request = () => ({ source: 'leads', filename: '线索列表.xlsx', sheetName: '线索列表', filters: [{ label: '品牌', value: '埃安' }], columns: [{ label: '客户名称' }], rows: [['张*'], ['李*']] });
 test('visit exports keep their source, field order, filters and row values through completion', async () => {
@@ -86,6 +98,54 @@ test('ownership applies to reads, downloads and deletion; pending tasks cannot b
   assert.deepEqual(await f.make().list(), []);
   await assert.rejects(alice.download(task.id), /不存在/);
 });
+test('retiring badge management deletes its stored rows and files before any task can be opened', async () => {
+  const file = Uint8Array.of(80, 75, 3, 4);
+  const old = { id: 'old-completed', userId: 'alice', revision: 1, source: 'badgeManagement', status: 'completed', filename: '工牌管理_20260921.xlsx', file, expiresAt: Number.MAX_SAFE_INTEGER };
+  const keep = { ...old, id: 'badge-detail', source: 'badges', notified: true };
+  const other = { ...keep, id: 'other-export', userId: 'bob', source: 'leads' };
+  const seed = { id: '__export_demo_seed_v2__:alice', userId: '__export_demo_seed__', revision: 1 };
+  const f = fixture([
+    old,
+    { ...old, id: 'old-queued', status: 'queued', rows: [['待导出工牌']] },
+    { ...old, id: 'old-running', status: 'running', rows: [['待导出工牌']] },
+    { ...old, id: 'old-failed', status: 'failed' },
+    { ...old, id: 'old-expired', status: 'expired', userId: 'bob' },
+    keep, other, seed
+  ]);
+  const alice = f.make();
+
+  assert.equal(sources.badgeManagement, undefined);
+  assert.equal(sources.badges, '工牌明细');
+  await assert.rejects(alice.download(old.id), /任务不存在/);
+  assert.deepEqual(await f.store.update(tasks => tasks), [keep, other, seed]);
+  assert.deepEqual((await alice.list()).map(task => task.id), [keep.id]);
+  assert.deepEqual(await alice.takeNotices(), []);
+  assert.deepEqual((await alice.download(keep.id)).bytes, file);
+  assert.deepEqual((await f.make('bob').list()).map(task => task.id), [other.id]);
+  await assert.rejects(alice.get(other.id), /无权访问/);
+  await assert.rejects(alice.submit({ ...request(), source: 'badgeManagement' }), /没有可导出的数据或字段/);
+  assert.equal(await f.make().seedDemoTasks(), false);
+  assert.deepEqual(await f.store.update(tasks => tasks), [keep, other, seed]);
+});
+
+test('badge management cleanup retries after a transaction abort and removes later legacy writes', async () => {
+  const old = { ...request(), id: 'old-running', userId: 'alice', revision: 1, source: 'badgeManagement', status: 'running', startedAt: 1, recordCount: 2 };
+  const f = fixture([old]);
+  let conversions = 0;
+  const buildFile = () => { conversions++; return Uint8Array.of(1); };
+  f.abortNextUpdate();
+  await assert.rejects(f.make('alice', buildFile).advance(), /模拟存储事务中止/);
+  assert.deepEqual(await f.store.update(tasks => tasks), [old]);
+
+  const reloaded = f.make('alice', buildFile);
+  await reloaded.advance();
+  assert.equal(conversions, 0);
+  assert.deepEqual(await f.store.update(tasks => tasks), []);
+  await f.store.update(tasks => { tasks.push({ ...old, id: 'from-old-tab', status: 'failed' }); });
+  assert.deepEqual(await reloaded.takeNotices(), []);
+  assert.deepEqual(await f.store.update(tasks => tasks), []);
+});
+
 test('generation failure has a reason and may be deleted or replaced by a new request', async () => {
   const f = fixture(), service = f.make('alice', () => { throw new Error('演示：文件生成失败'); });
   const task = await service.submit(request());

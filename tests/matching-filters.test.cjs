@@ -1074,13 +1074,14 @@ test('the delegated list export click submits the matching task and prevents the
   assert.equal(submissions[0].source, 'matching');
 });
 
-test('export manager source menu, filtered list and details recognize the actual matching task', async () => {
+test('export manager lists and locates the matching task without making its filename a control', async () => {
   const { context, node } = createHarness();
   const fixture = createExportFixture(), service = fixture.make();
   context.window.ExportTaskUI.submit = (request) => service.submit(plain(request));
   context.renderMatchingDashboard();
   await context.exportMatchingStoreExcel();
   const task = (await service.list())[0];
+  fixture.advance(1000);
   await service.submit({ source: 'leads', filename: 'other-source.xlsx', sheetName: '线索', filters: [], columns: [{ label: '线索ID' }], rows: [['L1']] });
   const manager = fs.readFileSync(path.join(root, 'export-management/page.js'), 'utf8');
   function managerFunction(name) {
@@ -1093,13 +1094,16 @@ test('export manager source menu, filtered list and details recognize the actual
   definitions.push(manager.split('\n').find((line) => line.startsWith('  function report(')));
   const choices = manager.indexOf('  const choices = ');
   definitions.push(manager.slice(choices, manager.indexOf('\n  };', choices) + 5));
-  Object.assign(context, { ExportTasks: exportTasks, service, page: 1, pages: 1, detailId: null, lastMarkup: '', refreshVersion: 0, renderPages() {} });
+  Object.assign(context, {
+    ExportTasks: exportTasks, service, page: 1, pages: 1, linkedTaskId: task.id, locateLinkedTask: false,
+    lastMarkup: '', refreshVersion: 0, renderPages() {}
+  });
   for (const id of ['exportSearch', 'exportStatus', 'exportStart', 'exportEnd']) node(id).value = '';
   node('exportSource').value = 'matching'; node('exportPageSize').value = '10';
   const control = node('source-control', { select: 'exportSource' });
   control.querySelector = () => ({ firstElementChild: node('source-label') });
   context.document.querySelectorAll = () => [control];
-  vm.runInContext([...definitions, ...['filterValue', 'detail', 'syncSelects', 'refresh'].map(managerFunction)].join('\n'), context);
+  vm.runInContext([...definitions, ...['syncSelects', 'refresh'].map(managerFunction)].join('\n'), context);
   context.syncSelects();
   assert.equal(node('source-label').textContent, '录音排查');
   assert.match(node('exportSourceMenu').innerHTML, /data-value="matching"><span>录音排查/);
@@ -1107,11 +1111,26 @@ test('export manager source menu, filtered list and details recognize the actual
   assert.match(node('exportRows').innerHTML, /<td>录音排查<\/td>/);
   assert.match(node('exportRows').innerHTML, /<td>3<\/td>/);
   assert.ok(!node('exportRows').innerHTML.includes('other-source.xlsx'));
-  const detail = context.detail(task);
-  assert.match(detail, /来源：<strong>录音排查<\/strong>/);
-  assert.match(detail, /全部时间/);
-  assert.equal((detail.match(/export-field-number/g) || []).length, 14);
-  assert.ok(detail.indexOf('品牌') < detail.indexOf('录音匹配率'));
+  assert.match(node('exportRows').innerHTML, /<span class="export-name" title="[^"]+">[^<]+<\/span>/);
+  assert.ok(node('exportRows').innerHTML.includes(task.filename));
+
+  node('exportSource').value = '';
+  node('exportPageSize').value = '1';
+  context.locateLinkedTask = true;
+  const targetRow = node('exportRows tr[aria-current="true"]');
+  let scrollCount = 0;
+  targetRow.scrollIntoView = () => { scrollCount += 1; };
+  await context.refresh();
+  assert.equal(context.page, 2);
+  assert.match(node('exportRows').innerHTML, /<tr aria-current="true" tabindex="-1">/);
+  assert.equal(context.document.activeElement, targetRow);
+  assert.equal(scrollCount, 1);
+
+  context.page = 1;
+  await context.refresh();
+  assert.equal(context.page, 1);
+  assert.match(node('exportRows').innerHTML, /other-source\.xlsx/);
+  assert.equal(scrollCount, 1);
 });
 
 test('shared 50-store summaries paginate 20/20/10 while metrics and export cover the full filtered set', async () => {
@@ -1201,7 +1220,7 @@ function visitDrilldownHarness() {
   context.clearHiddenStoreFilters = () => {};
   context.storeDrilldownState = { active: false };
   context.closeBadgeRecordDrawer = () => {};
-  context.handleVisitEventFiltersClick = context.handleVisitFieldSettingsClick = context.handleBadgeManagementClick = () => false;
+  context.handleVisitEventFiltersClick = context.handleVisitFieldSettingsClick = () => false;
   context.closeVisitFieldSettings = () => { context.visitFieldSettingsDraft = null;
   context.storeFieldSettingsDraft = null;
   context.clearHiddenStoreFilters = () => {}; };

@@ -49,6 +49,7 @@ function setup(view, legacyCustomerLayout) {
       history: { replaceState(_state, _title, url) { this.url = url; } }
     },
     restoreValidityTooltip() {},
+    closeAggregateNames() {},
     bindAiLeadValidityHelp() {},
     renderAiLeadValidityHeader: () => 'AI线索有效性',
     escapeHtml: value => String(value ?? '').replace(/[&<>"']/g, character => ({

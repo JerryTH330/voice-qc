@@ -1,8 +1,5 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
 const { setup } = require('./helpers/unified-dom.cjs');
 
 function list(kind, search = '') {
@@ -100,54 +97,15 @@ test('a missing advisor scope never widens to other advisors or stores', async (
   assert((await exportedIds(h, 'session')).length > 0);
 });
 
-function management({ legacy = false } = {}) {
-  const h = setup('store'), d = h.window.AIQCData;
+test('badge assets and event histories omit retired charge data', () => {
+  const h = setup('store');
+  const { badges, badgeEvents } = h.window.AIQCData;
+  const original = h.window.AIQCOrganization.badges;
+  assert(original.every(asset => badges.some(badge => badge.sn === asset.sn)));
+  assert.deepEqual(new Set(badges.map(badge => badge.badgeType)), new Set(['—', '4G版本工牌', '明略Wi-Fi工牌', '智能工牌·LIVE']));
+  assert(badges.every(badge => !Object.hasOwn(badge, 'dockConnected')));
+  const eventTypes = new Set(badgeEvents.flatMap(record => record.events.map(event => event.type)));
+  assert(eventTypes.has('recording-start') && eventTypes.has('low-battery'));
+  assert(!eventTypes.has('charging-start') && !eventTypes.has('charging-end'));
   h.controller.destroy();
-  h.c.badgeDetailRecords = d.badges;
-  h.c.sharedOrganizationDirectory = h.window.AIQCLinkedDemo.buildOrganizationView(h.window.AIQCOrganization);
-  if (legacy) {
-    h.c.badgeDetailRecords = d.badges.map(badge => ({ ...badge, dealer: d.directory.find(dealer => dealer.brand === badge.brand && dealer.dealerCode === badge.dealerCode) }));
-    h.window.AIQCData = undefined;
-  }
-  const source = fs.readFileSync(path.join(__dirname, '../device-management/page.js'), 'utf8');
-  const start = source.indexOf('const badgeManagementDealer =');
-  vm.runInContext(source.slice(start, source.indexOf('function renderBadgeManagementPage()', start)), h.c);
-  function include(name) {
-    const begin = source.indexOf(`function ${name}(`);
-    assert(begin >= 0, name);
-    vm.runInContext(source.slice(begin, source.indexOf('\n}\n', begin) + 2), h.c);
-  }
-  for (const name of ['getDeviceListExportRequest', 'submitBadgeManagementRebind', 'submitBadgeManagementConfirm']) include(name);
-  Object.assign(h.c, { getBadgeExportTimestamp: () => 'test', renderBadgeManagementPage() {}, closeBadgeManagementConfirm() {}, closeBadgeManagementMemberModal() {}, showToast() {} });
-  return { ...h, data: d, model: vm.runInContext('({dealer:badgeManagementDealer,badges:badgeManagementBadges,employees:badgeManagementEmployees,state:badgeManagementState})', h.c) };
-}
-
-test('badge management lists every exact store asset and shares search, binding changes and export scope', () => {
-  const h = management(), m = h.model;
-  const expected = h.data.badges.filter(badge => badge.brand === m.dealer.brand && badge.dealerCode === m.dealer.dealerCode);
-  assert(expected.length >= 5);
-  assert.deepEqual(new Set(m.badges.map(badge => badge.sn)), new Set(expected.map(badge => badge.sn)));
-  assert.equal(h.c.getDeviceListExportRequest('management').rows.length, expected.length);
-  const badge = m.badges.find(item => item.employeeId);
-  assert(h.c.getBadgeManagementEmployee(badge.employeeId));
-  m.state.query = badge.sn;
-  assert.deepEqual(Array.from(h.c.getBadgeManagementRecords(), item => item.sn), [badge.sn]);
-  assert.equal(h.c.getDeviceListExportRequest('management').rows.length, 1);
-  m.state.confirmSn = badge.sn; m.state.confirmAction = 'unbind';
-  h.c.submitBadgeManagementConfirm();
-  assert.equal(h.c.getDeviceListExportRequest('management').rows[0][3], '未绑定');
-  const employee = m.employees.find(item => !h.c.getBadgeManagementBinding(item.employeeId));
-  m.state.activeSn = badge.sn; m.state.selectedEmployeeId = employee.employeeId;
-  h.c.submitBadgeManagementRebind();
-  assert.equal(h.c.getDeviceListExportRequest('management').rows[0][2], employee.employeeId);
-  m.state.confirmSn = badge.sn; m.state.confirmAction = 'remove';
-  h.c.submitBadgeManagementConfirm();
-  assert.equal(h.c.getDeviceListExportRequest('management').rows.length, 0);
-});
-
-test('legacy badge data keeps the same exact store assets without appending a template badge', () => {
-  const h = management({ legacy: true }), m = h.model;
-  const expected = h.data.badges.filter(badge => badge.brand === m.dealer.brand && badge.dealerCode === m.dealer.dealerCode);
-  assert.deepEqual(new Set(m.badges.map(badge => badge.sn)), new Set(expected.map(badge => badge.sn)));
-  assert.equal(h.c.getDeviceListExportRequest('management').rows.length, expected.length);
 });

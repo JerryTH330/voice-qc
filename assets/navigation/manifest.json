@@ -38,14 +38,6 @@
       "file": "badge-detail.svg",
       "nodeId": "819:2983"
     },
-    "badgeManagement": {
-      "file": "badge-management.svg",
-      "nodeId": "819:2991"
-    },
-    "chargingDock": {
-      "file": "charging-dock.svg",
-      "nodeId": "819:2998"
-    },
     "recordingInspection": {
       "file": "recording-inspection.svg",
       "nodeId": "819:3284"

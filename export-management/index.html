@@ -7,7 +7,7 @@
   <link rel="icon" href="../assets/ds-logo.png">
   <link rel="stylesheet" href="../voice-qc-admin.css?v=20261028-full-sync-v1">
   <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261028-date-field-width-v1">
-  <link rel="stylesheet" href="./page.css?v=20261028-date-field-width-v1">
+  <link rel="stylesheet" href="./page.css?v=20261124-export-task-list-v1">
   <link rel="stylesheet" href="../fixed-action-column.css?v=20261028-full-sync-v1">
 </head>
 <body>
@@ -22,13 +22,13 @@
         <label class="badge-field-filter"><span>文件名称</span><input id="exportSearch" type="search" placeholder="搜索文件名称" autocomplete="off"></label>
         <div class="badge-field-filter badge-field-filter-select export-select" data-select="exportSource"><span>来源</span><input id="exportSource" type="hidden" value=""><button type="button" class="session-select-trigger" aria-label="来源筛选" aria-haspopup="listbox" aria-expanded="false" aria-controls="exportSourceMenu"><strong>全部来源</strong><span class="session-select-caret" aria-hidden="true"></span></button><div id="exportSourceMenu" class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="来源" hidden></div></div>
         <div class="badge-field-filter badge-field-filter-select export-select" data-select="exportStatus"><span>状态</span><input id="exportStatus" type="hidden" value=""><button type="button" class="session-select-trigger" aria-label="状态筛选" aria-haspopup="listbox" aria-expanded="false" aria-controls="exportStatusMenu"><strong>全部状态</strong><span class="session-select-caret" aria-hidden="true"></span></button><div id="exportStatusMenu" class="session-menu-panel badge-field-select-menu" role="listbox" aria-label="状态" hidden></div></div>
-        <div class="badge-field-filter badge-field-filter-date-time export-date-control"><span>提交日期</span><input id="exportStart" type="hidden"><input id="exportEnd" type="hidden"><button id="exportDateTrigger" type="button" class="session-date-trigger" aria-label="提交日期筛选" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportDateMenu"><strong>不限日期</strong><span class="session-date-icon" aria-hidden="true"></span></button><div id="exportDateMenu" class="session-menu-panel session-menu-panel-date" role="dialog" aria-label="提交日期范围" hidden></div></div>
+        <div class="badge-field-filter badge-field-filter-date-time export-date-control"><span>导出日期</span><input id="exportStart" type="hidden"><input id="exportEnd" type="hidden"><button id="exportDateTrigger" type="button" class="session-date-trigger" aria-label="导出日期筛选" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportDateMenu"><strong>不限日期</strong><span class="session-date-icon" aria-hidden="true"></span></button><div id="exportDateMenu" class="session-menu-panel session-menu-panel-date" role="dialog" aria-label="导出日期范围" hidden></div></div>
         <button class="btn ghost session-reset-btn" type="button" id="exportReset">重置</button>
       </section>
       <section class="card badge-detail-table-card export-table-card">
         <div class="table-headbar session-list-table-headbar"><h2>导出任务</h2><div class="badge-detail-table-head-tools"><span class="session-filter-summary" id="exportCount">正在加载…</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" id="exportRefresh" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button></div></div>
         <p id="exportError" role="alert" hidden></p>
-        <div class="badge-list-table-wrap export-table-wrap"><table class="data-table badge-data-table"><thead><tr><th>文件名称</th><th>来源</th><th>状态</th><th>记录数</th><th>提交时间</th><th>完成时间</th><th>失效时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table>
+        <div class="badge-list-table-wrap export-table-wrap"><table class="data-table badge-data-table"><thead><tr><th>文件名称</th><th>来源</th><th>状态</th><th>记录数</th><th>导出时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table>
         <div class="export-empty" id="exportEmpty" hidden><svg class="badge-list-empty-illustration" viewBox="0 0 180 132" fill="none" aria-hidden="true">
           <ellipse cx="90" cy="119" rx="59" ry="7" fill="#E8EEF8" />
           <path d="M56 23a10 10 0 0 1 10-10h44l17 17v63a10 10 0 0 1-10 10H66a10 10 0 0 1-10-10V23Z" fill="#F8FAFD" stroke="#CAD7EA" stroke-width="3" />
@@ -45,12 +45,11 @@
       </section>
     </main>
   </div>
-  <dialog id="exportDetail" class="export-detail-drawer" aria-labelledby="exportDetailTitle" aria-describedby="exportDetailSubtitle"><header><div><h2 id="exportDetailTitle">文件摘要</h2><p id="exportDetailSubtitle">查看导出任务状态、提交条件和导出字段</p></div><button type="button" class="export-close platform-close-icon" data-close="exportDetail" aria-label="关闭任务详情抽屉"></button></header><div id="exportDetailBody"></div><footer class="export-detail-footer"><p><svg class="export-detail-icon export-detail-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg><span id="exportDetailNote"></span></p><button id="exportDetailDownload" class="btn btn-primary" type="button" aria-busy="false" disabled><svg class="export-detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 11l5 5 5 -5M12 4v12"/></svg><span>下载文件</span></button></footer></dialog>
   <dialog id="exportDelete" aria-labelledby="exportDeleteTitle"><header><h2 id="exportDeleteTitle">删除导出任务</h2><button type="button" class="export-close platform-close-icon" data-close="exportDelete" aria-label="关闭删除确认"></button></header><div class="export-dialog-body"><p id="exportDeleteName"></p><p class="export-muted">删除后，任务记录及关联文件将一并移除，无法恢复。</p></div><footer><button class="btn ghost" type="button" data-close="exportDelete">取消</button><button class="btn export-danger" type="button" id="exportConfirmDelete">删除</button></footer></dialog>
   <script src="../shared/list-summary-counters.js?v=20261028-full-sync-v1"></script>
-  <script src="../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
+  <script src="../unified-navigation-shell.js?v=20261124-retire-device-modules-v1"></script>
   <script src="../date-filter-component-utils.js?v=20261113-date-shortcuts-v1"></script>
-  <script src="./page.js?v=20261113-date-shortcuts-v1"></script>
+  <script src="./page.js?v=20261124-export-task-list-v1"></script>
   <script src="../fixed-action-column.js?v=20261028-full-sync-v1"></script>
 </body>
 </html>

@@ -45,6 +45,33 @@ test('hidden initialization waits until the list becomes visible, then every lat
   h.root.shown=false;h.counter.refresh();h.root.shown=true;h.counter.refresh();assert.equal(n.textContent,'0');
 });
 
+test('one-time summary figures do not replay after completion or interruption', () => {
+  for (const interrupted of [false, true]) {
+    const h = setup(), metric = h.node();
+    h.counter.update('intro', [{ node: metric, value: 43.3, decimals: 1, suffix: '%' }], {
+      root: h.root, once: true
+    });
+    assert.equal(metric.textContent, '0.0%');
+    h.frame(0);
+    h.frame(400);
+    const intermediate = metric.textContent;
+    assert.ok(Number.parseFloat(intermediate) > 0 && Number.parseFloat(intermediate) < 43.3);
+    h.host.location.hash = '#other-view';
+    h.counter.refresh();
+    assert.equal(metric.textContent, intermediate);
+
+    if (!interrupted) h.frame(1200);
+    h.root.blocked = true;
+    h.counter.refresh();
+    assert.equal(metric.textContent, '43.3%');
+    h.root.blocked = false;
+    h.counter.refresh();
+    h.frame(1300);
+    assert.equal(metric.textContent, '43.3%');
+    assert.equal(h.frames.size, 0);
+  }
+});
+
 test('filter changes continue from the currently displayed value, including rapid reversals', () => {
   const h=setup(), n=h.node(); h.counter.update('summary',[{node:n,value:1000}],{root:h.root});h.frame(0);h.frame(540);
   const visible=n.textContent; h.counter.update('summary',[{node:n,value:20}],{root:h.root});assert.equal(n.textContent,visible);

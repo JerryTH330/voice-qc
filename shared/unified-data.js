@@ -227,12 +227,12 @@
   const badges = (global.AIQCOrganization.badges || []).map((b, index) => {
     const dealer = dealerMap.get(`${b.dealer.brand}::${b.dealer.dealerCode}`) || b.dealer;
     const bound = index % 47 !== 9, connected = index % 31 !== 0;
-    const type = ['充电坞版本工牌','4G版本工牌','明略Wi-Fi工牌','智能工牌·LIVE'][index % 4];
+    const type = ['—','4G版本工牌','明略Wi-Fi工牌','智能工牌·LIVE'][index % 4];
     const bucket = index % 10;
     return { ...org(dealer), sn: b.sn, advisorId: bound ? b.advisorId : '', advisorName: bound ? b.advisorName : '',
       badgeType: type, badgeStatus: bucket === 0 ? '未知' : bucket <= 2 ? '离线' : bucket <= 4 ? '开机' : '在线',
       recordingStatus: connected && index % 5 === 0 ? '录音中' : '未录音', connectionStatus: type === '4G版本工牌' ? '—' : connected ? '已连接' : '未连接',
-      dockConnected: index % 4 === 0, signal: ['信号良好','一般','较弱'][index % 3],
+      signal: ['信号良好','一般','较弱'][index % 3],
       battery: index === 6 ? 100 : index % 25 === 0 && index < 425 ? 7 + index % 13 : 56 + (index * 7) % 43,
       remainingMemory: 72 - (index * 13) % 68,
       uptime: connected ? `${String(4+index%5).padStart(2,'0')}:${String(index*13%60).padStart(2,'0')}:${String(index*17%60).padStart(2,'0')}` : `${String(index%3).padStart(2,'0')}:${String(index*11%60).padStart(2,'0')}:${String(index*19%60).padStart(2,'0')}`,

@@ -8302,8 +8302,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerAggregateLeadCountQuery: '',
         customerAggregateStoreCountQuery: '',
         customerStatus: '全部',
-        customerRecordCoverage: '全部',
-        customerStoreRecordCoverage: '全部',
         customerCrossStore: '全部',
         customerMultiLead: '全部',
         customerLeadCountRange: '全部',
@@ -8313,10 +8311,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         customerLeadIssuedEndDate: '',
         customerLatestLeadIssuedStartDate: '',
         customerLatestLeadIssuedEndDate: '',
-        customerFirstRecordingStartDate: '',
-        customerFirstRecordingEndDate: '',
-        customerLatestRecordingStartDate: '',
-        customerLatestRecordingEndDate: '',
         startDate: '2026-03-08',
         endDate: '2026-03-12'
       }
@@ -10775,20 +10769,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             dateField: 'latestLeadIssuedAt'
           }
         }
-        if (menuKey === 'customerFirstRecordingDate') {
-          return {
-            startDateKey: 'customerFirstRecordingStartDate',
-            endDateKey: 'customerFirstRecordingEndDate',
-            dateField: 'firstRecordingAt'
-          }
-        }
-        if (menuKey === 'customerLatestRecordingDate') {
-          return {
-            startDateKey: 'customerLatestRecordingStartDate',
-            endDateKey: 'customerLatestRecordingEndDate',
-            dateField: 'latestRecordingAt'
-          }
-        }
         return {
           startDateKey: 'customerLeadIssuedStartDate',
           endDateKey: 'customerLeadIssuedEndDate',
@@ -11128,8 +11108,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         return buildLeadCustomerAggregateRecords(leadRecords).filter((item) => {
           const leadIssuedDate = String(item.firstLeadIssuedAt || '').slice(0, 10)
           const latestLeadIssuedDate = String(item.latestLeadIssuedAt || '').slice(0, 10)
-          const firstRecordingDate = String(item.firstRecordingAt || '').slice(0, 10)
-          const latestRecordingDate = String(item.latestRecordingAt || '').slice(0, 10)
           const brandMatch = leadsFilterState.brand === '全部'
             || item.aggregateBrandSet?.has(leadsFilterState.brand)
           const organizationPathSet = leadsFilterState.organizationDimension === 'province'
@@ -11138,8 +11116,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const organizationMatch = leadsFilterState.organization === '全部组织'
             || Array.from(organizationPathSet || []).some((path) => path.startsWith(leadsFilterState.organization))
           const customerStatusMatch = leadsFilterState.customerStatus === '全部' || item.leadStatus === leadsFilterState.customerStatus
-          const leadCoverageMatch = !leadsFilterState.customerRecordCoverage || leadsFilterState.customerRecordCoverage === '全部' || item.recordCoverage === leadsFilterState.customerRecordCoverage
-          const storeCoverageMatch = !leadsFilterState.customerStoreRecordCoverage || leadsFilterState.customerStoreRecordCoverage === '全部' || item.storeRecordCoverage === leadsFilterState.customerStoreRecordCoverage
           const crossStoreMatch = !leadsFilterState.customerCrossStore || leadsFilterState.customerCrossStore === '全部' || (leadsFilterState.customerCrossStore === '是' ? item.crossStore : !item.crossStore)
           const multiLeadMatch = !leadsFilterState.customerMultiLead || leadsFilterState.customerMultiLead === '全部' || (leadsFilterState.customerMultiLead === '是' ? item.aggregateLeadCount >= 2 : item.aggregateLeadCount === 1)
           const leadCountMatch = matchesLeadCustomerCountRange(item.aggregateLeadCount, leadsFilterState.customerLeadCountRange)
@@ -11156,14 +11132,10 @@ const HERO_BIZ_KPI_ITEM_MAP = {
           const leadIssuedEndMatch = !leadsFilterState.customerLeadIssuedEndDate || leadIssuedDate <= leadsFilterState.customerLeadIssuedEndDate
           const latestLeadIssuedStartMatch = !leadsFilterState.customerLatestLeadIssuedStartDate || latestLeadIssuedDate >= leadsFilterState.customerLatestLeadIssuedStartDate
           const latestLeadIssuedEndMatch = !leadsFilterState.customerLatestLeadIssuedEndDate || latestLeadIssuedDate <= leadsFilterState.customerLatestLeadIssuedEndDate
-          const firstRecordingStartMatch = !leadsFilterState.customerFirstRecordingStartDate || firstRecordingDate >= leadsFilterState.customerFirstRecordingStartDate
-          const firstRecordingEndMatch = !leadsFilterState.customerFirstRecordingEndDate || firstRecordingDate <= leadsFilterState.customerFirstRecordingEndDate
-          const hasLatestRecordingDateFilter = Boolean(leadsFilterState.customerLatestRecordingStartDate || leadsFilterState.customerLatestRecordingEndDate)
-          const latestRecordingMatch = !hasLatestRecordingDateFilter || Boolean(latestRecordingDate)
-            && (!leadsFilterState.customerLatestRecordingStartDate || latestRecordingDate >= leadsFilterState.customerLatestRecordingStartDate)
-            && (!leadsFilterState.customerLatestRecordingEndDate || latestRecordingDate <= leadsFilterState.customerLatestRecordingEndDate)
 
-          return brandMatch && organizationMatch && customerStatusMatch && leadCoverageMatch && storeCoverageMatch && crossStoreMatch && multiLeadMatch && leadCountMatch && storeCountMatch && audioCountMatch && leadIssuedStartMatch && leadIssuedEndMatch && latestLeadIssuedStartMatch && latestLeadIssuedEndMatch && firstRecordingStartMatch && firstRecordingEndMatch && latestRecordingMatch
+          return brandMatch && organizationMatch && customerStatusMatch && crossStoreMatch && multiLeadMatch
+            && leadCountMatch && storeCountMatch && audioCountMatch && leadIssuedStartMatch && leadIssuedEndMatch
+            && latestLeadIssuedStartMatch && latestLeadIssuedEndMatch
         })
       }
 
@@ -11238,37 +11210,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         })
       }
 
-      function renderCustomerRecordCoverageHeader(dimension = 'lead') {
-        const isStoreDimension = dimension === 'store'
-        const title = isStoreDimension ? '门店录音覆盖' : '线索录音覆盖'
-        const allRecordedCopy = isStoreDimension
-          ? '该客户匹配的每个门店都至少关联了1通录音。'
-          : '该客户匹配的每条线索都至少关联了一通录音。'
-        const partiallyRecordedCopy = isStoreDimension
-          ? '该客户至少有1个门店关联上了录音。'
-          : '该客户至少有1条线索关联了录音，但并非全部都有。'
-        const noneRecordedCopy = isStoreDimension
-          ? '该客户匹配的所有门店均未关联上录音。'
-          : '该客户匹配的所有线索均未关联上录音。'
-        return `
-          <span class="ai-lead-validity-heading">
-            <span>${title}</span>
-            <button type="button" class="ai-lead-validity-help" aria-label="查看${title}判别标准">?</button>
-            <span class="ai-lead-validity-tooltip ai-lead-validity-tooltip-table" role="tooltip">
-              <strong>判别标准</strong>
-              <span class="ai-lead-validity-rule-table" role="table" aria-label="${title}判别标准">
-                <span class="ai-lead-validity-rule-head is-valid" role="rowheader">全部有录音</span>
-                <span class="ai-lead-validity-rule-cell" role="cell">${allRecordedCopy}</span>
-                <span class="ai-lead-validity-rule-head is-partial" role="rowheader">部分有录音</span>
-                <span class="ai-lead-validity-rule-cell" role="cell">${partiallyRecordedCopy}</span>
-                <span class="ai-lead-validity-rule-head is-undetermined" role="rowheader">全部无录音</span>
-                <span class="ai-lead-validity-rule-cell" role="cell">${noneRecordedCopy}</span>
-              </span>
-            </span>
-          </span>
-        `
-      }
-
       function getLeadsTableHeaderMarkup(viewMode = leadsViewState.mode) {
         if (viewMode === 'customers') {
           return `
@@ -11281,14 +11222,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               <th style="min-width: 110px; width: 110px;">是否多线索</th>
               <th style="min-width: 110px; width: 110px;">关联线索数</th>
               <th style="min-width: 110px; width: 110px;">关联录音数</th>
-              <th style="min-width: 170px; width: 170px;">${renderCustomerRecordCoverageHeader('lead')}</th>
-              <th style="min-width: 170px; width: 170px;">${renderCustomerRecordCoverageHeader('store')}</th>
               <th style="min-width: 130px; width: 130px;">最新线索状态</th>
               <th style="min-width: 170px; width: 170px;">线索首次下发时间</th>
               <th style="min-width: 170px; width: 170px;">线索最新下发时间</th>
-              <th style="min-width: 170px; width: 170px;">首次录音时间</th>
-              <th style="min-width: 170px; width: 170px;">最近录音时间</th>
-              <th style="min-width: 360px; width: 360px;">关联概况</th>
               <th style="min-width: 100px; width: 100px;">操作</th>
             </tr>
           `
@@ -11550,7 +11486,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         container.className = `session-filter-toolbar leads-filter-toolbar ${leadsViewState.mode === 'customers' ? 'is-customer-view' : 'is-leads-view'}${leadsFilterState.collapsed ? ' is-collapsed' : ''}`
 
         if (leadsViewState.mode === 'customers') {
-          const cvCoverageOpts = ['全部', '全部有录音', '部分有录音', '全部无录音']
           const cvCrossStoreOpts = ['全部', '是', '否']
           const cvMultiLeadOpts = ['全部', '是', '否']
           const cvLeadCountOpts = leadsFilterState.customerMultiLead === '是'
@@ -11569,13 +11504,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             ${renderLeadsMenuControl('customerMultiLead', '是否多线索', leadsFilterState.customerMultiLead || '全部', renderLeadsOptionMenu('customerMultiLead', cvMultiLeadOpts, leadsFilterState.customerMultiLead || '全部'), 'leads-filter-extra')}
             ${renderLeadsMenuControl('customerLeadCountRange', '关联线索数', leadsFilterState.customerLeadCountRange || '全部', renderLeadsOptionMenu('customerLeadCountRange', cvLeadCountOpts, leadsFilterState.customerLeadCountRange || '全部'), 'leads-filter-extra')}
             ${renderLeadsMenuControl('customerAudioCountRange', '关联录音数', leadsFilterState.customerAudioCountRange || '全部', renderLeadsOptionMenu('customerAudioCountRange', cvAudioCountOpts, leadsFilterState.customerAudioCountRange || '全部'), 'leads-filter-extra')}
-            ${renderLeadsMenuControl('customerRecordCoverage', '线索录音覆盖', leadsFilterState.customerRecordCoverage || '全部', renderLeadsOptionMenu('customerRecordCoverage', cvCoverageOpts, leadsFilterState.customerRecordCoverage || '全部'), 'leads-filter-extra')}
-            ${renderLeadsMenuControl('customerStoreRecordCoverage', '门店录音覆盖', leadsFilterState.customerStoreRecordCoverage || '全部', renderLeadsOptionMenu('customerStoreRecordCoverage', cvCoverageOpts, leadsFilterState.customerStoreRecordCoverage || '全部'), 'leads-filter-extra')}
             ${renderLeadsMenuControl('customerStatus', '最新线索状态', leadsFilterState.customerStatus, renderLeadsOptionMenu('customerStatus', leadCustomerStatusOptions, leadsFilterState.customerStatus), 'leads-filter-extra')}
             ${renderLeadsCustomerAggregateDateControl('customerLeadIssuedDate', '线索首次下发时间', 'customerLeadIssuedStartDate', 'customerLeadIssuedEndDate', 'leads-filter-extra')}
             ${renderLeadsCustomerAggregateDateControl('customerLatestLeadIssuedDate', '线索最新下发时间', 'customerLatestLeadIssuedStartDate', 'customerLatestLeadIssuedEndDate', 'leads-filter-extra')}
-            ${renderLeadsCustomerAggregateDateControl('customerFirstRecordingDate', '首次录音时间', 'customerFirstRecordingStartDate', 'customerFirstRecordingEndDate', 'leads-filter-extra')}
-            ${renderLeadsCustomerAggregateDateControl('customerLatestRecordingDate', '最近录音时间', 'customerLatestRecordingStartDate', 'customerLatestRecordingEndDate', 'leads-filter-extra')}
             <div class="leads-filter-inline-actions">
               <button type="button" class="btn session-reset-btn" data-leads-action="reset">重置筛选</button>
               ${renderLeadsCollapseActionButton()}
@@ -11693,7 +11624,8 @@ const HERO_BIZ_KPI_ITEM_MAP = {
         if (remoteCount) remoteCount.textContent = summaryRecords.filter((item) => item.leadStatus === '异地').length
 
         if (!displayRecords.length) {
-          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="17">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
+          const columnCount = thead?.querySelector('tr')?.children.length || 1
+          tbody.innerHTML = `<tr class="session-empty-row"><td colspan="${columnCount}">${viewMode === 'customers' ? '当前筛选条件下暂无客户，请调整筛选条件后重试。' : '当前筛选条件下暂无线索，请调整筛选条件后重试。'}</td></tr>`
           if (pagination) {
             pagination.innerHTML = ''
           }
@@ -11715,8 +11647,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               const multiLeadText = Number(item.aggregateLeadCount) >= 2 ? '是' : '否'
               const firstLeadIssuedDisplay = item.firstLeadIssuedAt || '–'
               const latestLeadIssuedDisplay = item.latestLeadIssuedAt || '–'
-              const firstRecordingDisplay = item.firstRecordingAt || '–'
-              const latestRecordingDisplay = item.latestRecordingAt || '–'
               const shouldOpenCustomerDetail = item.crossStore || Number(item.aggregateLeadCount) > 1
               const customerDetailDisabled = Number(item.aggregateAudioCount) <= 0
               const detailActionMarkup = customerDetailDisabled
@@ -11749,14 +11679,9 @@ const HERO_BIZ_KPI_ITEM_MAP = {
                 <td>${escapeHtml(multiLeadText)}</td>
                 <td>${escapeHtml(String(item.aggregateLeadCount))}</td>
                 <td>${escapeHtml(`${Number(item.aggregateAudioCount) || 0}条`)}</td>
-                <td>${escapeHtml(formatCustomerRecordCoverage(item.recordCoverage, item.aggregateHasRecordCount || 0, item.aggregateLeadCount || 0))}</td>
-                <td>${escapeHtml(formatCustomerRecordCoverage(item.storeRecordCoverage, item.aggregateRecordStoreSet?.size || 0, item.aggregateStoreCount || 0))}</td>
                 <td><span class="cv-status-pill cv-status-${escapeHtml(statusClass)}">${escapeHtml(item.leadStatus)}</span></td>
                 <td class="cv-time-cell">${escapeHtml(firstLeadIssuedDisplay)}</td>
                 <td class="cv-time-cell">${escapeHtml(latestLeadIssuedDisplay)}</td>
-                <td class="cv-time-cell">${escapeHtml(firstRecordingDisplay)}</td>
-                <td class="cv-time-cell">${escapeHtml(latestRecordingDisplay)}</td>
-                <td class="cv-association-summary-cell">${escapeHtml(item.associationSummary || '–')}</td>
                 <td>${detailActionMarkup}</td>
               </tr>
             `})
@@ -11907,7 +11832,7 @@ const HERO_BIZ_KPI_ITEM_MAP = {
               leadsMenuState.dateViewMonth = Number(leadsMenuState.dateDraftStartDate.slice(5, 7))
             }
 
-            if (nextMenu === 'customerLeadIssuedDate' || nextMenu === 'customerLatestLeadIssuedDate' || nextMenu === 'customerFirstRecordingDate' || nextMenu === 'customerLatestRecordingDate') {
+            if (nextMenu === 'customerLeadIssuedDate' || nextMenu === 'customerLatestLeadIssuedDate') {
               const { startDateKey, endDateKey, dateField } = getLeadsCustomerDateFilterConfig(nextMenu)
               const anchorDate = getLeadCustomerDateAnchorDate(dateField)
               const fallbackDateValue = formatSessionDateValue(anchorDate)
@@ -15639,8 +15564,6 @@ const HERO_BIZ_KPI_ITEM_MAP = {
       function initCustomerDetailPage() {
         const customerPayload = buildCustomerDetailPayload()
         applyCustomerDetailPayload(customerPayload)
-        const exampleLabel = pageHost.querySelector('[data-customer-example-label]')
-        if (exampleLabel) exampleLabel.hidden = !customerPayload.historicalDemo
         syncCustomerDetailDateDisplays()
         const transitionJourneyLayout = createCustomerJourneyTransition()
         initCustomerJourneyFilter(transitionJourneyLayout)
@@ -16732,34 +16655,25 @@ const HERO_BIZ_KPI_ITEM_MAP = {
             context.setLineDash([])
           }
 
-          const settledPoints = points.slice(0, Math.min(settledIndex + 1, points.length))
-          settledPoints.forEach((point) => {
-            if (point.missing) return
+          const drawPoint = (point, index) => {
+            const radius = (Array.isArray(dataset.pointRadius) ? dataset.pointRadius[index] : dataset.pointRadius) ?? 3
+            if (point.missing || radius <= 0) return
             context.beginPath()
             context.fillStyle = dataset.color
-            context.arc(point.x, point.y, dataset.pointRadius || 3, 0, Math.PI * 2)
+            context.arc(point.x, point.y, radius, 0, Math.PI * 2)
             context.fill()
 
             if (!dataset.solidPoint) {
               context.beginPath()
               context.fillStyle = '#ffffff'
-              context.arc(point.x, point.y, Math.max((dataset.pointRadius || 3) - 1.4, 1.1), 0, Math.PI * 2)
+              context.arc(point.x, point.y, Math.max(radius - 1.4, 1.1), 0, Math.PI * 2)
               context.fill()
             }
-          })
+          }
+          points.slice(0, Math.min(settledIndex + 1, points.length)).forEach(drawPoint)
 
           if (activePoint && !activePoint.missing && clampedProgress < 1 && segmentProgress > 0) {
-            context.beginPath()
-            context.fillStyle = dataset.color
-            context.arc(activePoint.x, activePoint.y, dataset.pointRadius || 3, 0, Math.PI * 2)
-            context.fill()
-
-            if (!dataset.solidPoint) {
-              context.beginPath()
-              context.fillStyle = '#ffffff'
-              context.arc(activePoint.x, activePoint.y, Math.max((dataset.pointRadius || 3) - 1.4, 1.1), 0, Math.PI * 2)
-              context.fill()
-            }
+            drawPoint(activePoint, settledIndex + 1)
           }
         })
 

@@ -29,8 +29,27 @@ test('focused original lead and recording export retain exact IDs and associatio
 test('customer aggregation and export never merge masked names or phones',async()=>{
  const h=list('leads','&leadsView=customers'),d=h.window.AIQCData;
  const request=await exportRows(h,'[data-lr-export]');
- assert.equal(request.rows.length,d.customers(d.leads).length);
- assert(request.rows.every(row=>row.some(value=>String(value).includes('客户ID缺失'))));
+ const customers=d.customers(d.leads);
+ assert.equal(request.rows.length,customers.length);
+ const unlinked=customers.filter(customer=>customer.customerAssociationMissing);
+ assert.equal(unlinked.length,d.leads.filter(lead=>!lead.customerId).length);
+ assert(unlinked.every(customer=>customer.aggregateLeadCount===1));
+ const headers=[...h.host.querySelectorAll('#leadsTableHeader th[data-column-key]')].map(node=>node.textContent);
+ assert.deepEqual(Array.from(request.columns,column=>column.label),headers);
+ const removed=['线索录音覆盖','门店录音覆盖','首次录音时间','最近录音时间','关联概况'];
+ removed.forEach(label=>assert(!headers.includes(label),label));
+ h.click('[data-lr-collapse]');
+ removed.forEach(label=>assert(!h.host.querySelector('#leadsFilterControls').textContent.includes(label),label));
+ h.click('[data-lr-settings]');
+ const settings=h.window.document.getElementById('leadsModernFieldSettings');
+ removed.forEach(label=>assert(!settings.textContent.includes(label),label));
+ for(const key of ['firstLeadIssuedAt','latestLeadIssuedAt']){
+   const field=settings.querySelector(`[data-lr-column-visible="${key}"]`);
+   field.checked=false;
+   field.dispatchEvent(new h.window.Event('change',{bubbles:true}));
+ }
+ h.click('[data-lr-settings-save]');
+ assert(!h.host.querySelector('[data-lr-date-trigger]'));
 });
 for(const kind of ['session','leads'])test(`${kind}: hiding a field updates table and export together`,async()=>{
  const h=list(kind),ns=kind==='session'?'sr':'lr';h.click(`[data-${ns}-settings]`);

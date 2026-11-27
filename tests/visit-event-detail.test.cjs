@@ -60,7 +60,7 @@ function createHarness({ reducedMotion = true } = {}) {
     showToast(message) { context.lastToast = message; }
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../shared/badge-history-data.js'), 'utf8'), context);
-  const declarations = ['badgeEventRecords', 'badgeEventTypeOptions', 'badgeEventDefaultFilters',
+  const declarations = ['badgeEventRecords', 'badgeEventTypeOptions', 'badgeTimelineEventTypes', 'badgeEventDefaultFilters',
     'badgeEventFilterState', 'badgeEventMenuState', 'visitEventFilterState', 'visitEventMenuState', 'visitEventMenuMotion'];
   vm.runInContext([...declarations.map(declaration), ...functionNames.map(sourceFunction),
     'Object.assign(globalThis, { badgeEventFilterState, badgeEventMenuState, visitEventFilterState, visitEventMenuState, visitEventMenuMotion });'
@@ -141,25 +141,26 @@ test('date changes query only the current SN and reset restores the original vis
   assert.match(h.nodes.visitEventResultSummary.textContent, /共 0 条/);
 });
 
-test('all six type choices filter complete groups, preserve recording durations, and show empty results', () => {
+test('all five type choices filter complete groups, preserve recording durations, and show empty results', () => {
   const h = createHarness();
   h.context.renderVisitEventDetail(visit({ badgeSn: 'MN-BDG-004821' }));
   const expectations = [
-    ['all', 11, '工牌开机'], ['power-on', 2, '工牌开机'], ['power-off', 2, '工牌关机'],
-    ['recording', 4, '2小时31分57秒'], ['charging', 2, '0小时58分59秒'], ['low-battery', 1, '剩余电量 19%']
+    ['all', 9, '工牌开机'], ['power-on', 2, '工牌开机'], ['power-off', 2, '工牌关机'],
+    ['recording', 4, '2小时31分57秒'], ['low-battery', 1, '剩余电量 19%']
   ];
   for (const [type, count, content] of expectations) {
     h.click('data-visit-event-type-trigger');
-    assert.equal((h.host.innerHTML.match(/data-visit-event-type-value=/g) || []).length, 6);
+    assert.equal((h.host.innerHTML.match(/data-visit-event-type-value=/g) || []).length, 5);
+    assert.doesNotMatch(h.host.innerHTML, /充电/);
     h.click('data-visit-event-type-value', type);
     assert.match(h.nodes.visitEventResultSummary.textContent, new RegExp(`共 ${count} 条`));
     assert.ok(h.nodes.visitEventDetailTimeline.innerHTML.includes(content));
     if (type !== 'all' && type !== 'power-on') assert.doesNotMatch(h.nodes.visitEventDetailTimeline.innerHTML, /<strong>工牌开机<\/strong>/);
   }
   h.context.renderVisitEventDetail(visit());
-  h.click('data-visit-event-type-trigger');
-  h.click('data-visit-event-type-value', 'charging');
-  assert.match(h.nodes.visitEventDetailTimeline.innerHTML, /所选日期没有该类型事件/);
+  h.click('data-visit-event-date-trigger');
+  h.click('data-visit-event-date-value', '2026-08-12');
+  assert.match(h.nodes.visitEventDetailTimeline.innerHTML, /所选日期没有工牌事件/);
   assert.match(h.nodes.visitEventResultSummary.textContent, /共 0 条/);
 });
 

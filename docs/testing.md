@@ -9,7 +9,7 @@ npm ci --ignore-scripts
 npm run validate
 ```
 
-`package-lock.json` 固定 DOM 测试依赖。`validate` 依次检查资源缓存版本、导航和工牌事件图标、充电坞中文输入，再执行全部 `tests/*.test.cjs`。测试目录、测试夹具和业务口径文档 `CONTEXT.md` 必须随功能一起提交。
+`package-lock.json` 固定 DOM 测试依赖。`validate` 依次检查资源缓存版本、导航和工牌事件图标，再执行全部 `tests/*.test.cjs`。测试目录、测试夹具和业务口径文档 `CONTEXT.md` 必须随功能一起提交。
 
 版本检查只识别资源 URL 和 Version 常量，不改写业务 ID、导出时间戳或历史字段设置的迁移版本。`node scripts/sync-versions.js --dry-run` 可预览旧测试常量；修改前仍应核对实际入口和运行时是否指向同一发布版本。
 

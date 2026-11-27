@@ -7,7 +7,8 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const linkedDemoVersion = '20261123-lead-list-return-v1';
 const allTimeVersion = '20261124-all-time-data-v1';
-const journeyMotionVersion = '20261124-customer-store-transition-v1';
+const chartVersion = '20261124-chart-palette-v1';
+const customerAggregateVersion = '20261124-customer-aggregate-names-v1';
 const factSources = [
   'leads/organization-data.js',
   'shared/organization-directory.js',
@@ -51,10 +52,11 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     assert(index('shared/unified-dashboard.js') < index('app-runtime.js'));
     const sharedVersions = {
       'shared/unified-data.js': allTimeVersion,
-      'shared/unified-dashboard.js': allTimeVersion,
+      'shared/chart-palette.js': chartVersion,
+      'shared/unified-dashboard.js': chartVersion,
       'shared/linked-demo-data.js': linkedDemoVersion,
       'date-filter-component-utils.js': allTimeVersion,
-      'app-runtime.js': journeyMotionVersion
+      'app-runtime.js': chartVersion
     };
     for (const [file, expectedVersion] of Object.entries(sharedVersions)) {
       assert.equal(new URL(urls[index(file)], 'https://prototype.example/').searchParams.get('v'), expectedVersion, file);
@@ -62,9 +64,10 @@ for (const area of ['session', 'leads', 'store-dashboard', 'sales-dashboard', 'f
     const html = fs.readFileSync(path.join(root, area, 'index.html'), 'utf8');
     const entry = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]).find(url => url.split('?')[0] === './page.js');
     assert(entry, 'index must reference its own page bootstrap');
-    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), journeyMotionVersion);
+    assert.equal(new URL(entry, 'https://prototype.example/').searchParams.get('v'), chartVersion);
+    assert(index('shared/chart-palette.js') < index('shared/unified-dashboard.js'));
     if (area === 'leads') {
-      assert.equal(new URL(urls[index('leads/leads-modern-runtime.js')], 'https://prototype.example/').searchParams.get('v'), allTimeVersion);
+      assert.equal(new URL(urls[index('leads/leads-modern-runtime.js')], 'https://prototype.example/').searchParams.get('v'), customerAggregateVersion);
     }
     if (area === 'factory-dashboard') {
       assert.equal(new URL(urls[index('device-management/visit-organization-filter.js')], 'https://prototype.example/').searchParams.get('v'), '20261110-organization-brand-options-v1');

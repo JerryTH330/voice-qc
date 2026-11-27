@@ -3,7 +3,7 @@
   else root.ExportTasks = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const sources = { session: '录音列表', leads: '线索列表', customers: '客户聚合列表', badges: '工牌明细', visits: '到访明细', matching: '录音排查', stores: '工牌总览', badgeManagement: '工牌管理', badgeEvents: '工牌事件', badgeUploads: '录音上传日志', badgeUploadDetails: '录音上传明细', visitEvents: '到访工牌事件' };
+  const sources = { session: '录音列表', leads: '线索列表', customers: '客户聚合列表', badges: '工牌明细', visits: '到访明细', matching: '录音排查', stores: '工牌总览', badgeEvents: '工牌事件', badgeUploads: '录音上传日志', badgeUploadDetails: '录音上传明细', visitEvents: '到访工牌事件' };
   const statuses = { queued: '排队中', running: '导出中', completed: '已完成', failed: '失败', expired: '已过期' };
   const copy = value => structuredClone(value);
   // 演示耗时：排队 2 秒，准备 8 秒，每 100 条增加 2 秒。
@@ -15,13 +15,12 @@
   }
   function createService({ store, userId, now = Date.now, buildFile }) {
     if (!userId) throw new Error('缺少当前用户');
-    function owned(tasks, id) {
-      const task = tasks.find(item => item.id === id && item.userId === userId);
-      if (!task) throw new Error('任务不存在或无权访问');
-      return task;
-    }
     function update(action) {
       return store.update(tasks => {
+        // 旧标签页仍可能提交同来源的任务，每次读取或更新时按来源清理。
+        for (let index = tasks.length - 1; index >= 0; index--) {
+          if (tasks[index].source === 'badgeManagement') tasks.splice(index, 1);
+        }
         tasks.forEach(task => {
           if (task.userId === userId && task.status === 'completed' && now() >= task.expiresAt) {
             task.status = 'expired'; task.revision++; delete task.file; delete task.rows;
@@ -29,6 +28,14 @@
         });
         return action(tasks);
       });
+    }
+    async function updateOwned(id, action) {
+      const result = await update(tasks => {
+        const task = tasks.find(item => item.id === id && item.userId === userId);
+        return task ? { value: action(task, tasks) } : null;
+      });
+      if (!result) throw new Error('任务不存在或无权访问');
+      return result.value;
     }
     return {
       advance() {
@@ -119,12 +126,13 @@
           return true;
         });
       },
-      remove(id) {
-        return update(tasks => {
-          const task = owned(tasks, id);
-          if (['queued', 'running'].includes(task.status)) throw new Error('进行中的任务不能删除');
+      async remove(id) {
+        const removed = await updateOwned(id, (task, tasks) => {
+          if (['queued', 'running'].includes(task.status)) return false;
           tasks.splice(tasks.indexOf(task), 1);
+          return true;
         });
+        if (!removed) throw new Error('进行中的任务不能删除');
       },
       takeNotices() {
         return update(tasks => tasks.filter(task => task.userId === userId && ['completed', 'failed'].includes(task.status) && !task.notified).map(task => {
@@ -133,23 +141,20 @@
         }));
       },
       async download(id) {
-        const result = await update(tasks => {
-          const task = owned(tasks, id);
-          return task.status === 'completed' ? { filename: task.filename, bytes: copy(task.file) } : null;
-        });
+        const result = await updateOwned(id, task => task.status === 'completed' ? { filename: task.filename, bytes: copy(task.file) } : null);
         if (!result) throw new Error('文件尚未生成或已过期，无法下载');
         return result;
       },
       submit(input) {
         const snapshot = copy(input);
-        if (!sources[snapshot.source] || !snapshot.columns?.length || !snapshot.rows?.length) return Promise.reject(new Error('没有可导出的数据或字段'));
-        return store.update(tasks => {
+        if (!Object.hasOwn(sources, snapshot.source) || !snapshot.columns?.length || !snapshot.rows?.length) return Promise.reject(new Error('没有可导出的数据或字段'));
+        return update(tasks => {
           const task = { ...snapshot, id: globalThis.crypto.randomUUID(), userId, revision: 1, status: 'queued', recordCount: snapshot.rows.length, createdAt: now(), completedAt: null, expiresAt: null, error: '' };
           tasks.push(task);
           return metadata(task);
         });
       },
-      get(id) { return update(tasks => metadata(owned(tasks, id))); },
+      get(id) { return updateOwned(id, metadata); },
       list() { return update(tasks => tasks.filter(task => task.userId === userId).sort((a, b) => b.createdAt - a.createdAt).map(metadata)); }
     };
   }

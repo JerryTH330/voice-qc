@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   const M = window.InsightSimpleModel;
+  const palette = window.AIQCChartPalette;
   const F = window.InsightScopeFilters;
   const D = window.InsightDateRange;
   let dateRange = null;
@@ -31,9 +32,11 @@
   let customerView = 'overview', summaryExpanded = false, actionSort = 'asc';
   const twoColumnProfileGrid = window.matchMedia('(max-width: 1000px)');
   const oneColumnProfileGrid = window.matchMedia('(max-width: 540px)');
-  const profileBatchSize = () => oneColumnProfileGrid.matches ? 2 : twoColumnProfileGrid.matches ? 4 : 6;
-  let summaryBatch = 0, summaryBatchSize = profileBatchSize();
-  let unmountProfileRotation, stopProfileSummaryMotion, unmountProfileDonuts;
+  const summaryRows = 2;
+  const fourColumnSummaryWidth = 1130;
+  let summaryBatch = 0, summaryColumns = 3;
+  let unmountProfileRotation, stopProfileSummaryMotion, stopProfileTagMotion, unmountProfileDonuts;
+  const profileDisclosureTiming = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' };
   const pageSizes = [10, 20, 50];
   const actionPager = { page: 1, size: 10 }, leadPager = { page: 1, size: 10 }, orgPager = { page: 1, size: 10 };
   let activePager = null;
@@ -42,12 +45,23 @@
     if (left == null || right == null) return (left == null) - (right == null) || a.index - b.index;
     return (actionSort === 'desc' ? right - left : left - right) || a.index - b.index;
   });
-  const profileGroups = [
-    { label: '购车计划', keys: ['intent_model', 'budget', 'timing', 'payment', 'trade_in', 'decision'] },
-    { label: '需求与反馈', keys: ['resistance', 'need', 'competitor', 'policy', 'test_drive'] },
-    { label: '客户背景', keys: ['driver', 'occupation', 'scenario'] },
-    { label: '产品提及', keys: ['product_positive', 'product_negative', 'product_neutral'] }
+  const profileOrder = [
+    'driver', 'decision', 'occupation', 'intent_model', 'trade_in', 'test_drive',
+    'scenario', 'timing', 'need', 'budget', 'resistance', 'payment', 'competitor',
+    'product_positive', 'product_negative', 'product_neutral'
   ];
+  // Append new models here so regrouping a brand's filter options never changes an existing color.
+  const modelColorOrder = [
+    'AION V', 'AION Y Plus', 'AION S Plus', 'AION RT', 'AION UT',
+    '传祺 E9', '传祺 M8', '传祺 GS8', '传祺 ES9'
+  ];
+  const profileColors = new Map(profileOrder.map(key => {
+    const names = key === 'intent_model'
+      ? modelColorOrder
+      : [M.topics.online, M.topics.offline].flatMap(stage => (stage[key]?.topics ?? []).map(topic => topic.name));
+    return [key, palette.categoryMap(names)];
+  }));
+  const availableProfileKeys = () => profileOrder.filter(key => M.topics[scope.stage][key]);
   const isProfileOverview = () => workspace === 'customers' && customerView === 'overview' && !drillState;
   const drillScroll = new Map();
   const drillRootLabel = () => factoryFilters?.summary() ?? F.summary(F.create(M, scope));
@@ -104,8 +118,7 @@
     const root = $('insightScopeFilters');
     if (root?.ownerDocument) {
       if (!factoryFilters) factoryFilters = window.InsightFactoryFilters.mount({
-        root, businessRoot: $('insightBusinessFilters'),
-        pathAction: $('insightScopeHelp'), M, getScope: () => scope,
+        root, businessRoot: $('insightBusinessFilters'), M, getScope: () => scope,
         onChange: patch => updateScope(patch), onReset: reset, onBeforeOpen: closeAnalysisMenus
       });
       else factoryFilters.sync(scope);
@@ -143,7 +156,7 @@
     closeMenus(); updateScope(range); $('dateTrigger').focus({ preventScroll: true });
   }
 
-  function render() {
+  function render({ playProfileIntro = false } = {}) {
     result = M.query(scope, compare);
     scope = result.scope;
     $('filterError').hidden = !result.errors.length;
@@ -157,13 +170,16 @@
     });
     $('analysisPanel').setAttribute('aria-labelledby', workspace === 'customers' ? 'customerTab' : 'actionTab');
     $('comparePanel').hidden = !compare;
-    $('toggleCompare').textContent = compare ? '调整对比客群' : '客群对比分析'; $('toggleCompare').disabled = false; $('toggleCompare').title = '';
-    $('toggleCompare').setAttribute('aria-expanded', String(compare));
+    const compareButton = $('toggleCompare');
+    $('toggleCompareLabel').textContent = compare ? '调整对比客群' : '客群对比分析';
+    compareButton.disabled = false;
+    compareButton.title = '';
+    compareButton.setAttribute('aria-expanded', String(compare));
     $('groupSummary').textContent = `A · ${M.templates[scope.template].label} ${num(result.a.length)} 条 ｜ B · ${M.templates[scope.comparisonTemplate].label} ${num(result.b.length)} 条`;
     $('groupSummary').title = `对比统一排除两组重叠线索 ${result.overlapCount} 条；其余条件相同。`;
     $('analysisControls').innerHTML = workspace === 'customers'
       ? (isProfileOverview() ? '' : '<button class="btn ghost" type="button" data-profile-home>返回画像总览</button>' + (drillState || scope.organizationDimension === 'geography' || ['region', 'zone', 'store'].some(key => scope.filters?.[key]?.length) ? '' : `<button class="btn ghost" id="byRegion" type="button" aria-pressed="${byRegion}">${byRegion ? '查看总体' : '按区域查看'}</button>`))
-      : '<span class="ci-note">仅展示已有 SOP 项目</span>';
+      : '';
     $('analysisTitle').textContent = workspace === 'customers' ? `${M.templates[scope.template].label} · ${M.topics[scope.stage][dimension].label}${compare ? '对比' : '分布'}` : `${M.templates[scope.template].label} · SOP分析`;
     $('analysisDescription').textContent = workspace === 'customers' ? '先看分布，再点开条目核实样本；不预设问题结论。' : '查看适用范围和动作执行情况。';
     $('analysisContext').textContent = `当前筛选：${drillRootLabel()} · ` + (compare ? `A：${M.templates[scope.template].label}（${num(result.a.length)}条） ｜ B：${M.templates[scope.comparisonTemplate].label}（${num(result.b.length)}条） · 重叠${result.overlapCount}条已从两组排除` : `当前人群${num(result.records.length)}条 · 客户标签分析分母${num(result.coverage.ready)}条可分析线索 · 按线索ID去重`);
@@ -179,24 +195,20 @@
     }
     if (isProfileOverview()) {
       $('analysisTitle').textContent = `${M.templates[scope.template].label} · 客户画像总览`;
-      $('analysisDescription').textContent = '从购车计划、需求反馈到客户背景，同时查看全部维度；点击图中标签继续下钻。';
+      $('analysisDescription').textContent = '查看客户画像分布，点击标签继续下钻。';
     }
-    renderProfileOverview();
-    const heads = workspace === 'customers'
-      ? [drillView ? drillView.levelLabel : '客户标签', ...(!drillView && byRegion ? ['区域'] : []), '提及线索', ...(compare ? ['A 组占比', 'B 组占比', '差异（A−B）'] : ['提及占比']), '操作']
-      : [drillView ? drillView.levelLabel : 'SOP', '适用线索', ...(compare ? ['A / B 完成率'] : ['动作完成率']), 'SOP 合格率', ...(compare ? ['A 组结果率¹'] : []), '操作'];
-    $('analysisHead').innerHTML = `<tr>${heads.map(h => `<th scope="col">${h}</th>`).join('')}</tr>`;
+    renderProfileOverview(playProfileIntro);
     const pagedActions = workspace === 'actions' && !drillState;
-    const tableItems = pagedActions && !compare ? pageItems(sortedActions(), actionPager) : rows.map((row, index) => ({ row, index }));
-    $('analysisRows').innerHTML = tableItems.map(({row, index}) => {
-      const details = `<button class="ci-text" type="button" data-start-drill="${index}" aria-label="下钻分析${esc(row.displayName || row.name)}">${workspace === 'actions' ? '下钻' : '下钻分析'}</button>`;
-      if (workspace === 'customers') return `<tr><td><strong>${esc(row.displayName || row.name)}</strong><small>${esc(drillView ? drillState.targetName : row.sub)}</small></td>${!drillView && byRegion ? `<td>${esc(row.region)}</td>` : ''}<td>${num(row.count)}<small>分母 ${num(row.denominator)} 条</small></td>${compare ? `<td>${pct(row.aRate)}<small>${row.aCount}/${row.aTotal}</small></td><td>${pct(row.bRate)}<small>${row.bCount}/${row.bTotal}</small></td><td class="ci-blue">${row.delta === null ? '—' : `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp`}</td>` : `<td><span class="ci-bar-value"><strong>${pct(row.share)}</strong><span class="ci-bar" aria-hidden="true"><i style="width:${row.share || 0}%"></i></span></span></td>`}<td>${details}</td></tr>`;
-      return `<tr><td><strong>${esc(row.displayName || row.name)}</strong></td><td>${num(row.count)}<small>完成 ${num(row.done)} / 未完成 ${num(row.missed)}</small></td><td>${compare ? `${pct(row.aRate)} / ${pct(row.bRate)}` : pct(row.completion)}</td><td>${pct(row.qualified)}</td>${compare ? `<td>${pct(row.resultDone)} / ${pct(row.resultMissed)}<small>完成 / 未完成动作</small></td>` : ''}<td>${details}</td></tr>`;
-    }).join('');
+    const sopOverview = pagedActions && !compare;
+    $('analysisPanel').classList.toggle('card', sopOverview);
+    $('analysisPanel').classList.toggle('table-card', sopOverview);
+    $('analysisPanel').classList.toggle('badge-detail-table-card', sopOverview);
+    if (sopOverview) renderSopTable(pageItems(sortedActions(), actionPager));
+    else renderAnalysisTable();
     const leaf = drillView?.level === 'leads';
     const leads = leaf && drillState.organizationMode === 'all' ? activeResult.records : drillView?.leads;
     if (leaf) renderLeads(leads);
-    renderComparisonChart(tableItems);
+    renderComparisonChart();
     if (pagedActions && rows.length) renderPagination(actionPager, rows.length);
     renderOrganizationDrill();
     renderActionOrganizationDrill();
@@ -207,7 +219,18 @@
       $('compareVisual').hidden = true;
     }
   }
-  function renderProfileDirectory() {
+  function renderAnalysisTable() {
+    const heads = workspace === 'customers'
+      ? [drillView ? drillView.levelLabel : '客户标签', ...(!drillView && byRegion ? ['区域'] : []), '提及线索', ...(compare ? ['A 组占比', 'B 组占比', '差异（A−B）'] : ['提及占比']), '操作']
+      : [drillView ? drillView.levelLabel : 'SOP', '适用线索', ...(compare ? ['A / B 完成率'] : ['动作完成率']), 'SOP 合格率', ...(compare ? ['A 组结果率¹'] : []), '操作'];
+    $('analysisHead').innerHTML = `<tr>${heads.map(h => `<th scope="col">${h}</th>`).join('')}</tr>`;
+    $('analysisRows').innerHTML = rows.map((row, index) => {
+      const details = `<button class="ci-text" type="button" data-start-drill="${index}" aria-label="下钻分析${esc(row.displayName || row.name)}">${workspace === 'actions' ? '下钻' : '下钻分析'}</button>`;
+      if (workspace === 'customers') return `<tr><td><strong>${esc(row.displayName || row.name)}</strong><small>${esc(drillView ? drillState.targetName : row.sub)}</small></td>${!drillView && byRegion ? `<td>${esc(row.region)}</td>` : ''}<td>${num(row.count)}<small>分母 ${num(row.denominator)} 条</small></td>${compare ? `<td>${pct(row.aRate)}<small>${row.aCount}/${row.aTotal}</small></td><td>${pct(row.bRate)}<small>${row.bCount}/${row.bTotal}</small></td><td class="ci-blue">${row.delta === null ? '—' : `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp`}</td>` : `<td><span class="ci-bar-value"><strong>${pct(row.share)}</strong><span class="ci-bar" aria-hidden="true"><i style="width:${row.share || 0}%"></i></span></span></td>`}<td>${details}</td></tr>`;
+      return `<tr><td><strong>${esc(row.displayName || row.name)}</strong></td><td>${num(row.count)}<small>完成 ${num(row.done)} / 未完成 ${num(row.missed)}</small></td><td>${compare ? `${pct(row.aRate)} / ${pct(row.bRate)}` : pct(row.completion)}</td><td>${pct(row.qualified)}</td>${compare ? `<td>${pct(row.resultDone)} / ${pct(row.resultMissed)}<small>完成 / 未完成动作</small></td>` : ''}<td>${details}</td></tr>`;
+    }).join('');
+  }
+  function renderProfileDirectory(playIntro = false) {
     const directory = $('profileDirectory');
     stopProfileSummaryMotion?.();
     unmountProfileRotation?.();
@@ -219,6 +242,16 @@
       index: summaryBatch,
       onIndexChange: index => { summaryBatch = index; }
     }) : null;
+    if (!playIntro || !window.ListSummaryCounters) return;
+    const batch = directory.querySelector('[data-profile-batch][aria-hidden="false"], #profileSummaryCards > .ci-highlight-grid');
+    if (!batch) return;
+    const metrics = [...batch.querySelectorAll('[data-profile-summary-percent]')].map(value => ({
+      node: value.firstElementChild,
+      value: Number.parseFloat(value.dataset.profileSummaryPercent),
+      decimals: 1,
+      suffix: '%'
+    }));
+    window.ListSummaryCounters.update('insight-profile-summary', metrics, { root: batch, once: true });
   }
   function toggleProfileSummary() {
     const previous = $('profileSummaryCards');
@@ -254,9 +287,7 @@
       closingGrid.classList.add('ci-profile-closing-grid');
       cards.appendChild(closingGrid);
     }
-    const animation = cards.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], {
-      duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both'
-    });
+    const animation = cards.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], profileDisclosureTiming);
 
     function stop() {
       reducedMotion.removeEventListener('change', finish);
@@ -274,17 +305,33 @@
     animation.onfinish = finish;
     reducedMotion.addEventListener('change', finish);
   }
-  function resizeProfileBatches() {
-    const size = profileBatchSize();
-    if (size === summaryBatchSize) return;
+  function profileSummaryWidth(directory) {
+    const style = getComputedStyle(directory);
+    const insets = [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth];
+    return directory.getBoundingClientRect().width - insets.reduce((sum, inset) => sum + Number.parseFloat(inset), 0);
+  }
+  function profileColumnsForWidth(width) {
+    if (width >= fourColumnSummaryWidth) return 4;
+    if (oneColumnProfileGrid.matches) return 1;
+    return twoColumnProfileGrid.matches ? 2 : 3;
+  }
+  function setProfileSummaryColumns(directory, columns, anchorOffset = 0) {
+    if (columns === summaryColumns) return;
+    const anchor = summaryBatch * summaryColumns * summaryRows + anchorOffset;
+    summaryBatch = Math.floor(anchor / (columns * summaryRows));
+    summaryColumns = columns;
+    directory.style.setProperty('--profile-summary-columns', String(columns));
+  }
+  function resizeProfileBatches(width) {
+    if (compare || !isProfileOverview() || width <= 0) return;
+    const columns = profileColumnsForWidth(width);
+    if (columns === summaryColumns) return;
     const directory = $('profileDirectory');
     const active = document.activeElement;
     const currentCards = Array.from(directory.querySelectorAll('[data-profile-batch][aria-hidden="false"] .ci-highlight-card'));
     const activeOffset = currentCards.indexOf(active);
-    const first = summaryBatch * summaryBatchSize;
-    summaryBatch = Math.floor((first + Math.max(activeOffset, 0)) / size);
-    summaryBatchSize = size;
-    if (compare || summaryExpanded || !isProfileOverview()) return;
+    setProfileSummaryColumns(directory, columns, Math.max(activeOffset, 0));
+    if (summaryExpanded) return;
     const controlAttribute = directory.contains(active) && ['data-profile-batch-step', 'data-summary-expand', 'id']
       .find(name => active.hasAttribute(name));
     const focusSelector = activeOffset >= 0
@@ -293,8 +340,9 @@
     renderProfileDirectory();
     if (focusSelector) directory.querySelector(focusSelector)?.focus({ preventScroll: true });
   }
-  function renderProfileOverview() {
+  function renderProfileOverview(playIntro) {
     const directory = $('profileDirectory'), board = $('profileOverview');
+    stopProfileTagMotion?.();
     unmountProfileDonuts?.();
     unmountProfileDonuts = null;
     directory.hidden = !isProfileOverview();
@@ -306,7 +354,8 @@
       unmountProfileRotation = null;
       return;
     }
-    renderProfileDirectory();
+    if (!compare) setProfileSummaryColumns(directory, profileColumnsForWidth(profileSummaryWidth(directory)));
+    renderProfileDirectory(playIntro);
     const legend = compare ? `<span><i class="ci-series-a"></i>A · ${esc(M.templates[scope.template].label)} · ${num(result.a.filter(r => r.analysisReady).length)} 条可分析</span><span><i class="ci-series-b"></i>B · ${esc(M.templates[scope.comparisonTemplate].label)} · ${num(result.b.filter(r => r.analysisReady).length)} 条可分析</span>` : `<span><i class="ci-series-a"></i>提及占比 · 分母 ${num(result.coverage.ready)} 条可分析线索</span>`;
     const views = [['chart', '图表'], ['list', '列表']];
     board.innerHTML = `<div class="ci-profile-view-toolbar dimension-switcher">
@@ -316,32 +365,117 @@
         ${views.map(([value, label]) => `<button id="profile-view-${value}" type="button" class="dimension-switcher__tab" role="tab" data-profile-view="${value}" aria-controls="profileViewPanel">${label}</button>`).join('')}
       </div>
     </div><div class="ci-profile-grid" id="profileViewPanel" role="tabpanel"></div>`;
-    renderProfileView();
+    renderProfileView({ playIntro });
   }
-  function renderProfileView() {
+  function renderProfileView({ playIntro = false, animateSwitch = false } = {}) {
     const board = $('profileOverview'), panel = $('profileViewPanel');
+    stopProfileTagMotion?.();
     unmountProfileDonuts?.();
     board.classList.toggle('ci-profile-list-view', profileView === 'list');
-    board.classList.toggle('ci-profile-has-expanded', expandedProfiles.size > 0);
+    panel.classList.toggle('animate-view-entry', animateSwitch);
     board.querySelectorAll('[data-profile-view]').forEach(tab => {
       const selected = tab.dataset.profileView === profileView;
       tab.setAttribute('aria-selected', String(selected));
       tab.tabIndex = selected ? 0 : -1;
       if (selected) panel.setAttribute('aria-labelledby', tab.id);
     });
-    panel.innerHTML = profileGroups.flatMap(group => group.keys).filter(key => M.topics[scope.stage][key]).map(profileCard).join('');
-    unmountProfileDonuts = window.InsightProfileDonut.mount(panel);
+    panel.innerHTML = availableProfileKeys().map(profileCard).join('');
+    unmountProfileDonuts = window.InsightProfileDonut.mount(panel, { playIntro: playIntro || animateSwitch });
+  }
+  function toggleProfileTags(control, allowMotion) {
+    const key = control.dataset.profileExpand;
+    const previous = control.closest('.ci-profile-card');
+    const opening = !expandedProfiles.has(key);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const animate = allowMotion && !reducedMotion.matches && typeof control.animate === 'function';
+    const previousGroup = animate ? previous.querySelector('.ci-profile-extra-rows') : null;
+    const currentHeight = previousGroup?.getBoundingClientRect().height;
+    const fromArrow = animate ? getComputedStyle(control.querySelector('svg')).transform : '';
+    const departing = animate && !opening ? Array.from(previous.querySelectorAll('[data-profile-drill]')).slice(5) : [];
+    const shareList = previous.classList.contains('ci-profile-share-list');
+    const shareItems = '.ci-pie-item > :is(span:not(.ci-pie-share-track), strong), .ci-pie-share-track > span';
+    const currentShareStyles = shareList && previousGroup ? Array.from(previousGroup.querySelectorAll(shareItems), item => {
+      const { opacity, transform } = getComputedStyle(item);
+      const scale = transform === 'none' ? 1 : new DOMMatrixReadOnly(transform).a;
+      return { opacity, transform: `scaleX(${scale})` };
+    }) : [];
+
+    stopProfileTagMotion?.();
+    if (opening) expandedProfiles.add(key);
+    else expandedProfiles.delete(key);
+    renderProfileView();
+
+    const card = $('profile-card-' + key), button = card.querySelector('[data-profile-expand]');
+    button?.focus({ preventScroll: true });
+
+    function keepToggleVisible() {
+      if (!opening && document.activeElement === button) {
+        button.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+      }
+    }
+    if (!animate) {
+      keepToggleVisible();
+      return;
+    }
+
+    const list = card.querySelector('.ci-pie-list, .ci-profile-bars');
+    const extraRows = opening ? Array.from(list.querySelectorAll('[data-profile-drill]')).slice(5) : departing;
+    const group = document.createElement('div');
+    group.className = 'ci-profile-extra-rows';
+    if (!opening) {
+      group.inert = true;
+      group.setAttribute('aria-hidden', 'true');
+    }
+    // Keep departing rows in the layout until the card has finished shrinking.
+    list.insertBefore(group, list.querySelector('.ci-pie-other'));
+    group.append(...extraRows);
+    const naturalHeight = group.getBoundingClientRect().height;
+    const fromHeight = currentHeight ?? (opening ? 0 : naturalHeight);
+    const toHeight = opening ? naturalHeight : 0;
+    // Ease into the shrink so the retracting bars stay visible as it starts.
+    const heightTiming = !opening && shareList
+      ? { ...profileDisclosureTiming, easing: 'cubic-bezier(0.55, 0.08, 0.8, 1)' }
+      : profileDisclosureTiming;
+    const heightMotion = group.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], heightTiming);
+    const arrow = button.querySelector('svg');
+    const arrowMotion = arrow.animate([{ transform: fromArrow }, { transform: getComputedStyle(arrow).transform }], profileDisclosureTiming);
+    const shareMotions = shareList ? Array.from(group.querySelectorAll(shareItems), (item, index) => {
+      const bar = item.matches('.ci-pie-share-track > span');
+      const property = bar ? 'transform' : 'opacity';
+      const visible = bar ? 'scaleX(1)' : 1;
+      const hidden = bar ? 'scaleX(0)' : opening ? 0.25 : 0;
+      const start = currentShareStyles[index]?.[property] ?? (opening ? hidden : visible);
+      return item.animate([{ [property]: start }, { [property]: opening ? visible : hidden }], profileDisclosureTiming);
+    }) : [];
+
+    function stop() {
+      reducedMotion.removeEventListener('change', finish);
+      heightMotion.onfinish = null;
+      heightMotion.cancel();
+      arrowMotion.cancel();
+      shareMotions.forEach(motion => motion.cancel());
+      if (opening) group.replaceWith(...group.childNodes);
+      else group.remove();
+      stopProfileTagMotion = null;
+    }
+    function finish() {
+      stop();
+      keepToggleVisible();
+    }
+    stopProfileTagMotion = stop;
+    heightMotion.onfinish = finish;
+    reducedMotion.addEventListener('change', finish);
   }
   function selectProfileView(tab, withMotion) {
     if (tab.dataset.profileView !== profileView) {
       tab.closest('.ci-profile-view-toolbar').classList.toggle('animate-selection', withMotion);
       profileView = tab.dataset.profileView;
-      renderProfileView();
+      renderProfileView({ animateSwitch: withMotion });
     }
     tab.focus({ preventScroll: true });
   }
   function renderProfileSummary() {
-    const keys = profileGroups.flatMap(group => group.keys.filter(key => M.topics[scope.stage][key]));
+    const keys = availableProfileKeys();
       const dimensionIcon = label => {
         const paths = /车型|车系/.test(label) ? '<path d="M5 17h14l-1-5-2-4H8l-2 4-1 5Zm0 0v2m14-2v2M7 14h.01M17 14h.01"/>' : /预算|付款|价格/.test(label) ? '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18m-13 5h3"/>' : /时间|阶段|计划/.test(label) ? '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' : /试驾/.test(label) ? '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M4 10h16M10 13l-2 6m6-6 2 6"/>' : /人|职业|性别|年龄/.test(label) ? '<circle cx="12" cy="8" r="3"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/>' : /抗性|顾虑/.test(label) ? '<path d="M12 3 3 19h18L12 3Zm0 6v4m0 3h.01"/>' : /需求|场景/.test(label) ? '<path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 .7-1.5 1.4-1.5 2h-5c0-.6-.5-1.3-1.5-2Z"/>' : '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M12 8v8"/>';
         return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
@@ -361,30 +495,31 @@
       return `<div class="ci-summary-heading"><div><h3>客户画像差异总览</h3></div><div class="ci-difference-legend"><span><i class="ci-diff-legend-a"></i>A · ${esc(groupA)}</span><span><i class="ci-diff-legend-b"></i>B · ${esc(groupB)}</span></div></div><div class="ci-difference-list ci-diff-cards">${shown.length ? shown.map(cardMarkup).join('') : '<p class="ci-difference-note">暂无可比较数据</p>'}</div>${ranked.length > 5 ? `<button class="ci-diff-expand" type="button" data-summary-expand aria-expanded="${summaryExpanded}">${summaryExpanded ? '收起' : `查看更多（${ranked.length}项）`} <span aria-hidden="true">${summaryExpanded ? '↑' : '↓'}</span></button>` : ''}<p class="ci-difference-note">差值＝当前组占比 − 对比组占比，单位为百分点；悬停卡片查看线索数。</p>`;
     }
     const meaningful = name => name && !/^(未知|未提及|未识别|无法识别|无法判断|不详|暂无|无数据)$/.test(name.trim());
-    const ranked = keys.map(key => ({ key, row: M.distribution(result, key).filter(row => meaningful(row.name)).sort((a, b) => (b.count ?? -1) - (a.count ?? -1))[0] })).sort((a, b) => (b.row?.count ?? -1) - (a.row?.count ?? -1));
-    const cards = ranked.map(({ key, row }) => {
+    const cards = keys.map(key => {
+      const [row] = M.distribution(result, key).filter(row => meaningful(row.name)).sort((a, b) => (b.count ?? -1) - (a.count ?? -1));
       const identified = result.records.filter(record => record.analysisReady && (record.annotations[key] || []).some(a => meaningful(a.name))).length;
       const total = result.records.length;
       const label = esc(M.topics[scope.stage][key].label);
-      const detail = row ? `${esc(row.name)}，${pct(row.share)}，${num(row.count)} / ${num(identified)}` : '暂无数据';
+      const name = row ? esc(row.name) : '暂无数据';
+      const share = row ? pct(row.share) : '—';
+      const detail = row ? `${name}，${share}，${num(row.count)} / ${num(identified)}` : name;
       return `<button type="button" class="ci-highlight-card" data-profile-dimension="${key}" aria-label="${label}，${detail}，识别覆盖 ${num(identified)} / ${num(total)}，查看画像明细">
         <img class="ci-highlight-icon" src="./simplified/profile-icons/${key}.png?v=20261123-insight-profile-icons-v2" width="48" height="48" alt="">
         <span class="ci-highlight-body">
-          <span class="ci-highlight-title">${label}</span>
-          <span class="ci-highlight-metric">
-            <strong>${row ? pct(row.share) : '—'}</strong>
-            <span class="ci-highlight-name">${row ? esc(row.name) : '暂无数据'}</span>
-            ${row ? `<small>${num(row.count)} / ${num(identified)}</small>` : ''}
-          </span>
+          <span class="ci-highlight-title" title="${label}">${label}</span>
+          <span class="ci-highlight-name" title="${name}">${name}</span>
+        </span>
+        <span class="ci-highlight-divider" aria-hidden="true"></span>
+        <span class="ci-highlight-metric">
+          <strong${Number.isFinite(row?.share) ? ` data-profile-summary-percent="${share}"` : ''}><span>${share}</span></strong>
+          ${row ? `<small>${num(row.count)} / ${num(identified)}</small>` : ''}
         </span>
       </button>`;
     });
     const heading = '<div class="ci-summary-heading"><div><h3>客户画像概览</h3></div></div>';
+    const summaryBatchSize = summaryColumns * summaryRows;
     const hasMore = cards.length > summaryBatchSize;
-    const expandButton = hasMore ? `<button class="session-toggle-text-btn" type="button" data-summary-expand aria-expanded="${summaryExpanded}" aria-controls="profileSummaryCards">
-      <span>${summaryExpanded ? '收起' : '展开'}</span>
-      <svg class="session-toggle-text-btn-icon${summaryExpanded ? '' : ' is-collapsed'}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-    </button>` : '';
+    const expandButton = hasMore ? `<button class="session-toggle-text-btn" type="button" data-summary-expand aria-expanded="${summaryExpanded}" aria-controls="profileSummaryCards">${profileToggleContent(summaryExpanded)}</button>` : '';
     if (summaryExpanded || !hasMore) {
       return `${heading}<div class="ci-profile-summary-cards" id="profileSummaryCards"><div class="ci-highlight-grid">${cards.join('')}</div></div>${hasMore ? `<div class="ci-profile-rotation-footer">${expandButton}</div>` : ''}`;
     }
@@ -412,24 +547,55 @@
     const bar = (value, series) => `<span class="ci-butterfly-track ci-butterfly-${series}" aria-hidden="true"><i class="ci-series-${series}" style="width:${Number.isFinite(value) ? Math.max(0, Math.min(100, value / upper * 100)) : 0}%"></i></span>`;
     return `<span class="ci-butterfly"><span class="ci-butterfly-value ci-value-a"><strong>${pct(aRate)}</strong><small>${num(aCount)}/${num(aTotal)}</small></span>${bar(aRate, 'a')}<span class="ci-butterfly-label">${esc(label)}</span>${bar(bRate, 'b')}<span class="ci-butterfly-value ci-value-b"><strong>${pct(bRate)}</strong><small>${num(bCount)}/${num(bTotal)}</small></span></span>`;
   }
+  function profileToggleContent(expanded) {
+    return `<span>${expanded ? '收起' : '展开'}</span>
+      <svg class="session-toggle-text-btn-icon${expanded ? '' : ' is-collapsed'}" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+  }
+  function profileCardHeader(key, label, hasMore, expanded) {
+    const organization = compare ? '' : `<span class="badge-detail-export-action">
+      <button type="button" class="ci-profile-icon-button" data-org-entry="${key}" aria-label="按组织分析${esc(label)}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="6" y="2" width="4" height="3.5" rx=".65"/><rect x="2" y="10.5" width="4" height="3.5" rx=".65"/><rect x="10" y="10.5" width="4" height="3.5" rx=".65"/>
+          <path d="M8 5.5v2.25m-4 2.75V7.75h8v2.75"/>
+        </svg>
+      </button>
+      <span class="badge-detail-export-tooltip" aria-hidden="true">按组织分析</span>
+    </span>`;
+    const expand = compare && hasMore ? `<button type="button" class="session-toggle-text-btn" data-profile-expand="${key}" aria-expanded="${expanded}">${profileToggleContent(expanded)}</button>` : '';
+    return `<header>
+      <h4>${esc(label)}</h4>
+      <div class="ci-profile-actions">
+        <span class="badge-detail-export-action">
+          <button type="button" class="ci-profile-icon-button" data-profile-download="${key}" aria-label="下载${esc(label)}图片">
+            <span class="badge-detail-export-icon" aria-hidden="true"></span>
+          </button>
+          <span class="badge-detail-export-tooltip" aria-hidden="true">下载图片</span>
+        </span>
+        ${organization}${expand}
+      </div>
+    </header>`;
+  }
   function profilePieCard(key, items) {
     const expanded = expandedProfiles.has(key);
-    const colors = ['#426fd1','#6d91df','#8bbce0','#60a9a1','#94c7b1','#e2b969','#d99278','#a18cc8','#c294b4','#95a5ba','#7390ab','#c9aa84','#9bb6a8'];
+    const hasMore = items.length > 5;
+    const colors = profileColors.get(key);
+    const needsList = items.some(row => !colors.has(row.name));
     const { label, sentiment } = M.topics[scope.stage][key];
     const ranked = items.map((row, index) => ({ row, index }));
     if (compare) ranked.sort((a, b) => (Number.isFinite(b.row.aRate) ? b.row.aRate : -1) - (Number.isFinite(a.row.aRate) ? a.row.aRate : -1) || a.index - b.index);
     const visible = expanded ? ranked : ranked.slice(0, 5);
-    const slices = visible.map(({ row, index }) => ({
-      name: row.name, value: row.count, color: colors[index % colors.length], share: pct(row.share)
+    const slices = visible.map(({ row }) => ({
+      name: row.name, value: row.count, color: colors.get(row.name), share: pct(row.share)
     }));
-    const showChart = !compare && profileView === 'chart';
+    const showChart = !compare && profileView === 'chart' && !needsList;
+    const showShareBars = !compare && profileView === 'list';
     let donut = '';
     if (showChart) {
       const sampleCount = items[0]?.denominator ?? 0;
       const rest = ranked.slice(visible.length);
       if (rest.length) {
         const value = rest.reduce((sum, { row }) => sum + row.count, 0);
-        slices.push({ name: '其他', value, color: '#dce3ed', share: pct(M.rate(value, sampleCount)) });
+        slices.push({ name: '其他', value, color: palette.other, share: pct(M.rate(value, sampleCount)) });
       }
       const samples = num(sampleCount);
       donut = `<div class="ci-pie-visual">
@@ -444,30 +610,39 @@
       const count = `（${num(row.count)}/${num(row.denominator)}）`;
       const metrics = compare
         ? `A ${pct(row.aRate)}（${num(row.aCount)}/${num(row.aTotal)}）<br>B ${pct(row.bRate)}（${num(row.bCount)}/${num(row.bTotal)}）`
-        : showChart ? `${share}<wbr><span class="ci-pie-count">${count}</span>` : `${share}${count}`;
+        : `${share}${showChart ? '<wbr>' : ''}<span class="ci-pie-count">${count}</span>`;
+      const shareBar = showShareBars && Number.isFinite(row.share)
+        ? `<span class="ci-pie-share-track" aria-hidden="true"><span style="width:${Math.min(100, Math.max(0, row.share))}%"></span></span>`
+        : '';
       const delta = Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)} pp` : '—';
       return `<button type="button" class="ci-pie-item" data-profile-drill="${key}" data-profile-index="${index}">
-        <i style="background:${color}"></i><span>${esc(row.name)}</span><strong>${metrics}</strong>
+        ${color ? `<i style="background:${color}"></i>` : ''}<span>${esc(row.name)}</span><strong>${metrics}</strong>
+        ${shareBar}
         ${compare ? `<small>差异 ${delta}</small>` : ''}
       </button>`;
     }).join('');
-    return `<article class="ci-profile-card ci-pie-card${sentiment ? ' ci-product-card ci-product-' + sentiment : ''}" id="profile-card-${key}" tabindex="-1" aria-label="${esc(label)}分布">
-      <header><h4>${esc(label)}</h4>
-        <button type="button" class="ci-text ci-profile-download" data-profile-download="${key}" aria-label="下载${esc(label)}图片">下载图片</button>
-        ${!compare ? `<button type="button" class="ci-text ci-org-entry" data-org-entry="${key}">按组织分析 →</button>` : ''}
-        ${compare && items.length > 5 ? `<button type="button" class="ci-text" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '收起 ↑' : '查看更多 ↓'}</button>` : ''}
-      </header>
+    return `<article class="ci-profile-card ci-pie-card${needsList ? ' ci-profile-list-view' : ''}${showShareBars ? ' ci-profile-share-list' : ''}${sentiment ? ' ci-product-card ci-product-' + sentiment : ''}" id="profile-card-${key}" tabindex="-1" aria-label="${esc(label)}分布">
+      ${profileCardHeader(key, label, hasMore, expanded)}
       <div class="ci-pie-layout">${donut}<div class="ci-pie-list">
         ${rows || '<p class="ci-note">暂无可分析数据</p>'}
-        ${items.length > 5 && !compare ? `<button type="button" class="ci-pie-other" data-profile-expand="${key}" aria-expanded="${expanded}">${expanded ? '<span class="ci-pie-other-action">收起 ↑</span>' : '<i></i><span>其他</span><span class="ci-pie-other-action">查看更多 ↓</span>'}</button>` : ''}
+        ${hasMore && !compare ? `<button type="button" class="session-toggle-text-btn ci-pie-other" data-profile-expand="${key}" aria-expanded="${expanded}">
+          ${expanded ? '' : '<i aria-hidden="true"></i><span class="ci-pie-other-label">其他</span>'}
+          <span class="ci-pie-other-action">${profileToggleContent(expanded)}</span>
+        </button>` : ''}
       </div></div>
     </article>`;
   }
   function profileCard(key) {
     const items = M.distribution(result, key);
     if (!compare || profileView === 'list') return profilePieCard(key, items);
+    const { label } = M.topics[scope.stage][key];
+    const expanded = expandedProfiles.has(key);
     const ranked = items.map((row, index) => ({ row, index })).sort((a, b) => (Number.isFinite(b.row.aRate) ? b.row.aRate : -1) - (Number.isFinite(a.row.aRate) ? a.row.aRate : -1) || a.index - b.index);
-    return `<article class="ci-profile-card ci-profile-comparison" id="profile-card-${key}" tabindex="-1" aria-label="${esc(M.topics[scope.stage][key].label)}对比"><header><h4>${esc(M.topics[scope.stage][key].label)}</h4><button type="button" class="ci-text ci-profile-download" data-profile-download="${key}" aria-label="下载${esc(M.topics[scope.stage][key].label)}图片">下载图片</button>${items.length > 5 ? `<button type="button" class="ci-text" data-profile-expand="${key}" aria-expanded="${expandedProfiles.has(key)}">${expandedProfiles.has(key) ? '收起 ↑' : '查看更多 ↓'}</button>` : ''}</header><div class="ci-profile-bars">${(expandedProfiles.has(key) ? ranked : ranked.slice(0, 5)).map(({row, index}) => `<button type="button" class="ci-profile-bar-row" data-profile-drill="${key}" data-profile-index="${index}" title="A：${num(row.aCount)}/${num(row.aTotal)}；B：${num(row.bCount)}/${num(row.bTotal)}" aria-label="下钻分析${esc(row.name)}，A ${pct(row.aRate)}，${num(row.aCount)}/${num(row.aTotal)}，B ${pct(row.bRate)}，${num(row.bCount)}/${num(row.bTotal)}"><span class="ci-profile-difference-heading"><strong>${esc(row.name)}</strong><span>差值 <b>${Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)}%` : '—'}</b></span></span>${butterfly(row.name, row.aRate, row.bRate, row.aCount, row.aTotal, row.bCount, row.bTotal)}</button>`).join('') || '<p class="ci-note">暂无可分析数据</p>'}</div></article>`;
+    const bars = (expanded ? ranked : ranked.slice(0, 5)).map(({row, index}) => `<button type="button" class="ci-profile-bar-row" data-profile-drill="${key}" data-profile-index="${index}" title="A：${num(row.aCount)}/${num(row.aTotal)}；B：${num(row.bCount)}/${num(row.bTotal)}" aria-label="下钻分析${esc(row.name)}，A ${pct(row.aRate)}，${num(row.aCount)}/${num(row.aTotal)}，B ${pct(row.bRate)}，${num(row.bCount)}/${num(row.bTotal)}"><span class="ci-profile-difference-heading"><strong>${esc(row.name)}</strong><span>差值 <b>${Number.isFinite(row.delta) ? `${row.delta > 0 ? '+' : ''}${row.delta.toFixed(1)}%` : '—'}</b></span></span>${butterfly(row.name, row.aRate, row.bRate, row.aCount, row.aTotal, row.bCount, row.bTotal)}</button>`).join('');
+    return `<article class="ci-profile-card ci-profile-comparison" id="profile-card-${key}" tabindex="-1" aria-label="${esc(label)}对比">
+      ${profileCardHeader(key, label, items.length > 5, expanded)}
+      <div class="ci-profile-bars">${bars || '<p class="ci-note">暂无可分析数据</p>'}</div>
+    </article>`;
   }
   function expandedProfileMarkup(key) {
     const wasExpanded = expandedProfiles.has(key);
@@ -625,24 +800,36 @@
     $('analysisRows').innerHTML = pageItems(records, leadPager).map(record => `<tr><td><strong>${esc(record.leadId)}</strong><small>${esc(record.advisor)}</small></td><td>${esc(record.model)}<small>${esc(M.sceneLabels[record.scene])}</small></td><td>${esc(record.status)}${compare ? `<small>${M.inGroup(scope, record, 'a')?'A':'B'} 组</small>` : ''}</td><td>${record.issuedAt.slice(0,10)}<small>已满${record.ageDays}天</small></td>${showEvidence ? `<td><button class="ci-text" data-lead-evidence="${esc(record.id)}" type="button">查看证据</button></td>` : ''}</tr>`).join('');
     renderPagination(leadPager, records.length);
   }
-  function renderActionChart(sorted) {
-    $('chartLegend').innerHTML = '';
-    $('comparisonChart').innerHTML = `<div class="ci-action-chart ci-action-simple ci-action-reference" role="group" aria-label="SOP执行率条形图"><div class="ci-action-reference-head"><span>SOP项目</span><span>执行率</span><span>已执行 / 适用</span><span>操作</span></div>${sorted.map(({row,index}) => {
-      const name = row.displayName || row.name;
+  function renderSopTable(items) {
+    const ascending = actionSort === 'asc';
+    const nextOrder = ascending ? '从高到低' : '从低到高';
+    $('analysisHead').innerHTML = `<tr>
+      <th scope="col">SOP项目</th>
+      <th scope="col" aria-sort="${ascending ? 'ascending' : 'descending'}">
+        <button class="store-sort-button active ${ascending ? 'is-ascending' : 'is-descending'}" type="button" data-action-sort aria-label="执行率，切换为${nextOrder}">
+          执行率<span class="store-sort-icon" aria-hidden="true"><i class="store-sort-icon-up"></i><i class="store-sort-icon-down"></i></span>
+        </button>
+      </th>
+      <th scope="col">已执行 / 适用</th>
+      <th scope="col">操作</th>
+    </tr>`;
+    $('analysisRows').innerHTML = items.map(({ row, index }) => {
+      const name = esc(row.displayName || row.name);
       const available = row.count > 0;
-      return `<button class="ci-action-row" type="button" data-start-drill="${index}" aria-label="${esc(name)}，执行率${pct(row.completion)}，${num(row.done)} / ${num(row.count)}，按组织下钻"><span class="ci-action-name">${esc(name)}</span><span class="ci-action-reference-rate"><strong>${pct(row.completion)}</strong><span class="ci-action-track${available ? '' : ' is-empty'}" aria-hidden="true"><i class="ci-action-done" style="width:${row.completion || 0}%"></i></span></span><span class="ci-action-reference-count">${available ? `${num(row.done)} / ${num(row.count)}` : '暂无数据'}</span><span class="ci-action-reference-link">下钻 <b aria-hidden="true">›</b></span></button>`;
-    }).join('')}</div>`;
+      return `<tr data-start-drill="${index}">
+        <td><strong class="cell-main">${name}</strong></td>
+        <td><span class="ci-bar-value"><strong>${pct(row.completion)}</strong><span class="ci-bar${available ? '' : ' is-empty'}" aria-hidden="true"><i style="width:${row.completion ?? 0}%"></i></span></span></td>
+        <td>${available ? `${num(row.done)} / ${num(row.count)}` : '暂无数据'}</td>
+        <td><button class="ci-text" type="button" aria-label="按组织下钻${name}">下钻</button></td>
+      </tr>`;
+    }).join('');
   }
-  function renderComparisonChart(tableItems) {
-    const visible = rows.length > 0 && drillView?.level !== 'leads';
-    $('compareVisual').classList.toggle('ci-action-reference-visual', workspace === 'actions' && !compare && !drillState);
+  function renderComparisonChart() {
+    const visible = rows.length > 0 && drillView?.level !== 'leads' && (compare || workspace === 'customers');
     $('compareVisual').hidden = !visible;
     $('comparisonChart').hidden = false;
     $('analysisTableWrap').hidden = visible;
-    $('actionSortControls').innerHTML = workspace === 'actions' && !compare && !drillState
-      ? `<span class="ci-note">执行率排序</span><button class="btn ${actionSort === 'desc' ? 'primary' : 'ghost'}" type="button" data-action-sort="desc" aria-pressed="${actionSort === 'desc'}">从高到低</button><button class="btn ${actionSort === 'asc' ? 'primary' : 'ghost'}" type="button" data-action-sort="asc" aria-pressed="${actionSort === 'asc'}">从低到高</button>` : '';
     if (!visible) { $('comparisonChart').innerHTML = ''; return; }
-    if (!compare && workspace === 'actions') { renderActionChart(tableItems); return; }
     if (!compare) {
       $('chartLegend').innerHTML = `<span><i class="ci-series-a" aria-hidden="true"></i>${esc(M.templates[scope.template].label)} · 提及占比</span><small>分母为各组织范围内可分析线索 · 点击条形图下钻</small>`;
       $('comparisonChart').innerHTML = `<div class="ci-chart-axis-row"><span>${drillView ? drillView.levelLabel : '客户标签'}</span><span class="ci-profile-detail-axis"><span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></span><span>提及 / 可分析</span></div><div role="group" aria-label="提及占比条形图">${rows.map((row,index) => `<button type="button" class="ci-compare-row ci-profile-detail-row" data-start-drill="${index}" aria-label="下钻分析${esc(row.displayName || row.name)}：${pct(row.share)}，${row.count}/${row.denominator}条"><span class="ci-chart-name"><strong>${esc(row.displayName || row.name)}</strong><small>${esc(row.region || row.sub || drillState?.targetName || '')}</small></span><span class="ci-profile-detail-plot"><span class="ci-profile-track" aria-hidden="true"><i class="ci-series-a" style="width:${row.share || 0}%"></i></span><strong>${pct(row.share)}</strong></span><span class="ci-chart-difference"><strong>${num(row.count)}/${num(row.denominator)}</strong><em>下钻分析 →</em></span></button>`).join('')}</div><p class="ci-chart-caption">统一使用0–100%刻度；提及线索按线索ID去重。同一线索可提及多个标签。</p>`;
@@ -917,7 +1104,7 @@
       ($('dateMenu').querySelector(selector) || $('dateMenu').querySelector('.session-date-tab.active')).focus({ preventScroll: true });
       return;
     }
-    document.querySelectorAll('.ci-template-help[open]').forEach(help => { if (!help.contains(target)) help.open = false; });
+    if (scopeHelp.open && !scopeHelp.contains(target)) scopeHelp.open = false;
     const templateButton = target.closest('[data-template]'); if (templateButton) { selectTemplate(templateButton.dataset.template); return; }
     // Shared filters may replace the clicked control before the event reaches the document.
     const eventPath = event.composedPath();
@@ -949,12 +1136,8 @@
     if (profileDownload) { downloadProfileImage(profileDownload.dataset.profileDownload); return; }
     const profileExpand = target.closest('[data-profile-expand]');
     if (profileExpand) {
-      const key = profileExpand.dataset.profileExpand, board = $('profileOverview');
-      if (!expandedProfiles.size) board.style.setProperty('--profile-base-height', `${profileExpand.closest('.ci-profile-card').getBoundingClientRect().height}px`);
-      if (expandedProfiles.has(key)) expandedProfiles.delete(key); else expandedProfiles.add(key);
-      renderProfileView();
-      if (!expandedProfiles.size) board.style.removeProperty('--profile-base-height');
-      board.querySelector(`[data-profile-expand="${key}"]`)?.focus({ preventScroll: true });
+      // The donut forwards clicks to this button without a mouse click count.
+      toggleProfileTags(profileExpand, event.detail > 0 || !profileExpand.matches(':focus-visible'));
       return;
     }
     const profileDetail = target.closest('[data-profile-detail]'); if (profileDetail) { openProfileDetail(profileDetail.dataset.profileDetail); return; }
@@ -969,10 +1152,12 @@
     const orgMode = target.closest('[data-org-mode]'); if (orgMode) { drillState.organizationMode=orgMode.dataset.orgMode; if (drillState.organizationMode==='all') drillState.targetName=M.topics[scope.stage][dimension].label; render(); return; }
     const profileDrill = target.closest('[data-profile-drill]');
     if (profileDrill) { openProfileDetail(profileDrill.dataset.profileDrill); startDrill(Number(profileDrill.dataset.profileIndex)); return; }
-    const sortButton = target.closest('[data-action-sort]');
-    if (sortButton && ['asc', 'desc'].includes(sortButton.dataset.actionSort)) {
-      actionSort = sortButton.dataset.actionSort; actionPager.page = 1; render();
-      document.querySelector(`[data-action-sort="${actionSort}"]`)?.focus({ preventScroll: true }); return;
+    if (target.closest('[data-action-sort]')) {
+      actionSort = actionSort === 'asc' ? 'desc' : 'asc';
+      actionPager.page = 1;
+      render();
+      $('analysisHead').querySelector('[data-action-sort]')?.focus({ preventScroll: true });
+      return;
     }
     const pageNumber = target.closest('[data-analysis-page]');
     if (pageNumber) { goToPage(pageNumber.dataset.analysisPage, '[aria-current="page"]'); return; }
@@ -997,7 +1182,7 @@
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && dateRange) { closeMenus(); $('dateTrigger').focus(); event.preventDefault(); event.stopPropagation(); return; }
-    if (event.key === 'Escape' && event.target.closest('.ci-template-help[open]')) { event.target.closest('.ci-template-help').open = false; event.preventDefault(); return; }
+    if (event.key === 'Escape' && scopeHelp.open && scopeHelp.contains(event.target)) { scopeHelp.open = false; event.preventDefault(); return; }
     const dayButton = event.target.closest('[data-range-value]');
     if (dayButton && dateRange && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(event.key)) {
       event.preventDefault();
@@ -1038,9 +1223,27 @@
     if (input.matches('[data-reference]')) groupDraft = input.value;
   });
   document.querySelector('main.main').append($('tpl-customer-insight').content);
-  document.querySelectorAll('[data-workspace]').forEach(button => {
-    button.addEventListener('click', () => { workspace = button.dataset.workspace; drillState = null; drillScroll.clear(); leadPager.page = 1; orgPager.page = 1; render(); });
-    button.addEventListener('keydown', event => { if (['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); const other = workspace === 'customers' ? $('actionTab') : $('customerTab'); other.click(); other.focus(); } });
+  const scopeHelp = $('insightScopeHelp');
+  const workspaceTabs = $('customerTab').parentElement;
+  workspaceTabs.querySelectorAll('[data-workspace]').forEach(button => {
+    button.addEventListener('click', event => {
+      workspaceTabs.classList.toggle('animate-selection', event.detail > 0);
+      workspace = button.dataset.workspace;
+      drillState = null;
+      drillScroll.clear();
+      leadPager.page = 1;
+      orgPager.page = 1;
+      render();
+    });
+    button.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const tabId = { Home: 'customerTab', End: 'actionTab' }[event.key]
+        ?? (workspace === 'customers' ? 'actionTab' : 'customerTab');
+      const next = $(tabId);
+      if (next.getAttribute('aria-selected') !== 'true') next.click();
+      next.focus({ preventScroll: true });
+    });
   });
   function reset() {
     closeMenus(); actionPager.page = 1; scope = { ...M.defaults(), filters: {}, organizationDimension: 'organization' };
@@ -1054,7 +1257,7 @@
     if (event.key === 'Enter') { event.preventDefault(); goToPage(event.target.value, '#analysisPageJump'); }
   });
   $('emptyReset').onclick = reset;
-  $('insightScopeHelp').addEventListener('toggle', event => { if (event.currentTarget.open) closeMenus(); });
+  scopeHelp.addEventListener('toggle', () => { if (scopeHelp.open) closeMenus(); });
   $('toggleCompare').onclick = openGroups;
   $('stopCompare').onclick = () => { summaryExpanded = false; compare = false; renderFilters(); render(); };
   $('editGroups').onclick = openGroups;
@@ -1094,9 +1297,13 @@
     dialog.addEventListener('close', () => { document.querySelector('.main').inert = false; document.querySelector('.sidebar').inert = false; });
     dialog.addEventListener('click', event => { const rect = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeDialog(dialog.id); });
   });
-  twoColumnProfileGrid.addEventListener('change', resizeProfileBatches);
-  oneColumnProfileGrid.addEventListener('change', resizeProfileBatches);
-  renderFilters(); render();
+  const summaryDirectory = $('profileDirectory');
+  const resizeSummaryForViewport = () => resizeProfileBatches(profileSummaryWidth(summaryDirectory));
+  twoColumnProfileGrid.addEventListener('change', resizeSummaryForViewport);
+  oneColumnProfileGrid.addEventListener('change', resizeSummaryForViewport);
+  new ResizeObserver(([entry]) => resizeProfileBatches(entry.contentRect.width)).observe(summaryDirectory);
+  renderFilters();
+  render({ playProfileIntro: true });
   if ($('reportDialog')?.ownerDocument) {
     reportCenter = window.InsightReports.mount({ root: $('reportDialog'), notify,
       getSnapshot: () => !result.errors.length && result.records.length ? window.InsightReportModel.snapshot(result, scopeText(scope, compare, false)) : null });

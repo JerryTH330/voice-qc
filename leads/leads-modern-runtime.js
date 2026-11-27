@@ -14,6 +14,7 @@
   var DEFAULT_DATE = global.AIQCData?.defaultRange.endDate || '2026-09-10';
   var LEAD_COLUMN_SCHEMA_VERSION = '20261021-lead-final-status-v1';
   var CUSTOMER_COLUMN_SCHEMA_VERSION = '20260921-customer-overview-order-v1';
+  var CUSTOMER_NAME_SUMMARY_KEYS = ['zone', 'store', 'advisorName'];
   var AI_LEAD_VALIDITY_OPTIONS = ['有效', '无效', '无法判断', '分析中', '未分析', '关联缺失'];
   var ORGANIZATION_KEYS = ['brand', 'region', 'zone', 'province', 'city', 'patroler', 'governor', 'store', 'advisor'];
   var FILTER_LABELS = {
@@ -39,8 +40,6 @@
     customerMultiLead: '是否多线索',
     customerLeadCountRange: '关联线索数',
     customerAudioCountRange: '关联录音数',
-    customerRecordCoverage: '线索录音覆盖',
-    customerStoreRecordCoverage: '门店录音覆盖',
     customerStatus: '最新线索状态'
   };
 
@@ -109,14 +108,9 @@
     column('multiLead', '是否多线索', 14),
     column('aggregateLeadCount', '关联线索数', 14),
     column('aggregateAudioCount', '关联录音数', 14),
-    column('recordCoverage', '线索录音覆盖', 20),
-    column('storeRecordCoverage', '门店录音覆盖', 20),
     column('leadStatus', '最新线索状态', 16),
     column('firstLeadIssuedAt', '线索首次下发时间', 20),
-    column('latestLeadIssuedAt', '线索最新下发时间', 20),
-    column('firstRecordingAt', '首次录音时间', 20),
-    column('latestRecordingAt', '最近录音时间', 20),
-    column('associationSummary', '关联概况', 38)
+    column('latestLeadIssuedAt', '线索最新下发时间', 20)
   ];
 
   function column(key, label, width) {
@@ -309,6 +303,10 @@
   var installedFilterHost = null;
   var validityTooltipHideTimer = 0;
   var validityTooltipAnchor = null;
+  var aggregateNamesTooltip = null;
+  var aggregateNamesAnchor = null;
+  var aggregateNamesHideTimer = 0;
+  var aggregateNamesPinned = false;
   var refreshTimer = 0;
   var fieldSettingsCloseTimer = 0;
   var fieldSettingsDragController = global.__fieldSettingsInteractions.createController({
@@ -338,10 +336,12 @@
       var saved = JSON.parse(global.localStorage.getItem(storageKey(view)) || 'null');
       if (!saved || !Array.isArray(saved.order) || !Array.isArray(saved.hidden)) return fallback;
       var validKeys = columns.map(function (item) { return item.key; });
+      var hidden = saved.hidden.filter(function (key) { return validKeys.includes(key); });
+      if (validKeys.every(function (key) { return hidden.includes(key); })) hidden = fallback.hidden;
       var schemaVersion = view === 'customers' ? CUSTOMER_COLUMN_SCHEMA_VERSION : LEAD_COLUMN_SCHEMA_VERSION;
       var outdated = global.localStorage.getItem(storageVersionKey(view)) !== schemaVersion;
       if (view === 'customers' && outdated) {
-        var migrated = { order: fallback.order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
+        var migrated = { order: fallback.order, hidden: hidden };
         global.localStorage.setItem(storageKey(view), JSON.stringify(migrated));
         global.localStorage.setItem(storageVersionKey(view), schemaVersion);
         return migrated;
@@ -352,7 +352,7 @@
         if (view === 'leads' && key === 'isFinalStatus') order.splice(order.indexOf('aiLeadValidity') + 1, 0, key);
         else order.push(key);
       });
-      var normalized = { order: order, hidden: saved.hidden.filter(function (key) { return validKeys.includes(key); }) };
+      var normalized = { order: order, hidden: hidden };
       if (outdated || JSON.stringify(normalized) !== JSON.stringify(saved)) {
         global.localStorage.setItem(storageKey(view), JSON.stringify(normalized));
         global.localStorage.setItem(storageVersionKey(view), schemaVersion);
@@ -411,14 +411,12 @@
       customerStoreCountRange: 'aggregateStoreCount',
       customerMultiLead: 'multiLead',
       customerLeadCountRange: 'aggregateLeadCount',
-      customerAudioCountRange: 'aggregateAudioCount',
-      customerRecordCoverage: 'recordCoverage',
-      customerStoreRecordCoverage: 'storeRecordCoverage'
+      customerAudioCountRange: 'aggregateAudioCount'
     };
     if (key === 'date') {
       return view === 'leads'
         ? isColumnVisible('leadDate', view)
-        : ['firstLeadIssuedAt', 'latestLeadIssuedAt', 'firstRecordingAt', 'latestRecordingAt'].some(function (columnKey) { return isColumnVisible(columnKey, view); });
+        : ['firstLeadIssuedAt', 'latestLeadIssuedAt'].some(function (columnKey) { return isColumnVisible(columnKey, view); });
     }
     return isColumnVisible(map[key] || key, view);
   }
@@ -523,7 +521,6 @@
     if (key === 'customerCrossStore' || key === 'customerMultiLead') return ['是', '否'].map(function (value) { return option(value); });
     if (key === 'customerStoreCountRange') return ['1家', '2家', '3家', '4家及以上'].map(function (value) { return option(value); });
     if (key === 'customerLeadCountRange' || key === 'customerAudioCountRange') return ['1条', '2条', '3条', '4条及以上'].map(function (value) { return option(value); });
-    if (key === 'customerRecordCoverage' || key === 'customerStoreRecordCoverage') return ['全部有录音', '部分有录音', '全部无录音'].map(function (value) { return option(value); });
     if (key === 'aiLeadValidity') return AI_LEAD_VALIDITY_OPTIONS.map(function (value) { return option(value); });
     if (key === 'isFinalStatus') return ['是', '否'].map(function (value) { return option(value); });
     if (key === 'validRecording') return ['是', '否'].map(function (value) { return option(value, value === '是' ? '有录音' : '无录音'); });
@@ -637,8 +634,6 @@
         && (!storeRanges.length || storeRanges.some(function (range) { return rangeMatch(customer.aggregateStoreCount, range); }))
         && (!leadRanges.length || leadRanges.some(function (range) { return rangeMatch(customer.aggregateLeadCount, range); }))
         && (!audioRanges.length || audioRanges.some(function (range) { return rangeMatch(customer.aggregateAudioCount, range); }))
-        && matchesValues(customer.recordCoverage, selected('customerRecordCoverage', targetState))
-        && matchesValues(customer.storeRecordCoverage, selected('customerStoreRecordCoverage', targetState))
         && matchesValues(customer.leadStatus, selected('customerStatus', targetState))
         && datesMatch;
     });
@@ -803,7 +798,7 @@
   function secondaryKeys() {
     var common = ['advisor', 'patroler', 'governor'];
     return currentView === 'customers'
-      ? common.concat(['customerCrossStore', 'customerStoreCountRange', 'customerMultiLead', 'customerLeadCountRange', 'customerAudioCountRange', 'customerRecordCoverage', 'customerStoreRecordCoverage', 'customerStatus'])
+      ? common.concat(['customerCrossStore', 'customerStoreCountRange', 'customerMultiLead', 'customerLeadCountRange', 'customerAudioCountRange', 'customerStatus'])
       : common.concat(['leadStatus', 'intentGrade', 'aiLeadValidity', 'isFinalStatus', 'date', 'leadIdQuery', 'validRecording', 'recordingCountQuery']);
   }
 
@@ -955,18 +950,9 @@
     }).map(function (item) { return item.value; });
   }
 
-  function aggregateCell(item, key, exportAll) {
-    var values = item.aggregateValues[key] || [];
-    if (!values.length) return '—';
-    if (exportAll) return values.join('、');
-    if (values.length === 1) return values[0];
-    return values[0] + ' · 另 ' + (values.length - 1) + ' 个';
-  }
-
-  function displayValue(item, key, exportMode) {
-    if (currentView === 'customers' && item.aggregateValues && ['brand', 'province', 'city', 'dealerCode', 'store', 'region', 'zone', 'patroler', 'governor', 'advisorName'].includes(key)) {
-      return aggregateCell(item, key, exportMode);
-    }
+  function displayValue(item, key) {
+    var aggregateValues = currentView === 'customers' && item.aggregateValues?.[key];
+    if (aggregateValues) return aggregateValues.join('、') || '—';
     if (key === 'crossStore') return item.crossStore ? '是' : '否';
     if (key === 'multiLead') return item.multiLead ? '是' : '否';
     if (key === 'isFinalStatus') return finalStatusValue(item.isFinalStatus) || '—';
@@ -998,13 +984,21 @@
 
   function renderCell(item, key) {
     if (item.linkedDemo && key === 'recordingCount' && item.recordingIds.length) return '<a class="table-link" href="' + escapeHtml(global.AIQCLinkedDemo.listUrl('recording', item.recordingIds[0])) + '">' + item.recordingCount + '</a>';
-    var value = displayValue(item, key, false);
+    var aggregateValues = currentView === 'customers' && item.aggregateValues?.[key];
+    if (aggregateValues?.length > 1) {
+      if (CUSTOMER_NAME_SUMMARY_KEYS.includes(key)) {
+        var prefix = escapeHtml(aggregateValues.slice(0, 2).join('、'));
+        if (aggregateValues.length === 2) return prefix;
+        return '<button type="button" class="lr-aggregate-names" aria-expanded="false" data-lr-aggregate-names="' +
+          escapeHtml(JSON.stringify(aggregateValues)) + '">' + prefix +
+          ' <span class="lr-aggregate-name-count">等 ' + aggregateValues.length + ' 个</span></button>';
+      }
+      return '<span class="lr-multi-value">' + aggregateValues.map(escapeHtml).join('、<wbr>') + '</span>';
+    }
+    var value = displayValue(item, key);
     if (key === 'leadStatus' && value && value !== '—') return renderStatusInline(value, leadStatusTone(value));
     if (key === 'intentGrade') return '<span class="pill-inline intent-grade-pill">' + escapeHtml(value) + '</span>';
     if (key === 'aiLeadValidity' && value && value !== '—') return renderStatusInline(value, aiLeadValidityTone(value));
-    if (currentView === 'customers' && item.aggregateValues && item.aggregateValues[key] && item.aggregateValues[key].length > 1) {
-      return '<span class="lr-multi-value" title="' + escapeHtml(item.aggregateValues[key].join('、')) + '">' + escapeHtml(value) + '</span>';
-    }
     return escapeHtml(value);
   }
 
@@ -1050,14 +1044,10 @@
     validityTooltipHideTimer = global.setTimeout(restoreValidityTooltip, 160);
   }
 
-  function positionAiLeadValidityTooltip(button, tooltip) {
-    tooltip = tooltip || validityTooltipEl();
-    if (!button || !tooltip) return;
-    var buttonRect = button.getBoundingClientRect();
+  function getTooltipPlacement(buttonRect, tooltip, gap) {
     var tooltipWidth = tooltip.offsetWidth;
     var tooltipHeight = tooltip.offsetHeight;
     var edge = 16;
-    var gap = 12;
     var left = Math.min(
       Math.max(buttonRect.left + buttonRect.width / 2 - tooltipWidth / 2, edge),
       Math.max(edge, global.innerWidth - tooltipWidth - edge)
@@ -1066,10 +1056,22 @@
     var top = fitsBelow
       ? buttonRect.bottom + gap
       : Math.max(edge, buttonRect.top - gap - tooltipHeight);
-    tooltip.dataset.placement = fitsBelow ? 'bottom' : 'top';
-    tooltip.style.setProperty('--lr-validity-tooltip-left', left + 'px');
-    tooltip.style.setProperty('--lr-validity-tooltip-top', top + 'px');
-    tooltip.style.setProperty('--lr-validity-tooltip-arrow-left', Math.min(Math.max(buttonRect.left + buttonRect.width / 2 - left - 4, 12), tooltipWidth - 20) + 'px');
+    return {
+      placement: fitsBelow ? 'bottom' : 'top',
+      left: left,
+      top: top,
+      arrowLeft: Math.min(Math.max(buttonRect.left + buttonRect.width / 2 - left - 4, 12), tooltipWidth - 20)
+    };
+  }
+
+  function positionAiLeadValidityTooltip(button, tooltip) {
+    tooltip = tooltip || validityTooltipEl();
+    if (!button || !tooltip) return;
+    var position = getTooltipPlacement(button.getBoundingClientRect(), tooltip, 12);
+    tooltip.dataset.placement = position.placement;
+    tooltip.style.setProperty('--lr-validity-tooltip-left', position.left + 'px');
+    tooltip.style.setProperty('--lr-validity-tooltip-top', position.top + 'px');
+    tooltip.style.setProperty('--lr-validity-tooltip-arrow-left', position.arrowLeft + 'px');
   }
 
   function showAiLeadValidityTooltip(button) {
@@ -1107,6 +1109,92 @@
     }
   }
 
+  function closeAggregateNames() {
+    global.clearTimeout(aggregateNamesHideTimer);
+    if (!aggregateNamesAnchor) return;
+    aggregateNamesAnchor.setAttribute('aria-expanded', 'false');
+    aggregateNamesAnchor.removeAttribute('aria-describedby');
+    aggregateNamesTooltip.hidden = true;
+    aggregateNamesAnchor = null;
+    aggregateNamesPinned = false;
+  }
+
+  function positionAggregateNames() {
+    if (!aggregateNamesAnchor) return;
+    var buttonRect = aggregateNamesAnchor.getBoundingClientRect();
+    var wrap = aggregateNamesAnchor.closest('.leads-list-table-wrap')?.getBoundingClientRect();
+    var action = aggregateNamesAnchor.closest('tr')?.querySelector('.fixed-action-column')?.getBoundingClientRect();
+    var visibleRight = Math.min(global.innerWidth, wrap?.right ?? Infinity, action?.left ?? Infinity);
+    if (!aggregateNamesAnchor.isConnected || buttonRect.right <= Math.max(0, wrap?.left ?? 0) ||
+      buttonRect.left >= visibleRight || buttonRect.bottom <= Math.max(0, wrap?.top ?? 0) ||
+      buttonRect.top >= Math.min(global.innerHeight, wrap?.bottom ?? Infinity)) {
+      closeAggregateNames();
+      return;
+    }
+    var position = getTooltipPlacement(buttonRect, aggregateNamesTooltip, 8);
+    aggregateNamesTooltip.style.left = position.left + 'px';
+    aggregateNamesTooltip.style.top = position.top + 'px';
+  }
+
+  function showAggregateNames(button) {
+    global.clearTimeout(aggregateNamesHideTimer);
+    if (aggregateNamesAnchor === button) return;
+    closeAggregateNames();
+
+    if (!aggregateNamesTooltip) {
+      aggregateNamesTooltip = document.createElement('div');
+      aggregateNamesTooltip.id = 'leadsAggregateNamesTooltip';
+      aggregateNamesTooltip.className = 'lr-aggregate-names-tooltip';
+      aggregateNamesTooltip.setAttribute('role', 'tooltip');
+      document.body.appendChild(aggregateNamesTooltip);
+    }
+    aggregateNamesAnchor = button;
+    var values = JSON.parse(button.dataset.lrAggregateNames);
+    aggregateNamesTooltip.innerHTML = '<ul>' + values.map(function (name) {
+      return '<li>' + escapeHtml(name) + '</li>';
+    }).join('') + '</ul>';
+    aggregateNamesTooltip.scrollTop = 0;
+    aggregateNamesTooltip.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    button.setAttribute('aria-describedby', aggregateNamesTooltip.id);
+    positionAggregateNames();
+  }
+
+  function containsAggregateNames(target) {
+    return target && aggregateNamesAnchor && (
+      aggregateNamesAnchor.contains(target) || aggregateNamesTooltip.contains(target)
+    );
+  }
+
+  function handleAggregateNamesPointerOver(event) {
+    if (event.pointerType === 'touch') return;
+    var button = event.target.closest('[data-lr-aggregate-names]');
+    if (button && !button.contains(event.relatedTarget)) showAggregateNames(button);
+    else if (containsAggregateNames(event.target)) global.clearTimeout(aggregateNamesHideTimer);
+  }
+
+  function handleAggregateNamesPointerOut(event) {
+    if (event.pointerType === 'touch' || aggregateNamesPinned || !containsAggregateNames(event.target) ||
+      containsAggregateNames(event.relatedTarget)) return;
+    aggregateNamesHideTimer = global.setTimeout(function () {
+      if (aggregateNamesAnchor?.matches(':focus-visible')) return;
+      closeAggregateNames();
+    }, 120);
+  }
+
+  function handleAggregateNamesClick(event) {
+    var button = event.target.closest('[data-lr-aggregate-names]');
+    if (button) {
+      if (aggregateNamesAnchor === button && aggregateNamesPinned) closeAggregateNames();
+      else {
+        showAggregateNames(button);
+        aggregateNamesPinned = Boolean(aggregateNamesAnchor);
+      }
+    } else if (!containsAggregateNames(event.target)) {
+      closeAggregateNames();
+    }
+  }
+
   function renderTools(total) {
     var headbar = document.querySelector('.leads-table-headbar');
     if (!headbar) return;
@@ -1131,6 +1219,7 @@
     var emptyState = document.getElementById('leadsEmptyState');
     var tableWrap = table && table.closest('.leads-list-table-wrap');
     if (!table || !header || !body) return;
+    closeAggregateNames();
     restoreValidityTooltip();
     var items = filteredRecords();
     var viewState = state();
@@ -1170,8 +1259,7 @@
             : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="customers">查看详情</button>'
         : '<button class="table-link" data-lr-detail-id="' + escapeHtml(item.id) + '" data-lr-return-view="leads">线索详情</button>';
       return '<tr' + (item.exampleKey ? ' data-customer-example-row="' + escapeHtml(item.exampleKey) + '"' : '') + '>' + columns.map(function (column) {
-        var cellClass = column.key === 'associationSummary' ? ' class="cv-association-summary-cell"' : '';
-        return '<td data-column-key="' + escapeHtml(column.key) + '"' + cellClass + '>' + renderCell(item, column.key) + (column.key === 'customerName' ? exampleLabel : '') + '</td>';
+        return '<td data-column-key="' + escapeHtml(column.key) + '">' + renderCell(item, column.key) + (column.key === 'customerName' ? exampleLabel : '') + '</td>';
       }).join('') + '<td class="fixed-action-column">' + detail + (showExampleLabelInName ? '' : exampleLabel) + '</td></tr>';
     }).join('') + (examples.length && !items.length
       ? '<tr><td colspan="' + (columns.length + 1) + '" class="lr-customer-example-empty"><span role="status">暂无符合条件的客户，请调整筛选条件后重试</span></td></tr>' : '');
@@ -1377,7 +1465,7 @@
     var request = {
       source: currentView, filename: name + '_' + stamp + '.xlsx', sheetName: name, filters: filters,
       columns: columns.map(function (item) { return { label: item.label, width: item.width }; }),
-      rows: items.map(function (item) { return columns.map(function (column) { return displayValue(item, column.key, true); }); })
+      rows: items.map(function (item) { return columns.map(function (column) { return displayValue(item, column.key); }); })
     };
     if (button) button.disabled = true;
     try { await global.__exportReady; await global.ExportTaskUI.submit(request); }
@@ -1729,6 +1817,7 @@
 
   function install() {
     var host = document.getElementById('leadsFilterControls');
+    if (aggregateNamesAnchor && !aggregateNamesAnchor.isConnected) closeAggregateNames();
     if (!host || host === installedFilterHost && host.dataset.lrInstalled === 'true') return;
     installedFilterHost = host;
     var pageStack = host.closest('.page-stack');
@@ -1741,6 +1830,19 @@
   }
 
   document.addEventListener('click', handleClick);
+  document.addEventListener('click', handleAggregateNamesClick);
+  document.addEventListener('pointerover', handleAggregateNamesPointerOver);
+  document.addEventListener('pointerout', handleAggregateNamesPointerOut);
+  document.addEventListener('focusin', function (event) {
+    var button = event.target.closest('[data-lr-aggregate-names]');
+    if (button) showAggregateNames(button);
+  });
+  document.addEventListener('focusout', function (event) {
+    if (event.target === aggregateNamesAnchor) closeAggregateNames();
+  });
+  document.addEventListener('scroll', function (event) {
+    if (aggregateNamesAnchor && !aggregateNamesTooltip.contains(event.target)) positionAggregateNames();
+  }, { capture: true, passive: true });
   document.addEventListener('input', handleInput);
   document.addEventListener('change', handleChange);
   document.addEventListener('dragstart', handleDragStart);
@@ -1749,6 +1851,10 @@
   document.addEventListener('dragend', handleDragEnd);
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') return;
+    if (aggregateNamesAnchor) {
+      closeAggregateNames();
+      return;
+    }
     restoreValidityTooltip();
     if (state().settingsOpen) {
       closeFieldSettings();
@@ -1758,6 +1864,7 @@
   });
 
   global.addEventListener('resize', function () {
+    positionAggregateNames();
     if (!validityTooltipAnchor) return;
     global.clearTimeout(validityTooltipHideTimer);
     restoreValidityTooltip();

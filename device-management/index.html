@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>工牌管理 · AI质检平台</title>
+    <title>到访明细 · AI质检平台</title>
     <link rel="icon" href="../assets/ds-logo.png" />
-    <link rel="stylesheet" href="./page.css?v=20261124-all-time-data-v1" />
-    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261028-date-field-width-v1" />
+    <link rel="stylesheet" href="./page.css?v=20261127-drawer-shadow-v1" />
+    <link rel="stylesheet" href="../shared/badge-list-components.css?v=20261125-table-header-sort-v1" />
     <link rel="stylesheet" href="../fixed-action-column.css?v=20261028-full-sync-v1" />
     <link rel="stylesheet" href="../shared/dimension-switcher.css?v=20261109-dimension-text-dark-v3" />
     <script>if (window.self !== window.top) document.documentElement.classList.add('embedded-prototype');</script>
@@ -149,66 +149,6 @@
             </section>
           </section>
 
-          <section class="page-panel" data-page="management">
-            <section class="card badge-management-filter-card">
-              <div class="badge-management-store-context">
-                <span class="badge-management-store-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5V20h16v-9.5M3 10.5h18L19 4H5l-2 6.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 20v-5h4v5M3.5 10.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5c0 1.4 1 2.5 2.3 2.5s2.2-1.1 2.2-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                </span>
-                <span><small>当前门店</small><strong id="badgeManagementStoreName">—</strong></span>
-              </div>
-              <div class="badge-management-filter-controls">
-                <label class="badge-management-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="搜索工牌号、员工姓名或工号" data-badge-management-search /></label>
-                <label class="badge-management-status-filter"><span>绑定状态</span><select data-badge-management-status><option value="全部">全部</option><option value="已绑定">已绑定</option><option value="未绑定">未绑定</option></select></label>
-                <button class="btn ghost" type="button" data-badge-management-reset>重置</button>
-              </div>
-            </section>
-            <section class="card table-card badge-management-list-card">
-              <div class="table-headbar session-list-table-headbar badge-management-list-head">
-                <div class="panel-title"><h3>工牌列表</h3><p>管理当前门店工牌与员工的绑定关系</p></div>
-                <div class="badge-detail-table-head-tools"><span class="session-filter-summary">当前展示 <strong id="badgeManagementCount">0</strong> 枚工牌</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="management" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="management" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div>
-              </div>
-              <div class="table-wrap badge-management-table-wrap">
-                <table class="data-table session-data-table badge-management-table">
-                  <thead>
-                    <tr>
-                      <th>工牌 SN</th>
-                      <th>员工姓名</th>
-                      <th>员工工号</th>
-                      <th>绑定状态</th>
-                      <th>连接状态</th>
-                      <th>剩余电量</th>
-                      <th>最新同步</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody id="badgeManagementTableBody"></tbody>
-                </table>
-              </div>
-            </section>
-          </section>
-
-          <section class="page-panel" data-page="docks">
-            <section class="card session-filter-card badge-session-filter-card dock-detail-filter-card">
-              <div class="session-filter-toolbar" id="dockDetailFilterControls"></div>
-            </section>
-            <section class="card table-card badge-detail-table-card dock-detail-table-card">
-              <div class="table-shell">
-                <div class="table-headbar session-list-table-headbar">
-                  <div class="panel-title"><h3>充电坞明细</h3></div>
-                  <div class="session-filter-summary"><span>当前匹配 <strong id="dockFilterCount">0</strong> 个充电坞</span></div>
-                </div>
-                <div class="table-wrap badge-list-table-wrap dock-list-table-wrap">
-                  <table class="data-table session-data-table dock-data-table">
-                    <thead><tr><th>充电坞 SN</th><th>状态</th><th>品牌</th><th>大区</th><th>战区</th><th>门店</th><th>操作</th></tr></thead>
-                    <tbody id="dockDetailTableBody"></tbody>
-                  </table>
-                </div>
-                <div class="session-pagination" id="dockDetailPagination"></div>
-              </div>
-            </section>
-          </section>
-
           <section class="page-panel" data-page="events">
             <section class="card badge-record-header">
               <button class="badge-record-back" type="button" data-badge-detail-back><span aria-hidden="true">‹</span> 返回工牌明细</button>
@@ -230,7 +170,7 @@
               <span data-badge-record-filter-slot="events" hidden></span>
               <div class="badge-event-filter-toolbar" id="badgeEventFilters"></div>
               <section class="card table-card badge-event-record-card">
-                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="badgeEventResultSummary">共 3 组记录</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
+                <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="badgeEventResultSummary">共 3 组记录</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
                 <div id="badgeEventTimeline">
               <section class="badge-event-duration-metrics" aria-label="工牌事件时长指标">
                 <article class="badge-event-duration-card">
@@ -473,53 +413,10 @@
           </section>
           <div class="badge-record-drawer-controls visit-event-filter-preview" id="visitEventFilters"></div>
           <section class="card table-card badge-event-record-card visit-event-card">
-            <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音、充电和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="visitEventResultSummary">共 0 条</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="visit-events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="visit-events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
+            <div class="card-head"><div><h2>工牌事件</h2><p>按时间顺序展示开关机、录音和低电量事件</p></div><div class="badge-detail-table-head-tools"><span class="data-source-note" id="visitEventResultSummary">共 0 条</span><i class="badge-detail-table-divider" aria-hidden="true"></i><button class="btn ghost badge-detail-table-action badge-detail-refresh-btn" type="button" data-list-refresh="visit-events" aria-busy="false"><span class="badge-detail-refresh-icon" aria-hidden="true"></span><span>刷新</span></button><button class="btn primary badge-detail-table-action" type="button" data-list-export="visit-events" aria-busy="false" disabled><span class="badge-detail-export-icon" aria-hidden="true"></span><span>导出</span></button></div></div>
             <div class="event-timeline" id="visitEventDetailTimeline"></div>
           </section>
         </div>
-      </section>
-    </div>
-
-    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementMemberModal" hidden>
-      <section class="modal badge-management-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementMemberTitle">
-        <div class="modal-head"><div><h2 id="badgeManagementMemberTitle">换绑成员</h2><p>仅可选择当前门店内未绑定工牌的员工</p></div><button class="icon-btn badge-management-modal-close platform-close-icon" type="button" aria-label="关闭"></button></div>
-        <div class="badge-management-modal-body">
-          <label class="badge-management-form-row"><span><b>*</b> 工牌</span><input id="badgeManagementMemberSn" type="text" readonly /></label>
-          <div class="badge-management-form-row badge-management-member-row">
-            <span>成员</span>
-            <div class="badge-management-member-field">
-              <button class="badge-management-member-trigger" type="button" data-badge-management-member-trigger aria-expanded="false"><strong id="badgeManagementMemberValue">请选择成员</strong><i aria-hidden="true"></i></button>
-              <div class="badge-management-member-panel" id="badgeManagementMemberPanel" hidden>
-                <label class="badge-management-picker-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="搜索员工姓名或工号" data-badge-management-member-search /></label>
-                <div class="badge-management-member-options" id="badgeManagementMemberOptions"></div>
-              </div>
-            </div>
-            <button class="badge-management-add-member" type="button" data-badge-management-open-add><span aria-hidden="true">＋</span>添加人员</button>
-          </div>
-        </div>
-        <div class="modal-foot"><button class="btn ghost badge-management-modal-close" type="button">取消</button><button class="btn primary" id="badgeManagementMemberSubmit" type="button" data-badge-management-member-submit disabled>确定</button></div>
-      </section>
-    </div>
-
-    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementAddModal" hidden>
-      <section class="modal badge-management-modal badge-management-add-modal" role="dialog" aria-modal="true" aria-labelledby="badgeManagementAddTitle">
-        <div class="modal-head"><div><h2 id="badgeManagementAddTitle">添加人员</h2><p>从当前门店员工目录搜索并导入，不支持手工新建</p></div><button class="icon-btn badge-management-add-close platform-close-icon" type="button" aria-label="关闭"></button></div>
-        <div class="badge-management-add-body">
-          <label class="badge-management-picker-search badge-management-directory-search"><span class="badge-management-search-icon" aria-hidden="true"></span><input type="search" placeholder="支持搜索员工姓名和工号" data-badge-management-directory-search /></label>
-          <div class="badge-management-select-all-row"><label><input type="checkbox" data-badge-management-select-all /><span>全选当前结果</span></label><small id="badgeManagementSelectedCount">已选择 0 人</small></div>
-          <div class="badge-management-directory-list" id="badgeManagementDirectoryList"></div>
-        </div>
-        <div class="modal-foot"><button class="btn ghost badge-management-add-close" type="button">取消</button><button class="btn primary" id="badgeManagementAddSubmit" type="button" data-badge-management-add-submit disabled>确定</button></div>
-      </section>
-    </div>
-
-    <div class="modal-backdrop badge-management-modal-backdrop" id="badgeManagementConfirmModal" hidden>
-      <section class="modal badge-management-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="badgeManagementConfirmTitle">
-        <div class="badge-management-confirm-body">
-          <span class="badge-management-confirm-icon" id="badgeManagementConfirmIcon" aria-hidden="true">!</span>
-          <div><h2 id="badgeManagementConfirmTitle">确认操作</h2><p id="badgeManagementConfirmDescription"></p><div class="badge-management-confirm-detail" id="badgeManagementConfirmDetail"></div></div>
-        </div>
-        <div class="modal-foot"><button class="btn ghost badge-management-confirm-close" type="button">取消</button><button class="btn primary" id="badgeManagementConfirmSubmit" type="button" data-badge-management-confirm-submit>确认</button></div>
       </section>
     </div>
 
@@ -540,7 +437,7 @@
           <button class="icon-btn badge-record-drawer-close platform-close-icon" type="button" data-badge-record-drawer-close aria-label="关闭详情抽屉"></button>
         </div>
       </div>
-      <div class="drawer-body badge-record-drawer-body" id="badgeRecordDrawerBody">
+      <div class="drawer-body badge-record-drawer-body">
         <section class="card badge-record-profile-card" aria-label="当前顾问工牌信息">
           <div class="badge-record-profile-name">
             <img src="../assets/device-record-profile/advisor-avatar.png" alt="" aria-hidden="true" />
@@ -568,33 +465,6 @@
           <div class="badge-record-drawer-filter-host" id="badgeRecordDrawerFilterHost"></div>
         </section>
         <div class="badge-record-drawer-content-host" id="badgeRecordDrawerContentHost"></div>
-
-        <div class="badge-dock-drawer-view" id="badgeDockDrawerView" hidden>
-          <section class="card table-card badge-dock-section" aria-label="子设备状态">
-            <div class="card-head">
-              <div>
-                <h2>子设备状态</h2>
-              </div>
-              <button class="btn ghost session-reset-btn badge-dock-refresh-btn" type="button" id="badgeDockRefreshBtn">
-                <span class="badge-dock-refresh-icon" aria-hidden="true"></span>
-                <span>刷新</span>
-              </button>
-            </div>
-            <div class="badge-dock-device-list" id="badgeDockSubdeviceList"></div>
-          </section>
-          <section class="card table-card badge-dock-section" aria-label="子设备日志">
-            <div class="card-head">
-              <div>
-                <h2>子设备日志</h2>
-              </div>
-              <div class="badge-dock-log-filters">
-                <div class="session-toolbar-control session-toolbar-menu badge-dock-event-control" id="badgeDockEventControl" aria-label="子设备日志事件名称"></div>
-                <div class="session-toolbar-control session-toolbar-menu session-toolbar-control-date badge-dock-date-range" id="badgeDockDateControl" aria-label="子设备日志日期范围"></div>
-              </div>
-            </div>
-            <div class="event-timeline badge-dock-log-timeline" id="badgeDockLogTimeline"></div>
-          </section>
-        </div>
       </div>
     </aside>
 
@@ -682,16 +552,16 @@
 
     <script src="../shared/list-header-actions.js?v=20261028-full-sync-v1"></script>
     <script src="../shared/list-summary-counters.js?v=20261028-full-sync-v1"></script>
-    <script src="../unified-navigation-shell.js?v=20261102-scene-filter-style-v6"></script>
+    <script src="../unified-navigation-shell.js?v=20261124-retire-device-modules-v1"></script>
     <script src="../date-filter-component-utils.js?v=20261124-all-time-data-v1"></script>
     <script src="../leads/organization-data.js?v=20261028-full-sync-v1"></script>
     <script src="../shared/organization-directory.js?v=20261028-full-sync-v1"></script>
     <script src="./organization-data.js?v=20261028-full-sync-v1"></script>
     <script src="../session/real-recording-data.js?v=20261028-full-sync-v1"></script>
     <script src="../leads/real-lead-data.js?v=20261028-full-sync-v1"></script>
-    <script src="../shared/linked-demo-data.js?v=20261123-lead-list-return-v1"></script>
-    <script src="../shared/badge-history-data.js?v=20261028-full-sync-v1"></script>
-    <script src="../shared/unified-data.js?v=20261124-all-time-data-v1"></script>
+    <script src="../shared/linked-demo-data.js?v=20261124-retire-device-modules-v1"></script>
+    <script src="../shared/badge-history-data.js?v=20261124-retire-device-modules-v1"></script>
+    <script src="../shared/unified-data.js?v=20261124-retire-device-modules-v1"></script>
     <script src="./visit-organization-filter.js?v=20261110-organization-brand-options-v1"></script>
     <script src="./visit-field-settings.js?v=20261028-full-sync-v1"></script>
     <script src="./visit-import-demo.js?v=20261028-full-sync-v1"></script>
@@ -700,7 +570,7 @@
     <script src="./xlsx-export-utils.js?v=20261028-full-sync-v1"></script>
     <script src="../shared/field-settings-interactions.js?v=20261028-full-sync-v1"></script>
     <script src="../shared/dimension-switcher.js?v=20261028-full-sync-v1"></script>
-    <script src="./page.js?v=20261124-all-time-data-v1"></script>
+    <script src="./page.js?v=20261124-retire-device-modules-v1"></script>
     <script src="../fixed-action-column.js?v=20261028-full-sync-v1"></script>
   </body>
 </html>

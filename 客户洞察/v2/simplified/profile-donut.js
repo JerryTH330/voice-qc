@@ -34,13 +34,17 @@
     }));
   }
 
-  function options(slices, animate) {
+  function options(slices, animate, grow = false) {
     return {
       animation: animate,
       stateAnimation: { duration: animate ? 150 : 0, easing: 'cubicOut' },
       series: [{
         type: 'pie',
-        animationDuration: 0,
+        startAngle: 90,
+        clockwise: true,
+        animationType: 'expansion',
+        animationEasing: 'cubicOut',
+        animationDuration: grow ? 320 : 0,
         animationDurationUpdate: 0,
         radius: ['62%', '92%'],
         label: { show: false },
@@ -111,37 +115,103 @@
     });
   }
 
-  function mount(container) {
+  function mount(container, { playIntro = false } = {}) {
     const plots = container.querySelectorAll('[data-profile-donut]');
     if (!plots.length || !host.echarts) return;
     const controller = new AbortController();
+    const { signal } = controller;
     const motion = host.matchMedia('(prefers-reduced-motion: reduce)');
-    const charts = new Map();
-    const sizes = new host.ResizeObserver(entries => entries.forEach(({ target, contentRect }) => {
-      const chart = charts.get(target);
+    const entries = new Map();
+    const sizes = new host.ResizeObserver(records => records.forEach(({ target, contentRect }) => {
+      const chart = entries.get(target)?.chart;
       const { width, height } = contentRect;
       if (chart && width && height && (width !== chart.getWidth() || height !== chart.getHeight())) chart.resize();
     }));
-    plots.forEach(plot => {
-      const slices = JSON.parse(plot.dataset.profileDonut);
+    const visibleFraction = 0.25;
+    const visibility = playIntro && !motion.matches && host.IntersectionObserver
+      ? new host.IntersectionObserver(records => {
+        if (signal.aborted) return;
+        records.forEach(({ target, intersectionRatio }) => {
+          if (intersectionRatio >= visibleFraction) start(entries.get(target), true);
+        });
+      }, { threshold: visibleFraction })
+      : null;
+
+    function stopGrowth(entry) {
+      entry.chart.off('finished', entry.finishGrowth);
+      entry.finishGrowth = null;
+      entry.card.classList.remove('is-donut-entering');
+      entry.legendAnimation?.cancel();
+      entry.legendAnimation = null;
+    }
+
+    function start(entry, grow) {
+      if (entry.chart) return;
+      const { plot, slices, card, legend } = entry;
+      visibility?.unobserve(plot);
       const chart = host.echarts.init(plot, null, { renderer: 'svg' });
-      chart.setOption(options(slices, !motion.matches));
-      linkLabels(chart, plot, slices, controller.signal);
-      charts.set(plot, chart);
+      entry.chart = chart;
+      if (grow && !motion.matches) {
+        entry.finishGrowth = () => stopGrowth(entry);
+        chart.on('finished', entry.finishGrowth);
+        // Keep the legend visible after its fade finishes while the ring is still growing.
+        entry.legendAnimation = legend.animate?.([
+          { opacity: 0, transform: 'translateY(4px)' },
+          { opacity: 1, transform: 'translateY(0)' }
+        ], { duration: 220, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'both' });
+      } else {
+        card.classList.remove('is-donut-entering');
+      }
+      chart.setOption(options(slices, !motion.matches, Boolean(entry.finishGrowth)));
+      linkLabels(chart, plot, slices, signal);
       sizes.observe(plot);
+    }
+
+    function showNow(entry) {
+      if (!entry.chart) {
+        start(entry, false);
+        return;
+      }
+      if (entry.finishGrowth) {
+        stopGrowth(entry);
+        entry.chart.setOption(options(entry.slices, !motion.matches), { notMerge: true });
+      }
+    }
+
+    plots.forEach(plot => {
+      const card = plot.closest('.ci-pie-card');
+      const legend = card.querySelector('.ci-pie-list');
+      const slices = JSON.parse(plot.dataset.profileDonut);
+      const entry = { plot, card, legend, slices };
+      entries.set(plot, entry);
+      if (visibility && slices.some(slice => slice.value > 0)) {
+        card.classList.add('is-donut-entering');
+        legend.addEventListener('focus', () => showNow(entry), { capture: true, signal });
+        visibility.observe(plot);
+      } else {
+        start(entry, false);
+      }
     });
     motion.addEventListener('change', () => {
       const animate = !motion.matches;
-      charts.forEach(chart => chart.setOption({
-        animation: animate,
-        stateAnimation: { duration: animate ? 150 : 0 },
-        series: [{ emphasis: { scale: animate } }]
-      }));
-    }, { signal: controller.signal });
+      entries.forEach(entry => {
+        if (!animate) showNow(entry);
+        entry.chart?.setOption({
+          animation: animate,
+          stateAnimation: { duration: animate ? 150 : 0 },
+          series: [{ emphasis: { scale: animate } }]
+        });
+      });
+    }, { signal });
     return () => {
-      sizes.disconnect();
       controller.abort();
-      charts.forEach(chart => chart.dispose());
+      visibility?.disconnect();
+      sizes.disconnect();
+      entries.forEach(entry => {
+        entry.legendAnimation?.cancel();
+        entry.chart?.dispose();
+        entry.card.classList.remove('is-donut-entering');
+      });
     };
   }
 

@@ -1,14 +1,14 @@
 # 主导航图标与资源清理
 
-更新日期：2026-09-22。
+更新日期：2026-11-24。
 
 ## 图标来源
 
 [Figma 主导航节点](https://www.figma.com/design/5nY2kC6LvaldZ85UuxjF28/Untitled?node-id=819-2906)。
 
-16 个原始 SVG 保存在 `assets/navigation/`；`manifest.json` 记录图标名称及 Figma 节点。文件保留导出原始字节，未重画路径。
+14 个原始 SVG 保存在 `assets/navigation/`；`manifest.json` 记录图标名称及 Figma 节点。文件保留导出原始字节，未重画路径。
 
-共享导航使用这些 SVG 的内嵌 data URL 遮罩，颜色跟随菜单文字；避免 `file://` 模式跨文件 SVG 遮罩的加载限制。运行 `node scripts/sync-navigation-icons.cjs` 可从本地 SVG 重新生成导航数据。运行 `node scripts/check-dock-navigation-icon.js` 校验全部 16 个图标与源文件一致。所有 11 个页面入口沿用同一个导航。
+共享导航使用这些 SVG 的内嵌 data URL 遮罩，颜色跟随菜单文字；避免 `file://` 模式跨文件 SVG 遮罩的加载限制。运行 `node scripts/sync-navigation-icons.cjs` 可从本地 SVG 重新生成导航数据。运行 `node scripts/check-navigation-icons.js` 校验导航图标与清单及源文件一致。所有 11 个页面入口沿用同一个导航。
 
 ## 旧资源清理
 

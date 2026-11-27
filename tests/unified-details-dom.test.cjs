@@ -79,6 +79,51 @@ test('historical examples open their own complete journeys from the top of the c
   const rows = [...list.host.querySelectorAll('#leadsTableBody > tr')];
   assert.deepEqual(rows.slice(0, 2).map(row => row.dataset.customerExampleRow), ['multi-node', 'multi-store']);
   assert.deepEqual(rows.slice(0, 2).map(row => row.querySelector('[data-column-key="customerName"]').textContent.trim()), ['林嘉远演示样例', '郑昱辰演示样例']);
+  const examples = list.window.__getLeadCustomerExampleRows();
+  const detailTriggers = [];
+  let unabridgedFieldCount = 0;
+  for (const [index, example] of examples.entries()) {
+    for (const key of ['zone', 'store', 'advisorName']) {
+      const values = example.aggregateValues[key];
+      assert(values.length > 1, key);
+      const cell = rows[index].querySelector(`[data-column-key="${key}"]`);
+      const detailTrigger = cell.querySelector('button[data-lr-aggregate-names]');
+      if (values.length <= 2) {
+        assert.equal(cell.textContent.trim(), values.join('、'));
+        assert(!detailTrigger, key);
+        unabridgedFieldCount += 1;
+        continue;
+      }
+      assert(detailTrigger, key);
+      assert.equal(detailTrigger.textContent.trim(), `${values.slice(0, 2).join('、')} 等 ${values.length} 个`);
+      assert.equal(detailTrigger.getAttribute('aria-expanded'), 'false');
+      assert.deepEqual(JSON.parse(detailTrigger.dataset.lrAggregateNames), Array.from(values));
+      detailTriggers.push({ exampleKey: example.exampleKey, field: key, values });
+    }
+  }
+  assert(unabridgedFieldCount > 0);
+  assert(detailTriggers.length >= 2);
+  const trigger = ({ exampleKey, field }) => `[data-customer-example-row="${exampleKey}"] [data-column-key="${field}"] [data-lr-aggregate-names]`;
+  const wrap = list.host.querySelector('.leads-list-table-wrap');
+  wrap.getBoundingClientRect = () => ({ left: 100, right: 1100, top: 100, bottom: 700 });
+  for (const field of detailTriggers.slice(0, 2)) {
+    const button = list.host.querySelector(trigger(field));
+    button.getBoundingClientRect = () => ({ left: 160, right: 320, top: 150, bottom: 174, width: 160, height: 24 });
+    button.closest('tr').querySelector('.fixed-action-column').getBoundingClientRect = () => ({ left: 1000 });
+  }
+  const firstTrigger = list.click(trigger(detailTriggers[0]));
+  const tooltip = list.window.document.getElementById('leadsAggregateNamesTooltip');
+  assert.equal(tooltip.getAttribute('role'), 'tooltip');
+  assert.equal(firstTrigger.getAttribute('aria-expanded'), 'true');
+  assert.deepEqual([...tooltip.querySelectorAll('li')].map(item => item.textContent), Array.from(detailTriggers[0].values));
+  const secondTrigger = list.click(trigger(detailTriggers[1]));
+  assert.equal(list.window.document.getElementById('leadsAggregateNamesTooltip'), tooltip);
+  assert.equal(firstTrigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(secondTrigger.getAttribute('aria-expanded'), 'true');
+  assert.deepEqual([...tooltip.querySelectorAll('li')].map(item => item.textContent), Array.from(detailTriggers[1].values));
+  list.key('Escape');
+  assert.equal(secondTrigger.getAttribute('aria-expanded'), 'false');
+  assert(tooltip.hidden || !tooltip.isConnected);
   assert.equal(rows.length, 12);
   assert.equal(list.host.querySelector('#leadsPagination .session-pagination-total').textContent, `共 ${customers.length} 条`);
   const links = rows.slice(0, 2).map(row => row.querySelector('.lead-customer-example-link'));
@@ -99,7 +144,9 @@ test('historical examples open their own complete journeys from the top of the c
     assert.equal(h.host.querySelector('#customerDetailLeadCount').textContent, `关联线索：${fixture.leads}条线索`);
     assert.equal(h.host.querySelector('#customerDetailStoreCount').textContent, `关联门店：${fixture.stores}个门店`);
     assert.equal(h.host.querySelectorAll('[data-customer-journey-entry]').length, fixture.recordings);
-    assert(!h.host.querySelector('[data-customer-example-label]').hidden);
+    assert.match(h.host.querySelector('#customerDetailLeadRecordingCoverage').textContent, /^线索录音覆盖：/);
+    assert.match(h.host.querySelector('#customerDetailStoreRecordingCoverage').textContent, /^门店录音覆盖：/);
+    assert(!h.host.querySelector('.lead-customer-example-label'));
     assert(h.host.querySelector('[data-customer-ai-generate]'));
     assert(!h.host.querySelector('[data-lead-session-link]'));
     const detailedSummaries = h.host.querySelectorAll('[data-example-journey-summary]');
